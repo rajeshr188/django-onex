@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+<h1>Delete Receipt</h1>
+
+<p>Are you sure you want to delete the Receipt: {{ object }}?</p>
+
+<form action="" method="POST">
+  {% csrf_token %}
+  <input type="submit" action="" value="Yes, delete." />
+</form>
+
+{% endblock %}

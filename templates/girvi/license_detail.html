@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'girvi_license_list' %}">License Listing</a>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit License</a></p>
+
+  <div class="row">
+    <div class="col-sm">
+      <table class="table table-striped">
+      <tr><td>name</td><td>{{ object.name }}</td></tr>
+      <tr><td>slug</td><td>{{ object.slug }}</td></tr>
+      <tr><td>created</td><td>{{ object.created }}</td></tr>
+      <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+      <tr><td>type</td><td>{{ object.type }}</td></tr>
+      <tr><td>shopname</td><td>{{ object.shopname }}</td></tr>
+      <tr><td>address</td><td>{{ object.address }}</td></tr>
+      <tr><td>phonenumber</td><td>{{ object.phonenumber }}</td></tr>
+      <tr><td>propreitor</td><td>{{ object.propreitor }}</td></tr>
+      </table>
+    </div>
+    <div class="col-sm">
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Loans
+          <span class="badge badge-primary badge-pill">{{object.loan_count}}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Loan Amount
+          <span class="badge badge-primary badge-pill">{{object.total_loan_amount.t}}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Gold Loan Amount
+          <span class="badge badge-primary badge-pill">{{object.total_gold_loan.t}}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Gold Weight
+          <span class="badge badge-primary badge-pill">{{object.total_gold_weight.t}} gms</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Silver Loan Amount
+          <span class="badge badge-primary badge-pill">{{object.total_silver_loan.t}}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Silver Weight
+          <span class="badge badge-primary badge-pill">  {{object.total_silver_weight.t}} gms</span>
+        </li>
+
+    </ul>
+    </div>
+
+  </div>
+
+
+
+{% endblock %}

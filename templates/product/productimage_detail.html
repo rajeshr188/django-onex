@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_productimage_list' %}">ProductImage Listing</a></p>
+<table class="table">
+<tr><td>ppoi</td><td>{{ object.ppoi }}</td></tr>
+<tr><td>alt</td><td>{{ object.alt }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit ProductImage</a>
+
+{% endblock %}

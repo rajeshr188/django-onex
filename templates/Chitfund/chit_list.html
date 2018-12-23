@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'chit_list' %}">Chit Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>name</td>
+    <td>created</td>
+    <td>type</td>
+    <td>amount</td>
+    <td>commission</td>
+    <td>Members</td>
+    <td>member_limit</td>
+    <td>date_to_allot</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.name }}</td>
+    <td>{{ object.created|date }}</td>
+    <td>{{ object.type }}</td>
+    <td>{{ object.amount }}</td>
+    <td>{{ object.commission }}% of {{object.amount}}</td>
+    <td>{{object.members.count}}</td>
+    <td>{{ object.member_limit }}</td>
+    <td>{{ object.date_to_allot }}</td>
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'chit_create' %}">Create new Chit</a>
+{% endblock %}

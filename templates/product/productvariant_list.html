@@ -1,0 +1,36 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_productvariant_list' %}">ProductVariant Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>sku</td>
+    <td>name</td>
+    <td>Product</td>
+    <td>Atrributes</td>
+    <td>track_inventory</td>
+    <td>Previous qih</td>
+    <td>Current qih</td><td>Current Qih Weight</td>
+    <td>cost_price</td>
+    <td>weight</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.sku }}</td>
+    <td>{{ object.name }}</td>
+    <td>{{object.product}}</td>
+    <td>{{object.attributes}}</td>
+    <td>{{ object.track_inventory }}</td>
+    <td>{{ object.quantity }}</td>
+    <td>{{object.stock.get_current_qih.total}}</td>
+    <td>{{object.stock.get_current_qih_weight.total}}</td>
+    <td>{{ object.cost_price }}</td>
+    <td>{{ object.weight }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

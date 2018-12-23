@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'purchase_invoice_list' %}">Invoice Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>slug</td>
+    <td>created</td>
+    <td>last_updated</td>
+    <td>rate</td>
+    <td>balancetype</td>
+    <td>paymenttype</td>
+    <td>balance</td>
+    <td>status</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.slug }}</td>
+    <td>{{ object.created }}</td>
+    <td>{{ object.last_updated }}</td>
+    <td>{{ object.rate }}</td>
+    <td>{{ object.balancetype }}</td>
+    <td>{{ object.paymenttype }}</td>
+    <td>{{ object.balance }}</td>
+    <td>{{ object.status }}</td>
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'purchase_invoice_create' %}">Create new Invoice</a>
+{% endblock %}

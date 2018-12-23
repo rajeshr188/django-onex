@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+{% load static %}
+{%load django_tables2%}
+{%load bootstrap4%}
+{% block content %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Suppliers</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+     <a class="btn btn-primary mr-2" href="{% url 'contact_supplier_create' %}" role="button">New Supplier</a>
+     <a class="btn btn-primary mr-2" href="{% url 'contact_supplier_list' %}" role="button">Supplier List</a>
+     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
+
+    </div>
+  </div>
+</div>
+
+{% if filter %}
+    <form action="" method="get" class="form form-inline mb-4">
+        {% bootstrap_form filter.form layout='inline' %}
+        {% bootstrap_button 'filter' %}
+    </form>
+{% endif %}
+{% render_table table 'django_tables2/bootstrap.html'  %}
+
+{% endblock %}

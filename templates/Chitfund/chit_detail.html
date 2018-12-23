@@ -1,0 +1,82 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <a class="btn btn-outline-primary" href="{% url 'chit_list' %}">Chit Listing</a>
+                <a class="btn btn-outline-primary" href="{{object.get_update_url}}">Edit Chit</a>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary ">
+                <a  href="{% url 'allotment_create' pk=object.id %}">Create Allotment</a>
+              </button>
+            </div>
+<br />
+<div class="row">
+    <div class="col">
+      <table class="table table-sm">
+      <tr><td>name</td><td>{{ object.name }}</td></tr>
+      <tr><td>created</td><td>{{ object.created }}</td></tr>
+      <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+      <tr><td>type</td><td>{{ object.type }}</td></tr>
+      <tr><td>amount</td><td>{{ object.amount }}</td></tr>
+      <tr><td>commission</td><td>{{ object.commission }}</td></tr>
+      <tr><td>member_limit</td><td>{{ object.member_limit }}</td></tr>
+      <tr><td>members</td><td>{{ object.get_noofmembers }}</td></tr>
+      <tr><td>date_to_allot</td><td>{{ object.date_to_allot }}</td></tr>
+      <tr><td>Nos allotted</td><td>{{object.get_noofallotments}}</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <ul class="list-group">
+      {%for person in object.members.all%}
+        <li class="list-group-item">{{person.name}} / {{person.phoneno}}</li>
+      </ul>
+      {%endfor%}
+    </div>
+  </div>
+<br />
+
+<div class="accordion" id="accordionExample">
+  {%for allot in object.allotment_set.all%}
+  <div class="card">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
+          {{allot.name}} To : {{allot.to_member}} Amount : {{allot.amount}} Installment : {{allot.installment}}
+        </button>
+      </h5>
+      <a class="btn btn-outline-success btn-sm" href="{% url 'collection_create' pk=allot.id %}">add collection to this allotment</a>
+    </div>
+
+    <div id="collapse{{forloop.counter}}" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+      <div class="card-body">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Date</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Member</th>
+            </tr>
+          </thead>
+          <tbody>
+        {%for payment in allot.collection_set.all %}
+            <tr>
+              <th scope="row">{{forloop.counter}}</th>
+              <td>{{payment.date_collected}}</td>
+              <td>{{payment.amount}}</td>
+              <td>{{payment.member}}</td>
+              <td>@mdo</td>
+            </tr>
+        {%endfor%}
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+    {%endfor%}
+  </div>
+
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_product_list' %}">Product Listing</a>
+  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Product</a></p>
+<table class="table">
+<tr><td>Product Name</td><td>{{ object.name }}</td></tr>
+<tr><td>Category</td><td>{{ object.category }}</td></tr>
+<tr><td>Product Type</td><td>{{object.product_type}}</td></tr>
+<tr><td>Description</td><td>{{object.description}}</td></tr>
+</table>
+
+<a class="btn btn-primary" href="{% url 'product_productvariant_create' pk=object.id %}">Create variant </a>
+<div class="table-responsive-sm">
+<table class="table table-bordered">
+  <thead class="thead-dark">
+    <th>SKU</th>
+      <th> Name</th>
+      <th> Variant Of</th>
+      <th> Attributes</th>
+      <th> Previously Qih</th>
+      <th> Current Qih</th>
+      <th> Tracked </th>
+      <th> Cost </th>
+      <th> Sell @</th>
+  </thead>
+  <tbody>
+{% for v in variants %}
+  <tr>
+    <td>{{v.sku}}</td>
+    <td>{{v.name}} </td>
+    <td>{{v.product}}</td>
+    <td>{{v.attributes}} </td>
+    <td>{{v.quantity}} </td>
+    <td>{{v.stock.Qih}}</td>
+    <td>{{v.track_inventory}}</td>
+    <td>{{v.cost_price}}</td>
+    <td>{{v.selling_price}}</td>
+  </tr>
+
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+
+{% endblock %}

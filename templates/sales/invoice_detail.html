@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a></p>
+<table class="table">
+<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>created</td><td>{{ object.created }}</td></tr>
+<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+<tr><td>rate</td><td>{{ object.rate }}</td></tr>
+<tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
+<tr><td>paymenttype</td><td>{{ object.paymenttype }}</td></tr>
+<tr><td>balance</td><td>{{ object.balance }}</td></tr>
+<tr><td>status</td><td>{{ object.status }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
+{% if object.invoiceitem_set %}
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th><th>Total</th>
+    </tr>
+  </thead>
+  {% for i in object.invoiceitem_set.all %}
+  <tr>
+    <td>{{i.is_return}}</td>
+    <td>{{i.product}}</td>
+    <td>{{i.quantity}}</td>
+    <td>{{i.weight}}</td>
+    <td>{{i.touch}}</td>
+    <td>{{i.total}}</td>
+  </tr>
+  {%endfor%}
+</table>
+{%endif%}
+{% if object.receiptline_set %}
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>created</th><th>amount</th>
+    </tr>
+  </thead>
+  {% for i in object.receiptline_set.all %}
+  <tr>
+    <td>{{i.created}}</td>
+    <td>{{i.amount}}</td>
+
+  </tr>
+  {%endfor%}
+</table>
+{%endif%}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
+<form method="post">
+{% csrf_token %}
+{% crispy form %}
+
+</form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>slug</td>
+    <td>Product</td>
+    <td>Quantity</td>
+    <td>reorderat</td>
+    <td>updated_on</td>
+    <td>Total Weight</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.slug }}</td>
+    <td>{{ object.variant }}</td>
+    <td>{{object.Qih}}</td>
+    <td>{{object.reorderat}}</td>
+    <td>{{object.updated_on}}</td>
+    <td>{{object.totalwt}}
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'contact_supplier_list' %}">Supplier Listing</a></p>
+<table class="table">
+<tr><td>name</td><td>{{ object.name }}</td></tr>
+<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>created</td><td>{{ object.created }}</td></tr>
+<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+<tr><td>organisation</td><td>{{ object.organisation }}</td></tr>
+<tr><td>phonenumber</td><td>{{ object.phonenumber }}</td></tr>
+<tr><td>initial</td><td>{{ object.initial }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Supplier</a>
+
+{% endblock %}

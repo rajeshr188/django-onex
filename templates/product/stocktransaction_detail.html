@@ -1,0 +1,16 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_stocktransaction_list' %}">Stock Transaction Listing</a></p>
+<table class="table">
+<tr><td>Created</td><td>{{ object.created }}</td></tr>
+<tr><td>Updated</td><td>{{ object.updated }}</td></tr>
+<tr><td>Product</td><td>{{ object.stock }}</td></tr>
+<tr><td>Quantity</td><td>{{ object.quantity }}</td></tr>
+<tr><td>type</td><td>{{ object.type }}</td></tr>
+<tr><td>Weight</td><td>{{ object.weight }}</td></tr>
+<tr><td>description</td><td>{{ object.description }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit StockTransaction</a>
+
+{% endblock %}

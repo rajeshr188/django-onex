@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'collection_list' %}">Collection Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>slug</td>
+    <td>date_collected</td>
+    <td>amount</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.slug }}</td>
+    <td>{{ object.date_collected }}</td>
+    <td>{{ object.amount }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

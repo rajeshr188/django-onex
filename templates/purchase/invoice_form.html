@@ -1,0 +1,179 @@
+{% extends '_base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+{% block content %}
+
+<p><h2 class="h3 mb-3 font-weight-normal">Add Purchase</h2></p>
+    <form action="." method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-row">
+            <div class="form-group col-md-4">
+              {{ form.supplier.errors }}
+              {% bootstrap_field form.supplier %}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.created.errors }}
+              {% bootstrap_field form.created %}
+            </div>
+
+
+          </div>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+              {{ form.balancetype.errors }}
+              {% bootstrap_field form.balancetype %}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.paymenttype.errors }}
+              {% bootstrap_field form.paymenttype %}
+            </div>
+
+
+          </div>
+
+
+        <div class="form-group row">
+          {{ form.rate.errors }}
+          <div class="col-sm-4">{% bootstrap_field form.rate %}</div>
+        </div>
+
+        {{ invoiceitem_form.management_form }}
+        {{ invoiceitem_form.non_form_errors }}
+        {% for form in invoiceitem_form %}
+        {%csrf_token%}
+            {{form.id}}
+
+            <table class="table table-sm table-striped">
+              {%if forloop.first%}
+              <thead class="thead-dark">
+                <tr>
+                   {% for field in form.visible_fields %}
+                   <th>{{field.label}}</th>
+                   {%endfor%}
+                </tr>
+              </thead>
+                  {% endif %}
+              <tbody>
+              <tr class="inline {{invoiceitem_form.prefix}}">
+                {% for field in form.visible_fields %}
+                <td class="{{field.name}}" >
+                    <!-- {{ field.errors.as_ul }} -->
+                    {% bootstrap_field field show_label=False%}
+                  </td>
+                  {% endfor %}
+                </tr>
+          </tbody>
+        </table>
+          {% endfor %}
+
+        <div class="form-group row">
+          {{ form.balance.errors }}
+          <div class="col-sm-4">{% bootstrap_field form.balance %}</div>
+        </div>
+        <button class="btn btn-primary" type="submit">Save Invoice</button>
+    </form>
+
+<script type="text/javascript">
+
+  $(function() {
+    $(document).ready(function() {
+      update_row();
+      update_amounts();
+      $(document).on('change', '.weight', function() {
+        console.log('wt here')
+        update_row();
+        update_amounts();
+      });
+      $(document).on('change', '.touch', function() {
+        update_row();
+        update_amounts();
+      });
+      $(document).on('change', '#id_balancetype', function() {
+        update_row();
+        update_amounts();
+      });
+      $(document).on('change', '#id_rate', function() {
+        update_row();
+        update_amounts();
+      });
+      $(document).on('change', '.makingcharge', function() {
+        update_row();
+        update_amounts();
+      });
+      $(document).on('change', '.is_return', function() {
+        update_row();
+        update_amounts();
+      });
+
+      function update_amounts(){
+        var sum = 0;
+        var nwt=0;
+        var twt=0;
+        $(".total input").each(function () {
+              if (!isNaN(this.value) && this.value.length != 0) {
+                  sum += parseFloat(this.value);
+              }
+          });
+        // $(".Nettwt input").each(function () {
+        //       if (!isNaN(this.value) && this.value.length != 0) {
+        //           nwt += parseFloat(this.value);
+        //       }
+        //   });
+        $(".weight input").each(function () {
+              if (!isNaN(this.value) && this.value.length != 0) {
+                  twt += parseFloat(this.value);
+              }
+          });
+          // show values in netto, steuer, brutto fields
+          // show values in netto, steuer, brutto fields
+        $("#id_balance").val(sum.toFixed(3));
+        $('#id_weight').val(Number(twt).toFixed(3));
+
+
+      }
+      function update_row() {
+
+        var rate=$('#id_rate').val();
+        $('.inline').each(function() {
+        var wt = $(this).find('.weight input').val();
+        var touch = $(this).find('.touch input').val();
+        var ret =$(this).find('.is_return input').is(':checked');
+        var mc = $(this).find('.makingcharge input').val();
+
+        var nettwt = (wt * touch)/100
+        if($('#id_balancetype').val()=='Cash')
+          var total=Number(nettwt)*Number(rate)+Number(mc);
+        else {
+          var total=Number(nettwt)+Number(mc);
+        }
+        if(ret)total=-total
+        $(this).find('.total input').val(total.toFixed(3));
+        console.log(wt,touch,nettwt,rate,total.toFixed(3))
+      });
+
+    }
+
+    $(".inline.{{ invoiceitem_form.prefix }}").formset({
+      prefix: "{{ invoiceitem_form.prefix }}",
+      //formTemplate: $("#formset-template").clone(),
+      // initialize newly created heavy fields on the added callback
+      added: function ($row) {
+         $row.find('.product select').select2();
+         $row.find('.delete-row').addClass('btn-sm btn-danger');
+      },
+      removed: function($row){
+        update_amounts();
+      }
+  })
+  $('.product select').select2();
+  $('.add-row').addClass('btn btn-success');
+  $('.delete-row').addClass('btn-sm btn-danger');
+
+})
+})
+
+</script>
+
+{% endblock %}

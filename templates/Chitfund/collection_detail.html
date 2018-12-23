@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'collection_list' %}">Collection Listing</a></p>
+<table class="table">
+<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>date_collected</td><td>{{ object.date_collected }}</td></tr>
+<tr><td>amount</td><td>{{ object.amount }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Collection</a>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_product_list' %}">Product Listing</a></p>
+<table class="table">
+<tr>
+  <td>Name</td>
+  <td>category</td>
+  <td>product type</td>
+  <td>description</td>
+  <td>attributes</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+    <td>{{object.category}}</td>
+    <td>{{object.product_type}}</td>
+    <td>{{ object.description }}</td>
+    <td>{{object.attributes}}<td>
+
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

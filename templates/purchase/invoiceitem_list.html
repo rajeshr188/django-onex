@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'purchase_invoiceitem_list' %}">InvoiceItem Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>weight</td>
+    <td>touch</td>
+    <td>total</td>
+    <td>is_return</td>
+    <td>quantity</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.weight }}</td>
+    <td>{{ object.touch }}</td>
+    <td>{{ object.total }}</td>
+    <td>{{ object.is_return }}</td>
+    <td>{{ object.quantity }}</td>
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'purchase_invoiceitem_create' %}">Create new InvoiceItem</a>
+{% endblock %}

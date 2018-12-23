@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_attributevalue_list' %}">AttributeValue Listing</a></p>
+<table class="table">
+<tr><td>name</td><td>{{ object.name }}</td></tr>
+<tr><td>value</td><td>{{ object.value }}</td></tr>
+<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit AttributeValue</a>
+
+{% endblock %}

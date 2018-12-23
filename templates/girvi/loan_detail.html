@@ -1,0 +1,61 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Loan Detail <a class="btn btn-default" href="{% url 'loan-list' %}">Loan Listing</a></h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+      <a class="btn btn-secondary" href="{% url 'girvi_release_create' loan.slug %}">Release</a>
+        <a class="btn btn-primary" href="{% url 'girvi_loan_update' loan.slug %}">Update</a>
+          <a class="btn btn-primary" href="{% url 'girvi_loan_delete' loan.id %}">Delete</a>
+
+
+
+      <button class="btn btn-sm btn-outline-secondary">Export</button>
+    </div>
+  </div>
+
+</div>
+<table class="table">
+<tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
+<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>created</td><td>{{ object.created }}</td></tr>
+<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+<tr><td>itemtype</td><td>{{ object.itemtype }}</td></tr>
+<tr><td>itemdesc</td><td>{{ object.itemdesc }}</td></tr>
+<tr><td>itemweight</td><td>{{ object.itemweight }}</td></tr>
+<tr><td>itemvalue</td><td>{{ object.itemvalue }}</td></tr>
+<tr><td>loanamount</td><td>{{ object.loanamount }}</td></tr>
+<tr><td>interestrate</td><td>{{ object.interestrate }}</td></tr>
+<tr><td>interest</td><td>{{ object.interest }}</td></tr>
+</table>
+
+<div class="table-responsive">
+
+{% if loan.bill %}
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th scope="col">Release Id</th>
+      <th scope="col">Release Date</th>
+      <th scope="col">Interest Paid</th>
+
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <th scope="row">2</th>
+      <td>{{loan.release.created}}</td>
+      <td>{{loan.release.interestpaid}}</td>
+
+    </tr>
+
+  </tbody>
+</table>
+{% else %}
+
+{%endif%}
+{% endblock %}

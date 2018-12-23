@@ -1,0 +1,15 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_producttype_list' %}">ProductType Listing</a></p>
+<table class="table">
+<tr><td>name</td><td>{{ object.name }}</td></tr>
+<tr><td>has_variants</td><td>{{ object.has_variants }}</td></tr>
+<tr><td>id</td><td>{{object.id}}</td></tr>
+<tr><td>Product Attributes</td><td>{% for a in object.product_attributes.all%} {{a}}, {%endfor%}</td></tr>
+<tr><td>Variant Attributes</td><td>{% for b in object.variant_attributes.all%} {{b}}, {%endfor%}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit ProductType</a>
+<a class="btn btn-primary" href="{% url 'product_product_create' type_pk=object.pk  %}">create product of this type</a>
+
+{% endblock %}

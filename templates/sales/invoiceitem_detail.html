@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'sales_invoiceitem_list' %}">InvoiceItem Listing</a></p>
+<table class="table">
+<tr><td>weight</td><td>{{ object.weight }}</td></tr>
+<tr><td>touch</td><td>{{ object.touch }}</td></tr>
+<tr><td>total</td><td>{{ object.total }}</td></tr>
+<tr><td>is_return</td><td>{{ object.is_return }}</td></tr>
+<tr><td>quantity</td><td>{{ object.quantity }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit InvoiceItem</a>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'allotment_list' %}">Allotment Listing</a></p>
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <form method="post">
+      {% csrf_token %}
+      {{form|crispy}}
+      <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+    </div>
+    <div class="col">
+      <div class="table-responsive-sm">
+        <table class="table">
+          <thead>
+            <th>#</th>
+            <th>Bid Interest %</th>
+            <th>Bid Amount</th>
+          </thead>
+          <tbody>
+            {%with amount=trialamount %}
+            {%for i in '0123456789'%}
+            <tr><td>{{forloop.counter}}</td><td>{{trialamount}}%</td><td>{{trialamount}}</td></tr>
+
+            {%endfor%}
+            {%endwith%}
+            </tbody>
+          </table>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'contact_list' %}">Contact Listing</a></p>
+<table class="table">
+<tr>
+    <td>name</td>
+    <td>created</td>
+    <td>last_updated</td>
+    <td>phoneno</td>
+    <td>Chits Involved</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+    <td>{{ object.created }}</td>
+    <td>{{ object.last_updated }}</td>
+    <td>{{ object.phoneno }}</td>
+    <td>{{object.get_noofchits}}</td>
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'contact_create' %}">Create new Contact</a>
+{% endblock %}

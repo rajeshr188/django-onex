@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'allotment_list' %}">Allotment Listing</a></p>
+<table class="table">
+<tr><td>amount</td><td>{{ object.amount }}</td></tr>
+<tr><td>Name</td><td>{{ object.name }}</td></tr>
+<tr><td>created</td><td>{{ object.created }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Allotment</a>
+
+{% endblock %}

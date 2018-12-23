@@ -1,0 +1,117 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load bootstrap4 %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'sales_receipt_list' %}">Receipt Listing</a></p>
+    <form action="." method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-row">
+            <div class="form-group col-md-4">
+              {{ form.customer.errors }}
+              {% bootstrap_field form.customer %}
+            </div>
+
+
+
+          </div>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+              {{ form.type.errors }}
+              {% bootstrap_field form.type %}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.rate.errors }}
+              {% bootstrap_field form.rate %}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.description.errors }}
+              {% bootstrap_field form.description %}
+            </div>
+
+          </div>
+
+        <div class="form-group row">
+          {{ form.weight.errors }}
+          <div class="col-sm-3">{% bootstrap_field form.weight %}</div>
+          {{ form.touch.errors }}
+          <div class="col-sm-3">{% bootstrap_field form.touch %}</div>
+          {{ form.nettwt.errors }}
+          <div class="col-sm-3">{% bootstrap_field form.nettwt %}</div>
+          {{ form.total.errors }}
+          <div class="col-sm-3">{% bootstrap_field form.total %}</div>
+        </div>
+
+
+        {{ receiptline_form.management_form }}
+        {{ receiptline_form.non_form_errors }}
+        {% for form in receiptline_form %}
+        {%csrf_token%}
+            {{form.id}}
+
+            <table class="table table-sm table-striped">
+              {%if forloop.first%}
+              <thead class="thead-dark">
+                <tr>
+                   {% for field in form.visible_fields %}
+                   <th>{{field.label}}</th>
+                   {%endfor%}
+                </tr>
+              </thead>
+                  {% endif %}
+              <tbody>
+              <tr class="inline {{receiptline_form.prefix}}">
+                {% for field in form.visible_fields %}
+                <td class="{{field.name}}" >
+                    <!-- {{ field.errors.as_ul }} -->
+                    {% bootstrap_field field show_label=False%}
+                  </td>
+                  {% endfor %}
+                </tr>
+          </tbody>
+        </table>
+          {% endfor %}
+          <div class="form-group row">
+            <div class="col"><label>Remaining </label><span>''</span></div>
+
+            </div>
+
+        <button class="btn btn-primary" type="submit">Save Invoice</button>
+    </form>
+    <script type="text/javascript">
+      $(".inline.{{ receiptline_form.prefix }}").formset({
+          prefix: "{{ receiptline_form.prefix }}",
+          added: function ($row) {
+             $row.find('.delete-row').addClass('btn-sm btn-danger');
+          },
+      })
+
+      $('.add-row').addClass('btn-sm btn-success');
+      $('.delete-row').addClass('btn-sm btn-danger');
+
+
+
+    </script>
+<script>
+$('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
+$(document).on('change','#id_type', function() {
+  //alert( this.value );
+  if(this.value=='Metal'){
+    $('#id_weight,#id_touch,#id_nettwt,#id_rate').prop('disabled',false)
+    $(function(){
+                $('#id_weight, #id_touch').keyup(function(){
+                   var value1 = parseFloat($('#id_weight').val()) || 0;
+                   var value2 = parseFloat($('#id_touch').val()) || 0;
+                   $('#id_nettwt,#id_total').val((value1 * value2)/100);
+                });
+             });
+  }
+  else {
+    $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
+  }
+
+});
+
+</script>
+{% endblock %}

@@ -91,6 +91,43 @@ class InvoiceUpdateView(UpdateView):
     model = Invoice
     form_class = InvoiceForm
 
+    def get(self, request, *args, **kwargs):
+
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        invoiceitem_form = InvoiceItemFormSet(instance=self.object)
+
+        return self.render_to_response(
+            self.get_context_data(form=form,
+                                  invoiceitem_form=invoiceitem_form))
+
+    def post(self, request, *args, **kwargs):
+
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        invoiceitem_form = InvoiceItemFormSet(self.request.POST,instance=self.object)
+
+        if (form.is_valid() and invoiceitem_form.is_valid()):
+            return self.form_valid(form, invoiceitem_form)
+        else:
+            return self.form_invalid(form, invoiceitem_form)
+
+    def form_valid(self, form, invoiceitem_form):
+
+        self.object = form.save()
+        invoiceitem_form.instance = self.object
+        items=invoiceitem_form.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form, invoiceitem_form):
+        return self.render_to_response(
+            self.get_context_data(form=form,
+                                  invoiceitem_form=invoiceitem_form))
+
+
 class InvoiceDeleteView(DeleteView):
     model = Invoice
     success_url = reverse_lazy('sales_invoice_list')
@@ -121,9 +158,6 @@ class ReceiptListView(FilterView):
     filterset_class = ReceiptFilter
     template_name = 'sales/receipt_list.html'
 
-# class ReceiptCreateView(CreateView):
-#     model = Receipt
-#     form_class = ReceiptForm
 class ReceiptCreateView(CreateView):
     model = Receipt
     form_class = ReceiptForm

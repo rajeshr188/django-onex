@@ -63,6 +63,21 @@ class Customer(models.Model):
         silver=self.loan_set.filter(itemtype='Silver').aggregate(total=Sum('itemweight'))
         return silver['total']
 
+    def get_total_invoice_cash(self):
+        return self.invoice_set.aggregate(total=Sum('balance'))
+
+    def get_total_invoice_metal(self):
+        return self.invoice_set.aggregate(total=Sum('balance'))
+
+    def get_total_invoice_paid_cash(self):
+        pass
+
+    def get_total_invoice_paid_metal(self):
+        pass
+
+    def get_total_invoice_balance(self):
+        pass
+
 class Supplier(models.Model):
 
     # Fields

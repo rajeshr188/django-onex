@@ -1,10 +1,39 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
+from contact.models import Customer
 from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,ReceiptLineForm,ReceiptLineFormSet
 from django.http import HttpResponseRedirect,HttpResponse
 from django.urls import reverse,reverse_lazy
 from django_filters.views import FilterView
-from .filters import InvoiceFilter
+from .filters import InvoiceFilter,ReceiptFilter
+from .render import Render
+from num2words import num2words
+from django.db.models import  Sum,Q,F,OuterRef,Subquery
+from django.shortcuts import render
+
+def print_invoice(request,id):
+    invoice=Invoice.objects.get(id=id)
+    params={'invoice':invoice}
+    return Render.render('sales/invoice_pdf.html',params)
+
+def print_receipt(request,id):
+    receipt=Receipt.objects.get(id=id)
+    params={'receipt':receipt,'inwords':num2words(receipt.total,lang='en_IN')}
+    return Render.render('sales/receipt.html',params)
+
+def list_balance(request):
+
+    receipts=Receipt.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
+    grec=receipts.annotate(grec=Sum('total',filter=Q(type='Metal'))).values('grec')
+    crec=receipts.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
+    invoices=Invoice.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
+    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
+    cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
+
+
+    context={'balance':balance}
+    return render(request,'sales/balance_list.html',context)
 
 class InvoiceListView(FilterView):
     model = Invoice
@@ -38,9 +67,7 @@ class InvoiceCreateView(CreateView):
 
     def form_valid(self, form, invoiceitem_form):
         self.object = form.save()
-        if self.object.paymenttype=="Cash":
-            self.object.status="Paid"
-            self.object.save()
+
         invoiceitem_form.instance = self.object
         invoiceitem_form.save()
 
@@ -89,9 +116,10 @@ class InvoiceItemDeleteView(DeleteView):
     model = InvoiceItem
     success_url = reverse_lazy('sales_invoiceitem_list')
 
-class ReceiptListView(ListView):
+class ReceiptListView(FilterView):
     model = Receipt
-
+    filterset_class = ReceiptFilter
+    template_name = 'sales/receipt_list.html'
 
 # class ReceiptCreateView(CreateView):
 #     model = Receipt

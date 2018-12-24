@@ -18,6 +18,7 @@ from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum
+
 class Invoice(models.Model):
 
     # Fields
@@ -39,7 +40,7 @@ class Invoice(models.Model):
     status_choices=(
                     ("Draft","Draft"),
                     ("Paid","Paid"),
-                    ("Partially Paid","partiallyPaid"),
+                    ("Partially Paid","PartiallyPaid"),
                     ("Unpaid","Unpaid")
     )
     status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
@@ -54,18 +55,27 @@ class Invoice(models.Model):
         ordering = ('created',)
 
     def __str__(self):
-        return f"{self.customer} / {self.id} / {self.created.date()} / {self.balance} - {self.get_total_receipts()}"
+        return f"{self.customer} / {self.id} / {self.created.date()} / {self.get_balance()}"
 
     def get_absolute_url(self):
         return reverse('sales_invoice_detail', args=(self.slug,))
 
-
     def get_update_url(self):
         return reverse('sales_invoice_update', args=(self.slug,))
 
+    def get_weight(self):
+        return self.invoiceitem_set.aggregate(t=Sum('weight'));
+
+    # def get_nettwt(self):
+    #     return self.invoiceitem_set.aggregate(t=sum('get_nettwt'));
     def get_total_receipts(self):
         paid=self.receiptline_set.aggregate(t=Sum('amount'))
         return paid['t']
+
+    def get_balance(self):
+        if self.get_total_receipts() != None :
+            return self.balance - self.get_total_receipts()
+        return self.balance
 
 class InvoiceItem(models.Model):
 
@@ -95,10 +105,11 @@ class InvoiceItem(models.Model):
     def get_absolute_url(self):
         return reverse('sales_invoiceitem_detail', args=(self.pk,))
 
-
     def get_update_url(self):
         return reverse('sales_invoiceitem_update', args=(self.pk,))
 
+    def get_nettwt(self):
+        return (self.weight * self.touch)/100
 
 class Receipt(models.Model):
 

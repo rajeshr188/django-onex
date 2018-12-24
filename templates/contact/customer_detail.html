@@ -20,72 +20,144 @@
 </div>
 <div class="row">
   <div class="col-9">
-    <div class="table-responsive-sm">
-    <table class="table table-sm table-bordered table-striped">
-      <thead class="thead-dark text-center">
-        <tr>
-          <th scope="col">LoanId</th>
-          <th scope="col">Created</th>
-          <th scope="col">Item</th>
-          <th scope="col">Weight</th>
-          <th scope="col">Amount</th>
-          <th scope="col">NoofMonths</th>
-          <th scope="col">status</th>
-          <th scope="col">Interest</th>
-          <th scope="col">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for loan in customer.get_loans   %}
-          {% if loan.release %}
-            <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Loans</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Invoices</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Receipts</a>
+      </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        <div class="table-responsive-sm">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="thead-dark text-center">
+            <tr>
+              <th scope="col">LoanId</th>
+              <th scope="col">Created</th>
+              <th scope="col">Item</th>
+              <th scope="col">Weight</th>
+              <th scope="col">Amount</th>
+              <th scope="col">NoofMonths</th>
+              <th scope="col">status</th>
+              <th scope="col">Interest</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loan in customer.get_loans   %}
+              {% if loan.release %}
+                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                      <td>{{loan.created.date}} </td>
+                      <td>{{loan.itemdescription}}</td>
+                      <td>{{loan.itemweight}}</td>
+                      <td>{{loan.loanamount}}</td>
+                      <td>{{loan.noofmonths}} </td>
+                      <td>{{loan.bill}} </td>
+                      <td>{{loan.interest}}</td>
+                      <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                      <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
+
+                    </tr>
+              {% elif loan.noofmonths > 12%}
+                <tr class="table-danger text-center">
+                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                   <td>{{loan.created.date}} </td>
                   <td>{{loan.itemdescription}}</td>
                   <td>{{loan.itemweight}}</td>
                   <td>{{loan.loanamount}}</td>
                   <td>{{loan.noofmonths}} </td>
                   <td>{{loan.bill}} </td>
-                  <td>{{loan.interest}}</td>
+                  <td>{{loan.interestdue}}</td>
                   <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
                   <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
 
                 </tr>
-          {% elif loan.noofmonths > 12%}
-            <tr class="table-danger text-center">
-              <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
-              <td>{{loan.created.date}} </td>
-              <td>{{loan.itemdescription}}</td>
-              <td>{{loan.itemweight}}</td>
-              <td>{{loan.loanamount}}</td>
-              <td>{{loan.noofmonths}} </td>
-              <td>{{loan.bill}} </td>
-              <td>{{loan.interestdue}}</td>
-              <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
-              <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
+              {% else%}
+                  <tr>
+                    <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                    <td>{{loan.created.date}} </td>
+                    <td>{{loan.itemdescription}}</td>
+                    <td>{{loan.itemweight}}</td>
+                    <td>{{loan.loanamount}}</td>
+                    <td>{{loan.noofmonths}} </td>
+                    <td>{{loan.release}} </td>
+                    <td>{{loan.interest}}</td>
+                    <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                    <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
 
+                  </tr>
+
+                {%endif %}
+
+            {%endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <div class="table-responsive-sm">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="thead-dark text-center">
+            <tr>
+              <th scope="col">Invoice Id</th>
+              <th scope="col">Created</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Cash/Credit</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Balance</th>
+              <th scope="col">Action</th>
             </tr>
-          {% else%}
-              <tr>
-                <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
-                <td>{{loan.created.date}} </td>
-                <td>{{loan.itemdescription}}</td>
-                <td>{{loan.itemweight}}</td>
-                <td>{{loan.loanamount}}</td>
-                <td>{{loan.noofmonths}} </td>
-                <td>{{loan.release}} </td>
-                <td>{{loan.interest}}</td>
-                <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
-                <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
-
-              </tr>
-
-            {%endif %}
-
-        {%endfor %}
-      </tbody>
-    </table>
+          </thead>
+          <tbody>
+            {% for inv in customer.invoicee.all   %}
+                <tr class="text-center">
+                      <td>{{inv.id}} </td>
+                      <td>{{inv.created|date}}</td>
+                      <td>{{inv.customer.name}}</td>
+                      <td>{{inv.balancetype}}</td>
+                      <td>{{inv.paymenttype}} </td>
+                      <td>{{inv.balance}} </td>
+                      <td></td>
+                </tr>
+            {%endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+        <div class="table-responsive-sm">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="thead-dark text-center">
+            <tr>
+              <th scope="col">Receipt Id</th>
+              <th scope="col">Created</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Balance</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rec in customer.receivedfrom.all   %}
+                <tr class="text-center">
+                      <td>{{rec.id}} </td>
+                      <td>{{rec.created|date}}</td>
+                      <td>{{rec.type}}</td>
+                      <td>{{rec.balance}} </td>
+                      <td></td>
+                </tr>
+            {%endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="col-3">
 
         <ul class="list-group">
@@ -93,17 +165,16 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             Loans  <span class="badge badge-primary badge-pill">{{customer.get_loans_count}}</span></li>
 
-            <li class="list-group-item d-flex justify-content-between align-items-center"">Amount <span class="badge badge-info badge-pill">{{customer.get_total_loanamount}}</span></li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_gold_weight}}</span>
+          <li class="list-group-item d-flex justify-content-between align-items-center"">Amount <span class="badge badge-info badge-pill">{{customer.get_total_loanamount}}</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_gold_weight}}</span>
 
 
-            <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge badge-info badge-pill">{{customer.get_silver_weight}}</span></li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge badge-info badge-pill"></span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge badge-info badge-pill">{{customer.get_silver_weight}}</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge badge-info badge-pill"></span></li>
           </ul>
 
   </div>
 </div>
-
 
 
 {% endblock %}

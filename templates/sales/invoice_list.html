@@ -2,7 +2,7 @@
 {% load static %}
 {%load bootstrap4%}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a></p>
+<p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Sales Listing</a></p>
 {% if filter %}
     <form action="" method="get" class="form form-inline mb-4">
         {% bootstrap_form filter.form layout='inline' %}
@@ -16,8 +16,8 @@
     <td>created</td>
     <td>last_updated</td>
     <td>rate</td>
-    <td>balancetype</td>
-    <td>paymenttype</td>
+    <td>Currency</td>
+    <td>Cash/Credit</td>
     <td>balance</td>
     <td>status</td>
     <td>Received</td>

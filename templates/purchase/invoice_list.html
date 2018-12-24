@@ -1,24 +1,36 @@
 {% extends "_base.html" %}
 {% load static %}
+{%load bootstrap4%}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'purchase_invoice_list' %}">Invoice Listing</a></p>
-<table class="table">
+<p><a class="btn btn-default" href="{% url 'purchase_invoice_list' %}">Purchase Listing</a>
+<a class="btn btn-primary" href="{% url 'purchase_invoice_create' %}">Create new Invoice</a></p>
+{% if filter %}
+    <form action="" method="get" class="form form-inline mb-4">
+        {% bootstrap_form filter.form layout='inline' %}
+        {% bootstrap_button 'filter' %}
+    </form>
+{% endif %}
+<table class="table table-striped table-bordered table-hover">
+  <thead class="thead-dark">
+    <tr>
+        <th>ID</th>
+        <th>Supplier</th>
+        <th>created</th>
+        <th>last_updated</th>
+        <th>rate</th>
+        <th>balancetype</th>
+        <th>paymenttype</th>
+        <th>balance</th>
+        <th>status</th>
+        <th>Paid</th>
+        <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for object in filter.qs %}
 <tr>
-<td>ID</td><td>Link</td>
-    <td>slug</td>
-    <td>created</td>
-    <td>last_updated</td>
-    <td>rate</td>
-    <td>balancetype</td>
-    <td>paymenttype</td>
-    <td>balance</td>
-    <td>status</td>
-</tr>
-{% for object in object_list %}
-<tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.slug }}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object.pk}}</a></td>
+    <td>{{ object.supplier }}</td>
     <td>{{ object.created }}</td>
     <td>{{ object.last_updated }}</td>
     <td>{{ object.rate }}</td>
@@ -26,7 +38,10 @@
     <td>{{ object.paymenttype }}</td>
     <td>{{ object.balance }}</td>
     <td>{{ object.status }}</td>
+    <td>{{object.get_total_payments}}</td>
+    <td><a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.slug%}">Delete</a></td>
 </tr>
 {% endfor %}
-</table><a class="btn btn-primary" href="{% url 'purchase_invoice_create' %}">Create new Invoice</a>
+</tbody>
+</table>
 {% endblock %}

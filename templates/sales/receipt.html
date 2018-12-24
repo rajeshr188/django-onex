@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Receipt</title>
+    <style type="text/css">
+        @page {
+            size: A6;
+            margin: 1cm;
+            @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 100pt; width: 512pt; top: 20pt; height: 40pt;
+        }
+        }
+
+        .invoice-title h2, .invoice-title h3 {
+    display: inline-block;}
+    div.a {
+    text-align: center;
+    font-size: large;}
+    </style>
+<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> -->
+</head>
+<body>
+  <div class="a">
+    <h2>JSK</h2>
+  </div>
+    <div class="container">
+      <div class="row">
+          <div class="col-xs-12">
+      		<div class="invoice-title">
+      			<h2>Receipt</h2><h3 class="pull-right"> # {{receipt.id}}</h3>
+            <address>
+              <strong>Date: </strong>
+            {{receipt.created|date:"d-m-Y"}}
+            </address>
+      		</div>
+      		<hr>
+      		<div class="row">
+      			<div class="col-xs-6">
+      				<address>
+      			   <strong>From: </strong> {{receipt.customer.name}}<br>
+
+      				</address>
+      			</div>
+      		</div>
+      		<div class="row">
+      			<div class="col-xs-6">
+      				<address>
+      					<strong>Payment Method: </strong>
+      					{{receipt.type}}<br>
+      				</address>
+      			</div>
+
+      		</div>
+          <div class="row">
+            <div class="col-xs-6">
+              <address>
+                <strong>Received: </strong>
+                {{receipt.total}}<br />
+                <strong>In Words: </strong>{{inwords}} rupees only<br /><hr/>
+              </address>
+            </div>
+
+          </div>
+
+          <div class="row">
+          	<div class="col-md-12">
+          		<div class="panel panel-default">
+          				<div class="panel-body">
+                  <h3 class="panel-title"><strong>Receipt Allotment Detail</strong></h3><hr />
+          				<div class="table-responsive">
+          					<table class="table table-condensed">
+          						<thead>
+                                      <tr>
+              							<td><strong>Invoice</strong></td>
+              							<td class="text-center"><strong>Amount</strong></td>
+                                      </tr>
+          						</thead>
+          						<tbody>
+          							{%for item in receipt.receiptline_set.all%}
+                        <tr><td>Id: {{item.invoice.id}} Created : {{item.invoice.created|date}}/{{item.invoice.created|timesince}} Balance : {{item.invoice.balance}}</td><td>{{item.amount}}</td></tr>
+                        {%endfor%}
+          						</tbody>
+          					</table>
+          				</div>
+          			</div>
+          		</div>
+          	</div>
+          </div>
+      </div>
+      	</div>
+      </div>
+
+
+</body>
+</html>

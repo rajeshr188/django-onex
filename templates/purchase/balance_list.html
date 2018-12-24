@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<table class="table table-striped table-bordered">
+<thead class="thead-dark">
+<tr>
+    <th>Customer</th>
+    <th>Gold Credit</th>
+    <th>Paid Debit</th>
+    <th>Gold Balance</th>
+    <th>Cash Credit</th>
+    <th>Cash Debit</th>
+    <th>Cash Balance</th>
+</tr></thead>
+<tbody>
+{% for object in balance %}
+<tr>
+    <td>{{object.name}}</td>
+    <td>{{object.gbal}}</td>
+    <td>{{object.grec}}</td>
+    <td>{{object.gold}}</td>
+    <td>{{object.cbal}}</td>
+    <td>{{object.crec}}</td>
+    <td>{{object.cash}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

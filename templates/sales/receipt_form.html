@@ -12,10 +12,7 @@
               {{ form.customer.errors }}
               {% bootstrap_field form.customer %}
             </div>
-
-
-
-          </div>
+        </div>
         <div class="form-row">
             <div class="form-group col-md-4">
               {{ form.type.errors }}
@@ -29,8 +26,7 @@
               {{ form.description.errors }}
               {% bootstrap_field form.description %}
             </div>
-
-          </div>
+        </div>
 
         <div class="form-group row">
           {{ form.weight.errors }}
@@ -73,7 +69,7 @@
         </table>
           {% endfor %}
           <div class="form-group row">
-            <div class="col"><label>Remaining </label><span>''</span></div>
+            <div class="col"><label>Remaining balance to allot :</label><p id="balance">''</p></div>
 
             </div>
 
@@ -94,6 +90,30 @@
 
     </script>
 <script>
+
+  $(function(){
+
+    $(document).ready(function() {
+
+      $(document).on('change','#id_total',function() { $('#balance').text( $(this).val());})
+      $(document).on('change', '.amount', function() { updatebal();});
+      updatebal();
+    });
+  });
+
+  function updatebal(){
+    var sum = 0;
+
+    $(".amount input").each(function () {
+          if (!isNaN(this.value) && this.value.length != 0) {
+              sum += parseFloat(this.value);
+          }
+      });
+    var balance=$("#balance").text();
+    $("#balance").text(balance-sum);
+
+  }
+
 $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
 $(document).on('change','#id_type', function() {
   //alert( this.value );
@@ -104,6 +124,7 @@ $(document).on('change','#id_type', function() {
                    var value1 = parseFloat($('#id_weight').val()) || 0;
                    var value2 = parseFloat($('#id_touch').val()) || 0;
                    $('#id_nettwt,#id_total').val((value1 * value2)/100);
+                   $('#id_total').trigger('change');
                 });
              });
   }

@@ -32,6 +32,11 @@ class ReceiptForm(forms.ModelForm):
         fields = ['customer','type', 'weight','touch','nettwt','rate','total', 'description']
 
 class ReceiptLineForm(forms.ModelForm):
+    # invoice=forms.ModelChoiceField(
+    #                                 queryset=Invoice.objects.all(),
+    #                                 widget=ModelSelect2Widget(
+    #                                 model=Invoice,search_fields=['name__icontains'],dependent_fields={'customer':'customer'}),
+    # )
     invoice=forms.ModelChoiceField(
                                     queryset=Invoice.objects.filter(Q(status="Unpaid")|Q(status="PartiallyPaid")),
                                     widget=Select2Widget,

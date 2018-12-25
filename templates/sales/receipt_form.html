@@ -75,32 +75,20 @@
 
         <button class="btn btn-primary" type="submit">Save Invoice</button>
     </form>
-    <script type="text/javascript">
-      $(".inline.{{ receiptline_form.prefix }}").formset({
-          prefix: "{{ receiptline_form.prefix }}",
-          added: function ($row) {
-             $row.find('.delete-row').addClass('btn-sm btn-danger');
-          },
-      })
 
-      $('.add-row').addClass('btn-sm btn-success');
-      $('.delete-row').addClass('btn-sm btn-danger');
-
-
-
-    </script>
 <script>
-
-  $(function(){
-
-    $(document).ready(function() {
-
-      $(document).on('change','#id_total',function() { $('#balance').text( $(this).val());})
-      $(document).on('change', '.amount', function() { updatebal();});
-      updatebal();
-    });
-  });
-
+  $(".inline.{{ receiptline_form.prefix }}").formset({
+      prefix: "{{ receiptline_form.prefix }}",
+      added: function ($row) {
+         $row.find('.delete-row').addClass('btn-sm btn-danger');
+      },
+      removed: function($row){
+        updatebal();
+      }
+  })
+  updatebal();
+  $('.add-row').addClass('btn-sm btn-success');
+  $('.delete-row').addClass('btn-sm btn-danger');
   function updatebal(){
     var sum = 0;
 
@@ -109,30 +97,37 @@
               sum += parseFloat(this.value);
           }
       });
-    var balance=$("#balance").text();
-    $("#balance").text(balance-sum);
+      console.log("amountsum" + sum);
+    var total=$("#id_total").val();
+    $("#balance").text(total-sum);
 
   }
+  $(function(){
+    $(document).ready(function() {
 
-$('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-$(document).on('change','#id_type', function() {
-  //alert( this.value );
-  if(this.value=='Metal'){
-    $('#id_weight,#id_touch,#id_nettwt,#id_rate').prop('disabled',false)
-    $(function(){
-                $('#id_weight, #id_touch').keyup(function(){
-                   var value1 = parseFloat($('#id_weight').val()) || 0;
-                   var value2 = parseFloat($('#id_touch').val()) || 0;
-                   $('#id_nettwt,#id_total').val((value1 * value2)/100);
-                   $('#id_total').trigger('change');
-                });
-             });
-  }
-  else {
-    $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-  }
+      $(document).on('change','#id_total',function() { $('#balance').text( $(this).val());})
+      $(document).on('change', '.amount', function() { updatebal();});
+      $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
+      $(document).on('change','#id_type', function() {
+      //alert( this.value );
+        if(this.value=='Metal'){
+          $('#id_weight,#id_touch,#id_nettwt,#id_rate').prop('disabled',false)
+          $(function(){
+                    $('#id_weight, #id_touch').keyup(function(){
+                       var value1 = parseFloat($('#id_weight').val()) || 0;
+                       var value2 = parseFloat($('#id_touch').val()) || 0;
+                       $('#id_nettwt,#id_total').val((value1 * value2)/100);
+                       $('#id_total').trigger('change');
+                    });
+                 });
+               }
+        else {
+              $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
+              }
 
-});
+            });
+    });
+  });
 
 </script>
 {% endblock %}

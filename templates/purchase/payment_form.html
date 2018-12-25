@@ -81,6 +81,9 @@
           added: function ($row) {
              $row.find('.delete-row').addClass('btn-sm btn-danger');
           },
+          removed: function($row){
+            updatebal();
+          }
       })
 
       $('.add-row').addClass('btn-sm btn-success');
@@ -109,8 +112,8 @@
               sum += parseFloat(this.value);
           }
       });
-    var balance=$("#balance").text();
-    $("#balance").text(balance-sum);
+    var total=$("#id_total").val();
+    $("#balance").text(total-sum);
 
   }
 

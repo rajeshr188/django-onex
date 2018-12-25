@@ -41,7 +41,7 @@
     <td>{{ object.balance }}</td>
     <td>{{ object.status }}</td>
     <td>{{object.get_total_payments}}</td>
-    <td><a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.slug%}">Delete</a></td>
+    <td><a class="btn btn-danger" href="{% url 'purchase_invoice_delete' object.slug%}">Delete</a></td>
 </tr>
 {% endfor %}
 </tbody>

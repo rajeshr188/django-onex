@@ -1,4 +1,4 @@
-from django.views.generic import DetailView, ListView, UpdateView, CreateView
+from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from contact.models import Supplier
 from .forms import InvoiceForm, InvoiceItemForm,InvoiceItemFormSet, PaymentForm,PaymentLineForm,PaymentLineFormSet
@@ -125,6 +125,9 @@ class InvoiceUpdateView(UpdateView):
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
 
+class InvoiceDeleteView(DeleteView):
+    model = Invoice
+    success_url = reverse_lazy('purchase_invoice_list')
 
 class InvoiceItemListView(ListView):
     model = InvoiceItem
@@ -168,8 +171,6 @@ class PaymentCreateView(CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         paymentline_form = PaymentLineFormSet(self.request.POST)
-        # for f in paymentline_form:
-        #         f.fields['invoice'].queryset = Invoice.objects.filter(status="Unpaid")
         if (form.is_valid() and paymentline_form.is_valid()):
             return self.form_valid(form, paymentline_form)
         else:
@@ -230,6 +231,10 @@ class PaymentDetailView(DetailView):
 class PaymentUpdateView(UpdateView):
     model = Payment
     form_class = PaymentForm
+
+class PaymentDeleteView(DeleteView):
+    model = Payment
+    success_url = reverse_lazy('purchase_payment_delete')
 
 class PaymentLineCreateView(CreateView):
     model = PaymentLine

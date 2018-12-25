@@ -34,6 +34,7 @@
     <td>{{ object.type }}</td>
     <td>{{ object.total }}</td>
     <td>{{ object.description }}</td>
+    <td><a class="btn btn-danger" href="{% url 'purchase_payment_delete' object.slug%}">Delete</a></td>
 </tr>
 {% endfor %}
 </tbody>

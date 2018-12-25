@@ -22,6 +22,7 @@ urlpatterns += (
     path('purchase/invoice/detail/<slug:slug>/', views.InvoiceDetailView.as_view(), name='purchase_invoice_detail'),
     path('invoice/detail/<int:id>/pdf', views.print_invoice,name='invoicepdf'),
     path('purchase/invoice/update/<slug:slug>/', views.InvoiceUpdateView.as_view(), name='purchase_invoice_update'),
+    path('purchase/invoice/delete/<slug:slug>/', views.InvoiceDeleteView.as_view(), name='purchase_invoice_delete'),
 )
 urlpatterns+=(
             path('purchase/balance/',views.list_balance,name='purchase_balance'),
@@ -39,6 +40,8 @@ urlpatterns += (
     path('purchase/payment/', views.PaymentListView.as_view(), name='purchase_payment_list'),
     path('purchase/payment/create/', views.PaymentCreateView.as_view(), name='purchase_payment_create'),
     path('purchase/payment/detail/<slug:slug>/', views.PaymentDetailView.as_view(), name='purchase_payment_detail'),
-    path('purchase/receipt/detail/<int:id>/pdf', views.print_payment,name='paymentpdf'),
+    path('purchase/payment/detail/<int:id>/pdf', views.print_payment,name='paymentpdf'),
     path('purchase/payment/update/<slug:slug>/', views.PaymentUpdateView.as_view(), name='purchase_payment_update'),
+    path('purchase/payment/delete/<slug:slug>/', views.PaymentDeleteView.as_view(), name='purchase_payment_delete'),
+
 )

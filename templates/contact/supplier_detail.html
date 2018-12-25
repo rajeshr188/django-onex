@@ -1,16 +1,100 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'contact_supplier_list' %}">Supplier Listing</a></p>
-<table class="table">
-<tr><td>name</td><td>{{ object.name }}</td></tr>
-<tr><td>slug</td><td>{{ object.slug }}</td></tr>
-<tr><td>created</td><td>{{ object.created }}</td></tr>
-<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
-<tr><td>organisation</td><td>{{ object.organisation }}</td></tr>
-<tr><td>phonenumber</td><td>{{ object.phonenumber }}</td></tr>
-<tr><td>initial</td><td>{{ object.initial }}</td></tr>
-</table>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Supplier</a>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+      <a class="btn btn-primary ml-2" href="{% url 'contact_customer_update' object.slug%}">Edit Supplier</a>
+      <button class="btn btn-sm btn-outline-secondary ml-2">Export</button>
+    </div>
+  </div>
+</div>
+<div class="card text-center alert alert-info mb-4">
+  <div class="card-body">
+    <h5 class="card-title">{{supplier.name|title}}</h5>
+    <p>{{supplier.organisation|capfirst}} {{supplier.initial|capfirst}} {{supplier.phonenumber}} </p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-9">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Invoices</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Receipts</a>
+      </li>
+    </ul>
+      <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <div class="table-responsive-sm">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="thead-dark text-center">
+            <tr>
+              <th scope="col">Invoice Id</th>
+              <th scope="col">Created</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Cash/Credit</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Balance</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in supplier.suppliers.all   %}
+                <tr class="text-center">
+                      <td>{{inv.id}} </td>
+                      <td>{{inv.created|date}}</td>
+                      <td>{{inv.customer.name}}</td>
+                      <td>{{inv.balancetype}}</td>
+                      <td>{{inv.paymenttype}} </td>
+                      <td>{{inv.balance}} </td>
+                      <td></td>
+                </tr>
+            {%endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+        <div class="table-responsive-sm">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="thead-dark text-center">
+            <tr>
+              <th scope="col">Payment Id</th>
+              <th scope="col">Created</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Balance</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rec in supplier.supplier.all   %}
+                <tr class="text-center">
+                      <td>{{rec.id}} </td>
+                      <td>{{rec.created|date}}</td>
+                      <td>{{rec.type}}</td>
+                      <td>{{rec.total}} </td>
+                      <td></td>
+                </tr>
+            {%endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-3">
+
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between align-items-center active"><h6">Statistics</h6></li>
+
+          </ul>
+
+  </div>
+</div>
+
 
 {% endblock %}

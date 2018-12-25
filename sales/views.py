@@ -167,8 +167,6 @@ class ReceiptCreateView(CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         receiptline_form = ReceiptLineFormSet()
-        # for f in receiptline_form:
-        #         f.fields['invoice'].queryset = Invoice.objects.filter(status="Unpaid")
 
         return self.render_to_response(
             self.get_context_data(form=form,
@@ -179,8 +177,6 @@ class ReceiptCreateView(CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         receiptline_form = ReceiptLineFormSet(self.request.POST)
-        # for f in receiptline_form:
-        #         f.fields['invoice'].queryset = Invoice.objects.filter(status="Unpaid")
         if (form.is_valid() and receiptline_form.is_valid()):
             return self.form_valid(form, receiptline_form)
         else:
@@ -204,8 +200,23 @@ class ReceiptCreateView(CreateView):
                 item.invoice.status="PartiallyPaid"
                 item.invoice.save()
 
-        # if amount > invpaid :
-            # transfer amount to inv.customer account
+        remaining=amount-invpaid
+        while remaining>0 :
+            try:
+                invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+            except IndexError:
+                invtopay = None
+            if invtopay !=None :
+                if remaining >= invtopay.balance :
+                    remaining -= invtopay.balance
+                    ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.balance)
+                    invtopay.status="Paid"
+                else :
+                    ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
+                    invtopay.status="PartiallyPaid"
+                    remaining=0
+                invtopay.save()
+                
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, receiptline_form):

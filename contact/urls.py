@@ -30,5 +30,5 @@ urlpatterns += (
     path('supplier/create/', views.SupplierCreateView.as_view(), name='contact_supplier_create'),
     path('supplier/detail/<slug:slug>/', views.SupplierDetailView.as_view(), name='contact_supplier_detail'),
     path('supplier/update/<slug:slug>/', views.SupplierUpdateView.as_view(), name='contact_supplier_update'),
-    path('supplier/<int:pk>/delete',views.SupplierDelete.as_view(),name='contact_supplier_delete'),
+    path('supplier/<slug:slug>/delete',views.SupplierDelete.as_view(),name='contact_supplier_delete'),
 )

@@ -40,7 +40,7 @@ class Invoice(models.Model):
     status_choices=(
                     ("Draft","Draft"),
                     ("Paid","Paid"),
-                    ("Partially Paid","partiallyPaid"),
+                    ("PartiallyPaid","PartiallyPaid"),
                     ("Unpaid","Unpaid")
     )
     status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
@@ -55,7 +55,7 @@ class Invoice(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return f"{self.supplier} / {self.id} / {self.created.date()} / {self.get_balance()}"
+        return f"{self.supplier} | {self.id} | {self.created.date()} | {self.get_balance()}"
 
     def get_absolute_url(self):
         return reverse('purchase_invoice_detail', args=(self.slug,))

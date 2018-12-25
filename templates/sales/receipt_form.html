@@ -80,6 +80,7 @@
   $(".inline.{{ receiptline_form.prefix }}").formset({
       prefix: "{{ receiptline_form.prefix }}",
       added: function ($row) {
+         $row.find('.invoice select').select2();
          $row.find('.delete-row').addClass('btn-sm btn-danger');
       },
       removed: function($row){

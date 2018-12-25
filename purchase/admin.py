@@ -12,7 +12,7 @@ class InvoiceAdminForm(forms.ModelForm):
 class InvoiceAdmin(admin.ModelAdmin):
     form = InvoiceAdminForm
     list_display = ['slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
-    readonly_fields = ['slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
+    # readonly_fields = ['slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
 
 admin.site.register(Invoice, InvoiceAdmin)
 
@@ -45,5 +45,3 @@ class PaymentAdmin(admin.ModelAdmin):
     readonly_fields = ['slug', 'created', 'last_updated', 'type', 'total', 'description']
 
 admin.site.register(Payment, PaymentAdmin)
-
-

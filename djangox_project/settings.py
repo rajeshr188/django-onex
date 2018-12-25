@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+EXTENSIONS_MAX_UNIQUE_QUERY_ATTEMPTS=1000
 # Application definition
 
 INSTALLED_APPS = [

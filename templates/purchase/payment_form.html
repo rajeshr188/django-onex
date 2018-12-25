@@ -79,7 +79,8 @@
       $(".inline.{{ paymentline_form.prefix }}").formset({
           prefix: "{{ paymentline_form.prefix }}",
           added: function ($row) {
-             $row.find('.delete-row').addClass('btn-sm btn-danger');
+            $row.find('.invoice select').select2();
+            $row.find('.delete-row').addClass('btn-sm btn-danger');
           },
           removed: function($row){
             updatebal();

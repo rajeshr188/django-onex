@@ -193,8 +193,23 @@ class PaymentCreateView(CreateView):
                 item.invoice.status="PartiallyPaid"
                 item.invoice.save()
 
-        # if amount > invpaid :
-            # transfer amount to inv.customer account
+        remaining=amount-invpaid
+        while remaining>0 :
+            try:
+                invtopay = Invoice.objects.filter(supplier=self.object.supplier,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+            except IndexError:
+                invtopay = None
+            if invtopay !=None :
+                if remaining >= invtopay.balance :
+                    remaining -= invtopay.balance
+                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.balance)
+                    invtopay.status="Paid"
+                else :
+                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=remaining)
+                    invtopay.status="PartiallyPaid"
+                    remaining=0
+                invtopay.save()
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, paymentline_form):

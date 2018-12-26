@@ -42,4 +42,5 @@ urlpatterns += (
     path('sales/receipt/detail/<slug:slug>/', views.ReceiptDetailView.as_view(), name='sales_receipt_detail'),
     path('sales/receipt/detail/<int:id>/pdf', views.print_receipt,name='receiptpdf'),
     path('sales/receipt/update/<slug:slug>/', views.ReceiptUpdateView.as_view(), name='sales_receipt_update'),
+    path('sales/receipt/delete/<slug:slug>/',views.ReceiptDeleteView.as_view(),name='sales_receipt_delete'),
 )

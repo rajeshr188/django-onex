@@ -13,6 +13,7 @@ urlpatterns = [
     path('sales/',include('sales.urls')),
     path('chitfund/',include('Chitfund.urls')),
     path('purchase/',include('purchase.urls')),
+    path('daybook/',include('daybook.urls')),
     path('select2/', include('django_select2.urls')),
 
 ]

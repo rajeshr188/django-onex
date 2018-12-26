@@ -49,7 +49,7 @@ INSTALLED_APPS = [
 
     # Local
     'users',
-    'pages','contact','product','girvi','sales','purchase','Chitfund',
+    'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',
 ]
 
 MIDDLEWARE = [

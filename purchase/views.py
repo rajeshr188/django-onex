@@ -10,7 +10,10 @@ from .render import Render
 from num2words import num2words
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
 from django.shortcuts import render
-
+from django_tables2 import RequestConfig
+from django_tables2.views import SingleTableMixin
+from django_tables2.export.views import ExportMixin
+from .tables import InvoiceTable,PaymentTable
 def print_invoice(request,id):
     invoice=Invoice.objects.get(id=id)
     params={'invoice':invoice}
@@ -35,10 +38,12 @@ def list_balance(request):
     context={'balance':balance}
     return render(request,'sales/balance_list.html',context)
 
-class InvoiceListView(FilterView):
+class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     model = Invoice
+    table_class = InvoiceTable
     filterset_class = InvoiceFilter
     template_name = 'purchase/invoice_list.html'
+    paginate_by = 25
 
 class InvoiceCreateView(CreateView):
     model = Invoice
@@ -147,11 +152,12 @@ class InvoiceItemUpdateView(UpdateView):
     form_class = InvoiceItemForm
 
 
-class PaymentListView(FilterView):
+class PaymentListView(ExportMixin,SingleTableMixin,FilterView):
     model = Payment
+    table_class = PaymentTable
     filterset_class = PaymentFilter
     template_name="purchase/payment_list.html"
-
+    paginate_by = 25
 class PaymentCreateView(CreateView):
     model = Payment
     form_class = PaymentForm

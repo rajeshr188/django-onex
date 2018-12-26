@@ -1,44 +1,29 @@
 {% extends "_base.html" %}
 {% load static %}
+{%load django_tables2%}
 {%load bootstrap4%}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Sales Listing</a></p>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Sales Invoice</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+     <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_create' %}" role="button">Add Sale</a>
+     <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_list' %}" role="button">Sales List</a>
+     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
+
+    </div>
+  </div>
+</div>
+
 {% if filter %}
     <form action="" method="get" class="form form-inline mb-4">
         {% bootstrap_form filter.form layout='inline' %}
         {% bootstrap_button 'filter' %}
     </form>
 {% endif %}
-<table class="table">
-<tr>
-<td>ID</td><td>Link</td>
-    <td>Customer</td>
-    <td>created</td>
-    <td>last_updated</td>
-    <td>rate</td>
-    <td>Currency</td>
-    <td>Cash/Credit</td>
-    <td>balance</td>
-    <td>status</td>
-    <td>Received</td>
-    <td>Action</td>
-</tr>
-{% for object in filter.qs %}
-<tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.customer }}</td>
-    <td>{{ object.created }}</td>
-    <td>{{ object.last_updated }}</td>
-    <td>{{ object.rate }}</td>
-    <td>{{ object.balancetype }}</td>
-    <td>{{ object.paymenttype }}</td>
-    <td>{{ object.balance }}</td>
-    <td>{{ object.status }}</td>
-    <td>{{object.get_total_receipts}}</td>
-    <td><a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.slug%}">Delete</a></td>
-</tr>
-{% endfor %}
-</table><a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">Create new Invoice</a>
+<div class="table-responsive-sm">
+{% render_table table 'django_tables2/bootstrap.html'  %}
+</div>
 
 {% endblock %}

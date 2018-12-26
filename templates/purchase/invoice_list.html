@@ -1,49 +1,29 @@
 {% extends "_base.html" %}
 {% load static %}
+{%load django_tables2%}
 {%load bootstrap4%}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'purchase_invoice_list' %}">Purchase Listing</a>
-<a class="btn btn-primary" href="{% url 'purchase_invoice_create' %}">Create new Invoice</a></p>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Purchase Invoice</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+     <a class="btn btn-primary mr-2" href="{% url 'purchase_invoice_create' %}" role="button">Add Purchase</a>
+     <a class="btn btn-primary mr-2" href="{% url 'purchase_invoice_list' %}" role="button">Purchase List</a>
+     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
+
+    </div>
+  </div>
+</div>
+
 {% if filter %}
     <form action="" method="get" class="form form-inline mb-4">
         {% bootstrap_form filter.form layout='inline' %}
         {% bootstrap_button 'filter' %}
     </form>
 {% endif %}
-<table class="table table-striped table-bordered table-hover">
-  <thead class="thead-dark">
-    <tr>
-        <th>ID</th>
-        <th>Slug</th>
-        <th>Supplier</th>
-        <th>created</th>
-        <th>last_updated</th>
-        <th>rate</th>
-        <th>balancetype</th>
-        <th>paymenttype</th>
-        <th>balance</th>
-        <th>status</th>
-        <th>Paid</th>
-        <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-{% for object in filter.qs %}
-<tr>
-    <td><a href="{{object.get_absolute_url}}">{{object.pk}}</a></td>
-    <td>{{object.slug}}</td>
-    <td>{{ object.supplier }}</td>
-    <td>{{ object.created }}</td>
-    <td>{{ object.last_updated }}</td>
-    <td>{{ object.rate }}</td>
-    <td>{{ object.balancetype }}</td>
-    <td>{{ object.paymenttype }}</td>
-    <td>{{ object.balance }}</td>
-    <td>{{ object.status }}</td>
-    <td>{{object.get_total_payments}}</td>
-    <td><a class="btn btn-danger" href="{% url 'purchase_invoice_delete' object.slug%}">Delete</a></td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+<div class="table-responsive-sm">
+{% render_table table 'django_tables2/bootstrap.html'  %}
+</div>
+
 {% endblock %}

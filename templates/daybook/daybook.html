@@ -2,15 +2,16 @@
 {% load static %}
 {% block content %}
 <div class="container">
+  <h2 class="text-center">{% now "jS F Y H:i" %}</h2>
   <div class="row">
     <div class="col">
-      <div class="table-responsive">
-        <h1><span class="badge badge-success">Cash Jama </span></h1>
-        <table class="table">
+      <div class="card table-responsive">
+        <h1 class="text-center"><span class="badge badge-success">Jama </span></h1>
+        <table class="table table-striped">
           <thead class="thead-light">
             <tr>
               <th scope="col"></th>
-              <th scope="col">Account</th>
+              <th scope="col">Type</th>
               <th scope="col">Details</th>
             </tr>
           </thead>
@@ -19,57 +20,43 @@
               <th scope="row">{{daybook.receipt.cashtotal.t}}</th>
               <td>Cash</td>
               <td>{%for customer in daybook.receipt.cash%} {{customer.customer.name}}({{customer.total}}) {%endfor%}</td>
-
             </tr>
             <tr>
-              <th scope="row">{{daybook.cashsale.metal.t}}</th>
+              <th scope="row">{{daybook.receipt.metaltotal.t}}</th>
               <td>Metal</td>
-              <td>Thornton</td>
-
+              <td>{%for customer in daybook.receipt.metal%} {{customer.customer.name}}({{customer.total}}) {%endfor%}</td>
             </tr>
-
           </tbody>
         </table>
       </div>
     </div>
     <div class="col">
-      <div class="table-responsive">
-        <h1><span class="badge badge-danger">Cash Nave</span></h1>
-        <table class="table">
+      <div class="card table-responsive">
+        <h1 class="text-center"><span class="badge badge-danger">Nave</span></h1>
+        <table class="table table-striped">
           <thead class="thead-light">
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">First</th>
-              <th scope="col">Last</th>
-              <th scope="col">Handle</th>
+              <th scope="col"></th>
+              <th scope="col">Type</th>
+              <th scope="col">Details</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
+              <th scope="row">{{daybook.payment.cashtotal.t}}</th>
+              <td>Cash</td>
+              <td>{%for supplier in daybook.payment.cash%} {{supplier.supplier.name}}({{supplier.total}}) {%endfor%}</td>
             </tr>
             <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Larry</td>
-              <td>the Bird</td>
-              <td>@twitter</td>
+              <th scope="row">{{daybook.payment.metaltotal.t}}</th>
+              <td>Metal</td>
+              <td>{%for supplier in daybook.payment.metal%} {{supplier.supplier.name}}({{supplier.total}}) {%endfor%}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
-
 </div>
 
 {%endblock%}

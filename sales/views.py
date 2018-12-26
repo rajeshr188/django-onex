@@ -10,6 +10,10 @@ from .render import Render
 from num2words import num2words
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
 from django.shortcuts import render
+from django_tables2 import RequestConfig
+from django_tables2.views import SingleTableMixin
+from django_tables2.export.views import ExportMixin
+from .tables import InvoiceTable,ReceiptTable
 
 def print_invoice(request,id):
     invoice=Invoice.objects.get(id=id)
@@ -35,10 +39,12 @@ def list_balance(request):
     context={'balance':balance}
     return render(request,'sales/balance_list.html',context)
 
-class InvoiceListView(FilterView):
+class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     model = Invoice
+    table_class = InvoiceTable
     filterset_class = InvoiceFilter
     template_name = 'sales/invoice_list.html'
+    paginate_by = 25
 
 class InvoiceCreateView(CreateView):
     model = Invoice
@@ -153,11 +159,13 @@ class InvoiceItemDeleteView(DeleteView):
     model = InvoiceItem
     success_url = reverse_lazy('sales_invoiceitem_list')
 
-class ReceiptListView(FilterView):
+class ReceiptListView(ExportMixin,SingleTableMixin,FilterView):
     model = Receipt
+    table_class=ReceiptTable
     filterset_class = ReceiptFilter
     template_name = 'sales/receipt_list.html'
-
+    paginate_by = 25
+    
 class ReceiptCreateView(CreateView):
     model = Receipt
     form_class = ReceiptForm
@@ -216,7 +224,7 @@ class ReceiptCreateView(CreateView):
                     invtopay.status="PartiallyPaid"
                     remaining=0
                 invtopay.save()
-                
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, receiptline_form):

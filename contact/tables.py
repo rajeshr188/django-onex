@@ -44,7 +44,6 @@ class SupplierTable(tables.Table):
         return 'Delete'
     class Meta:
         model = Supplier
-        fields = ('pic','id','name','phonenumber','organisation'
-                    )
+        fields = ('pic','id','name','phonenumber','organisation','initial')
         attrs = {"class": "table table-striped table-bordered"}
-        empty_text = "There are no customers matching the search criteria..."
+        empty_text = "There are no suppliers matching the search criteria..."

@@ -85,7 +85,7 @@ class InvoiceItem(models.Model):
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
     quantity = models.IntegerField()
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant,
@@ -127,7 +127,7 @@ class Payment(models.Model):
     weight = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     touch = DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
     nettwt = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
 
     # Relationship Fields

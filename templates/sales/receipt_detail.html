@@ -2,9 +2,12 @@
 {% load static %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'sales_receipt_list' %}">Receipt Listing</a>
+  <a class="btn btn-primary" href="{% url 'sales_receipt_create' %}">Add Receipt </a>
 <a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a></p>
 <table class="table">
+<tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>customer</td><td>{{ object.customer }}</td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>type</td><td>{{ object.type }}</td></tr>
@@ -15,12 +18,13 @@
 {% if object.receiptline_set %}
 <table class="table table-sm">
   <thead>
-    <tr><th>Invoice</th><th>Amount Received</th></tr>
+    <tr><th>Invoice</th><th>Status</th><th>Amount Received</th></tr>
   </thead>
 {% for i in object.receiptline_set.all %}
 
   <tr>
-    <td>{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.customer.name}}/{{i.invoice.balance}}</td><td>{{i.amount}}</td>
+    <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.customer.name}}/{{i.invoice.balance}}</a></td>
+    <td>{{i.invoice.status}}</td><td>{{i.amount}}</td>
   </tr>
 
 {%endfor%}

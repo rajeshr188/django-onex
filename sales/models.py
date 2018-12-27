@@ -25,7 +25,7 @@ class Invoice(models.Model):
     slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    rate = models.PositiveSmallIntegerField()
+    rate = models.PositiveSmallIntegerField(default=3000)
     btype_choices=(
             ("Cash","Cash"),
             ("Metal","Metal")
@@ -34,8 +34,8 @@ class Invoice(models.Model):
         ("Cash","Cash"),
         ("Credit","Credit")
     )
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
-    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Cash")
+    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Metal")
+    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
                     ("Draft","Draft"),
@@ -126,8 +126,8 @@ class Receipt(models.Model):
     weight = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     touch = DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
     nettwt = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField(max_length=100)
+    total = models.DecimalField(max_digits=10, decimal_places=3)
+    description = models.TextField(max_length=100,default="describe here")
 
     # Relationship Fields
     customer = models.ForeignKey(
@@ -143,7 +143,6 @@ class Receipt(models.Model):
 
     def get_absolute_url(self):
         return reverse('sales_receipt_detail', args=(self.slug,))
-
 
     def get_update_url(self):
         return reverse('sales_receipt_update', args=(self.slug,))

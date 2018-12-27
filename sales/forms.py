@@ -10,7 +10,7 @@ class InvoiceForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:
         model = Invoice
-        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer']
+        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 
 class InvoiceItemForm(forms.ModelForm):
@@ -29,7 +29,7 @@ class ReceiptForm(forms.ModelForm):
 
     class Meta:
         model = Receipt
-        fields = ['customer','type', 'weight','touch','nettwt','rate','total', 'description']
+        fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description']
 
 class ReceiptLineForm(forms.ModelForm):
     # invoice=forms.ModelChoiceField(

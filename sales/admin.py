@@ -11,8 +11,8 @@ class InvoiceAdminForm(forms.ModelForm):
 
 class InvoiceAdmin(admin.ModelAdmin):
     form = InvoiceAdminForm
-    list_display = ['slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
-    readonly_fields = ['slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
+    list_display = ['id','slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
+
 
 admin.site.register(Invoice, InvoiceAdmin)
 
@@ -41,9 +41,7 @@ class ReceiptAdminForm(forms.ModelForm):
 
 class ReceiptAdmin(admin.ModelAdmin):
     form = ReceiptAdminForm
-    list_display = ['slug', 'created', 'last_updated', 'type', 'total', 'description']
-    readonly_fields = ['slug', 'created', 'last_updated', 'type', 'total', 'description']
+    list_display = ['id','slug', 'created', 'last_updated', 'type', 'total', 'description']
+
 
 admin.site.register(Receipt, ReceiptAdmin)
-
-

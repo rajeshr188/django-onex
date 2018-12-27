@@ -13,9 +13,10 @@
     <th>Cash Balance</th>
 </tr></thead>
 <tbody>
+
 {% for object in balance %}
 <tr>
-    <td>{{object.name}}</td>
+    <td><a href="{% url 'contact_customer_detail' object.slug%}">{{object.name}}  {{object.area}}</a></td>
     <td>{{object.gbal}}</td>
     <td>{{object.grec}}</td>
     <td>{{object.gold}}</td>
@@ -24,6 +25,15 @@
     <td>{{object.cash}}</td>
 </tr>
 {% endfor %}
+<tr class="table-success">
+  <td><strong>Total</strong></td>
+  <td><strong>{{goldbal.t}}</strong></td>
+  <td><strong>{{goldrec.t}}</strong></td>
+  <td><strong>{{gbal}}</strong></td>
+  <td><strong>{{cashbal.t}}</strong></td>
+  <td><strong>{{cashrec.t}}</strong></td>
+  <td><strong>{{cbal}}</strong></td>
+</tr>
 </tbody>
 </table>
 {% endblock %}

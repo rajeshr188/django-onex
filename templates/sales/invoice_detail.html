@@ -2,9 +2,13 @@
 {% load static %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a>
+  <a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.slug %}">Delete</a>
+  <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Invoice</a>
   <a class="btn btn-secondary" href="{% url 'invoicepdf'  object.id %}">Print</a></p>
 <table class="table">
+<tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>Customer</td><td>{{ object.customer }}</td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>rate</td><td>{{ object.rate }}</td></tr>
@@ -37,11 +41,12 @@
 <table class="table table-sm table-striped">
   <thead>
     <tr>
-      <th>created</th><th>amount</th>
+      <th>ReceiptId</th> <th>Status</th><th>amount</th>
     </tr>
   </thead>
   {% for i in object.receiptline_set.all %}
   <tr>
+    <td><a href="{% url 'sales_receipt_detail' i.receipt.slug %}">{{i.receipt.id}}</a></td>
     <td>{{i.created}}</td>
     <td>{{i.amount}}</td>
 

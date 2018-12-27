@@ -35,8 +35,15 @@ def list_balance(request):
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
     balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
 
-
-    context={'balance':balance}
+    goldbal=Invoice.objects.filter(balancetype="Metal").aggregate(t=Sum('balance'))
+    cashbal=Invoice.objects.filter(balancetype="Cash").aggregate(t=Sum('balance'))
+    goldrec=Receipt.objects.filter(type="Metal").aggregate(t=Sum('total'))
+    cashrec=Receipt.objects.filter(type="Cash").aggregate(t=Sum('total'))
+    cbal=cashbal['t']-cashrec['t']
+    gbal=goldbal['t']-goldrec['t']
+    context={'balance':balance,
+     'goldbal':goldbal,'goldrec':goldrec,'cashbal':cashbal,'cashrec':cashrec,'gbal':gbal,'cbal':cbal,
+    }
     return render(request,'sales/balance_list.html',context)
 
 class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
@@ -165,7 +172,7 @@ class ReceiptListView(ExportMixin,SingleTableMixin,FilterView):
     filterset_class = ReceiptFilter
     template_name = 'sales/receipt_list.html'
     paginate_by = 25
-    
+
 class ReceiptCreateView(CreateView):
     model = Receipt
     form_class = ReceiptForm
@@ -236,10 +243,8 @@ class ReceiptCreateView(CreateView):
             self.get_context_data(form=form,
                                   receiptline_form=receiptline_form))
 
-
 class ReceiptDetailView(DetailView):
     model = Receipt
-
 
 class ReceiptUpdateView(UpdateView):
     model = Receipt
@@ -254,5 +259,5 @@ class ReceiptLineCreateView(CreateView):
     form_class = ReceiptLineForm
 
 class ReceiptLineDeleteView(DeleteView):
-    model = Receipt
+    model = ReceiptLine
     success_url = reverse_lazy('sales_receiptline_list')

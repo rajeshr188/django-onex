@@ -12,6 +12,10 @@
               {{ form.customer.errors }}
               {% bootstrap_field form.customer %}
             </div>
+            <div class="form-group col-md-4">
+              {{ form.created.errors }}
+              {% bootstrap_field form.created %}
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-4">
@@ -73,7 +77,7 @@
 
             </div>
 
-        <button class="btn btn-primary" type="submit">Save Invoice</button>
+        <button class="btn btn-primary" type="submit">Save Receipt</button>
     </form>
 
 <script>

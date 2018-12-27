@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 class InvoiceTable(tables.Table):
     id = tables.LinkColumn('purchase_invoice_detail',args=[A('slug')])
-    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('slug')])
+    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('supplier.slug')])
     paid = tables.Column(accessor='get_total_payments',verbose_name="Paid",orderable=False)
     edit = tables.LinkColumn('purchase_invoice_update', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     delete = tables.LinkColumn('purchase_invoice_delete', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
@@ -30,11 +30,7 @@ class InvoiceTable(tables.Table):
 
 class PaymentTable(tables.Table):
     id = tables.LinkColumn('purchase_payment_detail',args=[A('slug')])
-    # created = tables.Column()
-    # type=tables.Column()
-    # total=tables.Column()
-    # description=tables.Column()
-    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('slug')])
+    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('supplier.slug')])
     edit = tables.LinkColumn('purchase_payment_update', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     delete = tables.LinkColumn('purchase_payment_delete', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 

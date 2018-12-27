@@ -44,7 +44,7 @@
           <tbody>
             {% for inv in supplier.suppliers.all   %}
                 <tr class="text-center">
-                      <td>{{inv.id}} </td>
+                      <td><a href="{% url 'sales_invoice_detail' inv.slug%}">{{inv.id}}</a> </td>
                       <td>{{inv.created|date}}</td>
                       <td>{{inv.customer.name}}</td>
                       <td>{{inv.balancetype}}</td>

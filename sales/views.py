@@ -1,5 +1,5 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
-from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
+from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month
 from contact.models import Customer
 from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,ReceiptLineForm,ReceiptLineFormSet
 from django.http import HttpResponseRedirect,HttpResponse
@@ -8,13 +8,15 @@ from django_filters.views import FilterView
 from .filters import InvoiceFilter,ReceiptFilter
 from .render import Render
 from num2words import num2words
-from django.db.models import  Sum,Q,F,OuterRef,Subquery
+from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import render
 from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
 
+from django.http import JsonResponse
 def print_invoice(request,id):
     invoice=Invoice.objects.get(id=id)
     params={'invoice':invoice}
@@ -30,21 +32,32 @@ def list_balance(request):
     receipts=Receipt.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
     grec=receipts.annotate(grec=Sum('total',filter=Q(type='Metal'))).values('grec')
     crec=receipts.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
+
     invoices=Invoice.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+
     balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
 
-    goldbal=Invoice.objects.filter(balancetype="Metal").aggregate(t=Sum('balance'))
-    cashbal=Invoice.objects.filter(balancetype="Cash").aggregate(t=Sum('balance'))
-    goldrec=Receipt.objects.filter(type="Metal").aggregate(t=Sum('total'))
-    cashrec=Receipt.objects.filter(type="Cash").aggregate(t=Sum('total'))
-    cbal=cashbal['t']-cashrec['t']
-    gbal=goldbal['t']-goldrec['t']
-    context={'balance':balance,
-     'goldbal':goldbal,'goldrec':goldrec,'cashbal':cashbal,'cashrec':cashrec,'gbal':gbal,'cbal':cbal,
+    balance_total = balance.aggregate(gbal_total = Sum(F('gbal')),grec_total = Sum(F('grec')),cbal_total = Sum(F('cbal')),crec_total = Sum(F('crec')))
+    balance_nett_gold = balance_total['gbal_total']-balance_total['grec_total']
+    balance_nett_cash = balance_total['cbal_total']-balance_total['crec_total']
+
+    balance_by_month = Invoice.objects.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
+
+    context={'balance':balance,'balance_total':balance_total,'balance_nett_gold':balance_nett_gold,'balance_nett_cash':balance_nett_cash,
+                'balance_by_month':balance_by_month,
+
     }
     return render(request,'sales/balance_list.html',context)
+
+def graph(request):
+    return render(request, 'sales/graph.html')
+
+
+def sales_count_by_month(request):
+    data = Invoice.objects.extra(select={'date': 'DATE(created)'},order_by=['date']).values('date').annotate(count_items=Count('id'))
+    return JsonResponse(list(data), safe=False)
 
 class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     model = Invoice

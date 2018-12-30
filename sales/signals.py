@@ -6,6 +6,10 @@ from sales.models import Invoice,Receipt,ReceiptLine
 def delete_status(sender,instance,*args,**kwargs):
     print ('deleting invoice status')
     inv=instance.invoice
-    inv.status="unpaid"
+    if inv.balance-instance.amount == 0:
+        inv.status = "Unpaid"
+    elif inv.balance-instance.amount > 0:
+        inv.status = "PartiallyPaid"
+    else :
+        inv.status = "Error"
     inv.save()
-    print ("invoice status afterdelete {inv.status}")

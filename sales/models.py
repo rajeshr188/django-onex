@@ -17,7 +17,12 @@ from django_extensions.db import fields as extension_fields
 from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
-from django.db.models import Avg,Count,Sum
+from django.db.models import Avg,Count,Sum,Func,F
+
+class Month(Func):
+    function = 'EXTRACT'
+    template = '%(function)s(MONTH from %(expressions)s)'
+    output_field = models.IntegerField()
 
 class Invoice(models.Model):
 

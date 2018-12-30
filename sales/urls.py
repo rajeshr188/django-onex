@@ -26,6 +26,8 @@ urlpatterns += (
 )
 urlpatterns+=(
             path('sales/balance/',views.list_balance,name='sales_balance'),
+            path('sales/graph/',views.graph,name='graph'),
+            path('sales/sales_count_by_month/',views.sales_count_by_month,name='sales_count_by_month'),
             )
 urlpatterns += (
     # urls for InvoiceItem

@@ -1,39 +1,96 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<table class="table table-striped table-bordered">
-<thead class="thead-dark">
-<tr>
-    <th>Customer</th>
-    <th>Gold Credit</th>
-    <th>Paid Debit</th>
-    <th>Gold Balance</th>
-    <th>Cash Credit</th>
-    <th>Cash Debit</th>
-    <th>Cash Balance</th>
-</tr></thead>
-<tbody>
+<div class="row">
+  <div class="col-3">
+    <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+      <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Customer-wise</a>
+      <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">Month-wise</a>
+    </div>
+  </div>
+  <div class="col-9">
+    <div class="tab-content" id="v-pills-tabContent">
+      <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+          <thead class="thead-dark">
+          <tr>
+              <th>Customer</th>
+              <th>Gold Credit</th>
+              <th>Paid Debit</th>
+              <th>Gold Balance</th>
+              <th>Cash Credit</th>
+              <th>Cash Debit</th>
+              <th>Cash Balance</th>
+          </tr></thead>
+          <tbody>
 
-{% for object in balance %}
-<tr>
-    <td><a href="{% url 'contact_customer_detail' object.slug%}">{{object.name}}  {{object.area}}</a></td>
-    <td>{{object.gbal}}</td>
-    <td>{{object.grec}}</td>
-    <td>{{object.gold}}</td>
-    <td>{{object.cbal}}</td>
-    <td>{{object.crec}}</td>
-    <td>{{object.cash}}</td>
-</tr>
-{% endfor %}
-<tr class="table-success">
-  <td><strong>Total</strong></td>
-  <td><strong>{{goldbal.t}}</strong></td>
-  <td><strong>{{goldrec.t}}</strong></td>
-  <td><strong>{{gbal}}</strong></td>
-  <td><strong>{{cashbal.t}}</strong></td>
-  <td><strong>{{cashrec.t}}</strong></td>
-  <td><strong>{{cbal}}</strong></td>
-</tr>
-</tbody>
-</table>
+          {% for object in balance %}
+          <tr>
+              <td><a href="{% url 'contact_customer_detail' object.slug%}">{{object.name}}  {{object.area}}</a></td>
+              <td>{{object.gbal}}</td>
+              <td>{{object.grec}}</td>
+              <td>{{object.gold}}</td>
+              <td>{{object.cbal}}</td>
+              <td>{{object.crec}}</td>
+              <td>{{object.cash}}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-success">
+            <td><strong>Total</strong></td>
+            <td><strong>{{balance_total.gbal_total}}</strong></td>
+            <td><strong>{{balance_total.grec_total}}</strong></td>
+            <td><strong>{{balance_nett_gold}}</strong></td>
+            <td><strong>{{balance_total.cbal_total}}</strong></td>
+            <td><strong>{{balance_total.crec_total}}</strong></td>
+            <td><strong>{{balance_nett_cash}}</strong></td>
+          </tr>
+          </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+        here goes month wise...
+
+        <div class="accordion" id="accordionExample">
+          <div class="card">
+            <div class="card-header" id="headingOne">
+              <h2 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Collapsible Group Item #1
+                </button>
+              </h2>
+            </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+              <div class="card-body">
+                {% for i in balance_by_month_cash %}
+                Month: {{i.month}} {{i.balancetype}} Balance :{{i.tc}}<br/>
+                {%endfor%}
+                <br/>
+                {% for i in balance_by_month_metal %}
+                Month :{{i.month}} {{i.balancetype}} Balance :{{i.tm}}<br/>
+                {%endfor%}
+                <br />
+                {% for i in result_list %}
+                Month :{{i.month}} {{i.balancetype}} Balance :{{i.tm}}<br/>
+                {%endfor%}
+                <br />
+                {% for k,g in group_dict %}
+                Month :{{k}} {{g}}<br/>
+                {%endfor%}
+                <hr />
+                {% for k in balance_by_month %}
+                {{k}}<br/>
+                {%endfor%}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

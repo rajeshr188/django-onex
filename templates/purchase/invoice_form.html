@@ -37,6 +37,8 @@
         <div class="form-group row">
           {{ form.rate.errors }}
           <div class="col-sm-4">{% bootstrap_field form.rate %}</div>
+          {{ form.rate.status }}
+          <div class="col-sm-4">{% bootstrap_field form.status %}</div>
         </div>
 
         {{ invoiceitem_form.management_form }}

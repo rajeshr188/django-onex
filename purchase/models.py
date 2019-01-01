@@ -25,7 +25,7 @@ class Invoice(models.Model):
     slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    rate = models.PositiveSmallIntegerField()
+    rate = models.PositiveSmallIntegerField(default=3000)
     btype_choices=(
             ("Cash","Cash"),
             ("Metal","Metal")
@@ -34,8 +34,8 @@ class Invoice(models.Model):
         ("Cash","Cash"),
         ("Credit","Credit")
     )
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
-    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Cash")
+    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Metal")
+    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
                     ("Draft","Draft"),

@@ -110,6 +110,7 @@
               <th scope="col">Cash/Credit</th>
               <th scope="col">Currency</th>
               <th scope="col">Balance</th>
+              <th scope="col">Status</th>
               <th scope="col">Action</th>
             </tr>
           </thead>
@@ -121,7 +122,8 @@
                       <td>{{inv.customer.name}}</td>
                       <td>{{inv.balancetype}}</td>
                       <td>{{inv.paymenttype}} </td>
-                      <td>{{inv.balance}} </td>
+                      <td>{{inv.balance}}/{{inv.get_total_receipts}} </td>
+                      <td>{{inv.status}}</td>
                       <td></td>
                 </tr>
             {%endfor %}
@@ -144,7 +146,7 @@
           <tbody>
             {% for rec in customer.receivedfrom.all   %}
                 <tr class="text-center">
-                      <td>{{rec.id}} </td>
+                      <td><a href="{% url 'sales_receipt_detail' rec.slug %}">{{rec.id}} </a></td>
                       <td>{{rec.created|date}}</td>
                       <td>{{rec.type}}</td>
                       <td>{{rec.total}} </td>

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 from import_export import fields,resources
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget
 from .models import Customer, Supplier
 
@@ -16,7 +16,7 @@ class CustomerAdminForm(forms.ModelForm):
         model = Customer
         fields = '__all__'
 
-class CustomerAdmin(ImportExportModelAdmin):
+class CustomerAdmin(ImportExportActionModelAdmin):
     form = CustomerAdminForm
     resource_class=CustomerResource
     list_display = ['name', 'id', 'created', 'last_updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
@@ -24,6 +24,10 @@ class CustomerAdmin(ImportExportModelAdmin):
 
 admin.site.register(Customer, CustomerAdmin)
 
+class SupplierResource(resources.ModelResource):
+
+    class Meta:
+        model = Supplier
 
 class SupplierAdminForm(forms.ModelForm):
 
@@ -32,8 +36,9 @@ class SupplierAdminForm(forms.ModelForm):
         fields = '__all__'
 
 
-class SupplierAdmin(admin.ModelAdmin):
+class SupplierAdmin(ImportExportActionModelAdmin):
     form = SupplierAdminForm
+    resource_class = SupplierResource
     list_display = ['name', 'slug', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
     readonly_fields = ['name', 'slug', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
 

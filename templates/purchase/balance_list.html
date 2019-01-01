@@ -15,7 +15,7 @@
 <tbody>
 {% for object in balance %}
 <tr>
-    <td>{{object.name}}</td>
+    <td><a href ="{%url 'contact_supplier_detail' object.slug%}">{{object.name}}</a></td>
     <td>{{object.gbal}}</td>
     <td>{{object.grec}}</td>
     <td>{{object.gold}}</td>

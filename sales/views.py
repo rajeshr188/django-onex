@@ -37,7 +37,7 @@ def list_balance(request):
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
 
-    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
+    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).order_by('name')
 
     balance_total = balance.aggregate(gbal_total = Sum(F('gbal')),grec_total = Sum(F('grec')),cbal_total = Sum(F('cbal')),crec_total = Sum(F('crec')))
     balance_nett_gold = balance_total['gbal_total']-balance_total['grec_total']

@@ -10,7 +10,7 @@ class InvoiceForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Supplier.objects.all(),widget=Select2Widget)
     class Meta:
         model = Invoice
-        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier']
+        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier','status']
 
 
 class InvoiceItemForm(forms.ModelForm):

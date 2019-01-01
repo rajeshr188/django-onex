@@ -36,7 +36,7 @@ def list_balance(request):
 
 
     context={'balance':balance}
-    return render(request,'sales/balance_list.html',context)
+    return render(request,'purchase/balance_list.html',context)
 
 class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     model = Invoice
@@ -240,8 +240,12 @@ class PaymentUpdateView(UpdateView):
 
 class PaymentDeleteView(DeleteView):
     model = Payment
-    success_url = reverse_lazy('purchase_payment_delete')
+    success_url = reverse_lazy('purchase_payment_list')
 
 class PaymentLineCreateView(CreateView):
     model = PaymentLine
     form_class = PaymentLineForm
+
+class PaymentLineDeleteView(DeleteView):
+    model = PaymentLine
+    success_url = reverse_lazy('purchase_paymentline_list')

@@ -49,7 +49,7 @@
                       <td>{{inv.customer.name}}</td>
                       <td>{{inv.balancetype}}</td>
                       <td>{{inv.paymenttype}} </td>
-                      <td>{{inv.balance}} </td>
+                      <td>{{inv.balance}}/{{inv.get_total_payments}} </td>
                       <td></td>
                 </tr>
             {%endfor %}
@@ -72,7 +72,7 @@
           <tbody>
             {% for rec in supplier.supplier.all   %}
                 <tr class="text-center">
-                      <td>{{rec.id}} </td>
+                      <td><a href = "{% url 'purchase_payment_detail' rec.slug %}">{{rec.id}} </a></td>
                       <td>{{rec.created|date}}</td>
                       <td>{{rec.type}}</td>
                       <td>{{rec.total}} </td>

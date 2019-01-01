@@ -8,7 +8,7 @@
 <table class="table">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>slug</td><td>{{ object.slug }}</td></tr>
-<tr><td>Customer</td><td>{{ object.customer }}</td></tr>
+<tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.slug%}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>rate</td><td>{{ object.rate }}</td></tr>

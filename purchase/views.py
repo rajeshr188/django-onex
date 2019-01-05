@@ -207,9 +207,9 @@ class PaymentCreateView(CreateView):
             except IndexError:
                 invtopay = None
             if invtopay !=None :
-                if remaining >= invtopay.balance :
-                    remaining -= invtopay.balance
-                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.balance)
+                if remaining >= invtopay.get_balance() :
+                    remaining -= invtopay.get_balance()
+                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.get_balance())
                     invtopay.status="Paid"
                 else :
                     PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=remaining)

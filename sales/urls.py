@@ -20,7 +20,7 @@ urlpatterns += (
     path('sales/invoice/', views.InvoiceListView.as_view(), name='sales_invoice_list'),
     path('sales/invoice/create/', views.InvoiceCreateView.as_view(), name='sales_invoice_create'),
     path('sales/invoice/detail/<slug:slug>/', views.InvoiceDetailView.as_view(), name='sales_invoice_detail'),
-    path('sales/invoice/detail/<int:id>/pdf', views.print_invoice,name='invoicepdf'),
+    path('sales/invoice/detail/<int:id>/pdf', views.print_invoice,name='sales_invoicepdf'),
     path('sales/invoice/update/<slug:slug>/', views.InvoiceUpdateView.as_view(), name='sales_invoice_update'),
     path('sales/invoice/delete/<slug:slug>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
 )

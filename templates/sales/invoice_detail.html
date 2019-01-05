@@ -4,8 +4,8 @@
 <p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a>
   <a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.slug %}">Delete</a>
   <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Invoice</a>
-  <a class="btn btn-secondary" href="{% url 'invoicepdf'  object.id %}">Print</a></p>
-<table class="table">
+  <a class="btn btn-secondary" href="{% url 'sales_invoicepdf'  object.id %}">Print</a></p>
+<table class="table table-sm table-striped table-bordered">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>slug</td><td>{{ object.slug }}</td></tr>
 <tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.slug%}">{{ object.customer }}</a></td></tr>

@@ -219,31 +219,35 @@ class ReceiptCreateView(CreateView):
         for item in items:
             if item.invoice.balance == item.amount :
                 invpaid += item.amount
-                # Invoice.objects.filter(id=item.invoice.id).update(status="Paid")
                 item.invoice.status="Paid"
                 item.invoice.save()
             elif item.invoice.balance > item.amount:
                 invpaid += item.amount
-                # Invoice.objects.filter(id=item.invoice.id).update(status="PartiallyPaid")
                 item.invoice.status="PartiallyPaid"
                 item.invoice.save()
 
         remaining=amount-invpaid
-        while remaining>0 :
+
+        try:
+            invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+        except IndexError:
+            invtopay = None
+
+        while remaining>0 and invtopay !=None:
+
+            if remaining >= invtopay.get_balance() :
+                remaining -= invtopay.get_balance()
+                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.get_balance())
+                invtopay.status="Paid"
+            else :
+                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
+                invtopay.status="PartiallyPaid"
+                remaining=0
+            invtopay.save()
             try:
                 invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
             except IndexError:
                 invtopay = None
-            if invtopay !=None :
-                if remaining >= invtopay.balance :
-                    remaining -= invtopay.balance
-                    ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.balance)
-                    invtopay.status="Paid"
-                else :
-                    ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
-                    invtopay.status="PartiallyPaid"
-                    remaining=0
-                invtopay.save()
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -259,9 +263,81 @@ class ReceiptCreateView(CreateView):
 class ReceiptDetailView(DetailView):
     model = Receipt
 
-class ReceiptUpdateView(UpdateView):
+# class ReceiptUpdateView(UpdateView):
+#     model = Receipt
+#     form_class = ReceiptForm
+
+class ReceiptUpdateView(CreateView):
     model = Receipt
     form_class = ReceiptForm
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        receiptline_form = ReceiptLineFormSet(instance=self.object)
+
+        return self.render_to_response(
+            self.get_context_data(form=form,
+                                  receiptline_form=receiptline_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        receiptline_form = ReceiptLineFormSet(self.request.POST,instance=self.object)
+        if (form.is_valid() and receiptline_form.is_valid()):
+            return self.form_valid(form, receiptline_form)
+        else:
+            return self.form_invalid(form, receiptline_form)
+
+    def form_valid(self, form, receiptline_form):
+        self.object = form.save()
+        receiptline_form.instance = self.object
+        items=receiptline_form.save()
+        amount=self.object.total
+        invpaid = self.object.get_line_totals()
+        # experimental
+        for item in items:
+            if item.invoice.balance == item.amount :
+                invpaid += item.amount
+                item.invoice.status="Paid"
+                item.invoice.save()
+            elif item.invoice.balance > item.amount:
+                invpaid += item.amount
+                item.invoice.status="PartiallyPaid"
+                item.invoice.save()
+        # end experimental
+        remaining=amount-invpaid
+        try:
+            invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+        except IndexError:
+            invtopay = None
+        while remaining>0 and invtopay !=None:
+            if remaining >= invtopay.get_balance() :
+                remaining -= invtopay.get_balance()
+                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.get_balance())
+                invtopay.status="Paid"
+            else :
+                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
+                invtopay.status="PartiallyPaid"
+                remaining=0
+            invtopay.save()
+            try:
+                invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+            except IndexError:
+                invtopay = None
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form, receiptline_form):
+        """
+        Called if a form is invalid. Re-renders the context data with the
+        data-filled forms and errors.
+        """
+        return self.render_to_response(
+            self.get_context_data(form=form,
+                                  receiptline_form=receiptline_form))
 
 class ReceiptDeleteView(DeleteView):
     model = Receipt

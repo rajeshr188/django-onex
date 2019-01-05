@@ -3,7 +3,6 @@ from django_extensions.db.fields import AutoSlugField
 from django.db.models import CharField
 from django.db.models import DateTimeField
 from django.db.models import TextField
-from django_extensions.db.fields import AutoSlugField
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType

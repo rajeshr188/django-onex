@@ -38,7 +38,7 @@ class ReceiptLineForm(forms.ModelForm):
     #                                 model=Invoice,search_fields=['name__icontains'],dependent_fields={'customer':'customer'}),
     # )
     invoice=forms.ModelChoiceField(
-                                    queryset=Invoice.objects.filter(Q(status="Unpaid")|Q(status="PartiallyPaid")),
+                                    queryset=Invoice.objects.all(),
                                     widget=Select2Widget,
     )
     class Meta:

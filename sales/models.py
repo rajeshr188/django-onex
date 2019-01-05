@@ -152,6 +152,10 @@ class Receipt(models.Model):
     def get_update_url(self):
         return reverse('sales_receipt_update', args=(self.slug,))
 
+    def get_line_totals(self):
+        linetotal=self.receiptline_set.aggregate(t=Sum('amount'))
+        return linetotal['t']
+
 class ReceiptLine(models.Model):
     slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)

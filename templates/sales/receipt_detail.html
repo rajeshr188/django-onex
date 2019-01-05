@@ -1,30 +1,35 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'sales_receipt_list' %}">Receipt Listing</a>
+<p><a class="btn btn-secondary" href="{% url 'sales_receipt_list' %}">Receipt Listing</a>
   <a class="btn btn-primary" href="{% url 'sales_receipt_create' %}">Add Receipt </a>
-<a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a></p>
-<table class="table">
+  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Receipt</a>
+  <a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a>
+  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.slug%}">Delete</a></p>
+<table class="table table-sm table-striped table-bordered">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>slug</td><td>{{ object.slug }}</td></tr>
 <tr><td>customer</td><td>{{ object.customer }}</td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>type</td><td>{{ object.type }}</td></tr>
-<tr><td>total</td><td>{{ object.total }}</td></tr>
+<tr><td>Total Received</td><td>{{ object.total }}</td></tr>
+<tr><td>Total Allotted</td><td>{{object.get_line_totals}}<td></tr>
 <tr><td>description</td><td>{{ object.description }}</td></tr>
 </table>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Receipt</a>
+
 {% if object.receiptline_set %}
-<table class="table table-sm">
+<table class="table table-sm table-striped table-bordered">
   <thead>
-    <tr><th>Invoice</th><th>Status</th><th>Amount Received</th></tr>
+    <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
   </thead>
 {% for i in object.receiptline_set.all %}
 
   <tr>
     <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.customer.name}}/{{i.invoice.balance}}</a></td>
-    <td>{{i.invoice.status}}</td><td>{{i.amount}}</td>
+    <td>{{i.invoice.status}}</td>
+    <td>{{i.amount}}</td>
+    <td>{{i.get_balance()}}</td>
   </tr>
 
 {%endfor%}

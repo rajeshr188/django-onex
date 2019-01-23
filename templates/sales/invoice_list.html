@@ -22,8 +22,9 @@
         {% bootstrap_button 'filter' %}
     </form>
 {% endif %}
+records returned :{{filter.qs.count}}
 <div class="table-responsive-sm">
-{% render_table table 'django_tables2/bootstrap.html'  %}
+{% render_table table 'django_tables2/bootstrap4.html'  %}
 </div>
 
 {% endblock %}

@@ -16,8 +16,48 @@
   <div class="card-body">
     <h5 class="card-title">{{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}}</h5>
     <p>{{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
+
   </div>
 </div>
+<div class="row">
+    <div class="col-sm">
+      <table class ="table table-sm table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%for month in monthwise%}
+          <tr>
+            <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-sm">
+      <table class ="table table-sm table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>dasy since</th><th>Cash Bal</th><th>Metal Bal</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
+          </tr>
+          <tr>
+            <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
 <div class="row">
   <div class="col-9">
     <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -31,6 +71,7 @@
         <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Receipts</a>
       </li>
     </ul>
+
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
         <div class="table-responsive-sm">
@@ -99,6 +140,7 @@
         </table>
         </div>
       </div>
+
       <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         <div class="table-responsive-sm">
         <table class="table table-sm table-bordered table-striped">

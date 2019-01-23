@@ -13,6 +13,9 @@ from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
+from sales.models import Invoice,Month
+from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
+from datetime import datetime, timedelta,date
 
 def home(request):
     data = dict()
@@ -25,7 +28,7 @@ class CustomerListView(ExportMixin,SingleTableMixin,FilterView):
     model = Customer
     template_name = 'contact/customer_list.html'
     filterset_class = CustomerFilter
-    paginate_by = 50
+    paginate_by = 25
 
 class CustomerCreateView(CreateView):
     model = Customer
@@ -35,6 +38,18 @@ class CustomerCreateView(CreateView):
 
 class CustomerDetailView(DetailView):
     model = Customer
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        # Add in a QuerySet of all the books
+        inv = Invoice.objects.filter(customer=self.object.id).exclude(status="Paid")
+        how_many_days = 30
+        context['current'] = inv.filter(created__gte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
+        context['past'] = inv.filter(created__lte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
+
+        context['monthwise'] = inv.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
+        return context
 
 class CustomerUpdateView(UpdateView):
     model = Customer
@@ -49,7 +64,7 @@ class SupplierListView(ExportMixin,SingleTableMixin,FilterView):
     model = Supplier
     template_name = 'contact/supplier_list.html'
     filterset_class = SupplierFilter
-    paginate_by = 50
+    paginate_by = 25
 
 class SupplierCreateView(CreateView):
     model = Supplier

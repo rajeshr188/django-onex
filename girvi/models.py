@@ -134,7 +134,7 @@ class Loan(models.Model):
     def save(self,*args,**kwargs):
         self.interest=self.interestdue()
         #self.loanamount=self.loanamount - Decimal(self.interest)
-        # self.itemvalue=self.loanamount+500
+        self.itemvalue=self.loanamount+500
         super().save(*args,**kwargs)
 
 

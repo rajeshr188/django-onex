@@ -46,12 +46,15 @@ INSTALLED_APPS = [
     'allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters','widget_tweaks',
+    'tempus_dominus','controlcenter',
 
     # Local
     'users',
     'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',
 ]
-
+CONTROLCENTER_DASHBOARDS = (
+        ('mydash','djangox_project.dashboard.MyDash'),
+)
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -165,3 +168,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+# DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap4.html'

@@ -29,7 +29,7 @@
     <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.customer.name}}/{{i.invoice.balance}}</a></td>
     <td>{{i.invoice.status}}</td>
     <td>{{i.amount}}</td>
-    <td>{{i.get_balance()}}</td>
+    <td>{{i.invoice.get_balance}}</td>
   </tr>
 
 {%endfor%}

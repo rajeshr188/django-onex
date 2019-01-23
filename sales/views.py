@@ -66,6 +66,9 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'sales/invoice_list.html'
     paginate_by = 25
 
+    # def get_context_data():
+    #     pass
+
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -267,7 +270,7 @@ class ReceiptDetailView(DetailView):
 #     model = Receipt
 #     form_class = ReceiptForm
 
-class ReceiptUpdateView(CreateView):
+class ReceiptUpdateView(UpdateView):
     model = Receipt
     form_class = ReceiptForm
 

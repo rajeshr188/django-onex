@@ -15,6 +15,7 @@ from django.db import models as models
 from django_extensions.db import fields as extension_fields
 from datetime import datetime
 from django.utils import timezone
+
 class Contact(models.Model):
 
     # Fields
@@ -24,7 +25,6 @@ class Contact(models.Model):
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     phoneno = models.CharField(max_length=10)
 
-
     class Meta:
         ordering = ('-created',)
 
@@ -33,7 +33,6 @@ class Contact(models.Model):
 
     def get_absolute_url(self):
         return reverse('contact_detail', args=(self.slug,))
-
 
     def get_update_url(self):
         return reverse('contact_update', args=(self.slug,))

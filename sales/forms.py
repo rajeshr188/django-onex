@@ -1,4 +1,6 @@
 from django import forms
+import datetime
+from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
 from django_select2.forms import Select2Widget,ModelSelect2Widget,ModelSelect2MultipleWidget
 from contact.models import Customer
@@ -7,6 +9,21 @@ from django.forms.models import inlineformset_factory
 from django.db.models import Q
 
 class InvoiceForm(forms.ModelForm):
+
+    created = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+                'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'useCurrent': True,
+                'collapse': False,
+            },
+            attrs={
+               'append': 'fa fa-calendar',
+               'input_toggle': False,
+               'icon_toggle': True,
+            }
+        ),
+    )
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:
         model = Invoice
@@ -26,7 +43,21 @@ InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
-
+    
+    created = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+                'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'useCurrent': True,
+                'collapse': False,
+            },
+            attrs={
+               'append': 'fa fa-calendar',
+               'input_toggle': False,
+               'icon_toggle': True,
+            }
+        ),
+    )
     class Meta:
         model = Receipt
         fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description']

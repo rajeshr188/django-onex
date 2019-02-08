@@ -15,23 +15,30 @@ from django.shortcuts import render
 from django.db.models import Avg,Count,Sum
 from num2words import num2words
 import math
+
 def home(request):
     data = dict()
 
     customer=dict()
     c=Customer.objects
+    customer['withoutloans']=c.annotate(num_loans=Count('loan')).filter(num_loans=0).count()
+    # customer['withoutloans']=c.filter(loan__isnull=True).count()
+    customer['withloans']=c.annotate(num_loans=Count('loan')).filter(num_loans__gt=0).count()
     customer['count']=c.count()
     customer['latest']=','.join(lat.name for lat in c.order_by('-created')[:5])
+    customer['maxloans']=c.filter(loan__release__isnull=True).annotate(num_loans=Count('loan'),sum_loans=Sum('loan__loanamount')).values('name','num_loans','sum_loans').order_by('-num_loans')[:10]
 
     license =dict()
     l=License.objects
     license['count']=l.count()
     license['licenses']=','.join(lic.name for lic in l.all())
+    license['totalloans']=l.annotate(t=Sum('loan__loanamount'))
 
 
     loan=dict()
-    l=Loan.objects
+    l=Loan.objects.select_related('customer')
     loan['count']=l.count()
+    loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
     loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])
     loan['amount']=l.aggregate(t=Sum('loanamount'))
     loan['amount_words']=num2words(loan['amount']['t'],lang='en_IN')
@@ -41,6 +48,7 @@ def home(request):
     loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
     loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
     loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
+
     release=dict()
     r=Release.objects
     release['count']=r.count()
@@ -71,11 +79,10 @@ class LicenseDeleteView(DeleteView):
 
 class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
-    # table_data=Loan.objects.all()
     model = Loan
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=50
+    paginate_by=10
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()
@@ -96,15 +103,15 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        if self.kwargs:
-            customer=Customer.objects.get(id=self.kwargs['pk'])
-            # license=License.objects.get(id=2)
-            return{
-                'customer':customer,
-                'loanid':incloanid,
-                # 'license':license,
-                'created':ld,
-            }
+        # if self.kwargs:
+        # customer=Customer.objects.get(id=self.kwargs['pk'])
+        license=License.objects.get(id=2)
+        return{
+            # 'customer':customer,
+            'loanid':incloanid,
+            'license':license,
+            # 'created':ld,
+        }
 
 class LoanDetailView(DetailView):
     model = Loan

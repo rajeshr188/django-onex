@@ -31,7 +31,7 @@ class CustomerTable(tables.Table):
                     'relatedto','relatedas', 'address', 'area','phonenumber')
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."
-
+        # template_name='django_tables2/bootstrap4.html'
 class SupplierTable(tables.Table):
     name = tables.LinkColumn('contact_supplier_detail', args=[A('slug')])
     pic = ImageColumn()
@@ -47,3 +47,4 @@ class SupplierTable(tables.Table):
         fields = ('pic','id','name','phonenumber','organisation','initial')
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "There are no suppliers matching the search criteria..."
+        # template_name='django_tables2/bootstrap4.html'

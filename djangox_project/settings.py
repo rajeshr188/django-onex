@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters','widget_tweaks',
-    'tempus_dominus','controlcenter',
+    'tempus_dominus','controlcenter','explorer','debug_toolbar',
 
     # Local
     'users',
@@ -55,7 +55,10 @@ INSTALLED_APPS = [
 CONTROLCENTER_DASHBOARDS = (
         ('mydash','djangox_project.dashboard.MyDash'),
 )
+EXPLORER_CONNECTIONS = { 'Default': 'default' }
+EXPLORER_DEFAULT_CONNECTION = 'default'
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,7 +69,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'djangox_project.urls'
-
+INTERNAL_IPS = '127.0.0.1'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -126,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

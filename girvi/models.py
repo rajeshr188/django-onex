@@ -70,7 +70,7 @@ class License(models.Model):
 class Loan(models.Model):
 
     # Fields
-    loanid = models.CharField(max_length=255)
+    loanid = models.CharField(max_length=255,unique=True)
     slug = extension_fields.AutoSlugField(populate_from='loanid', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
@@ -100,7 +100,7 @@ class Loan(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return u'%s' % self.slug
+        return f"{self.loanid} - {self.loanamount}"
 
     def get_absolute_url(self):
         return reverse('girvi_loan_detail', args=(self.slug,))
@@ -141,14 +141,14 @@ class Loan(models.Model):
 class Release(models.Model):
 
     # Fields
-    releaseid = models.CharField(max_length=255)
+    releaseid = models.CharField(max_length=255,unique=True)
     slug = extension_fields.AutoSlugField(populate_from='releaseid', blank=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
+    created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     interestpaid = models.IntegerField()
 
     # Relationship Fields
-    loan = models.ForeignKey(
+    loan = models.OneToOneField(
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
@@ -166,6 +166,8 @@ class Release(models.Model):
     def get_absolute_url(self):
         return reverse('girvi_release_detail', args=(self.slug,))
 
-
     def get_update_url(self):
         return reverse('girvi_release_update', args=(self.slug,))
+
+    def total_received(self):
+        return self.loan.loanamount + self.interestpaid

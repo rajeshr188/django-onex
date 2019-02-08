@@ -12,7 +12,7 @@ from django.db import models as models
 from django_extensions.db import fields as extension_fields
 from django.db.models import Avg,Count,Sum
 # from phonenumber_field.modelfields import PhoneNumberField
-
+import uuid
 class Customer(models.Model):
 
     # Fields
@@ -32,7 +32,7 @@ class Customer(models.Model):
 
     class Meta:
         ordering = ('-created',)
-
+        unique_together = ('name','relatedto')
     def __str__(self):
         return f"{self.name} {self.relatedas} {self.relatedto} {self.phonenumber}"
 
@@ -63,10 +63,25 @@ class Customer(models.Model):
         return silver['total']
 
     def get_total_invoice_cash(self):
-        return self.invoice_set.aggregate(total=Sum('balance'))
+        return self.invoicee.filter(balancetype="Cash").aggregate(total=Sum('balance'))['total']
 
     def get_total_invoice_metal(self):
-        return self.invoice_set.aggregate(total=Sum('balance'))
+        return self.invoicee.filter(balancetype="Metal").aggregate(total=Sum('balance'))['total']
+
+    def get_unpaid(self):
+        return self.invoicee.exclude(status="Paid")
+
+    def get_unpaid_cash(self):
+        return self.get_unpaid().filter(balancetype="Cash").values('created','id','balance','slug')
+
+    def get_unpaid_cash_total(self):
+        return self.get_unpaid_cash().aggregate(total=Sum('balance'))['total']
+
+    def get_unpaid_metal(self):
+        return self.get_unpaid().filter(balancetype="Metal").values('created','id','balance','slug')
+
+    def get_unpaid_metal_total(self):
+        return self.get_unpaid_metal().aggregate(total=Sum('balance'))['total']
 
     def get_total_invoice_paid_cash(self):
         pass
@@ -80,7 +95,7 @@ class Customer(models.Model):
 class Supplier(models.Model):
 
     # Fields
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255,unique=True)
     pic=models.ImageField(upload_to='contacts/supplier/pic/',null=True,blank=True)
     slug = extension_fields.AutoSlugField(populate_from='name', blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)

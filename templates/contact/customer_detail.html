@@ -1,26 +1,78 @@
 {% extends "_base.html" %}
 {% load static %}
+{% load render_table from django_tables2 %}
 {% block content %}
+<div class="alert alert-secondary text-center" role="alert">
+  <p class="font-weight-bold">
+    {{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}}
+    {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
+    <ul class="nav justify-content-end">
+      <li class="nav-item">
+        <a class="nav-link active" href="{% url 'contact_customer_update' object.slug%}">Edit Customer</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link "  href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link "  href="{% url 'sales_invoice_create'  %}">Add Invoice</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link "  href="{% url 'sales_receipt_create' %}">Add Receipt</a>
+      </li>
+    </ul>
+</div>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-
-  <div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group mr-2">
-      <a class="btn btn-primary ml-2" href="{% url 'contact_customer_update' object.slug%}">Edit Customer</a>
-      <a class="btn btn-primary ml-2 "  role="button"href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
-      <button class="btn btn-sm btn-outline-secondary ml-2">Export</button>
+<div class="mb-3 ">
+  <div class="btn-toolbar role="toolbar"">
+    <div class="btn-group mr-2" role="group">
+      <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.slug%}">Edit Customer</a>
+      <a class="btn btn-primary ml-2" role="button" href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
+      <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_invoice_create'  %}">Add Invoice</a>
+      <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_receipt_create' %}">Add Receipt</a>
     </div>
   </div>
 </div>
-<div class="card text-center alert alert-info mb-4">
-  <div class="card-body">
-    <h5 class="card-title">{{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}}</h5>
-    <p>{{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
-
+<div class="card-columns">
+  <div class="card text-center">
+    <div class="card-header">
+    Loan
+    </div>
+    <div class="card-body">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Loans  <span class="badge badge-primary badge-pill">{{customer.get_loans_count}}</span></li>
+      <li class="list-group-item d-flex justify-content-between align-items-center"">Amount <span class="badge badge-info badge-pill">{{customer.get_total_loanamount}}</span></li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_gold_weight}}</span>
+      <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge badge-info badge-pill">{{customer.get_silver_weight}}</span></li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge badge-info badge-pill"></span></li>
+      </ul>
+      </div>
   </div>
-</div>
-<div class="row">
-    <div class="col-sm">
+  <div class="card text-center">
+    <div class="card-header">
+    Invoice Balance
+    </div>
+    <div class="card-body">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between align-items-center"">Amount <span class="badge badge-info badge-pill">{{customer.get_total_invoice_cash}}</span></li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_total_invoice_metal}}</span>
+      </ul>
+    </div>
+  </div>
+  <div class="card text-center">
+    <div class="card-header">
+    UnPaid Cash Balance : {{customer.get_unpaid_cash_total}}
+    </div>
+  </div>
+  <div class="card text-center " >
+    <div class="card-header">
+    UnPaid Metal Balance : {{customer.get_unpaid_metal_total}}
+    </div>
+  </div>
+  <div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">Month-Wise</h5>
+      <div class="table-responsive">
       <table class ="table table-sm table-striped table-bordered">
         <thead>
           <tr>
@@ -35,31 +87,34 @@
           {%endfor%}
         </tbody>
       </table>
+      </div>
     </div>
-    <div class="col-sm">
+  </div>
+  <div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">Payment-Time-Wise</h5>
+      <div class="table-responsive">
       <table class ="table table-sm table-striped table-bordered">
         <thead>
           <tr>
-            <th>dasy since</th><th>Cash Bal</th><th>Metal Bal</th>
+            <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
           </tr>
         </thead>
         <tbody>
-
           <tr>
             <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
           </tr>
           <tr>
             <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
           </tr>
-
         </tbody>
       </table>
+      </div>
     </div>
-
   </div>
-
+</div>
 <div class="row">
-  <div class="col-9">
+  <div class="col">
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item">
         <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Loans</a>
@@ -92,43 +147,42 @@
           <tbody>
             {% for loan in customer.get_loans   %}
               {% if loan.release %}
-                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
                       <td>{{loan.created.date}} </td>
-                      <td>{{loan.itemdescription}}</td>
+                      <td>{{loan.itemdesc}}</td>
                       <td>{{loan.itemweight}}</td>
                       <td>{{loan.loanamount}}</td>
                       <td>{{loan.noofmonths}} </td>
-                      <td>{{loan.bill}} </td>
+                      <td>{{loan.release}} </td>
                       <td>{{loan.interest}}</td>
-                      <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
-                      <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
+                      <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a></td>
 
                     </tr>
               {% elif loan.noofmonths > 12%}
                 <tr class="table-danger text-center">
-                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
                   <td>{{loan.created.date}} </td>
-                  <td>{{loan.itemdescription}}</td>
+                  <td>{{loan.itemdesc}}</td>
                   <td>{{loan.itemweight}}</td>
                   <td>{{loan.loanamount}}</td>
                   <td>{{loan.noofmonths}} </td>
-                  <td>{{loan.bill}} </td>
+                  <td>{{loan.release}} </td>
                   <td>{{loan.interestdue}}</td>
-                  <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                  <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
                   <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
 
                 </tr>
               {% else%}
                   <tr>
-                    <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                    <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
                     <td>{{loan.created.date}} </td>
-                    <td>{{loan.itemdescription}}</td>
+                    <td>{{loan.itemdesc}}</td>
                     <td>{{loan.itemweight}}</td>
                     <td>{{loan.loanamount}}</td>
                     <td>{{loan.noofmonths}} </td>
                     <td>{{loan.release}} </td>
                     <td>{{loan.interest}}</td>
-                    <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                    <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
                     <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
 
                   </tr>
@@ -142,13 +196,16 @@
       </div>
 
       <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <!-- {% render_table customer.invoicee.all 'django_tables2/bootstrap-responsive.html' %} -->
         <div class="table-responsive-sm">
+        {% render_table invoices 'django_tables2/bootstrap4.html'  %}
+        </div>
+        <!-- <div class="table-responsive-sm">
         <table class="table table-sm table-bordered table-striped">
           <thead class="thead-dark text-center">
             <tr>
               <th scope="col">Invoice Id</th>
               <th scope="col">Created</th>
-              <th scope="col">Customer</th>
               <th scope="col">Cash/Credit</th>
               <th scope="col">Currency</th>
               <th scope="col">Balance</th>
@@ -161,7 +218,6 @@
                 <tr class="text-center">
                       <td><a href="{% url 'sales_invoice_detail' inv.slug%}">{{inv.id}} </a></td>
                       <td>{{inv.created|date}}</td>
-                      <td>{{inv.customer.name}}</td>
                       <td>{{inv.balancetype}}</td>
                       <td>{{inv.paymenttype}} </td>
                       <td>{{inv.balance}}/{{inv.get_total_receipts}} </td>
@@ -171,7 +227,7 @@
             {%endfor %}
           </tbody>
         </table>
-        </div>
+        </div> -->
       </div>
       <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         <div class="table-responsive-sm">
@@ -201,24 +257,5 @@
       </div>
     </div>
   </div>
-
-  <div class="col-3">
-
-        <ul class="list-group">
-          <li class="list-group-item d-flex justify-content-between align-items-center active"><h6">Statistics</h6></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Loans  <span class="badge badge-primary badge-pill">{{customer.get_loans_count}}</span></li>
-
-          <li class="list-group-item d-flex justify-content-between align-items-center"">Amount <span class="badge badge-info badge-pill">{{customer.get_total_loanamount}}</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_gold_weight}}</span>
-
-
-          <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge badge-info badge-pill">{{customer.get_silver_weight}}</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge badge-info badge-pill"></span></li>
-          </ul>
-
-  </div>
 </div>
-
-
 {% endblock %}

@@ -1,13 +1,72 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
+
 <div class="container">
-  <h2 class="text-center">{% now "jS F Y H:i" %}</h2>
+  <!-- <h2 class="text-center"><span class="badge badge-info">{% now "jS F Y H:i" %}</span></h2> -->
+
+  <div class="d-flex justify-content-center mb-5">
+    <h2 class="text-center mr-2"><span class="badge badge-info">{{daybook.date|date:"d F Y"}}</span></h2>
+    <form class="form-inline" method="GET">
+    <label class="sr-only" for="inlineFormInputName2">Date</label>
+    <input type="text" name='q' class="form-control mr-2" id="inlineFormInputName2" placeholder="dd/mm/yy">
+    <button type="submit" class="btn btn-primary ">Submit</button>
+    </form>
+  </div>
+
+
   <div class="row">
     <div class="col">
-      <div class="card table-responsive">
-        <h1 class="text-center"><span class="badge badge-success">Jama </span></h1>
-        <table class="table table-striped">
+      <h2 class="text-center"><span class="badge badge-success">Girvi Khata Jama </span></h2>
+        <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
+          <tbody>
+            <tr>
+              <th scope="row">{{daybook.release.releaseamount.t}}</th>
+              <td>{%for r in daybook.release.releases%} ({{r.releaseid}}/{{r.loan__loanamount}}) {%endfor%}</td>
+
+            </tr>
+          </tbody>
+        </table>
+    </div>
+    <div class="col">
+      <h2 class ="text-center"><span class="badge badge-danger">Girvi Khata Nave </span></h2>
+      <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
+          <tbody>
+            <tr>
+              <th scope="row">{{daybook.loan.total.t}} </th>
+              <td>{%for l in daybook.loan.loans%} ({{l.loanid}}/{{l.loanamount}}) {%endfor%}</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <h2 class="text-center"><span class="badge badge-success">Byaaj Khata Jama </span></h2>
+      <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
+        <tbody>
+            <tr>
+              <th scope="row">{{daybook.release.total.t}}</th>
+              <td>{%for r in daybook.release.releases%} ({{r.releaseid}}/{{r.interestpaid}}) {%endfor%}</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+    <div class="col">
+      <h2 class="text-center"><span class="badge badge-danger">Byaaj Khata Nave </span></h2>
+      <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
+          <tbody>
+            <tr>
+
+            </tr>
+          </tbody>
+        </table>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <h2 class="text-center"><span class="badge badge-success">Maal Khata Jama </span></h2>
+      <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
           <thead class="thead-light">
             <tr>
               <th scope="col"></th>
@@ -28,12 +87,10 @@
             </tr>
           </tbody>
         </table>
-      </div>
     </div>
     <div class="col">
-      <div class="card table-responsive">
-        <h1 class="text-center"><span class="badge badge-danger">Nave</span></h1>
-        <table class="table table-striped">
+      <h2 class="text-center"><span class="badge badge-danger">Maal Khata Nave</span></h2>
+      <table class="table table-sm shadow p-3 mb-5 bg-white rounded">
           <thead class="thead-light">
             <tr>
               <th scope="col"></th>
@@ -54,9 +111,9 @@
             </tr>
           </tbody>
         </table>
-      </div>
     </div>
   </div>
+
 </div>
 
 {%endblock%}

@@ -20,9 +20,9 @@ class InvoiceTable(tables.Table):
     class Meta:
         model = Invoice
         fields = ('id','created','customer','balancetype','paymenttype',
-                    'rate','balance','status')
+                    'balance','status')
 
-        attrs = {"class": "table table-striped table-bordered"}
+        attrs = {"class": "table table-sm table-striped table-bordered"}
         empty_text = "No Invoices Found matching your search..."
 
 

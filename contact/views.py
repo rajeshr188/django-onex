@@ -16,7 +16,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from sales.models import Invoice,Month
 from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
 from datetime import datetime, timedelta,date
-
+from sales.tables import InvoiceTable
 def home(request):
     data = dict()
     data['customercount']=str(Customer.objects.count())
@@ -38,16 +38,18 @@ class CustomerCreateView(CreateView):
 
 class CustomerDetailView(DetailView):
     model = Customer
-
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
         # Add in a QuerySet of all the books
+        data=self.object.invoicee.all()
+        table = InvoiceTable(data,exclude=('customer','edit','delete',))
+        table.paginate(page=self.request.GET.get('page', 1), per_page=25)
+        context['invoices']=table
         inv = Invoice.objects.filter(customer=self.object.id).exclude(status="Paid")
         how_many_days = 30
         context['current'] = inv.filter(created__gte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
         context['past'] = inv.filter(created__lte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
-
         context['monthwise'] = inv.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
         return context
 

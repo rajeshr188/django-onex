@@ -1,7 +1,8 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
+<p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a>
+<a class="btn btn-default" href="{% url 'girvi_loan_create' %}">Add new</a></p>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Loan Detail <a class="btn btn-default" href="{% url 'loan-list' %}">Loan Listing</a></h1>
@@ -18,9 +19,9 @@
   </div>
 
 </div>
-<table class="table">
+<table class="table table-sm table-striped">
 <tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
-<tr><td>slug</td><td>{{ object.slug }}</td></tr>
+<tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.customer.slug %}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>itemtype</td><td>{{ object.itemtype }}</td></tr>
@@ -34,21 +35,23 @@
 
 <div class="table-responsive">
 
-{% if loan.bill %}
+{% if loan.release %}
 <table class="table table-sm">
   <thead>
     <tr>
       <th scope="col">Release Id</th>
       <th scope="col">Release Date</th>
-      <th scope="col">Interest Paid</th>
+      <th scope="col">Amount</th>
+      <th scope="col">Interest</th>
 
     </tr>
   </thead>
   <tbody>
 
     <tr>
-      <th scope="row">2</th>
+      <th ><a href="{% url 'girvi_release_detail' loan.release.slug %}">{{loan.release.releaseid}}</a></th>
       <td>{{loan.release.created}}</td>
+      <td>{{loan.release.total_received}}</td>
       <td>{{loan.release.interestpaid}}</td>
 
     </tr>

@@ -37,10 +37,14 @@ def list_balance(request):
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
 
-    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).order_by('name')
+    balance=Customer.objects.filter(type='Wh').values('slug','name').annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).order_by('name')
 
     balance_total = balance.aggregate(gbal_total = Sum(F('gbal')),grec_total = Sum(F('grec')),cbal_total = Sum(F('cbal')),crec_total = Sum(F('crec')))
-    balance_nett_gold = balance_total['gbal_total']-balance_total['grec_total']
+    if balance_total['gbal_total'] is None: balance_total['gbal_total']=0
+    if balance_total['grec_total'] is None: balance_total['grec_total']=0
+    if balance_total['cbal_total'] is None: balance_total['cbal_total']=0
+    if balance_total['crec_total'] is None: balance_total['crec_total']=0
+    balance_nett_gold = balance_total['gbal_total']  - balance_total['grec_total']
     balance_nett_cash = balance_total['cbal_total']-balance_total['crec_total']
 
     balance_by_month = Invoice.objects.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
@@ -65,9 +69,6 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     filterset_class = InvoiceFilter
     template_name = 'sales/invoice_list.html'
     paginate_by = 25
-
-    # def get_context_data():
-    #     pass
 
 class InvoiceCreateView(CreateView):
     model = Invoice
@@ -265,10 +266,6 @@ class ReceiptCreateView(CreateView):
 
 class ReceiptDetailView(DetailView):
     model = Receipt
-
-# class ReceiptUpdateView(UpdateView):
-#     model = Receipt
-#     form_class = ReceiptForm
 
 class ReceiptUpdateView(UpdateView):
     model = Receipt

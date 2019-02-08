@@ -1,11 +1,43 @@
 {% extends "_base.html" %}
 {% load static %}
-{% load crispy_forms_tags %}
+{% load bootstrap4 %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'girvi_release_list' %}">Release Listing</a></p>
 <form method="post">
 {% csrf_token %}
-{{form|crispy}}
+{{ form.non_field_errors }}
+
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.releaseid.errors }}
+    {% bootstrap_field form.releaseid %}
+  </div>
+  <div class="form-group col-md-4">
+    {{ form.created.errors }}
+    {% bootstrap_field form.created %}
+  </div>
+</div>
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.customer.errors }}
+    {% bootstrap_field form.customer %}
+  </div>
+  <div class="form-group col-md-4">
+    {{ form.loan.errors }}
+    {% bootstrap_field form.loan %}
+  </div>
+</div>
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.interestpaid.errors }}
+    {% bootstrap_field form.interestpaid %}
+  </div>
+</div>
 <button class="btn btn-primary" type="submit">Submit</button>
 </form>
+<!-- <script type="text/javascript">
+  $('#id_loan').on('change', function() {
+  alert( this.loanamount );
+}); -->
+  </script>
 {% endblock %}

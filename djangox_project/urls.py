@@ -18,7 +18,9 @@ urlpatterns = [
     path('select2/', include('django_select2.urls')),
     path('admin/dashboard/',controlcenter.urls),
     path('explorer/', include('explorer.urls')),
+    path('silk/',include('silk.urls',namespace='silk')),
 ]
+
 if settings.DEBUG:
     urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
     import debug_toolbar

@@ -8,10 +8,10 @@ class ImageColumn(tables.Column):
         return format_html('<img src="{}" width="50" height="50" class="img-fluid img-thumbnail" alt={}/>', value.url,value.name)
 class CustomerTable(tables.Table):
     name = tables.LinkColumn('contact_customer_detail', args=[A('slug')])
-    pic = ImageColumn()
+    # pic = ImageColumn()
     relatedas=tables.Column(orderable=False)
-    loan=tables.Column(accessor='get_total_loans',verbose_name='No.of Loans')
-    loanamount = tables.Column(accessor='get_total_loanamount',verbose_name='Loan Amount')
+    loan=tables.Column(accessor='get_total_loans',verbose_name='No.of Loans',orderable=False)
+    loanamount = tables.Column(accessor='get_total_loanamount',verbose_name='Loan Amount',orderable=False)
     gweight=tables.Column(accessor='get_gold_weight',verbose_name='Gold')
     sweight=tables.Column(accessor='get_silver_weight',verbose_name='Silver')
     # interestdue = tables.Column(accessor='get_interestdue',verbose_name='Interest')
@@ -25,13 +25,12 @@ class CustomerTable(tables.Table):
 
     class Meta:
         model = Customer
-        fields = ('pic','id','name',
-                    'loan','loanamount','gweight','sweight',
-                    # 'interestdue',
+        fields = (
+                    'id','name',
                     'relatedto','relatedas', 'address', 'area','phonenumber')
-        attrs = {"class": "table table-striped table-bordered"}
+        attrs = {"class": "table table-sm text-center  table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."
-        # template_name='django_tables2/bootstrap4.html'
+
 class SupplierTable(tables.Table):
     name = tables.LinkColumn('contact_supplier_detail', args=[A('slug')])
     pic = ImageColumn()

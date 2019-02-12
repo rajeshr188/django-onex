@@ -17,10 +17,14 @@ from sales.models import Invoice,Month
 from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
 from datetime import datetime, timedelta,date
 from sales.tables import InvoiceTable
+
 def home(request):
     data = dict()
-    data['customercount']=str(Customer.objects.count())
-    data['suppliercount']=Customer.objects.count()
+    c=Customer.objects
+    data['customercount']=c.all().count()
+    data['retailcount']=c.filter(type='Re').count()
+    data['whcount']=c.filter(type="Wh").count()
+    data['suppliercount']=Supplier.objects.count()
     return render(request,'contact/home.html',context={'data':data},)
 
 class CustomerListView(ExportMixin,SingleTableMixin,FilterView):

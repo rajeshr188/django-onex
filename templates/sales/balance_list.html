@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="row">
-  <div class="col-3">
+  <div class="col-2">
     <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
       <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Customer-wise</a>
       <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">Month-wise</a>
@@ -51,18 +51,7 @@
       </div>
       <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
         here goes month wise...
-
-        <div class="accordion" id="accordionExample">
           <div class="card">
-            <div class="card-header" id="headingOne">
-              <h2 class="mb-0">
-                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                  Collapsible Group Item #1
-                </button>
-              </h2>
-            </div>
-
-            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
               <div class="card-body">
                 {% for i in balance_by_month_cash %}
                 Month: {{i.month}} {{i.balancetype}} Balance :{{i.tc}}<br/>
@@ -84,9 +73,7 @@
                 {{k}}<br/>
                 {%endfor%}
               </div>
-            </div>
           </div>
-        </div>
 
       </div>
     </div>

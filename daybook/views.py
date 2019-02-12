@@ -19,7 +19,7 @@ def daybook(request):
     loan['total'] = loans.aggregate(t=Sum('loanamount'))
 
     release = dict()
-    releases = Release.objects.filter(created__year=today.year,created__month=today.month,created__day=today.day).select_related('loan').values('releaseid','loan__loanamount','interestpaid')
+    releases = Release.objects.filter(created__year=today.year,created__month=today.month,created__day=today.day).values('releaseid','loan__loanamount','interestpaid')
     release['releases']=releases
     release['total']=releases.aggregate(t=Sum('interestpaid'))
     release['releaseamount']=releases.aggregate(t=Sum('loan__loanamount'))

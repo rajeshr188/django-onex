@@ -25,6 +25,7 @@ urlpatterns += (
     path('sales/invoice/delete/<slug:slug>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
 )
 urlpatterns+=(
+            path('sales/',views.home,name='sales_home'),
             path('sales/balance/',views.list_balance,name='sales_balance'),
             path('sales/graph/',views.graph,name='graph'),
             path('sales/sales_count_by_month/',views.sales_count_by_month,name='sales_count_by_month'),

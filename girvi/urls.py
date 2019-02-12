@@ -1,4 +1,6 @@
 from django.urls import path, include
+from django.views.generic.dates import ArchiveIndexView
+from .models import Loan
 from rest_framework import routers
 from django_filters.views import FilterView
 from . import api
@@ -16,6 +18,32 @@ urlpatterns = (
 )
 urlpatterns +=(
     path('',views.home,name='girvi-home'),
+)
+urlpatterns +=(
+    path('loan_archive/',
+         ArchiveIndexView.as_view(model=Loan, date_field="created"),
+         name="loan_archive"),
+)
+urlpatterns +=(
+    path('<int:year>/',
+         views.LoanYearArchiveView.as_view(),
+         name="loan_year_archive"),
+)
+urlpatterns += (
+    # Example: /2012/08/
+    path('<int:year>/<int:month>/',
+         views.LoanMonthArchiveView.as_view(month_format='%m'),
+         name="archive_month_numeric"),
+    # Example: /2012/aug/
+    path('<int:year>/<str:month>/',
+         views.LoanMonthArchiveView.as_view(),
+         name="archive_month"),
+)
+urlpatterns += (
+    # Example: /2012/week/23/
+    path('<int:year>/week/<int:week>/',
+         views.LoanWeekArchiveView.as_view(),
+         name="archive_week"),
 )
 urlpatterns += (
     # urls for License

@@ -60,7 +60,7 @@ class Invoice(models.Model):
         ordering = ('created',)
 
     def __str__(self):
-        return f"{self.customer} / {self.id} / {self.created.date()} / {self.get_balance()}"
+        return f"{self.customer.name} / {self.id} / {self.created.date()} / {self.get_balance()}"
 
     def get_absolute_url(self):
         return reverse('sales_invoice_detail', args=(self.slug,))
@@ -153,8 +153,7 @@ class Receipt(models.Model):
         return reverse('sales_receipt_update', args=(self.slug,))
 
     def get_line_totals(self):
-        linetotal=self.receiptline_set.aggregate(t=Sum('amount'))
-        return linetotal['t']
+        return self.receiptline_set.aggregate(t=Sum('amount'))['t']
 
 class ReceiptLine(models.Model):
     slug = extension_fields.AutoSlugField(populate_from='id', blank=True)

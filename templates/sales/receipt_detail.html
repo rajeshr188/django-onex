@@ -14,11 +14,10 @@
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>type</td><td>{{ object.type }}</td></tr>
 <tr><td>Total Received</td><td>{{ object.total }}</td></tr>
-<tr><td>Total Allotted</td><td>{{object.get_line_totals}}<td></tr>
+<tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
 <tr><td>description</td><td>{{ object.description }}</td></tr>
 </table>
 
-{% if object.receiptline_set %}
 <table class="table table-sm table-striped table-bordered">
   <thead>
     <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
@@ -26,7 +25,7 @@
 {% for i in object.receiptline_set.all %}
 
   <tr>
-    <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.customer.name}}/{{i.invoice.balance}}</a></td>
+    <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
     <td>{{i.invoice.status}}</td>
     <td>{{i.amount}}</td>
     <td>{{i.invoice.get_balance}}</td>
@@ -34,5 +33,4 @@
 
 {%endfor%}
 </table>
-{%endif%}
 {% endblock %}

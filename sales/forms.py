@@ -9,11 +9,10 @@ from django.forms.models import inlineformset_factory
 from django.db.models import Q
 
 class InvoiceForm(forms.ModelForm):
-
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'minDate': '2009-01-20',# 'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,
             },
@@ -24,15 +23,13 @@ class InvoiceForm(forms.ModelForm):
             }
         ),
     )
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
-
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(queryset=ProductVariant.objects.all(),widget=Select2Widget)
-
 
     class Meta:
         model = InvoiceItem
@@ -42,12 +39,11 @@ InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
-    
+    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'minDate': '2013-02-07',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,
             },
@@ -77,4 +73,4 @@ class ReceiptLineForm(forms.ModelForm):
         fields=['invoice','amount']
 
 ReceiptLineFormSet=inlineformset_factory(Receipt,ReceiptLine,
-    fields=('invoice','amount','receipt'),extra=1,can_delete=True,form=ReceiptLineForm)
+    fields=('invoice','amount','receipt'),extra=0,can_delete=True,form=ReceiptLineForm)

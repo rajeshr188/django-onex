@@ -15,8 +15,12 @@ from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
-
 from django.http import JsonResponse
+
+def home(request):
+    data = dict()
+    return render(request,'sales/home.html',context={'data':data},)
+
 def print_invoice(request,id):
     invoice=Invoice.objects.get(id=id)
     params={'invoice':invoice}
@@ -217,41 +221,59 @@ class ReceiptCreateView(CreateView):
     def form_valid(self, form, receiptline_form):
         self.object = form.save()
         receiptline_form.instance = self.object
-        items=receiptline_form.save()
+        receiptline_form.save()
         amount=self.object.total
-        invpaid = 0
-        for item in items:
-            if item.invoice.balance == item.amount :
-                invpaid += item.amount
-                item.invoice.status="Paid"
-                item.invoice.save()
-            elif item.invoice.balance > item.amount:
-                invpaid += item.amount
-                item.invoice.status="PartiallyPaid"
-                item.invoice.save()
+        # invpaid = 0
+        # for item in items:
+        #     if item.invoice.balance == item.amount :
+        #         invpaid += item.amount
+        #         item.invoice.status="Paid"
+        #         item.invoice.save()
+        #     elif item.invoice.balance > item.amount:
+        #         invpaid += item.amount
+        #         item.invoice.status="PartiallyPaid"
+        #         item.invoice.save()
 
-        remaining=amount-invpaid
+        # remaining=amount-invpaid
 
+        # try:
+        #     invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+        # except IndexError:
+        #     invtopay = None
+        # print(invtopay)
+        # while remaining>0 and invtopay !=None:
+        #
+        #     if remaining >= invtopay.get_balance() :
+        #         remaining -= invtopay.get_balance()
+        #         ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.get_balance())
+        #         invtopay.status="Paid"
+        #     else :
+        #         ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
+        #         invtopay.status="PartiallyPaid"
+        #         remaining=0
+        #     invtopay.save()
+        #     try:
+        #         invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+        #     except IndexError:
+        #         invtopay = None
         try:
-            invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+            invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')
         except IndexError:
             invtopay = None
-
-        while remaining>0 and invtopay !=None:
-
-            if remaining >= invtopay.get_balance() :
-                remaining -= invtopay.get_balance()
-                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=invtopay.get_balance())
-                invtopay.status="Paid"
+        print(invtopay)
+        for i in invtopay:
+            print(i)
+            if amount<=0 : break
+            bal=i.get_balance()
+            if amount >= bal :
+                amount -= bal
+                ReceiptLine.objects.create(receipt=self.object,invoice=i,amount=bal)
+                i.status="Paid"
             else :
-                ReceiptLine.objects.create(receipt=self.object,invoice=invtopay,amount=remaining)
-                invtopay.status="PartiallyPaid"
-                remaining=0
-            invtopay.save()
-            try:
-                invtopay = Invoice.objects.filter(customer=self.object.customer,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
-            except IndexError:
-                invtopay = None
+                ReceiptLine.objects.create(receipt=self.object,invoice=i,amount=amount)
+                i.status="PartiallyPaid"
+                amount=0
+            i.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

@@ -1,158 +1,77 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-      <div class="sidebar-sticky">
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <a class="nav-link active" href="#">
-              <span data-feather="home"></span>
-              Dashboard <span class="sr-only">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="file"></span>
-              Orders
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="shopping-cart"></span>
-              Products
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="users"></span>
-              Customers
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="bar-chart-2"></span>
-              Reports
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="layers"></span>
-              Integrations
-            </a>
-          </li>
-        </ul>
-
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-          <span>Saved reports</span>
-          <a class="d-flex align-items-center text-muted" href="#">
-            <span data-feather="plus-circle"></span>
-          </a>
-        </h6>
-        <ul class="nav flex-column mb-2">
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="file-text"></span>
-              Current month
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="file-text"></span>
-              Last quarter
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="file-text"></span>
-              Social engagement
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <span data-feather="file-text"></span>
-              Year-end sale
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Dashboard</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-          <div class="btn-group mr-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <span data-feather="calendar"></span>
-            This week
-          </button>
-        </div>
-      </div>
-      <div class="card-columns">
-
-        <div class="card p-3">
-          <blockquote class="blockquote mb-0 card-body">
-            <p>Customers without Loans : {{data.customer.withoutloans}}</p>
-              <p>Customers with Loans : {{data.customer.withloans}}</p>
-          </blockquote>
-        </div>
-
-        <div class="card text-center">
-          <div class="card-body">
-            <h5 class="card-title">Customers</h5>
-            <p class="card-text">Count :{{data.customer.count}}</p>
-            <p class="card-text">Latest :{{data.customer.latest}}
-            </p>
-            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-          </div>
-        </div>
-        <div class="card text-center">
-          <div class="card-body">
-            <h5 class="card-title">Customers</h5>
-              <ul class="list-group list-group-flush">
-                {%for c in data.customer.maxloans%}<li class="list-group-item"> {{c.name}} / {{c.num_loans}} / {{c.sum_loans}} </li>{%endfor%}
-              </ul>
-          </div>
-        </div>
-        <div class="card text-center">
-          <div class="card-body">
-            <h5 class="card-title">Loans</h5>
-            <p class="card-text">Count :{{data.loan.count}}</p>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item">Latest :{{data.loan.latest}}</li>
-              <li class="list-group-item">Amount :{{data.loan.amount.t}}</li>
-              <li class="list-group-item">{{data.loan.amount_words}}</li>
-
-              <li class="list-group-item">Gold Loan Avg :{{data.loan.gold_amount.t}}/{{data.loan.gold_weight.t}}={{data.loan.gavg}}</li>
-              <li class="list-group-item">Silver Loan Avg :{{data.loan.silver_amount.t}}/{{data.loan.silver_weight.t}}={{data.loan.savg}}</li>
-
-            </ul>
-            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-          </div>
-        </div>
-        <div class="card text-center">
-          <div class="card-body">
-            <h5 class="card-title">Release</h5>
-            <p class="card-text">Count :{{data.release.count}}</p>
-            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-          </div>
-        </div>
-        <div class="card text-center">
-          <div class="card-body">
-            <h5 class="card-title">License</h5>
-            <p class="card-text">Count :{{data.license.count}}</p>
-            <p class="card-text">Licenses : {{data.license.licenses}}</p>
-            <p class="card-text">{%for l in data.license.totalloans %} {{l.name}}-{{l.t}} ,{%endfor%}</p>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+<div class="row">
+<div class="nav flex-column nav-pills bg-light d-md-block col-md-2 " id="v-pills-tab" role="tablist" aria-orientation="vertical">
+  <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Home</a>
+  <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">Loans</a>
+  <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">Release</a>
+  <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Reports</a>
 </div>
+<div class="tab-content col-md-9 " id="v-pills-tabContent">
+  <div class="tab-pane fade show active " id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+    <div class="card-columns">
 
+      <div class="card">
+        <h5 class="card-title">Card title</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Customers with Loans : {{data.customer.withloans}}</h6>
+          <p>Customers without Loans : {{data.customer.withoutloans}}</p>
+            <p></p>
+      </div>
+
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Customers</h5>
+          <p class="card-text">Count :{{data.customer.count}}</p>
+          <p class="card-text">Latest :{{data.customer.latest}}
+          </p>
+        </div>
+      </div>
+
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Loans</h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Count :{{data.loan.count}}</li>
+            <li class="list-group-item">Latest :{{data.loan.latest}}</li>
+            <li class="list-group-item">Amount :{{data.loan.amount.t}} {{data.loan.amount_words}}</li>
+            <li class="list-group-item">Gold Loan Avg :{{data.loan.gold_amount.t}}/{{data.loan.gold_weight.t}}={{data.loan.gavg}}</li>
+            <li class="list-group-item">Silver Loan Avg :{{data.loan.silver_amount.t}}/{{data.loan.silver_weight.t}}={{data.loan.savg}}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Release</h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Count :{{data.release.count}}</li>
+            <li class="list-group-item">Amount :{{data.release.count}}</li>
+            <li class="list-group-item">today :{{data.release.count}}</li>
+            <li class="list-group-item">this month :{{data.release.count}}</li>
+          </ul>
+          </div>
+      </div>
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">License</h5>
+          <p class="card-text">Count :{{data.license.count}}</p>
+          <ul class="list-group list-group-flush">{%for l in data.license.totalloans %} <li class="list-group-item">{{l.name}}-{{l.t}}</li>{%endfor%}<ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title">Customers with max loans</h5>
+          <ul class="list-group list-group-flush">
+            {%for c in data.customer.maxloans%}<li class="list-group-item"> {{c.name}}  {{c.num_loans}}  {{c.sum_loans}} </li>{%endfor%}
+          </ul>
+      </div>
+    </div>
+  </div>
+  <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">..3.</div>
+  <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...4s</div>
+</div>
+</div>
 {% endblock %}

@@ -1,4 +1,5 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
+from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from .models import License, Loan, Release
 from .forms import LicenseForm, LoanForm, ReleaseForm
 from django.urls import reverse,reverse_lazy
@@ -31,12 +32,12 @@ def home(request):
     license =dict()
     l=License.objects
     license['count']=l.count()
-    license['licenses']=','.join(lic.name for lic in l.all())
+    # license['licenses']=','.join(lic.name for lic in l.all())
     license['totalloans']=l.annotate(t=Sum('loan__loanamount'))
 
 
     loan=dict()
-    l=Loan.objects.select_related('customer')
+    l=Loan.objects
     loan['count']=l.count()
     loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
     loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])
@@ -58,6 +59,24 @@ def home(request):
     data['loan']=loan
     data['release']=release
     return render(request,'girvi/home.html',context={'data':data},)
+
+class LoanYearArchiveView(YearArchiveView):
+    queryset = Loan.objects.all()
+    date_field = "created"
+    make_object_list = True
+    allow_future = True
+
+class LoanMonthArchiveView(MonthArchiveView):
+    queryset = Loan.objects.all()
+    date_field = "created"
+    allow_future = True
+
+class LoanWeekArchiveView(WeekArchiveView):
+    queryset = Loan.objects.all()
+    date_field = "created"
+    week_format = "%W"
+    allow_future = True
+
 
 class LicenseListView(ListView):
     model = License

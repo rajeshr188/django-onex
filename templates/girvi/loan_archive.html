@@ -1,0 +1,5 @@
+<ul>
+    {% for loan in latest %}
+        <li>{{ loan.created|date }}: {{ loan.id }}</li>
+    {% endfor %}
+</ul>

@@ -16,10 +16,13 @@ from django.shortcuts import render
 from django.db.models import Avg,Count,Sum,Q
 from num2words import num2words
 import math
+import datetime
+from django.db.models.functions import Cast
+from django.db.models.fields import DateField
 
 def home(request):
     data = dict()
-
+    today = datetime.date.today()
     customer=dict()
     c=Customer.objects
     customer['withoutloans']=c.annotate(num_loans=Count('loan')).filter(num_loans=0).count()
@@ -34,7 +37,8 @@ def home(request):
     license['count']=l.count()
     # license['licenses']=','.join(lic.name for lic in l.all())
     license['totalloans']=l.annotate(t=Sum('loan__loanamount'))
-
+    licchart = l.annotate(la=Sum('loan__loanamount')).values('name','la')
+    license['licchart']=list(licchart)
 
     loan=dict()
     l=Loan.objects
@@ -55,11 +59,13 @@ def home(request):
     fixed.append(chart['silver'])
     fixed.append(chart['bronze'])
     loan['chart']=fixed
-    datetime = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+    datetimel = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+    thismonth = l.filter(created__year = today.year,created__month = today.month).annotate(date_only=Cast('created', DateField()),t=Sum('loanamount')).order_by('created').values_list('date_only','t',named=True)
     # fixed = []
     # for row in datetime:
     #     fixed.append([row[0],row[1]])
-    loan['datechart']=datetime
+    loan['datechart']=datetimel
+    loan['thismonth']=thismonth
     release=dict()
     r=Release.objects
     release['count']=r.count()

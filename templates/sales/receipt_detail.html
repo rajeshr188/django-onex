@@ -8,7 +8,7 @@
   <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.id%}">Delete</a></p>
 <table class="table table-sm table-striped table-bordered">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
-<tr><td>customer</td><td>{{ object.customer }}</td></tr>
+<tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id%}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>type</td><td>{{ object.type }}</td></tr>

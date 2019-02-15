@@ -14,13 +14,14 @@ from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,PaymentTable
-def print_invoice(request,id):
-    invoice=Invoice.objects.get(id=id)
+
+def print_invoice(request,pk):
+    invoice=Invoice.objects.get(id=pk)
     params={'invoice':invoice}
     return Render.render('purchase/invoice_pdf.html',params)
 
-def print_payment(request,id):
-    payment=Payment.objects.get(id=id)
+def print_payment(request,pk):
+    payment=Payment.objects.get(id=pk)
     params={'payment':payment,'inwords':num2words(payment.total,lang='en_IN')}
     return Render.render('purchase/payment.html',params)
 

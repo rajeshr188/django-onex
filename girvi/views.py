@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
-from .models import License, Loan, Release
+from .models import License, Loan, Release,Month,Year
 from .forms import LicenseForm, LoanForm, ReleaseForm
 from django.urls import reverse,reverse_lazy
 from contact.models import Customer
@@ -13,7 +13,7 @@ from .filters import LoanFilter
 import re
 from django.utils import timezone
 from django.shortcuts import render
-from django.db.models import Avg,Count,Sum
+from django.db.models import Avg,Count,Sum,Q
 from num2words import num2words
 import math
 
@@ -49,7 +49,17 @@ def home(request):
     loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
     loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
     loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
-
+    chart=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
+    fixed = []
+    fixed.append(chart['gold'])
+    fixed.append(chart['silver'])
+    fixed.append(chart['bronze'])
+    loan['chart']=fixed
+    datetime = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+    # fixed = []
+    # for row in datetime:
+    #     fixed.append([row[0],row[1]])
+    loan['datechart']=datetime
     release=dict()
     r=Release.objects
     release['count']=r.count()
@@ -152,7 +162,7 @@ class ReleaseCreateView(CreateView):
 
     def get_initial(self):
         if self.kwargs:
-            loan=Loan.objects.get(slug=self.kwargs['slug'])
+            loan=Loan.objects.get(id=self.kwargs['pk'])
             return{'loan':loan,'interestpaid':loan.interestdue,}
 
 class ReleaseDetailView(DetailView):

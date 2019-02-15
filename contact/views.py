@@ -50,11 +50,13 @@ class CustomerDetailView(DetailView):
         table = InvoiceTable(data,exclude=('customer','edit','delete',))
         table.paginate(page=self.request.GET.get('page', 1), per_page=25)
         context['invoices']=table
-        inv = Invoice.objects.filter(customer=self.object.id).exclude(status="Paid")
+        salesin=Invoice.objects.filter(customer=self.object.id)
+        inv =salesin.exclude(status="Paid")
         how_many_days = 30
         context['current'] = inv.filter(created__gte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
         context['past'] = inv.filter(created__lte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
         context['monthwise'] = inv.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
+        context['monthwiserev'] = salesin.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
         return context
 
 class CustomerUpdateView(UpdateView):

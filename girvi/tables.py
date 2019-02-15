@@ -3,7 +3,7 @@ from django_tables2.utils import A
 from .models import Loan
 
 class LoanTable(tables.Table):
-    loanid=tables.LinkColumn('girvi_loan_detail',args=[A('slug')])
+    loanid=tables.LinkColumn('girvi_loan_detail',args=[A('pk')])
     # status = tables.Column(accessor='get_total_receipts',verbose_name="Paid",orderable=False)
     class Meta:
         model=Loan

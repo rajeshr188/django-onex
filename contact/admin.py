@@ -39,7 +39,7 @@ class SupplierAdminForm(forms.ModelForm):
 class SupplierAdmin(ImportExportActionModelAdmin):
     form = SupplierAdminForm
     resource_class = SupplierResource
-    list_display = ['name', 'slug', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
-    readonly_fields = ['name', 'slug', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
+    list_display = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
+    readonly_fields = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
 
 admin.site.register(Supplier, SupplierAdmin)

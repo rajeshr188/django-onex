@@ -8,7 +8,7 @@
     {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
     <ul class="nav justify-content-end">
       <li class="nav-item">
-        <a class="nav-link active" href="{% url 'contact_customer_update' object.slug%}">Edit Customer</a>
+        <a class="nav-link active" href="{% url 'contact_customer_update' object.pk%}">Edit Customer</a>
       </li>
       <li class="nav-item">
         <a class="nav-link "  href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
@@ -25,7 +25,7 @@
 <div class="mb-3 ">
   <div class="btn-toolbar role="toolbar"">
     <div class="btn-group mr-2" role="group">
-      <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.slug%}">Edit Customer</a>
+      <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.id%}">Edit Customer</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_invoice_create'  %}">Add Invoice</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_receipt_create' %}">Add Receipt</a>
@@ -71,7 +71,7 @@
   </div>
   <div class="card text-center">
     <div class="card-body">
-      <h5 class="card-title">Month-Wise</h5>
+      <h5 class="card-title">Unpaid Month-Wise</h5>
       <div class="table-responsive">
       <table class ="table table-sm table-striped table-bordered">
         <thead>
@@ -92,7 +92,28 @@
   </div>
   <div class="card text-center">
     <div class="card-body">
-      <h5 class="card-title">Payment-Time-Wise</h5>
+      <h5 class="card-title">Purchase Month-Wise</h5>
+      <div class="table-responsive">
+      <table class ="table table-sm table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%for month in monthwiserev%}
+          <tr>
+            <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+  <div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">Payment Expected</h5>
       <div class="table-responsive">
       <table class ="table table-sm table-striped table-bordered">
         <thead>
@@ -112,6 +133,7 @@
       </div>
     </div>
   </div>
+
 </div>
 <div class="row">
   <div class="col">
@@ -147,7 +169,7 @@
           <tbody>
             {% for loan in customer.get_loans   %}
               {% if loan.release %}
-                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
+                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                       <td>{{loan.created.date}} </td>
                       <td>{{loan.itemdesc}}</td>
                       <td>{{loan.itemweight}}</td>
@@ -155,12 +177,12 @@
                       <td>{{loan.noofmonths}} </td>
                       <td>{{loan.release}} </td>
                       <td>{{loan.interest}}</td>
-                      <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a></td>
+                      <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a></td>
 
                     </tr>
               {% elif loan.noofmonths > 12%}
                 <tr class="table-danger text-center">
-                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
+                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                   <td>{{loan.created.date}} </td>
                   <td>{{loan.itemdesc}}</td>
                   <td>{{loan.itemweight}}</td>
@@ -168,13 +190,13 @@
                   <td>{{loan.noofmonths}} </td>
                   <td>{{loan.release}} </td>
                   <td>{{loan.interestdue}}</td>
-                  <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
-                  <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
+                  <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                  <a href="{%url 'girvi_release_create' loan.id%}">Release</a></td>
 
                 </tr>
               {% else%}
                   <tr>
-                    <th scope="row"><a href="{% url 'girvi_loan_detail' loan.slug %}">{{loan.loanid}}</a></th>
+                    <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                     <td>{{loan.created.date}} </td>
                     <td>{{loan.itemdesc}}</td>
                     <td>{{loan.itemweight}}</td>
@@ -182,8 +204,8 @@
                     <td>{{loan.noofmonths}} </td>
                     <td>{{loan.release}} </td>
                     <td>{{loan.interest}}</td>
-                    <td><a href="{% url 'girvi_loan_update' loan.slug %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
-                    <a href="{%url 'girvi_release_create' loan.loanid%}">Release</a></td>
+                    <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
+                    <a href="{%url 'girvi_release_create' loan.id%}">Release</a></td>
 
                   </tr>
 
@@ -200,34 +222,7 @@
         <div class="table-responsive-sm">
         {% render_table invoices 'django_tables2/bootstrap4.html'  %}
         </div>
-        <!-- <div class="table-responsive-sm">
-        <table class="table table-sm table-bordered table-striped">
-          <thead class="thead-dark text-center">
-            <tr>
-              <th scope="col">Invoice Id</th>
-              <th scope="col">Created</th>
-              <th scope="col">Cash/Credit</th>
-              <th scope="col">Currency</th>
-              <th scope="col">Balance</th>
-              <th scope="col">Status</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for inv in customer.invoicee.all   %}
-                <tr class="text-center">
-                      <td><a href="{% url 'sales_invoice_detail' inv.slug%}">{{inv.id}} </a></td>
-                      <td>{{inv.created|date}}</td>
-                      <td>{{inv.balancetype}}</td>
-                      <td>{{inv.paymenttype}} </td>
-                      <td>{{inv.balance}}/{{inv.get_total_receipts}} </td>
-                      <td>{{inv.status}}</td>
-                      <td></td>
-                </tr>
-            {%endfor %}
-          </tbody>
-        </table>
-        </div> -->
+
       </div>
       <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         <div class="table-responsive-sm">
@@ -244,7 +239,7 @@
           <tbody>
             {% for rec in customer.receivedfrom.all   %}
                 <tr class="text-center">
-                      <td><a href="{% url 'sales_receipt_detail' rec.slug %}">{{rec.id}} </a></td>
+                      <td><a href="{% url 'sales_receipt_detail' rec.id %}">{{rec.id}} </a></td>
                       <td>{{rec.created|date}}</td>
                       <td>{{rec.type}}</td>
                       <td>{{rec.total}} </td>

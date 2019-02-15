@@ -6,7 +6,7 @@
 
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-      <a class="btn btn-primary ml-2" href="{% url 'contact_customer_update' object.slug%}">Edit Supplier</a>
+      <a class="btn btn-primary ml-2" href="{% url 'contact_supplier_update' object.id%}">Edit Supplier</a>
       <button class="btn btn-sm btn-outline-secondary ml-2">Export</button>
     </div>
   </div>
@@ -44,7 +44,7 @@
           <tbody>
             {% for inv in supplier.suppliers.all   %}
                 <tr class="text-center">
-                      <td><a href="{% url 'sales_invoice_detail' inv.slug%}">{{inv.id}}</a> </td>
+                      <td><a href="{% url 'purchase_invoice_detail' inv.id%}">{{inv.id}}</a> </td>
                       <td>{{inv.created|date}}</td>
                       <td>{{inv.customer.name}}</td>
                       <td>{{inv.balancetype}}</td>
@@ -72,7 +72,7 @@
           <tbody>
             {% for rec in supplier.supplier.all   %}
                 <tr class="text-center">
-                      <td><a href = "{% url 'purchase_payment_detail' rec.slug %}">{{rec.id}} </a></td>
+                      <td><a href = "{% url 'purchase_payment_detail' rec.id %}">{{rec.id}} </a></td>
                       <td>{{rec.created|date}}</td>
                       <td>{{rec.type}}</td>
                       <td>{{rec.total}} </td>

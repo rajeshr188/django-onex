@@ -8,7 +8,7 @@ class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.License
         fields = (
-            'slug',
+            'id',
             'name',
             'created',
             'last_updated',
@@ -25,7 +25,7 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Loan
         fields = (
-            'slug',
+            'id',
             'loanid',
             'customer',
             'created',
@@ -45,7 +45,7 @@ class ReleaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Release
         fields = (
-            'slug',
+            'id',
             'releaseid',
             'loan',
             'customer',

@@ -1,30 +1,29 @@
 from django.urls import reverse
-from django_extensions.db.fields import AutoSlugField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import DecimalField
-from django.db.models import IntegerField
-from django.db.models import PositiveIntegerField
-from django.db.models import PositiveSmallIntegerField
-from django.db.models import TextField
-from django_extensions.db.fields import AutoSlugField
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
-from django.db import models as models
-from django_extensions.db import fields as extension_fields
+from django.db import models
 from contact.models import Customer
 import datetime
 from django.utils import timezone
-from django.db.models import Avg,Count,Sum
+from django.db.models import Avg,Count,Sum,Func
+
+class Month(Func):
+    function = 'EXTRACT'
+    template = '%(function)s(MONTH from %(expressions)s)'
+    output_field = models.IntegerField()
+
+class Year(Func):
+    function = 'EXTRACT'
+    template = '%(function)s(YEAR from %(expressions)s)'
+    output_field = models.IntegerField()
 
 class License(models.Model):
 
     # Fields
     name = models.CharField(max_length=255)
-    slug = extension_fields.AutoSlugField(populate_from='name', blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     lt=(('PBL','Pawn Brokers License'),
@@ -35,18 +34,17 @@ class License(models.Model):
     phonenumber = models.CharField(max_length=30)
     propreitor = models.CharField(max_length=30)
 
-
     class Meta:
         ordering = ('-created',)
 
     def __str__(self):
-        return u'%s' % self.slug
+        return u'%s' % self.name
 
     def get_absolute_url(self):
-        return reverse('girvi_license_detail', args=(self.slug,))
+        return reverse('girvi_license_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('girvi_license_update', args=(self.slug,))
+        return reverse('girvi_license_update', args=(self.pk,))
 
     def loan_count(self):
         return self.loan_set.count()
@@ -71,7 +69,6 @@ class Loan(models.Model):
 
     # Fields
     loanid = models.CharField(max_length=255,unique=True)
-    slug = extension_fields.AutoSlugField(populate_from='loanid', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     itype=(
@@ -103,10 +100,10 @@ class Loan(models.Model):
         return f"{self.loanid} - {self.loanamount}"
 
     def get_absolute_url(self):
-        return reverse('girvi_loan_detail', args=(self.slug,))
+        return reverse('girvi_loan_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('girvi_loan_update', args=(self.slug,))
+        return reverse('girvi_loan_update', args=(self.pk,))
 
     def noofmonths(self):
         cd=datetime.datetime.now()
@@ -142,7 +139,6 @@ class Release(models.Model):
 
     # Fields
     releaseid = models.CharField(max_length=255,unique=True)
-    slug = extension_fields.AutoSlugField(populate_from='releaseid', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     interestpaid = models.IntegerField()
@@ -161,13 +157,13 @@ class Release(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return u'%s' % self.slug
+        return u'%s' % self.releaseid
 
     def get_absolute_url(self):
-        return reverse('girvi_release_detail', args=(self.slug,))
+        return reverse('girvi_release_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('girvi_release_update', args=(self.slug,))
+        return reverse('girvi_release_update', args=(self.pk,))
 
     def total_received(self):
         return self.loan.loanamount + self.interestpaid

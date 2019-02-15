@@ -19,10 +19,10 @@ urlpatterns += (
     # urls for Invoice
     path('sales/invoice/', views.InvoiceListView.as_view(), name='sales_invoice_list'),
     path('sales/invoice/create/', views.InvoiceCreateView.as_view(), name='sales_invoice_create'),
-    path('sales/invoice/detail/<slug:slug>/', views.InvoiceDetailView.as_view(), name='sales_invoice_detail'),
-    path('sales/invoice/detail/<int:id>/pdf', views.print_invoice,name='sales_invoicepdf'),
-    path('sales/invoice/update/<slug:slug>/', views.InvoiceUpdateView.as_view(), name='sales_invoice_update'),
-    path('sales/invoice/delete/<slug:slug>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
+    path('sales/invoice/detail/<int:pk>/', views.InvoiceDetailView.as_view(), name='sales_invoice_detail'),
+    path('sales/invoice/detail/<int:pk>/pdf', views.print_invoice,name='sales_invoicepdf'),
+    path('sales/invoice/update/<int:pk>/', views.InvoiceUpdateView.as_view(), name='sales_invoice_update'),
+    path('sales/invoice/delete/<int:pk>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
 )
 urlpatterns+=(
             path('sales/',views.home,name='sales_home'),
@@ -42,8 +42,8 @@ urlpatterns += (
     # urls for Receipt
     path('sales/receipt/', views.ReceiptListView.as_view(), name='sales_receipt_list'),
     path('sales/receipt/create/', views.ReceiptCreateView.as_view(), name='sales_receipt_create'),
-    path('sales/receipt/detail/<slug:slug>/', views.ReceiptDetailView.as_view(), name='sales_receipt_detail'),
-    path('sales/receipt/detail/<int:id>/pdf', views.print_receipt,name='receiptpdf'),
-    path('sales/receipt/update/<slug:slug>/', views.ReceiptUpdateView.as_view(), name='sales_receipt_update'),
-    path('sales/receipt/delete/<slug:slug>/', views.ReceiptDeleteView.as_view(), name='sales_receipt_delete'),
+    path('sales/receipt/detail/<int:pk>/', views.ReceiptDetailView.as_view(), name='sales_receipt_detail'),
+    path('sales/receipt/detail/<int:pk>/pdf', views.print_receipt,name='receiptpdf'),
+    path('sales/receipt/update/<int:pk>/', views.ReceiptUpdateView.as_view(), name='sales_receipt_update'),
+    path('sales/receipt/delete/<int:pk>/', views.ReceiptDeleteView.as_view(), name='sales_receipt_delete'),
 )

@@ -5,10 +5,9 @@
   <a class="btn btn-primary" href="{% url 'sales_receipt_create' %}">Add Receipt </a>
   <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Receipt</a>
   <a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a>
-  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.slug%}">Delete</a></p>
+  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.id%}">Delete</a></p>
 <table class="table table-sm table-striped table-bordered">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
-<tr><td>slug</td><td>{{ object.slug }}</td></tr>
 <tr><td>customer</td><td>{{ object.customer }}</td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
@@ -22,10 +21,10 @@
   <thead>
     <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
   </thead>
-{% for i in object.receiptline_set.all %}
+{% for i in object.receiptline_set.all.select_related %}
 
   <tr>
-    <td><a href="{% url 'sales_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
+    <td><a href="{% url 'sales_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
     <td>{{i.invoice.status}}</td>
     <td>{{i.amount}}</td>
     <td>{{i.invoice.get_balance}}</td>

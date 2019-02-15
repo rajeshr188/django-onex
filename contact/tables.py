@@ -7,16 +7,16 @@ class ImageColumn(tables.Column):
     def render(self, value):
         return format_html('<img src="{}" width="50" height="50" class="img-fluid img-thumbnail" alt={}/>', value.url,value.name)
 class CustomerTable(tables.Table):
-    name = tables.LinkColumn('contact_customer_detail', args=[A('slug')])
+    name = tables.LinkColumn('contact_customer_detail', args=[A('pk')])
     # pic = ImageColumn()
     relatedas=tables.Column(orderable=False)
-    loan=tables.Column(accessor='get_total_loans',verbose_name='No.of Loans',orderable=False)
+    loan=tables.Column(accessor='get_loans_count',verbose_name='No.of Loans',orderable=False)
     loanamount = tables.Column(accessor='get_total_loanamount',verbose_name='Loan Amount',orderable=False)
     gweight=tables.Column(accessor='get_gold_weight',verbose_name='Gold')
     sweight=tables.Column(accessor='get_silver_weight',verbose_name='Silver')
     # interestdue = tables.Column(accessor='get_interestdue',verbose_name='Interest')
-    edit = tables.LinkColumn('contact_customer_update', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-    delete = tables.LinkColumn('contact_customer_delete', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
+    edit = tables.LinkColumn('contact_customer_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
+    delete = tables.LinkColumn('contact_customer_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 
     def render_edit(self):
         return 'Edit'
@@ -32,10 +32,10 @@ class CustomerTable(tables.Table):
         empty_text = "There are no customers matching the search criteria..."
 
 class SupplierTable(tables.Table):
-    name = tables.LinkColumn('contact_supplier_detail', args=[A('slug')])
+    name = tables.LinkColumn('contact_supplier_detail', args=[A('pk')])
     pic = ImageColumn()
-    edit = tables.LinkColumn('contact_supplier_update', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-    delete = tables.LinkColumn('contact_supplier_delete', args=[A('slug')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
+    edit = tables.LinkColumn('contact_supplier_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
+    delete = tables.LinkColumn('contact_supplier_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 
     def render_edit(self):
         return 'Edit'

@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters','widget_tweaks',
-    'tempus_dominus','controlcenter','explorer','debug_toolbar','silk',
+    'tempus_dominus','controlcenter','explorer','debug_toolbar',
 
     # Local
     'users',
@@ -66,7 +66,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'djangox_project.urls'

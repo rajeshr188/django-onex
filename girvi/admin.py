@@ -15,8 +15,8 @@ class LicenseAdminForm(forms.ModelForm):
 
 class LicenseAdmin(admin.ModelAdmin):
     form = LicenseAdminForm
-    list_display = ['name', 'slug', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
-    readonly_fields = ['name', 'slug', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
+    list_display = ['name', 'id', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
+    readonly_fields = ['name', 'id', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
 
 admin.site.register(License, LicenseAdmin)
 
@@ -42,8 +42,8 @@ class LoanAdminForm(forms.ModelForm):
 class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
-    list_display = ['id','loanid', 'slug', 'created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
-    readonly_fields = ['id','loanid', 'slug', 'created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
+    list_display = ['id','loanid','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
+    readonly_fields = ['id','loanid','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
 
 admin.site.register(Loan, LoanAdmin)
 
@@ -68,8 +68,8 @@ class ReleaseAdminForm(forms.ModelForm):
 class ReleaseAdmin(ImportExportModelAdmin):
     form = ReleaseAdminForm
     resource_class=ReleaseResource
-    
-    list_display = ['releaseid','loan','customer', 'slug', 'created', 'last_updated', 'interestpaid']
-    readonly_fields = ['releaseid','loan','customer', 'slug', 'created', 'last_updated', 'interestpaid']
+
+    list_display = ['releaseid','loan','customer','created', 'last_updated', 'interestpaid']
+    readonly_fields = ['releaseid','loan','customer','created', 'last_updated', 'interestpaid']
 
 admin.site.register(Release, ReleaseAdmin)

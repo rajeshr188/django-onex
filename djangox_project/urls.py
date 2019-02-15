@@ -18,7 +18,7 @@ urlpatterns = [
     path('select2/', include('django_select2.urls')),
     path('admin/dashboard/',controlcenter.urls),
     path('explorer/', include('explorer.urls')),
-    path('silk/',include('silk.urls',namespace='silk')),
+    # path('silk/',include('silk.urls',namespace='silk')),
 ]
 
 if settings.DEBUG:

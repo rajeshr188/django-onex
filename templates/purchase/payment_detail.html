@@ -20,7 +20,7 @@
 {% for i in object.paymentline_set.all %}
 
   <tr>
-    <td><a href="{% url 'purchase_invoice_detail' i.invoice.slug%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.supplier.name}}/{{i.invoice.balance}}</a></td>
+    <td><a href="{% url 'purchase_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}{{i.invoice.id}}/{{i.invoice.supplier.name}}/{{i.invoice.balance}}</a></td>
     <td>{{i.invoice.status}}</td>
     <td>{{i.amount}}</td>
   </tr>

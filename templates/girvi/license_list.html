@@ -8,7 +8,7 @@
     <tr>
     <td>ID</td><td>Link</td>
         <td>name</td>
-        <td>slug</td>
+        <td>id</td>
         <td>created</td>
         <td>last_updated</td>
         <td>type</td>
@@ -22,7 +22,7 @@
         <td>{{object.pk}}</td>
         <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
         <td>{{ object.name }}</td>
-        <td>{{ object.slug }}</td>
+        <td>{{ object.id }}</td>
         <td>{{ object.created }}</td>
         <td>{{ object.last_updated }}</td>
         <td>{{ object.type }}</td>
@@ -34,7 +34,7 @@
     {% endfor %}
     </table>
     </div>
-  
+
 </div>
 <a class="btn btn-primary" href="{% url 'girvi_license_create' %}">Create new License</a>
 {% endblock %}

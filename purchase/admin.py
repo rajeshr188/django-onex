@@ -22,7 +22,7 @@ class InvoiceResource(resources.ModelResource):
 class InvoiceAdmin(ImportExportActionModelAdmin):
     form = InvoiceAdminForm
     resource_class = InvoiceResource
-    list_display = ['id','slug', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
+    list_display = ['id','created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
 
 admin.site.register(Invoice, InvoiceAdmin)
 
@@ -57,7 +57,7 @@ class PaymentResourse(resources.ModelResource):
 class PaymentAdmin(ImportExportActionModelAdmin):
     form = PaymentAdminForm
     resource_class = PaymentResourse
-    list_display = ['id','slug', 'created', 'last_updated', 'type', 'total', 'description']
+    list_display = ['id','created', 'last_updated', 'type', 'total', 'description']
 
 
 admin.site.register(Payment, PaymentAdmin)

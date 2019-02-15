@@ -8,8 +8,8 @@
   <h1 class="h2">Loan Detail <a class="btn btn-default" href="{% url 'loan-list' %}">Loan Listing</a></h1>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-      <a class="btn btn-secondary" href="{% url 'girvi_release_create' loan.slug %}">Release</a>
-        <a class="btn btn-primary" href="{% url 'girvi_loan_update' loan.slug %}">Update</a>
+      <a class="btn btn-secondary" href="{% url 'girvi_release_create' loan.id %}">Release</a>
+        <a class="btn btn-primary" href="{% url 'girvi_loan_update' loan.id %}">Update</a>
           <a class="btn btn-primary" href="{% url 'girvi_loan_delete' loan.id %}">Delete</a>
 
 
@@ -21,7 +21,7 @@
 </div>
 <table class="table table-sm table-striped">
 <tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
-<tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.customer.slug %}">{{ object.customer }}</a></td></tr>
+<tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>itemtype</td><td>{{ object.itemtype }}</td></tr>

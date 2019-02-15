@@ -1,19 +1,10 @@
 from django.urls import reverse
-from django_extensions.db.fields import AutoSlugField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import DecimalField
-from django.db.models import IntegerField
-from django.db.models import PositiveSmallIntegerField
-from django.db.models import TextField
-from django_extensions.db.fields import AutoSlugField
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
-from django.db import models as models
-from django_extensions.db import fields as extension_fields
+from django.db import models
 from contact.models import Supplier
 from product.models import ProductVariant
 from django.utils import timezone
@@ -22,7 +13,6 @@ from django.db.models import Avg,Count,Sum
 class Invoice(models.Model):
 
     # Fields
-    slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
     rate = models.PositiveSmallIntegerField(default=3000)
@@ -58,11 +48,11 @@ class Invoice(models.Model):
         return f"{self.supplier} | {self.id} | {self.created.date()} | {self.get_balance()}"
 
     def get_absolute_url(self):
-        return reverse('purchase_invoice_detail', args=(self.slug,))
+        return reverse('purchase_invoice_detail', args=(self.pk,))
 
 
     def get_update_url(self):
-        return reverse('purchase_invoice_update', args=(self.slug,))
+        return reverse('purchase_invoice_update', args=(self.pk,))
 
     def get_weight(self):
         return self.purchaseinvoices.aggregate(t=Sum('weight'));
@@ -115,7 +105,6 @@ class InvoiceItem(models.Model):
 class Payment(models.Model):
 
     # Fields
-    slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
     btype_choices=(
@@ -123,10 +112,10 @@ class Payment(models.Model):
                 ("Metal","Metal")
             )
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
-    rate=IntegerField(default=0)
-    weight = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    touch = DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
-    nettwt = DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
+    rate= models.IntegerField(default=0)
+    weight = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
+    touch = models.DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
+    nettwt = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
 
@@ -140,18 +129,16 @@ class Payment(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return u'%s' % self.slug
+        return u'%s' % self.id
 
     def get_absolute_url(self):
-        return reverse('purchase_payment_detail', args=(self.slug,))
-
+        return reverse('purchase_payment_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('purchase_payment_update', args=(self.slug,))
+        return reverse('purchase_payment_update', args=(self.pk,))
 
 class PaymentLine(models.Model):
 
-    slug = extension_fields.AutoSlugField(populate_from='id', blank=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
     amount=models.DecimalField(max_digits=10,decimal_places=3)
@@ -160,10 +147,10 @@ class PaymentLine(models.Model):
     invoice=models.ForeignKey(Invoice,on_delete=models.CASCADE)
 
     def __str__(self):
-        return u'%s' % self.slug
+        return u'%s' % self.id
 
     def get_absolute_url(self):
-        return reverse('purchase_paymentline_detail', args=(self.slug,))
+        return reverse('purchase_paymentline_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('purchase_paymentline_update', args=(self.slug,))
+        return reverse('purchase_paymentline_update', args=(self.pk,))

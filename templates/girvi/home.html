@@ -12,13 +12,22 @@
   <div class="tab-pane fade show active " id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
     <div class="card-columns">
 
-      <div class="card">
+      <div class="card text-center border-primary mb-3">
         <h5 class="card-title">Card title</h5>
         <h6 class="card-subtitle mb-2 text-muted">Customers with Loans : {{data.customer.withloans}}</h6>
           <p>Customers without Loans : {{data.customer.withoutloans}}</p>
             <p></p>
       </div>
-
+      <div class="card">
+        <div class="card-body">
+          <canvas id="loanChart" width="500" height="500"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <canvas id="myChart" width="500" height="500"></canvas>
+        </div>
+      </div>
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Customers</h5>
@@ -74,4 +83,71 @@
   <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...4s</div>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js" type="text/javascript"></script>
+<script>
+  var s1 = {
+  label: 'loan amount',
+  borderColor: 'red',
+   data: [{% for i in data.loan.datechart %} {x:'{{i.year}}',y:{{i.l}}},{% endfor %}]
+
+};
+
+var ctx1 = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx1, {
+  type: 'line',
+  data: { labels:[{% for i in data.loan.datechart %}{{i.year}},{%endfor%}],datasets: [s1] },
+});
+var ctx = document.getElementById("loanChart");
+var myChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ["Gold", "Silver", "Bronze"],
+        datasets: [{
+
+            data:{{data.loan.chart}},
+            backgroundColor: [
+       "#F7464A",
+       "#46BFBD",
+       "#FDB45C",
+       "#949FB1",
+       "#4D5360",
+     ],
+            // backgroundColor: [
+            //     'rgba(255, 99, 132, 0.2)',
+            //     'rgba(54, 162, 235, 0.2)',
+            //     'rgba(255, 206, 86, 0.2)',
+            //     'rgba(75, 192, 192, 0.2)',
+            //     'rgba(153, 102, 255, 0.2)',
+            //     'rgba(255, 159, 64, 0.2)'
+            // ],
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options : {
+      tooltips: {
+    callbacks: {
+      label: function(tooltipItem, data) {
+        var dataset = data.datasets[tooltipItem.datasetIndex];
+        var meta = dataset._meta[Object.keys(dataset._meta)[0]];
+        var total = meta.total;
+        var currentValue = dataset.data[tooltipItem.index];
+        var percentage = parseFloat((currentValue/total*100).toFixed(1));
+        return currentValue + ' (' + percentage + '%)';
+      },
+      title: function(tooltipItem, data) {
+        return data.labels[tooltipItem[0].index];
+      }
+    }
+  }
+  },
+});
+</script>
 {% endblock %}

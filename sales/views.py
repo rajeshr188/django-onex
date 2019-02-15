@@ -19,9 +19,14 @@ from django.http import JsonResponse
 import json
 def home(request):
     inv = Invoice.objects
-    sales_by_month=inv.annotate(month = Month('created'),year=Year('created')).values('year','month').order_by('month').annotate(tc = Coalesce(Sum('balance',filter = Q(balancetype='Cash')),0),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
+    sales_by_month=inv.annotate(month = Month('created'),year=Year('created')).\
+                    values('year','month').order_by('month').\
+                    annotate(tc = Coalesce(Sum('balance',filter = Q(balancetype='Cash')),0),
+                            tm = Coalesce(Sum('balance',filter = Q(balancetype = 'Metal')),0))
     rec = Receipt.objects
-    receipts_by_month = rec.annotate(month = Month('created'),year=Year('created')).values('month','year').order_by('month').annotate(tc = Sum('total',filter = Q(type='Cash')),tm = Sum('total',filter = Q(type = 'Metal')))
+    receipts_by_month = rec.annotate(month = Month('created'),year=Year('created')).\
+                    values('month','year').order_by('month').\
+                    annotate(tc = Sum('total',filter = Q(type='Cash')),tm = Sum('total',filter = Q(type = 'Metal')))
     data = dict()
     data['sales_by_month']=sales_by_month
     # var_fixed = []
@@ -48,23 +53,33 @@ def list_balance(request):
     grec=receipts.annotate(grec=Sum('total',filter=Q(type='Metal'))).values('grec')
     crec=receipts.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
 
-    invoices=Invoice.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
-    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
-    cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+    invoices=Invoice.objects.filter(customer=OuterRef('pk')).\
+                order_by().values('customer')
+    gbal=invoices.annotate(gbal=Sum('balance',
+            filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
+    cbal=invoices.annotate(cbal=Sum('balance',
+            filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
 
-    balance=Customer.objects.filter(type='Wh').values('slug','name').annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).order_by('name')
+    balance=Customer.objects.filter(type='Wh').values('id','name').\
+                annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),
+                        cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).\
+                        order_by('name')
 
-    balance_total = balance.aggregate(gbal_total = Sum(F('gbal')),grec_total = Sum(F('grec')),cbal_total = Sum(F('cbal')),crec_total = Sum(F('crec')))
-    if balance_total['gbal_total'] is None: balance_total['gbal_total']=0
-    if balance_total['grec_total'] is None: balance_total['grec_total']=0
-    if balance_total['cbal_total'] is None: balance_total['cbal_total']=0
-    if balance_total['crec_total'] is None: balance_total['crec_total']=0
+    balance_total = balance.aggregate(gbal_total = Coalesce(Sum(F('gbal')),0),
+                    grec_total = Coalesce(Sum(F('grec')),0),
+                    cbal_total = Coalesce(Sum(F('cbal')),0),
+                    crec_total = Coalesce(Sum(F('crec')),0))
+
     balance_nett_gold = balance_total['gbal_total']  - balance_total['grec_total']
     balance_nett_cash = balance_total['cbal_total']-balance_total['crec_total']
 
-    balance_by_month = Invoice.objects.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
+    balance_by_month = Invoice.objects.annotate(month = Month('created')).\
+                        values('month').order_by('month').\
+                        annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
 
-    context={'balance':balance,'balance_total':balance_total,'balance_nett_gold':balance_nett_gold,'balance_nett_cash':balance_nett_cash,
+    context={'balance':balance,'balance_total':balance_total,
+                'balance_nett_gold':balance_nett_gold,
+                'balance_nett_cash':balance_nett_cash,
                 'balance_by_month':balance_by_month,
 
     }
@@ -76,7 +91,8 @@ def graph(request):
 
 def sales_count_by_month(request):
     # data = Invoice.objects.extra(select={'date': 'DATE(created)'},order_by=['date']).values('date').annotate(count_items=Count('id'))
-    data = Invoice.objects.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Metal')))
+    data = Invoice.objects.annotate(month = Month('created')).values('month').\
+            order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Metal')))
     return JsonResponse(list(data), safe=False)
 
 class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):

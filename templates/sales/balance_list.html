@@ -17,7 +17,7 @@
           <tr>
               <th>Customer</th>
               <th>Gold Credit</th>
-              <th>Paid Debit</th>
+              <th>Gold Debit</th>
               <th>Gold Balance</th>
               <th>Cash Credit</th>
               <th>Cash Debit</th>
@@ -27,7 +27,7 @@
 
           {% for object in balance %}
           <tr>
-              <td><a href="{% url 'contact_customer_detail' object.slug%}">{{object.name}}  {{object.area}}</a></td>
+              <td><a href="{% url 'contact_customer_detail' object.id%}">{{object.name}}  {{object.area}}</a></td>
               <td>{{object.gbal}}</td>
               <td>{{object.grec}}</td>
               <td>{{object.gold}}</td>

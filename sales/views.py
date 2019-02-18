@@ -17,6 +17,7 @@ from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
 from django.http import JsonResponse
 import json
+
 def home(request):
     inv = Invoice.objects
     sales_by_month=inv.annotate(month = Month('created'),year=Year('created')).\
@@ -348,6 +349,8 @@ class ReceiptUpdateView(UpdateView):
         amount=self.object.total
         invpaid = self.object.get_line_totals()
         # experimental
+        if invpaid is None:
+            invpaid=0
         for item in items:
             if item.invoice.balance == item.amount :
                 invpaid += item.amount

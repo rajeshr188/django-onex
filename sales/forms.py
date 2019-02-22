@@ -73,4 +73,4 @@ class ReceiptLineForm(forms.ModelForm):
         fields=['invoice','amount']
 
 ReceiptLineFormSet=inlineformset_factory(Receipt,ReceiptLine,
-    fields=('invoice','amount','receipt'),extra=1,can_delete=True,form=ReceiptLineForm)
+    fields=('invoice','amount','receipt'),extra=0,can_delete=True,form=ReceiptLineForm)

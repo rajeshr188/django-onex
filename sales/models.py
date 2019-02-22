@@ -59,7 +59,7 @@ class Invoice(models.Model):
         # )
 
     def __str__(self):
-        return f"{self.customer.name} / {self.id} / {self.created.date()} / {self.get_balance()}"
+        return f"{self.id}"
 
     def get_absolute_url(self):
         return reverse('sales_invoice_detail', args=(self.pk,))

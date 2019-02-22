@@ -14,7 +14,7 @@ class InvoiceAdminForm(forms.ModelForm):
 
 class InvoiceResource(resources.ModelResource):
     customer = fields.Field(column_name='customer',attribute='customer',
-                            widget=ForeignKeyWidget(Customer,'pk'))
+                            widget=ForeignKeyWidget(Customer,'name'))
     class Meta:
         model = Invoice
         fields = ('id','customer','created','rate','balancetype','paymenttype','balance','status',)

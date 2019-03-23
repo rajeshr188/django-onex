@@ -18,7 +18,7 @@ class Customer(models.Model):
     pic=models.ImageField(upload_to='contacts/customer/pic/',null=True,blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
-    phonenumber = models.CharField(max_length=15)
+    phonenumber = models.CharField(max_length=15,default='911')
     Address = models.TextField(max_length=100,blank=True)
     ctype=(('Wh','Wholesale'),('Re','Retail'))
     type = models.CharField(max_length=30,choices=ctype,default='Re')

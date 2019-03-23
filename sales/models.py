@@ -39,7 +39,6 @@ class Invoice(models.Model):
     paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
-                    ("Draft","Draft"),
                     ("Paid","Paid"),
                     ("Partially Paid","PartiallyPaid"),
                     ("Unpaid","Unpaid")
@@ -130,8 +129,13 @@ class Receipt(models.Model):
     touch = models.DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
     nettwt = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
-    description = models.TextField(max_length=100,default="describe here")
-
+    description = models.TextField(max_length=50,default="describe here")
+    status_choices=(
+                    ("Allotted","Allotted"),
+                    ("Partially Allotted","PartiallyAllotted"),
+                    ("Unallotted","Unallotted")
+    )
+    status=models.CharField(max_length=15,choices=status_choices,default="Unallotted")
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -140,6 +144,17 @@ class Receipt(models.Model):
 
     class Meta:
         ordering = ('-created',)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        # print('insave')
+        total_allotted=self.get_line_totals()
+        if total_allotted is not None :
+            if total_allotted == self.total:
+                self.status="Allotted"
+            else:
+                self.status="Unallotted"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return u'%s' % self.id

@@ -33,7 +33,7 @@ class ReceiptTable(tables.Table):
     delete = tables.LinkColumn('sales_receipt_delete', args=[A('id')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 
     def render_customer(self,value):
-        return f"{value.name} / {value.area}"
+        return f"{value.name}"
     def render_created(self,value):
         return value.date
     def render_edit(self):
@@ -43,6 +43,6 @@ class ReceiptTable(tables.Table):
 
     class Meta:
         model = Receipt
-        fields = ('id','created','customer','type','total','description')
+        fields = ('id','created','customer','type','total','description','status')
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "No Receipts Found matching your search..."

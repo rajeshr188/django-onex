@@ -56,7 +56,7 @@ class ReceiptForm(forms.ModelForm):
     )
     class Meta:
         model = Receipt
-        fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description']
+        fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description','status']
 
 class ReceiptLineForm(forms.ModelForm):
     # invoice=forms.ModelChoiceField(

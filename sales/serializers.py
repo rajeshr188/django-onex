@@ -8,7 +8,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Invoice
         fields = (
-            'id', 
+            'id',
             'created',
             'last_updated',
             'rate',
@@ -43,5 +43,5 @@ class ReceiptSerializer(serializers.ModelSerializer):
             'last_updated',
             'type',
             'total',
-            'description',
+            'description','status',
         )

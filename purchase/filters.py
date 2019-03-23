@@ -17,4 +17,4 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model=Payment
-        fields=['id','created','type']
+        fields=['id','created','type','status']

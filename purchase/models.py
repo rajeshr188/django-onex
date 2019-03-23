@@ -28,7 +28,6 @@ class Invoice(models.Model):
     paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
-                    ("Draft","Draft"),
                     ("Paid","Paid"),
                     ("PartiallyPaid","PartiallyPaid"),
                     ("Unpaid","Unpaid")
@@ -45,7 +44,7 @@ class Invoice(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return f"{self.supplier} | {self.id} | {self.created.date()} | {self.get_balance()}"
+        return f"{self.id}"
 
     def get_absolute_url(self):
         return reverse('purchase_invoice_detail', args=(self.pk,))
@@ -118,6 +117,12 @@ class Payment(models.Model):
     nettwt = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
+    status_choices = (
+                        ("Allotted","Allotted"),
+                        ("Partially Allotted","PartiallyAllotted"),
+                        ("Unallotted","Unallotted"),
+                        )
+    status=models.CharField(max_length=15,choices=status_choices,default="Unallotted")
 
     # Relationship Fields
     supplier = models.ForeignKey(
@@ -136,6 +141,9 @@ class Payment(models.Model):
 
     def get_update_url(self):
         return reverse('purchase_payment_update', args=(self.pk,))
+
+    def get_line_totals(self):
+        return self.paymentline_set.aggregate(t=Sum('amount'))['t']
 
 class PaymentLine(models.Model):
 

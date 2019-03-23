@@ -10,33 +10,37 @@
         <div class="form-row">
             <div class="form-group col-md-4">
               {{ form.supplier.errors }}
-              {% bootstrap_field form.supplier %}
+              {% bootstrap_field form.supplier size="small" %}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.created.errors }}
+              {% bootstrap_field form.created size="small" %}
             </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-4">
               {{ form.type.errors }}
-              {% bootstrap_field form.type %}
+              {% bootstrap_field form.type size="small" %}
             </div>
             <div class="form-group col-md-4">
               {{ form.rate.errors }}
-              {% bootstrap_field form.rate %}
+              {% bootstrap_field form.rate size="small" %}
             </div>
             <div class="form-group col-md-4">
               {{ form.description.errors }}
-              {% bootstrap_field form.description %}
+              {% bootstrap_field form.description size="small" %}
             </div>
         </div>
 
         <div class="form-group row">
           {{ form.weight.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.weight %}</div>
+          <div class="col-sm-3">{% bootstrap_field form.weight size="small" %}</div>
           {{ form.touch.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.touch %}</div>
+          <div class="col-sm-3">{% bootstrap_field form.touch size="small" %}</div>
           {{ form.nettwt.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.nettwt %}</div>
+          <div class="col-sm-3">{% bootstrap_field form.nettwt size="small" %}</div>
           {{ form.total.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.total %}</div>
+          <div class="col-sm-3">{% bootstrap_field form.total size="small" %}</div>
         </div>
 
 
@@ -61,7 +65,7 @@
                 {% for field in form.visible_fields %}
                 <td class="{{field.name}}" >
                     <!-- {{ field.errors.as_ul }} -->
-                    {% bootstrap_field field show_label=False%}
+                    {% bootstrap_field field show_label=False size="small" %}
                   </td>
                   {% endfor %}
                 </tr>

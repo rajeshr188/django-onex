@@ -52,10 +52,7 @@ class Invoice(models.Model):
     )
 
     class Meta:
-        ordering = ('created',)
-        # indexes = (
-        #     BrinIndex(fields=['created']),
-        # )
+        ordering = ('-created',)
 
     def __str__(self):
         return f"{self.id}"
@@ -69,8 +66,6 @@ class Invoice(models.Model):
     def get_weight(self):
         return self.invoiceitem_set.aggregate(t=Sum('weight'));
 
-    # def get_nettwt(self):
-    #     return self.invoiceitem_set.aggregate(t=sum('get_nettwt'));
     def get_total_receipts(self):
         paid=self.receiptline_set.aggregate(t=Sum('amount'))
         return paid['t']

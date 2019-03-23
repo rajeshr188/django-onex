@@ -5,26 +5,19 @@ from contact.models import Customer
 from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget,DecimalWidget
-
-from import_export import widgets
 import decimal
-class CustomDecimalWidget(widgets.DecimalWidget):
+
+class CustomDecimalWidget(DecimalWidget):
     """
     Widget for converting decimal fields.
     """
-
     def clean(self, value,row=None):
         if self.is_empty(value):
             return None
         return decimal.Decimal(str(value))
 
-class customerWidget(widgets.ForeignKeyWidget):
+class customerWidget(ForeignKeyWidget):
 
-    # def clean(self, value):
-    #     if value:
-    #         return self.model.objects.get_or_create(
-    #             name=val,type='Wh',
-    #         )
     def clean(self, value, row=None, *args, **kwargs):
         return self.model.objects.get_or_create(name = value,type='Wh')[0]
 
@@ -78,11 +71,8 @@ class ReceiptResource(resources.ModelResource):
     customer=fields.Field(column_name='customer',
                             attribute='customer',
                             widget=ForeignKeyWidget(Customer,'name'))
-    # invoice = fields.Field(column_name = 'invoice',attribute = 'invoice',
-    #                             widget= ForeignKeyWidget(Invoice,'pk'))
     total = fields.Field(column_name = 'total',attribute='total',
                             widget = CustomDecimalWidget())
-
     class Meta:
         model = Receipt
         fields=('id','customer','created','last_updated','type','total','description','status')

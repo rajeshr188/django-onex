@@ -4,7 +4,21 @@ from .models import Invoice, InvoiceItem, Payment
 from contact.models import Supplier
 from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
-from import_export.widgets import ForeignKeyWidget
+from import_export.widgets import ForeignKeyWidget,DecimalWidget
+import decimal
+
+class CustomDecimalWidget(DecimalWidget):
+    """
+    Widget for converting decimal fields.
+    """
+    def clean(self, value,row=None):
+        if self.is_empty(value):
+            return None
+        return decimal.Decimal(str(value))
+class supplierWidget(ForeignKeyWidget):
+
+    def clean(self, value, row=None, *args, **kwargs):
+        return self.model.objects.get_or_create(name = value,type='Wh')[0]
 
 class InvoiceAdminForm(forms.ModelForm):
 
@@ -14,10 +28,12 @@ class InvoiceAdminForm(forms.ModelForm):
 
 class InvoiceResource(resources.ModelResource):
     supplier = fields.Field(column_name = 'supplier',attribute = 'supplier',
-                                widget=ForeignKeyWidget(Supplier,'pk'))
+                                widget=supplierWidget(Supplier,'name'))
     class Meta:
         model = Invoice
         fields=('id','supplier','created','rate','balancetype','paymenttype','balance','status',)
+        skip_unchanged = True
+        report_skipped = False
 
 class InvoiceAdmin(ImportExportActionModelAdmin):
     form = InvoiceAdminForm
@@ -46,18 +62,20 @@ class PaymentAdminForm(forms.ModelForm):
         fields = '__all__'
 
 class PaymentResourse(resources.ModelResource):
-    invoice = fields.Field(column_name = 'invoice',attribute = 'invoice',
-                                widget= ForeignKeyWidget(Invoice,'pk'))
-    supplier = fields.Field(column_name = 'supplier',attribute = 'supplier',
-                                widget=ForeignKeyWidget(Supplier,'pk')
-                    )
+    supplier=fields.Field(column_name='supplier',
+                            attribute='supplier',
+                            widget=ForeignKeyWidget(Supplier,'name'))
+    total = fields.Field(column_name = 'total',attribute='total',
+                            widget = CustomDecimalWidget())
     class Meta:
         model = Payment
+        skip_unchanged = True
+        report_skipped = False
 
 class PaymentAdmin(ImportExportActionModelAdmin):
     form = PaymentAdminForm
     resource_class = PaymentResourse
-    list_display = ['id','created', 'last_updated', 'type', 'total', 'description']
+    list_display = ['id','created', 'last_updated', 'type', 'total', 'description','status']
 
 
 admin.site.register(Payment, PaymentAdmin)

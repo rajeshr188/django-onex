@@ -33,9 +33,7 @@
             <div class="form-group col-md-3">
               {{ form.description.errors }}
               {% bootstrap_field form.description size="small"%}
-
             </div>
-
         </div>
 
         <div class="form-group row">
@@ -48,7 +46,6 @@
           {{ form.total.errors }}
           <div class="col-sm-3">{% bootstrap_field form.total size="small"%}</div>
         </div>
-
 
         {{ receiptline_form.management_form }}
         {{ receiptline_form.non_form_errors }}
@@ -80,9 +77,7 @@
           {% endfor %}
           <div class="form-group row">
             <div class="col"><label>Remaining balance to allot :</label><p id="balance">''</p></div>
-
-            </div>
-
+          </div>
         <button class="btn btn-primary" type="submit">Save Receipt</button>
     </form>
 

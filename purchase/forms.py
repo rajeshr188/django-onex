@@ -28,7 +28,7 @@ class PaymentForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Supplier.objects.all(),widget=Select2Widget)
     class Meta:
         model = Payment
-        fields = ['supplier','type', 'weight','touch','nettwt','rate','total', 'description' ]
+        fields = ['supplier','created','type', 'weight','touch','nettwt','rate','total', 'description','status']
 
 class PaymentLineForm(forms.ModelForm):
 

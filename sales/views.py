@@ -107,6 +107,7 @@ from openpyxl import Workbook,load_workbook
 import tablib
 import re
 import time
+import pytz
 def simple_upload(request):
     if request.method == 'POST' and request.FILES['myfile']:
         myfile = request.FILES['myfile']
@@ -116,7 +117,7 @@ def simple_upload(request):
         wb=load_workbook(myfile,read_only=True)
         sheet = wb.active
 
-        inv = tablib.Dataset(headers = ['id','customer','created','rate','description','balancetype','paymenttype','balance'])
+        inv = tablib.Dataset(headers = ['id','customer','created','description','balancetype','paymenttype','balance'])
         rec = tablib.Dataset(headers = ['id','customer','created','description','type','total',])
         bal = tablib.Dataset(headers = ['customer','cash_balance','metal_balance'])
         pname = None
@@ -125,39 +126,41 @@ def simple_upload(request):
                 pname = re.search(r'\)\s([^)]+)', row[0].value).group(1).strip()
             elif pname is not None and row[0].value is None:
                 if row[1].value is not None:
+                    date = pytz.utc.localize(row[1].value)
                     # id = re.search(r'\:\s([^)]+)', row[3].value).group(1).strip()
                     if row[4].value is not None:
-                        inv_list = ['', pname, row[1].value,
-                           '', row[2].value,'Credit', 'Cash', row[4].value]
+                        inv_list = ['', pname,date,
+                           row[2].value,'Cash','Credit',  row[4].value]
                         inv.append(inv_list)
                     if row[9].value is not None:
-                        rec_list = ['',pname, row[1].value,
+                        rec_list = ['',pname, date,
                             row[2].value, 'Cash', row[9].value]
                         rec.append(rec_list)
                     if row[22].value is not None:
-                        inv_list = ['',pname, row[1].value,
-                            '',row[2].value,'Credit','Metal', row[22].value]
+                        inv_list = ['',pname, date,
+                            row[2].value,'Metal','Credit', row[22].value]
                         inv.append(inv_list)
                     if row[24].value is not None:
-                        rec_list = ['',pname, row[1].value,
+                        rec_list = ['',pname, date,
                             row[2].value,'Metal', row[24].value]
                         rec.append(rec_list)
                 elif row[1].value is None and (row[4].value and row[16].value and row[26].value is not None):
                     bal_list = [pname,row[16].value,row[26].value]
                     bal.append(bal_list)
-        print(bal.export('csv'))
+        # print(bal.export('csv'))
         inv_r = InvoiceResource()
-        # rec_r = ReceiptResource()
-        
-        print("running dry run")
-        inv_result = inv_r.import_data(inv, dry_run=True)  # Test the data import
-        # rec_result = rec_r.import_data(rec,dry_run=True)
+        rec_r = ReceiptResource()
 
-        if not inv_result.has_errors():
-            print("running wet")
-            inv_r.import_data(inv, dry_run=False)  # Actually import now
-        else :
-            print("error occured")
+        print("running  inv wet run")
+        inv_result = inv_r.import_data(inv, dry_run=False)  # Test the data import
+        print("running  rec wet run")
+        rec_result = rec_r.import_data(rec,dry_run=False)
+        print("succesfuly imported")
+        # if not inv_result.has_errors():
+        #     print("running wet")
+        #     inv_r.import_data(inv, dry_run=False)  # Actually import now
+        # else :
+        #     print("error occured")
         # if not rec_result.has_errors():
         #     rec_r.import_data(dataset, dry_run=False)  # Actually import now
 

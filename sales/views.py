@@ -96,6 +96,75 @@ def sales_count_by_month(request):
             order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Metal')))
     return JsonResponse(list(data), safe=False)
 
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+import tablib
+from .admin import InvoiceResource,ReceiptResource
+import openpyxl
+import datetime
+from openpyxl import Workbook,load_workbook
+import tablib
+import re
+import time
+def simple_upload(request):
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        # fs = FileSystemStorage()
+        # filename = fs.save(myfile.name, myfile)
+        # uploaded_file_url = fs.url(filename)
+        wb=load_workbook(myfile,read_only=True)
+        sheet = wb.active
+
+        inv = tablib.Dataset(headers = ['id','customer','created','rate','description','balancetype','paymenttype','balance'])
+        rec = tablib.Dataset(headers = ['id','customer','created','description','type','total',])
+        bal = tablib.Dataset(headers = ['customer','cash_balance','metal_balance'])
+        pname = None
+        for row in sheet.rows:
+            if row[0].value is not None and 'Sundry Debtors' in row[0].value:
+                pname = re.search(r'\)\s([^)]+)', row[0].value).group(1).strip()
+            elif pname is not None and row[0].value is None:
+                if row[1].value is not None:
+                    # id = re.search(r'\:\s([^)]+)', row[3].value).group(1).strip()
+                    if row[4].value is not None:
+                        inv_list = ['', pname, row[1].value,
+                           '', row[2].value,'Credit', 'Cash', row[4].value]
+                        inv.append(inv_list)
+                    if row[9].value is not None:
+                        rec_list = ['',pname, row[1].value,
+                            row[2].value, 'Cash', row[9].value]
+                        rec.append(rec_list)
+                    if row[22].value is not None:
+                        inv_list = ['',pname, row[1].value,
+                            '',row[2].value,'Credit','Metal', row[22].value]
+                        inv.append(inv_list)
+                    if row[24].value is not None:
+                        rec_list = ['',pname, row[1].value,
+                            row[2].value,'Metal', row[24].value]
+                        rec.append(rec_list)
+                elif row[1].value is None and (row[4].value and row[16].value and row[26].value is not None):
+                    bal_list = [pname,row[16].value,row[26].value]
+                    bal.append(bal_list)
+        print(bal.export('csv'))
+        inv_r = InvoiceResource()
+        # rec_r = ReceiptResource()
+        
+        print("running dry run")
+        inv_result = inv_r.import_data(inv, dry_run=True)  # Test the data import
+        # rec_result = rec_r.import_data(rec,dry_run=True)
+
+        if not inv_result.has_errors():
+            print("running wet")
+            inv_r.import_data(inv, dry_run=False)  # Actually import now
+        else :
+            print("error occured")
+        # if not rec_result.has_errors():
+        #     rec_r.import_data(dataset, dry_run=False)  # Actually import now
+
+        return render(request, 'sales/simpleupload.html')
+
+    return render(request, 'sales/simpleupload.html')
+
 class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     model = Invoice
     table_class = InvoiceTable

@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import formset_factory
 import datetime
 from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import License, Loan, Release
@@ -12,7 +13,7 @@ class LicenseForm(forms.ModelForm):
 
 
 class LoanForm(forms.ModelForm):
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),widget=Select2Widget)
 
     created = forms.DateTimeField(
         widget=DateTimePicker(
@@ -48,13 +49,23 @@ class ReleaseForm(forms.ModelForm):
             }
         ),
     )
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=ModelSelect2Widget(
-                                                                    model=Customer,search_fields=['name__icontains'],dependent_fields={'loan':'loan'}
-    ),)
-    loan=forms.ModelChoiceField(queryset=Loan.objects.all(),widget=ModelSelect2Widget(
-                                                            model=Loan,search_fields=['loanid_icontains'],dependent_fields={'customer':'customer'}
-    ),)
+    # customer = forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),
+    #                                     widget=Select2Widget)
+    customer = forms.ModelChoiceField(queryset = Customer.objects.filter(type='Re'),
+                                        widget=ModelSelect2Widget(
+                                        queryset = Customer.objects.filter(type='Re'),
+                                        model=Customer,
+                                        search_fields=['name__icontains'],
+        ))
+    loan = forms.ModelChoiceField(queryset=Loan.objects.all(),
+                                    widget=ModelSelect2Widget(
+                                    model=Loan,
+                                    search_fields=['loanid_icontains'],
+                                    dependent_fields={'customer':'customer'}),
+                                    )
 
     class Meta:
         model = Release
         fields = ['releaseid','customer','loan', 'interestpaid',]
+
+Release_formset = formset_factory(ReleaseForm,extra=1)

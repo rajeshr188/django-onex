@@ -74,7 +74,7 @@ class Loan(models.Model):
     itype=(
             ('Gold','Gold'),
             ('Silver','Silver'),
-            ('Bronze','Bronze'),('O','Other'),)
+            ('Bronze','Bronze'))
     itemtype = models.CharField(max_length=30,choices=itype,default='Gold')
     itemdesc = models.TextField(max_length=30)
     itemweight = models.DecimalField(max_digits=10, decimal_places=2)

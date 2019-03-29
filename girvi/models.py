@@ -114,7 +114,10 @@ class Loan(models.Model):
             return nom-1
 
     def interestdue(self):
-        return float(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
+        if is_released(self) :
+            return 0
+        else:
+            return float(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)

@@ -1,14 +1,20 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a href="{% url 'loan_archive' %}">Loans Archive</a> </p>
+<h1>All Loans for {{ year|date:"Y" }}</h1>
 <ul>
     {% for date in date_list %}
-        <li>{{ date|date }}</li>
+        <li><a href="{% url 'archive_month' date|date:"Y" date|date:"M" %}">{{ date|date }}</a></li>
     {% endfor %}
 </ul>
 
-<div>
+<!-- <div>
     <h1>All Loans for {{ year|date:"Y" }}</h1>
     {% for obj in object_list %}
         <p>
             {{ obj.loanid }} - {{ obj.created|date:"F j, Y" }}
         </p>
     {% endfor %}
-</div>
+</div> -->
+{%endblock%}

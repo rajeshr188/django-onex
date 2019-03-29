@@ -7,9 +7,9 @@ from contact.models import Customer
 from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
-from .tables import LoanTable
+from .tables import LoanTable,ReleaseTable
 from django_filters.views import FilterView
-from .filters import LoanFilter
+from .filters import LoanFilter,ReleaseFilter
 import re
 from django.utils import timezone
 from django.shortcuts import render
@@ -159,8 +159,14 @@ class LoanDeleteView(DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
 
-class ReleaseListView(ListView):
+# class ReleaseListView(ListView):
+#     model = Release
+class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
+    table_class=ReleaseTable
     model = Release
+    template_name='girvi/release_list.html'
+    filterset_class=ReleaseFilter
+    paginate_by=20
 
 class ReleaseCreateView(CreateView):
     model = Release

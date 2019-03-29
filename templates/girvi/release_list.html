@@ -1,26 +1,28 @@
 {% extends "_base.html" %}
 {% load static %}
+{%load django_tables2%}
+{%load bootstrap4%}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'girvi_release_list' %}">Release Listing</a></p>
-<table class="table">
-<tr>
-<td>ID</td><td>Link</td>
-    <td>releaseid</td>
-    <td>id</td>
-    <td>created</td>
-    <td>last_updated</td>
-    <td>interestpaid</td>
-</tr>
-{% for object in object_list %}
-<tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.releaseid }}</td>
-    <td>{{ object.id }}</td>
-    <td>{{ object.created }}</td>
-    <td>{{ object.last_updated }}</td>
-    <td>{{ object.interestpaid }}</td>
-</tr>
-{% endfor %}
-</table><a class="btn btn-primary" href="{% url 'girvi_release_create' %}">Create new Release</a>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Release</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+     <a class="btn btn-primary" href="{% url 'girvi_release_create' %}" role="button">New Release</a>
+     <a class="btn btn-primary ml-2" href="{% url 'girvi_release_list' %}" role="button">Release List</a>
+     <a class="btn btn-primary ml-2" href="{% export_url "ods" %}" role="button">export</a>
+
+    </div>
+  </div>
+</div>
+
+{% if filter %}
+    <form action="" method="get" class="form form-inline">
+        {% bootstrap_form filter.form layout='inline' %}
+        {% bootstrap_button 'filter' %}
+    </form>
+{% endif %}
+<div class="table-responsive-sm">
+{% render_table table 'django_tables2/bootstrap4.html'  %}
+</div>
 {% endblock %}

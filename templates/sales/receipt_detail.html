@@ -1,36 +1,43 @@
 {% extends "_base.html" %}
 {% load static %}
+{% load humanize %}
 {% block content %}
+
 <p><a class="btn btn-secondary" href="{% url 'sales_receipt_list' %}">Receipt Listing</a>
   <a class="btn btn-primary" href="{% url 'sales_receipt_create' %}">Add Receipt </a>
   <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Receipt</a>
   <a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a>
-  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.id%}">Delete</a></p>
+  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.id%}">Delete</a>
+</p>
+
 <table class="table table-sm table-striped table-bordered">
-<tr><td>Id</td><td>{{ object.id }}</td></tr>
-<tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id%}">{{ object.customer }}</a></td></tr>
-<tr><td>created</td><td>{{ object.created }}</td></tr>
-<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
-<tr><td>type</td><td>{{ object.type }}</td></tr>
-<tr><td>status</td><td>{{ object.status }}</td></tr>
-<tr><td>Total Received</td><td>{{ object.total }}</td></tr>
-<tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
-<tr><td>description</td><td>{{ object.description }}</td></tr>
+  <tr><td>Id</td><td>{{ object.id }}</td></tr>
+  <tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id%}">{{ object.customer }}</a></td></tr>
+  <tr><td>created</td><td>{{ object.created }}</td></tr>
+  <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+  <tr><td>type</td><td>{{ object.type }}</td></tr>
+  <tr><td>status</td><td>{{ object.status }}</td></tr>
+  <tr><td>Total Received</td><td>{{ object.total }}</td></tr>
+  <tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
+  <tr><td>description</td><td>{{ object.description }}</td></tr>
 </table>
 
 <table class="table table-sm table-striped table-bordered">
   <thead>
     <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
   </thead>
-{% for i in object.receiptline_set.all.select_related %}
+  <tbody>
+    {% for i in object.receiptline_set.all.select_related %}
 
-  <tr>
-    <td><a href="{% url 'sales_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
-    <td>{{i.invoice.status}}</td>
-    <td>{{i.amount}}</td>
-    <td>{{i.invoice.get_balance}}</td>
-  </tr>
+      <tr>
+        <td><a href="{% url 'sales_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
+        <td>{{i.invoice.status}}</td>
+        <td>{{i.amount}}</td>
+        <td>{{i.invoice.get_balance}}</td>
+      </tr>
 
-{%endfor%}
+    {%endfor%}
+  </tbody>
 </table>
+
 {% endblock %}

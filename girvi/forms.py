@@ -57,9 +57,10 @@ class ReleaseForm(forms.ModelForm):
                                         model=Customer,
                                         search_fields=['name__icontains'],
         ))
-    loan = forms.ModelChoiceField(queryset=Loan.objects.all(),
+    loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
                                     widget=ModelSelect2Widget(
                                     model=Loan,
+                                    queryset = Loan.unreleased.all(),
                                     search_fields=['loanid_icontains'],
                                     dependent_fields={'customer':'customer'}),
                                     )

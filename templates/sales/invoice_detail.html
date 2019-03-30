@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
 {% load static %}
+{% load humanize %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a>
   <a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.id %}">Delete</a>
@@ -13,7 +14,7 @@
 <tr><td>rate</td><td>{{ object.rate }}</td></tr>
 <tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
 <tr><td>paymenttype</td><td>{{ object.paymenttype }}</td></tr>
-<tr><td>balance</td><td>{{ object.balance }}</td></tr>
+<tr><td>balance</td><td>{{ object.balance|intcomma }}</td></tr>
 <tr><td>status</td><td>{{ object.status }}</td></tr>
 </table>
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
@@ -47,7 +48,7 @@
   <tr>
     <td><a href="{% url 'sales_receipt_detail' i.receipt.id %}">{{i.receipt.id}}</a></td>
     <td>{{i.created}}</td>
-    <td>{{i.amount}}</td>
+    <td>{{i.amount|intcomma}}</td>
 
   </tr>
   {%endfor%}

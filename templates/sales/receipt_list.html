@@ -16,14 +16,6 @@
   </div>
 </div>
 
-{% if filter %}
-    <form action="" method="get" class="form form-inline mb-4">
-        {% bootstrap_form filter.form layout='inline' %}
-        {% bootstrap_button 'filter' %}
-    </form>
-{% endif %}
-<div class="table-responsive-sm">
-{% render_table table 'django_tables2/bootstrap4.html'  %}
-</div>
+{% include 'table.html'%}
 
 {% endblock %}

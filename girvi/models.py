@@ -9,6 +9,7 @@ from contact.models import Customer
 import datetime
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func
+from .managers import ReleasedManager,UnReleasedManager
 
 class Month(Func):
     function = 'EXTRACT'
@@ -93,6 +94,11 @@ class Loan(models.Model):
         on_delete=models.CASCADE,
     )
 
+    # Managers
+    objects = models.Manager()
+    released = ReleasedManager()
+    unreleased = UnReleasedManager()
+
     class Meta:
         ordering = ('-created',)
 
@@ -128,12 +134,8 @@ class Loan(models.Model):
     def is_worth(self):
         return self.itemvalue<total
 
-    def get_loan_amount(self):
-        return self.aggregate(t=Sum('loanamount'))
-
     def save(self,*args,**kwargs):
         self.interest=self.interestdue()
-        #self.loanamount=self.loanamount - Decimal(self.interest)
         self.itemvalue=self.loanamount+500
         super().save(*args,**kwargs)
 

@@ -1,24 +1,39 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
-from .models import License, Loan, Release,Month,Year
-from .forms import LicenseForm, LoanForm, ReleaseForm
 from django.urls import reverse,reverse_lazy
-from contact.models import Customer
-from django_tables2 import RequestConfig
-from django_tables2.views import SingleTableMixin
-from django_tables2.export.views import ExportMixin
-from .tables import LoanTable,ReleaseTable
-from django_filters.views import FilterView
-from .filters import LoanFilter,ReleaseFilter
 import re
 from django.utils import timezone
 from django.shortcuts import render
 from django.db.models import Avg,Count,Sum,Q
+from django.db.models.functions import Cast
+from django.db.models.fields import DateField
+
+from .models import License, Loan, Release,Month,Year
+from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset
+from .tables import LoanTable,ReleaseTable
+from .filters import LoanFilter,ReleaseFilter
+from contact.models import Customer
+
+from django_tables2 import RequestConfig
+from django_tables2.views import SingleTableMixin
+from django_tables2.export.views import ExportMixin
+from django_filters.views import FilterView
+
 from num2words import num2words
 import math
 import datetime
-from django.db.models.functions import Cast
-from django.db.models.fields import DateField
+from dateutil.relativedelta import relativedelta
+from django.db.models import Subquery,OuterRef
+
+def notice(request):
+
+    a_yr_ago = timezone.now() - relativedelta(years=1)
+    unrel = Loan.unreleased.filter(created__date__lt=a_yr_ago)
+    cust = Customer.objects.filter(type='Re',loan__release__isnull=True,loan__created__lte = a_yr_ago).annotate(count = Count('loan'),t=Sum('loan__loanamount')).prefetch_related('loan_set')
+    data = {}
+    data['cust']=cust
+
+    return render(request,'girvi/notice.html',context={'data':data},)
 
 def home(request):
     data = dict()
@@ -93,7 +108,6 @@ class LoanWeekArchiveView(WeekArchiveView):
     week_format = "%W"
     allow_future = True
 
-
 class LicenseListView(ListView):
     model = License
 
@@ -159,8 +173,6 @@ class LoanDeleteView(DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
 
-# class ReleaseListView(ListView):
-#     model = Release
 class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=ReleaseTable
     model = Release

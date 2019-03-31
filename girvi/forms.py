@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import formset_factory
+from django.forms import modelformset_factory
 import datetime
 from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import License, Loan, Release
@@ -18,6 +18,7 @@ class LoanForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
+                'defaultDate': (datetime.date.today()).strftime('%Y-%m-%d'),
                 'minDate': '2010-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': True,
@@ -38,6 +39,7 @@ class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
+                'defaultDate': (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,
@@ -49,24 +51,23 @@ class ReleaseForm(forms.ModelForm):
             }
         ),
     )
-    # customer = forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),
-    #                                     widget=Select2Widget)
     customer = forms.ModelChoiceField(queryset = Customer.objects.filter(type='Re'),
                                         widget=ModelSelect2Widget(
                                         queryset = Customer.objects.filter(type='Re'),
                                         model=Customer,
                                         search_fields=['name__icontains'],
+                                        dependent_fields={'loan':'loan'}
         ))
     loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
                                     widget=ModelSelect2Widget(
                                     model=Loan,
                                     queryset = Loan.unreleased.all(),
                                     search_fields=['loanid_icontains'],
-                                    dependent_fields={'customer':'customer'}),
-                                    )
+                                    dependent_fields={'customer':'customer'}
+        ))
 
     class Meta:
         model = Release
         fields = ['releaseid','customer','loan', 'interestpaid',]
 
-Release_formset = formset_factory(ReleaseForm,extra=1)
+Release_formset = modelformset_factory(Release,form = ReleaseForm)

@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{%load humanize%}
+{% load static %}
+{% block content %}
+
+{%for i in data.cust%}
+  {{i}} / {{i.count}} / {{i.t}} / {{i.loan_set.all}}<hr />
+
+{%endfor%}
+
+{% endblock%}

@@ -73,3 +73,9 @@ urlpatterns += (
     path('girvi/release/update/<int:pk>/', views.ReleaseUpdateView.as_view(), name='girvi_release_update'),
     path('girvi/release/<int:pk>/delete',views.ReleaseDetailView.as_view(),name='girvi_release_delete'),
 )
+urlpatterns += (
+    # Example: /2012/week/23/
+    path('girvi/notice/',
+         views.notice,
+         name="notice"),
+)

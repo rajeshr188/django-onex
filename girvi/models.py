@@ -119,17 +119,17 @@ class Loan(models.Model):
         else:
             return nom-1
 
+    def is_released(self):
+        return hasattr(self,'release')
+
     def interestdue(self):
-        if is_released(self) :
+        if self.is_released() :
             return 0
         else:
             return float(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)
-
-    def is_released(self):
-        return hasattr(self,'release')
 
     def is_worth(self):
         return self.itemvalue<total

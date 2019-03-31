@@ -12,6 +12,7 @@ class InvoiceForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
+                'defaultDate': (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
                 'minDate': '2009-01-20',# 'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,
@@ -43,6 +44,7 @@ class ReceiptForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
+                'defaultDate': (datetime.date.today()).strftime('%Y-%m-%d'),
                 'minDate': '2013-02-07',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,

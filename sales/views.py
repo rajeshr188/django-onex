@@ -98,13 +98,12 @@ def sales_count_by_month(request):
 
 
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
+# from django.core.files.storage import FileSystemStorage
 import tablib
 from .admin import InvoiceResource,ReceiptResource
 import openpyxl
 import datetime
 from openpyxl import Workbook,load_workbook
-import tablib
 import re
 import time
 import pytz
@@ -220,7 +219,6 @@ class InvoiceCreateView(CreateView):
 
 class InvoiceDetailView(DetailView):
     model = Invoice
-
 
 class InvoiceUpdateView(UpdateView):
     model = Invoice

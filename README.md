@@ -1,12 +1,10 @@
-# DjangoX
+# OneX
 
-A framework for launching new Django projects quickly. Comes with a complete user authentication flow, custom user model, and social authentication options via Gmail, Facebook, Twitter, etc.
-
-> **NOTE**: This open source project is supported by my two published books [Django for Beginners](https://djangoforbeginners.com/) and [REST APIs with Django](https://restapiswithdjango.com). Both of which have the first few chapters available for free online. Please take a look!
+A framework for Business Apps
 
 ## Features
 
-- For Django 2.1 and Python 3.7
+- For Django 2.1.7 and Python 3.7
 - Modern virtual environments with [pipenv](https://github.com/pypa/pipenv)
 - Styling with [Bootstrap](https://github.com/twbs/bootstrap) v4.1.3
 - Custom user model
@@ -16,12 +14,12 @@ A framework for launching new Django projects quickly. Comes with a complete use
 
 ## First-time setup
 
-1.  Make sure Python 3.7x and Pipenv are already installed. [See here for help](https://djangoforbeginners.com/initial-setup/).
+1.  Make sure Python 3.7x and Pipenv are already installed.
 2.  Clone the repo and configure the virtualenv:
 
 ```
-$ git clone https://github.com/wsvincent/djangox.git
-$ cd djangox
+$ git clone https://github.com/rajeshr188/onex.git
+$ cd onex
 $ pipenv install
 $ pipenv shell
 ```

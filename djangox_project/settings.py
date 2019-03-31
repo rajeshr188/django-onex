@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters','widget_tweaks',
     'tempus_dominus','controlcenter','explorer','debug_toolbar','django_extensions',
+    'extra_views',
     # Local
     'users',
     'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',

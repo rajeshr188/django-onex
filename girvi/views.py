@@ -23,17 +23,31 @@ from num2words import num2words
 import math
 import datetime
 from dateutil.relativedelta import relativedelta
-from django.db.models import Subquery,OuterRef
+from django.db.models import Subquery,OuterRef,Prefetch
 
 def notice(request):
+    qyr = request.GET.get('qyr',None)
+    # qcust = request.GET.GET('qcust',None)
+    if qyr is None:
+        qyr=1
+    print(type(qyr))
+    a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
 
-    a_yr_ago = timezone.now() - relativedelta(years=1)
-    unrel = Loan.unreleased.filter(created__date__lt=a_yr_ago)
-    cust = Customer.objects.filter(type='Re',loan__release__isnull=True,loan__created__lte = a_yr_ago).annotate(count = Count('loan'),t=Sum('loan__loanamount')).prefetch_related('loan_set')
+    cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
+                                        loan__release__isnull=True).\
+                                        prefetch_related(Prefetch('loan_set',
+                                                queryset = Loan.objects.filter(
+                                                release__isnull=True,
+                                                created__lt=a_yr_ago
+                                                ))).annotate(
+                                                t=Sum('loan__loanamount')
+                                                )
     data = {}
+
+    data['totalamount']=cust.aggregate(loancount = Count('loan'),t=Sum('loan__loanamount'))
     data['cust']=cust
 
-    return render(request,'girvi/notice.html',context={'data':data},)
+    return render(request,'girvi/notice.html',context={'data':data})
 
 def home(request):
     data = dict()
@@ -56,7 +70,7 @@ def home(request):
     license['licchart']=list(licchart)
 
     loan=dict()
-    l=Loan.objects
+    l=Loan.unreleased
     loan['count']=l.count()
     loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
     loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])

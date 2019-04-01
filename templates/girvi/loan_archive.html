@@ -19,9 +19,5 @@
     <p> <a href = "{% url 'loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}}</a></p>
   {% endfor %}
 </div>
-<!-- <ul>
-    {% for loan in latest %}
-        <li>{{ loan.created|date }}: {{ loan.id }}</li>
-    {% endfor %}
-</ul> -->
+
 {%endblock%}

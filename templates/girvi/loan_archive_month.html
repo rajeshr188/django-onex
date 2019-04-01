@@ -10,7 +10,7 @@
         Next Month: <a href = "{% url 'archive_month' next_month|date:"Y" next_month|date:"M" %}">{{ next_month|date:"F Y" }} </a>
     {% endif %}
 </p>
-<h1>All Loans for {{ month }}</h1>
+<h1>All Loans for {{ month }} / {{object_list.count}}</h1>
 <ul>
     {% for loan in object_list %}
         <li><a href="{%url 'girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }}</a></li>

@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <p><a href="{% url 'loan_archive' %}">Loans Archive</a> </p>
-<h1>All Loans for {{ year|date:"Y" }}</h1>
+<h1>All Loans for {{ year|date:"Y" }} - {{object_list.count}}</h1>
 <ul>
     {% for date in date_list %}
         <li><a href="{% url 'archive_month' date|date:"Y" date|date:"M" %}">{{ date|date }}</a></li>

@@ -48,15 +48,15 @@ class LoanAdmin(ImportExportModelAdmin):
 admin.site.register(Loan, LoanAdmin)
 
 class ReleaseResource(resources.ModelResource):
-    customer=fields.Field(column_name='customer',
-                            attribute='customer',
-                            widget=ForeignKeyWidget(Customer,'pk'))
+    # customer=fields.Field(column_name='customer',
+    #                         attribute='customer',
+    #                         widget=ForeignKeyWidget(Customer,'pk'))
     loan=fields.Field(column_name='loan',
                             attribute='loan',
                             widget=ForeignKeyWidget(Loan,'pk'))
     class Meta:
         model=Release
-        fields=('releaseid','created','customer','loan','interestpaid')
+        fields=('releaseid','created','loan','interestpaid')
 
 class ReleaseAdminForm(forms.ModelForm):
 
@@ -69,7 +69,7 @@ class ReleaseAdmin(ImportExportModelAdmin):
     form = ReleaseAdminForm
     resource_class=ReleaseResource
 
-    list_display = ['releaseid','loan','customer','created', 'last_updated', 'interestpaid']
-    readonly_fields = ['releaseid','loan','customer','created', 'last_updated', 'interestpaid']
+    list_display = ['releaseid','loan','created', 'last_updated', 'interestpaid']
+    readonly_fields = ['releaseid','loan','created', 'last_updated', 'interestpaid']
 
 admin.site.register(Release, ReleaseAdmin)

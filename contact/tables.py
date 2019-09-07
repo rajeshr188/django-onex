@@ -27,9 +27,10 @@ class CustomerTable(tables.Table):
         model = Customer
         fields = (
                     'id','name',
-                    'relatedto','relatedas', 'address', 'area','phonenumber')
+                    'relatedto','relatedas', 'Address', 'phonenumber')
         attrs = {"class": "table table-sm text-center  table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."
+        template_name='django_tables2/bootstrap4.html'
 
 class SupplierTable(tables.Table):
     name = tables.LinkColumn('contact_supplier_detail', args=[A('pk')])

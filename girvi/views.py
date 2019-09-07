@@ -1,15 +1,16 @@
-from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
+from django.views.generic import FormView,DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from django.urls import reverse,reverse_lazy
+from django.http import Http404, HttpResponseRedirect
 import re
 from django.utils import timezone
-from django.shortcuts import render
-from django.db.models import Avg,Count,Sum,Q
+from django.shortcuts import render,redirect
+from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 
 from .models import License, Loan, Release,Month,Year
-from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset
+from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset,LoanFormset
 from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter
 from contact.models import Customer
@@ -23,14 +24,11 @@ from num2words import num2words
 import math
 import datetime
 from dateutil.relativedelta import relativedelta
-from django.db.models import Subquery,OuterRef,Prefetch
+from django.views.decorators.csrf import csrf_exempt
 
 def notice(request):
-    qyr = request.GET.get('qyr',None)
+    qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
-    if qyr is None:
-        qyr=1
-    print(type(qyr))
     a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
 
     cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
@@ -43,11 +41,49 @@ def notice(request):
                                                 t=Sum('loan__loanamount')
                                                 )
     data = {}
-
     data['totalamount']=cust.aggregate(loancount = Count('loan'),t=Sum('loan__loanamount'))
     data['cust']=cust
 
     return render(request,'girvi/notice.html',context={'data':data})
+
+
+@csrf_exempt
+def multirelease(request,id=None):
+    if request.method == 'POST': #<- Checking for method type
+        id_list = request.POST.getlist('cbox')
+        action = request.POST.get('action')
+        print("action" + str(request.POST.get('action')))
+        if action == 'delete':
+            # delete all selected rows
+            print('in delete action')
+        elif action == 'edit':
+            print('in edit action'+str(id_list))
+            formset = LoanFormset(queryset = Loan.objects.filter(id__in=id_list))
+            return render(request, 'girvi/manage_loans.html', {'formset': formset})
+        elif action =='release' :
+            print('in releaseaction')
+            for loan_id in id_list:
+                last=Release.objects.all().order_by('id').last()
+                if not last:
+                    return '1'
+                Release.objects.create(releaseid=int(last.id)+1,created=timezone.now(),loan_id=loan_id,interestpaid=0)
+
+    return HttpResponseRedirect(reverse('girvi_loan_list'))
+
+def manage_loans(request):
+    print(request.POST)
+    if request.method == 'POST':
+        formset = LoanFormset(request.POST)
+        if formset.is_valid():
+            # do something with the formset.cleaned_data
+            print("saving formset")
+            instances=formset.save()
+            return redirect('girvi_loan_list')
+    else:
+        formset = LoanFormset(queryset=Loan.objects.none())
+        return render(request, 'girvi/manage_loans.html', {'formset': formset})
+
+    HttpResponseRedirect(reverse('girvi_loan_list'))
 
 def home(request):
     data = dict()
@@ -143,6 +179,7 @@ class LicenseDeleteView(DeleteView):
 class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
     model = Loan
+    # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
     paginate_by=10
@@ -155,6 +192,15 @@ def incloanid():
     billno=splitl[0] + str(int(splitl[1])+1)
     return str(billno)
 
+def increlid():
+    last=Release.objects.all().order_by('id').last()
+    if not last:
+        return '1'
+    # splitl=re.split('(\d+)',last.loanid)
+    # billno=splitl[0] + str(int(splitl[1])+1)
+    return str(int(last.releaseid)+1)
+
+
 def ld():
     last=Loan.objects.all().order_by('id').last()
     if not last:
@@ -166,15 +212,22 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        # if self.kwargs:
-        # customer=Customer.objects.get(id=self.kwargs['pk'])
         license=License.objects.get(id=2)
-        return{
-            # 'customer':customer,
-            'loanid':incloanid,
-            'license':license,
-            # 'created':ld,
-        }
+        if self.kwargs:
+            customer=Customer.objects.get(id=self.kwargs['pk'])
+            return{
+                'customer':customer,
+                'loanid':incloanid,
+                'license':license,
+                'created':ld,
+            }
+        else:
+            return{
+
+                'loanid':incloanid,
+                'license':license,
+                'created':ld,
+            }
 
 class LoanDetailView(DetailView):
     model = Loan
@@ -192,7 +245,7 @@ class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
     model = Release
     template_name='girvi/release_list.html'
     filterset_class=ReleaseFilter
-    paginate_by=20
+    paginate_by=50
 
 class ReleaseCreateView(CreateView):
     model = Release
@@ -201,7 +254,7 @@ class ReleaseCreateView(CreateView):
     def get_initial(self):
         if self.kwargs:
             loan=Loan.objects.get(id=self.kwargs['pk'])
-            return{'loan':loan,'interestpaid':loan.interestdue,}
+            return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
 
 class ReleaseDetailView(DetailView):
     model = Release

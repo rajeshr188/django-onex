@@ -48,7 +48,7 @@ class ReleaseSerializer(serializers.ModelSerializer):
             'id',
             'releaseid',
             'loan',
-            'customer',
+            # 'customer',
             'created',
             'last_updated',
             'interestpaid',

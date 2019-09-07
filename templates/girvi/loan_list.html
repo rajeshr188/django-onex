@@ -3,7 +3,7 @@
 {%load django_tables2%}
 {%load bootstrap4%}
 {% block content %}
-
+{{ filter.form.media }}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Loan</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
@@ -11,11 +11,57 @@
      <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" role="button">New Loan</a>
      <a class="btn btn-primary ml-2" href="{% url 'girvi_loan_list' %}" role="button">Loan List</a>
      <a class="btn btn-primary ml-2" href="{% export_url "ods" %}" role="button">export</a>
-
     </div>
   </div>
 </div>
 
-{% include 'table.html'%}
+Results :{{filter.qs.count}}
+<div class="row">
+  <div class="col-9">
+    <div class=" table-responsive text-center">
+
+      <form class="form-inline" action="{% url 'girvi-multirelease'%}" method="POST">
+        {% csrf_token %}
+        <div class="input-group mb-2 mr-sm-2">
+          <label class="form-check-label" for="inlineFormCheck">Action : </label>
+          <select class="form-control ml-2" name = "action">
+                      <option value = "edit">Edit</option>
+                      <option value = "delete">Delete</option>
+                      <option value = "release">Release</option>
+                  </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mb-2">Go</button>
+        {% render_table table 'django_tables2/bootstrap4.html'  %}
+
+      </form>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="sticky-top">
+      {% if filter %}
+        <div class="card  bg-light mb-3 text-center">
+          <div class="card-header">
+            Filter
+          </div>
+          <div class="card-body">
+            <form action="" method="get" class="form-horizontal">
+                {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
+                {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+            </form>
+        </div>
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+</div>
+
+
+
+
+<!-- {% include 'table.html'%} -->
 
 {% endblock %}

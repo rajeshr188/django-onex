@@ -1,0 +1,18 @@
+<div class="card-columns">
+  {%for i in data.cust%}
+  <div class="card border-danger">
+    <div class="card-body">
+      <h5 class="card-title">{{i}}</h5>
+      <p class="card-text">
+        No of loans :{{i.loan_set.count}}
+        Total Amount :{{i.t}}
+        <ul class="list-group">
+          {%for l in i.loan_set.all%}
+          <li class="list-group-item">{{l}}</li>
+          {%endfor%}
+        </ul>
+      </p>
+    </div>
+  </div>
+  {%endfor%}
+</div>

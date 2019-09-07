@@ -170,7 +170,8 @@
           <tbody>
             {% for loan in customer.get_loans   %}
               {% if loan.release %}
-                <tr class="table-success text-center">      <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
+                <tr class="table-success text-center">
+                  <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                       <td>{{loan.created.date}} </td>
                       <td>{{loan.itemdesc}}</td>
                       <td>{{loan.itemweight}}</td>
@@ -196,7 +197,7 @@
 
                 </tr>
               {% else%}
-                  <tr>
+                  <tr class="table-light text-center">
                     <th scope="row"><a href="{% url 'girvi_loan_detail' loan.id %}">{{loan.loanid}}</a></th>
                     <td>{{loan.created.date}} </td>
                     <td>{{loan.itemdesc}}</td>

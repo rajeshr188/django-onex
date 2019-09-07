@@ -9,5 +9,10 @@
 {% endif %}
 records returned :{{filter.qs.count}}
 <div class="table-responsive-sm">
-{% render_table table 'django_tables2/bootstrap4.html'  %}
+  <form action="{% url 'girvi-multirelease'%}" method="POST">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Go</button>
+    {% render_table table 'django_tables2/bootstrap4.html'  %}
+
+  </form>
 </div>

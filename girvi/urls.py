@@ -20,6 +20,9 @@ urlpatterns +=(
     path('',views.home,name='girvi-home'),
 )
 urlpatterns +=(
+    path('multirelease/',views.multirelease,name='girvi-multirelease'),
+)
+urlpatterns +=(
     path('loan_archive/',
          ArchiveIndexView.as_view(model=Loan, date_field="created"),
          name="loan_archive"),
@@ -57,6 +60,7 @@ urlpatterns += (
 urlpatterns += (
     # urls for Loan
     path('girvi/loan/', views.LoanListView.as_view(), name='girvi_loan_list'),
+    path('girvi/loan/manage/',views.manage_loans,name='manage_loans'),
     path('girvi/loan/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
     path('girvi/loan/<int:pk>/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
     path('girvi/loan/detail/<int:pk>/', views.LoanDetailView.as_view(), name='girvi_loan_detail'),
@@ -71,11 +75,12 @@ urlpatterns += (
     path('girvi/release/<int:pk>/create/', views.ReleaseCreateView.as_view(), name='girvi_release_create'),
     path('girvi/release/detail/<int:pk>/', views.ReleaseDetailView.as_view(), name='girvi_release_detail'),
     path('girvi/release/update/<int:pk>/', views.ReleaseUpdateView.as_view(), name='girvi_release_update'),
-    path('girvi/release/<int:pk>/delete',views.ReleaseDetailView.as_view(),name='girvi_release_delete'),
+    path('girvi/release/<int:pk>/delete',views.ReleaseDeleteView.as_view(),name='girvi_release_delete'),
 )
 urlpatterns += (
     # Example: /2012/week/23/
     path('girvi/notice/',
          views.notice,
          name="notice"),
+
 )

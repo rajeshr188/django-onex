@@ -48,22 +48,22 @@ class License(models.Model):
         return reverse('girvi_license_update', args=(self.pk,))
 
     def loan_count(self):
-        return self.loan_set.count()
+        return self.loan_set.filter(release__isnull=True).count()
 
     def total_loan_amount(self):
-        return self.loan_set.aggregate(t=Sum('loanamount'))
+        return self.loan_set.filter(release__isnull=True).aggregate(t=Sum('loanamount'))
 
     def total_gold_loan(self):
-        return self.loan_set.filter(itemtype='Gold').aggregate(t=Sum('loanamount'))
+        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('loanamount'))
 
     def total_silver_loan(self):
-        return self.loan_set.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
+        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('loanamount'))
 
     def total_gold_weight(self):
-        return self.loan_set.filter(itemtype='Gold').aggregate(t=Sum('itemweight'))
+        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('itemweight'))
 
     def total_silver_weight(self):
-        return self.loan_set.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
+        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
 
 
 class Loan(models.Model):
@@ -77,7 +77,7 @@ class Loan(models.Model):
             ('Silver','Silver'),
             ('Bronze','Bronze'))
     itemtype = models.CharField(max_length=30,choices=itype,default='Gold')
-    itemdesc = models.TextField(max_length=30)
+    itemdesc = models.TextField(max_length=100)
     itemweight = models.DecimalField(max_digits=10, decimal_places=2)
     itemvalue = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     loanamount = models.PositiveIntegerField()
@@ -117,7 +117,7 @@ class Loan(models.Model):
         if(nom<=0):
             return 0
         else:
-            return nom-1
+            return nom
 
     def is_released(self):
         return hasattr(self,'release')
@@ -126,7 +126,7 @@ class Loan(models.Model):
         if self.is_released() :
             return 0
         else:
-            return float(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
+            return int(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)
@@ -146,17 +146,17 @@ class Release(models.Model):
     releaseid = models.CharField(max_length=255,unique=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
-    interestpaid = models.IntegerField()
+    interestpaid = models.IntegerField(default=0)
 
     # Relationship Fields
     loan = models.OneToOneField(
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
-    customer = models.ForeignKey(
-        Customer,
-        on_delete=models.CASCADE, related_name="releasedby"
-    )
+    # customer = models.ForeignKey(
+    #     Customer,
+    #     on_delete=models.CASCADE, related_name="releasedby"
+    # )
 
     class Meta:
         ordering = ('-created',)

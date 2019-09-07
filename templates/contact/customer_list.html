@@ -3,7 +3,7 @@
 {%load django_tables2%}
 {%load bootstrap4%}
 {% block content %}
-
+{{ filter.form.media }}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Customers</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
@@ -15,15 +15,35 @@
   </div>
 </div>
 
-{% if filter %}
-    <form action="" method="get" class="form form-inline mb-4">
-        {% bootstrap_form filter.form layout='inline' %}
-        {% bootstrap_button 'filter' %}
-    </form>
-{% endif %}
+<div class="row">
+  <div class="col-9">
+    <div class="table-responsive text-center">
+      {% render_table table 'django_tables2/bootstrap4.html'  %}
+    </div>
+    </div>
+    <div class="col-3">
+      <div class="sticky-top">
+        {% if filter %}
+          <div class="card  bg-light mb-3 text-center">
+            <div class="card-header">
+              Filter
+            </div>
+            <div class="card-body">
+              <form action="" method="get" class="form-horizontal">
+                  {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
+                  {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+              </form>
+          </div>
+        </div>
 
-<div class="table-responsive-sm">
-{% render_table table 'django_tables2/bootstrap4.html'  %}
+        {% endif %}
+
+      </div>
+
+    </div>
 </div>
+
+
+
 
 {% endblock %}

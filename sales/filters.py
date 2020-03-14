@@ -5,7 +5,7 @@ from django_select2.forms import Select2Widget
 
 class InvoiceFilter(django_filters.FilterSet):
     customer=django_filters.ModelChoiceFilter(
-                    queryset=Customer.objects.filter(type = 'Wh'),widget=Select2Widget)
+                    queryset=Customer.objects.exclude(type = 'Re'),widget=Select2Widget)
     class Meta:
         model=Invoice
         fields=['id','paymenttype','balancetype','status']

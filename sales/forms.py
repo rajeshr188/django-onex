@@ -10,7 +10,7 @@ from django.db.models import Q
 
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
-    
+
 class InvoiceForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
@@ -27,7 +27,7 @@ class InvoiceForm(forms.ModelForm):
             }
         ),
     )
-    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']

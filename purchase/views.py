@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
-from contact.models import Supplier
+from contact.models import Customer
 from .forms import InvoiceForm, InvoiceItemForm,InvoiceItemFormSet, PaymentForm,PaymentLineForm,PaymentLineFormSet
 from django.http import HttpResponseRedirect,HttpResponse
 from django.urls import reverse,reverse_lazy

@@ -20,16 +20,16 @@ class CustomerSerializer(serializers.ModelSerializer):
         )
 
 
-class SupplierSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Supplier
-        fields = (
-            'id',
-            'name',
-            'created',
-            'last_updated',
-            'organisation', 
-            'phonenumber',
-            'initial',
-        )
+# class SupplierSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = models.Supplier
+#         fields = (
+#             'id',
+#             'name',
+#             'created',
+#             'last_updated',
+#             'organisation',
+#             'phonenumber',
+#             'initial',
+#         )

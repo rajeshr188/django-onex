@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 from .models import Invoice, InvoiceItem, Payment
-from contact.models import Supplier
+from contact.models import Customer
 from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget,DecimalWidget
@@ -28,7 +28,7 @@ class InvoiceAdminForm(forms.ModelForm):
 
 class InvoiceResource(resources.ModelResource):
     supplier = fields.Field(column_name = 'supplier',attribute = 'supplier',
-                                widget=supplierWidget(Supplier,'name'))
+                                widget=supplierWidget(Customer,'name'))
     class Meta:
         model = Invoice
         fields=('id','supplier','created','rate','balancetype','paymenttype','balance','status',)
@@ -64,7 +64,7 @@ class PaymentAdminForm(forms.ModelForm):
 class PaymentResourse(resources.ModelResource):
     supplier=fields.Field(column_name='supplier',
                             attribute='supplier',
-                            widget=ForeignKeyWidget(Supplier,'name'))
+                            widget=ForeignKeyWidget(Customer,'name'))
     total = fields.Field(column_name = 'total',attribute='total',
                             widget = CustomDecimalWidget())
     class Meta:

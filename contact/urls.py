@@ -6,7 +6,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'customer', api.CustomerViewSet)
-router.register(r'supplier', api.SupplierViewSet)
+# router.register(r'supplier', api.SupplierViewSet)
 
 
 urlpatterns = (
@@ -24,11 +24,11 @@ urlpatterns += (
     path('customer/<int:pk>/delete/',views.CustomerDelete.as_view(),name='contact_customer_delete'),
 )
 
-urlpatterns += (
-    # urls for Supplier
-    path('supplier/', views.SupplierListView.as_view(), name='contact_supplier_list'),
-    path('supplier/create/', views.SupplierCreateView.as_view(), name='contact_supplier_create'),
-    path('supplier/detail/<int:pk>/', views.SupplierDetailView.as_view(), name='contact_supplier_detail'),
-    path('supplier/update/<int:pk>/', views.SupplierUpdateView.as_view(), name='contact_supplier_update'),
-    path('supplier/<int:pk>/delete',views.SupplierDelete.as_view(),name='contact_supplier_delete'),
-)
+# urlpatterns += (
+#     # urls for Supplier
+#     path('supplier/', views.SupplierListView.as_view(), name='contact_supplier_list'),
+#     path('supplier/create/', views.SupplierCreateView.as_view(), name='contact_supplier_create'),
+#     path('supplier/detail/<int:pk>/', views.SupplierDetailView.as_view(), name='contact_supplier_detail'),
+#     path('supplier/update/<int:pk>/', views.SupplierUpdateView.as_view(), name='contact_supplier_update'),
+#     path('supplier/<int:pk>/delete',views.SupplierDelete.as_view(),name='contact_supplier_delete'),
+# )

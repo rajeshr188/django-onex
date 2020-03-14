@@ -3,6 +3,7 @@ from .models import Category, ProductType, Product, ProductVariant, Attribute, A
 from .forms import CategoryForm, ProductTypeForm, ProductForm, ProductVariantForm, AttributeForm, AttributeValueForm, ProductImageForm, VariantImageForm,StockForm,StockTransactionForm
 from django.shortcuts import get_object_or_404,redirect,reverse
 from django.template.response import TemplateResponse
+
 class CategoryListView(ListView):
     model = Category
 

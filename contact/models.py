@@ -50,7 +50,7 @@ class Customer(models.Model):
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     phonenumber = models.CharField(max_length=15,default='911')
     Address = models.TextField(max_length=100,blank=True)
-    ctype=(('Wh','Wholesale'),('Re','Retail'))
+    ctype=(('Wh','Wholesale'),('Re','Retail'),('Su','Supplier'))
     type = models.CharField(max_length=30,choices=ctype,default='Re')
     ras=(('S/o','S/o'),('D/o','D/o'),('W/o','W/o'),('R/o','R/o'))
     relatedas = models.CharField(max_length=5,choices=ras,default='S/o')
@@ -121,26 +121,26 @@ class Customer(models.Model):
     def get_total_invoice_balance(self):
         pass
 
-class Supplier(models.Model):
-
-    # Fields
-    name = models.CharField(max_length=255,unique=True)
-    pic=models.ImageField(upload_to='contacts/supplier/pic/',null=True,blank=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
-    organisation = models.CharField(max_length=30)
-    phonenumber = models.CharField(max_length=15)
-    initial = models.CharField(max_length=30)
-
-
-    class Meta:
-        ordering = ('-created',)
-
-    def __str__(self):
-        return u'%s' % self.id
-
-    def get_absolute_url(self):
-        return reverse('contact_supplier_detail', args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse('contact_supplier_update', args=(self.pk,))
+# class Supplier(models.Model):
+#
+#     # Fields
+#     name = models.CharField(max_length=255,unique=True)
+#     pic=models.ImageField(upload_to='contacts/supplier/pic/',null=True,blank=True)
+#     created = models.DateTimeField(auto_now_add=True, editable=False)
+#     last_updated = models.DateTimeField(auto_now=True, editable=False)
+#     organisation = models.CharField(max_length=30)
+#     phonenumber = models.CharField(max_length=15)
+#     initial = models.CharField(max_length=30)
+#
+#
+#     class Meta:
+#         ordering = ('-created',)
+#
+#     def __str__(self):
+#         return u'%s' % self.id
+#
+#     def get_absolute_url(self):
+#         return reverse('contact_supplier_detail', args=(self.pk,))
+#
+#     def get_update_url(self):
+#         return reverse('contact_supplier_update', args=(self.pk,))

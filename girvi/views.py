@@ -4,7 +4,7 @@ from django.urls import reverse,reverse_lazy
 from django.http import Http404, HttpResponseRedirect
 import re
 from django.utils import timezone
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
 from django.db.models.functions import Cast,TruncMonth
 from django.db.models.fields import DateField
@@ -253,7 +253,7 @@ def increlid():
 def ld():
     last=Loan.objects.all().order_by('id').last()
     if not last:
-        return timezone.now
+        return datetime.date.today()
     return last.created
 
 class LoanCreateView(CreateView):
@@ -261,7 +261,8 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        license=License.objects.get(id=1)
+
+        license=get_object_or_404(License,id=1)
         if self.kwargs:
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{

@@ -21,8 +21,12 @@ from sales.tables import InvoiceTable
 def home(request):
     data = dict()
     c=Customer.objects
-    data['customercount']=c.all().count()
     data['retailcount']=c.filter(type='Re').count()
+
+    data['wol']=c.filter(type='Re',loan=None).count()
+    data['wl']=data['retailcount']-data['wol']
+    data['customercount']=c.all().count()
+
     data['whcount']=c.filter(type="Wh").count()
     data['suppliercount']=Supplier.objects.count()
     return render(request,'contact/home.html',context={'data':data},)

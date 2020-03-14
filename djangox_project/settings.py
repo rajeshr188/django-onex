@@ -46,9 +46,13 @@ INSTALLED_APPS = [
     'allauth',  # new
     'allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
-    'rest_framework','mptt','phonenumber_field','django_tables2','django_filters','widget_tweaks',
-    'tempus_dominus','controlcenter','explorer','debug_toolbar','django_extensions',
+    'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
+    'widget_tweaks',
+    'tempus_dominus',
+    # 'controlcenter',
+    'explorer','debug_toolbar','django_extensions',
     'extra_views',
+    'corsheaders',
     # Local
     'users',
     'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',
@@ -75,6 +79,7 @@ DEBUG_TOOLBAR_PANELS = [
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -85,6 +90,20 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = False
+
+CORS_ORIGIN_WHITELIST = (
+    'localhost:4200',
+)
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+}
 # CACHE_MIDDLEWARE_ALIAS = 'default'
 # CACHE_MIDDLEWARE_SECONDS = 604800
 # CACHE_MIDDLEWARE_KEY_PREFIX = 'jsk'

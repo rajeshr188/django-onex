@@ -1,7 +1,8 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month,Year
 from contact.models import Customer
-from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,ReceiptLineForm,ReceiptLineFormSet
+from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,
+                    ReceiptLineForm,ReceiptLineFormSet,RandomSalesForm)
 from django.http import HttpResponseRedirect,HttpResponse
 from django.urls import reverse,reverse_lazy
 from django_filters.views import FilterView
@@ -37,6 +38,27 @@ def home(request):
     data['saleslist']=sales_by_month
     data['receipts_by_month']=receipts_by_month
     return render(request,'sales/home.html',context={'data':data},)
+
+def randomsales(request):
+    c=Customer.objects.order_by("?")[:30]
+
+    if request.method == 'POST':
+        form = RandomSalesForm(request.POST)
+        if form.is_valid():
+            print('success')
+    else:
+        form = RandomSalesForm()
+
+    data = dict()
+    data['cust']=c
+
+    now = datetime.datetime.now()
+    daterange = calendar.monthrange(now.year,now.month)
+    row = dict()
+
+
+
+    return render(request, 'sales/randomsales.html', context={'data':data,'form':form},)
 
 def print_invoice(request,pk):
     invoice=Invoice.objects.get(id=pk)

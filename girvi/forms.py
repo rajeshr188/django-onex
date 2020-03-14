@@ -50,13 +50,7 @@ class ReleaseForm(forms.ModelForm):
             }
         ),
     )
-    # customer = forms.ModelChoiceField(queryset = Customer.objects.filter(type='Re'),
-    #                                     widget=ModelSelect2Widget(
-    #                                     queryset = Customer.objects.filter(type='Re'),
-    #                                     model=Customer,
-    #                                     search_fields=['name__icontains'],
-    #                                     dependent_fields={'loan':'loan'}
-    #     ))
+
     loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
                                     widget=ModelSelect2Widget(
                                     model=Loan,
@@ -69,5 +63,11 @@ class ReleaseForm(forms.ModelForm):
         model = Release
         fields = ['releaseid','loan', 'interestpaid',]
 
+Loan_formset = modelformset_factory(Loan,fields = ('loanid','created',
+                                    'customer','loanamount','itemtype',
+                                    'itemdesc','interestrate','itemweight'),
+                                    extra=2)
+
+
+
 Release_formset = modelformset_factory(Release,form = ReleaseForm)
-LoanFormset = modelformset_factory(Loan,fields = ('loanid','created','customer','loanamount','itemtype','itemdesc','interestrate','itemweight'),extra = 0)

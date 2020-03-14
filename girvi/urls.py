@@ -64,6 +64,7 @@ urlpatterns += (
     path('girvi/loan/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
     path('girvi/loan/<int:pk>/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
     path('girvi/loan/detail/<int:pk>/', views.LoanDetailView.as_view(), name='girvi_loan_detail'),
+    path('girvi/loan/detail/<int:pk>/pdf', views.print_loanpledge, name='loan_pdf'),
     path('girvi/loan/update/<int:pk>/', views.LoanUpdateView.as_view(), name='girvi_loan_update'),
     path('girvi/loan/<int:pk>/delete/',views.LoanDeleteView.as_view(),name='girvi_loan_delete'),
 )

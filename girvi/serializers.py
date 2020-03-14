@@ -29,6 +29,7 @@ class LoanSerializer(serializers.ModelSerializer):
             'loanid',
             'customer',
             'created',
+            'license',
             'last_updated',
             'itemtype',
             'itemdesc',

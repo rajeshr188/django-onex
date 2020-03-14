@@ -13,7 +13,7 @@
 <h1>All Loans for {{ month }} / {{object_list.count}}</h1>
 <ul>
     {% for loan in object_list %}
-        <li><a href="{%url 'girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }}</a></li>
+        <li><a href="{%url 'girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
     {% endfor %}
 </ul>
 

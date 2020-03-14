@@ -8,6 +8,9 @@ from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
 
+class RandomSalesForm(forms.Form):
+    month = forms.IntegerField(required = True)
+    
 class InvoiceForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(

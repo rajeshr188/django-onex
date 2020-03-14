@@ -59,20 +59,16 @@
         </div>
       </div>
     </div>
+    <div class="card-group mb-2">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Loan this Year</h5>
+          <canvas id="thisyearChart" width="500" height="200"></canvas>
+          <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+        </div>
+      </div>
+    </div>
     <div class="card-columns">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Loan by License</h5>
-          <canvas id="licChart" width="500" height="500"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Loan by Type</h5>
-          <canvas id="loanChart" width="500" height="500"></canvas>
-        </div>
-      </div>
-
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Customers</h5>
@@ -83,7 +79,7 @@
       <div class="card">
       <div class="card-body">
         <h6 class="card-subtitle mb-2 text-muted">Customers with Loans : {{data.customer.withloans}}</h6>
-          <p>Customers with/o Loans : {{data.customer.withoutloans}}</p>
+          <p>Customers with/o Loans : {{data.customer.withoutloans}} </p>
           <p>Total Customers : {{data.customer.count}}</p>
       </div>
       </div>
@@ -91,6 +87,7 @@
         <div class="card-body">
           <h5 class="card-title">Loans</h5>
           <ul class="list-group list-group-flush">
+            <li>License Total :{% for c in data.license.totalloans %} {{c.id}}:{{c.t}}</li>{%endfor%}
             <li class="list-group-item">Count :{{data.loan.count}}</li>
             <li class="list-group-item">Latest :{{data.loan.latest}}</li>
             <li class="list-group-item">Amount :{{data.loan.amount.t}} {{data.loan.amount_words}}</li>
@@ -112,7 +109,35 @@
       </div>
     </div>
   </div>
-  <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">..3.</div>
+  <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">
+    <div class="card-group">
+  <div class="card">
+
+    <div class="card-body">
+      <h5 class="card-title">Loans</h5>
+      <p class="card-text">Total : {{data.loan.total_loans}}</p>
+      <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+    </div>
+  </div>
+  <div class="card">
+
+    <div class="card-body">
+      <h5 class="card-title">Released</h5>
+      <p class="card-text">Total : {{data.loan.released_loans}}</p>
+      <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+    </div>
+  </div>
+  <div class="card">
+
+    <div class="card-body">
+      <h5 class="card-title">Unreleased</h5>
+      <p class="card-text">Total : {{data.loan.unreleased_loans}}
+                          </p>
+      <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+    </div>
+  </div>
+</div>
+  </div>
   <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...4s</div>
 </div>
 </div>
@@ -138,14 +163,39 @@
   borderColor: 'red',
   data: [{% for i in data.loan.thismonth %} {x:'{{i.date_only}}',y:{{i.t}}},{% endfor %}]
     };
+  var lasts2 = {
+  label: 'last month loan',
+  borderColor: 'blue',
+  data: [{% for i in data.loan.lastmonth %} {x:'{{i.date_only}}',y:{{i.t}}},{% endfor %}]
+    };
 
   var ctx2 = document.getElementById('thismonthChart').getContext('2d');
   var chart = new Chart(ctx2, {
     type: 'line',
     data: {
       labels:[{% for i in data.loan.thismonth %}'{{i.date_only}}',{%endfor%}],
-      datasets: [s2] },
+      datasets: [s2,lasts2] },
     });
+
+    var syear = {
+    label: 'This year loan',
+    borderColor: 'red',
+    data: [{% for i in data.loan.thisyear %} {x:'{{i.month}}',y:{{i.t}}},{% endfor %}]
+      };
+
+    var lastyear = {
+    label: 'last year loan',
+    borderColor: 'blue',
+    data: [{% for i in data.loan.lastyear %} {x:'{{i.month}}',y:{{i.t}}},{% endfor %}]
+      };
+
+    var ctxyear = document.getElementById('thisyearChart').getContext('2d');
+    var chart = new Chart(ctxyear, {
+      type: 'line',
+      data: {
+        labels:[{% for i in data.loan.thisyear %}'{{i.month}}',{%endfor%}],
+        datasets: [syear,lastyear] },
+      });
 
   var ctx3 = document.getElementById("loanChart");
   var myChart = new Chart(ctx3, {

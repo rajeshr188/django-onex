@@ -26,6 +26,7 @@ urlpatterns += (
 )
 urlpatterns+=(
             path('sales/',views.home,name='sales_home'),
+            path('sales/randomsales/',views.randomsales,name='randomsales'),
             path('sales/upload/',views.simple_upload,name='simpleupload'),
             path('sales/balance/',views.list_balance,name='sales_balance'),
             path('sales/graph/',views.graph,name='graph'),

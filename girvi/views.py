@@ -6,11 +6,11 @@ import re
 from django.utils import timezone
 from django.shortcuts import render,redirect
 from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast,TruncMonth
 from django.db.models.fields import DateField
 
 from .models import License, Loan, Release,Month,Year
-from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset,LoanFormset
+from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset,Loan_formset
 from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter
 from contact.models import Customer
@@ -26,6 +26,20 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from django.views.decorators.csrf import csrf_exempt
 
+from utils.render import Render
+
+def print_loanpledge(request,pk):
+    loan=Loan.objects.get(id=pk)
+    params={'loan':loan}
+    return Render.render('girvi/loan_pdf.html',params)
+
+def print_release(request,pk):
+    release = Release.objects.et(id=pk)
+    params = {'release':release}
+    return Render.render('girvi/release_pdf.html',params)
+
+def print_notice(request,pk):
+    pass
 def notice(request):
     qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
@@ -56,6 +70,8 @@ def multirelease(request,id=None):
         if action == 'delete':
             # delete all selected rows
             print('in delete action')
+            Loan.objects.filter(id__in=id_list).delete()
+            print('deleted'+ id_list)
         elif action == 'edit':
             print('in edit action'+str(id_list))
             formset = LoanFormset(queryset = Loan.objects.filter(id__in=id_list))
@@ -71,42 +87,55 @@ def multirelease(request,id=None):
     return HttpResponseRedirect(reverse('girvi_loan_list'))
 
 def manage_loans(request):
-    print(request.POST)
+
+    formset = Loan_formset(queryset=Loan.objects.none())
+
     if request.method == 'POST':
-        formset = LoanFormset(request.POST)
+        formset = formset(request.POST)
         if formset.is_valid():
             # do something with the formset.cleaned_data
             print("saving formset")
             instances=formset.save()
-            return redirect('girvi_loan_list')
+            return redirect(reverse('girvi_loan_list'))
+        else :
+            print('formset invalid')
+            return render(request, 'girvi/manage_loans.html', {'formset': formset})
     else:
-        formset = LoanFormset(queryset=Loan.objects.none())
-        return render(request, 'girvi/manage_loans.html', {'formset': formset})
+        formset = Loan_formset(queryset=Loan.objects.none())
 
-    HttpResponseRedirect(reverse('girvi_loan_list'))
+
+    return render(request, 'girvi/manage_loans.html', {'formset': formset})
 
 def home(request):
     data = dict()
     today = datetime.date.today()
+
+    loan=dict()
+    loans = Loan.objects
+    released =Loan.released
+    unreleased = Loan.unreleased
+
     customer=dict()
     c=Customer.objects
-    customer['withoutloans']=c.annotate(num_loans=Count('loan')).filter(num_loans=0).count()
-    # customer['withoutloans']=c.filter(loan__isnull=True).count()
-    customer['withloans']=c.annotate(num_loans=Count('loan')).filter(num_loans__gt=0).count()
     customer['count']=c.count()
+    customer['withoutloans']=c.filter(loan__isnull=True).count()
+    customer['withloans']=customer['count']-customer['withoutloans']
     customer['latest']=','.join(lat.name for lat in c.order_by('-created')[:5])
     customer['maxloans']=c.filter(loan__release__isnull=True).annotate(num_loans=Count('loan'),sum_loans=Sum('loan__loanamount')).values('name','num_loans','sum_loans').order_by('-num_loans')[:10]
 
     license =dict()
-    l=License.objects
+    l=License.objects.all()
     license['count']=l.count()
     # license['licenses']=','.join(lic.name for lic in l.all())
-    license['totalloans']=l.annotate(t=Sum('loan__loanamount'))
-    licchart = l.annotate(la=Sum('loan__loanamount')).values('name','la')
+    license['totalloans']=l.annotate(t=Sum('loan__loanamount',filter=Q(loan__release__isnull=True)))
+    licchart = l.annotate(la=Sum('loan__loanamount',filter=Q(loan__release__isnull=True))).values('name','la')
     license['licchart']=list(licchart)
 
-    loan=dict()
-    l=Loan.unreleased
+    loan['total_loans'] = loans.count()
+    loan['released_loans'] = released.count()
+    loan['unreleased_loans'] = unreleased.count()
+
+    l=unreleased
     loan['count']=l.count()
     loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
     loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])
@@ -125,12 +154,32 @@ def home(request):
     fixed.append(chart['bronze'])
     loan['chart']=fixed
     datetimel = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
-    thismonth = l.filter(created__year = today.year,created__month = today.month).annotate(date_only=Cast('created', DateField()),t=Sum('loanamount')).order_by('created').values_list('date_only','t',named=True)
+
+    thismonth = l.filter(created__year = today.year,created__month = today.month)\
+                    .annotate(date_only=Cast('created', DateField()))\
+                    .values('date_only').annotate(t=Sum('loanamount'))\
+                    .order_by('created').values_list('date_only','t',named=True)
+
+    lastmonth =  l.filter(created__year = today.year,created__month = (today.replace(day=1) - datetime.timedelta(days=1)).month)\
+                    .annotate(date_only=Cast('created', DateField()))\
+                    .values('date_only').annotate(t=Sum('loanamount'))\
+                    .order_by('created').values_list('date_only','t',named=True)
+
+    thisyear = l.filter(created__year = today.year).annotate(month=Month('created'))\
+                .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
+
+    lastyear = l.filter(created__year = (today.replace(month=1,day=1)-datetime.timedelta(days=1)).year).annotate(month=Month('created'))\
+                .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
+
+
     # fixed = []
     # for row in datetime:
     #     fixed.append([row[0],row[1]])
     loan['datechart']=datetimel
     loan['thismonth']=thismonth
+    loan['lastmonth']=lastmonth
+    loan['thisyear']=thisyear
+    loan['lastyear']=lastyear
     release=dict()
     r=Release.objects
     release['count']=r.count()
@@ -182,7 +231,7 @@ class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=10
+    paginate_by=50
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()
@@ -212,7 +261,7 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        license=License.objects.get(id=2)
+        license=License.objects.get(id=1)
         if self.kwargs:
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{
@@ -231,6 +280,7 @@ class LoanCreateView(CreateView):
 
 class LoanDetailView(DetailView):
     model = Loan
+
 
 class LoanUpdateView(UpdateView):
     model = Loan

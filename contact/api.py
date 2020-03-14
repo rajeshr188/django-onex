@@ -8,7 +8,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = models.Customer.objects.all()
     serializer_class = serializers.CustomerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
@@ -16,6 +16,4 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
     queryset = models.Supplier.objects.all()
     serializer_class = serializers.SupplierSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]

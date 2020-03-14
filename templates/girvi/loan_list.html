@@ -9,6 +9,7 @@
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
      <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" role="button">New Loan</a>
+     <a class="btn btn-secondary" href="{%url 'manage_loans' %}" role ="button">Bulk Create </a>
      <a class="btn btn-primary ml-2" href="{% url 'girvi_loan_list' %}" role="button">Loan List</a>
      <a class="btn btn-primary ml-2" href="{% export_url "ods" %}" role="button">export</a>
     </div>
@@ -39,6 +40,7 @@ Results :{{filter.qs.count}}
   </div>
   <div class="col-3">
     <div class="sticky-top">
+
       {% if filter %}
         <div class="card  bg-light mb-3 text-center">
           <div class="card-header">

@@ -8,7 +8,7 @@ class LicenseViewSet(viewsets.ModelViewSet):
 
     queryset = models.License.objects.all()
     serializer_class = serializers.LicenseSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
 
 class LoanViewSet(viewsets.ModelViewSet):
@@ -16,7 +16,8 @@ class LoanViewSet(viewsets.ModelViewSet):
 
     queryset = models.Loan.objects.all()
     serializer_class = serializers.LoanSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ('id','loanid','created','customer','itemtype','license','itemweight','itemdesc','loanamount' )
 
 
 class ReleaseViewSet(viewsets.ModelViewSet):
@@ -24,6 +25,4 @@ class ReleaseViewSet(viewsets.ModelViewSet):
 
     queryset = models.Release.objects.all()
     serializer_class = serializers.ReleaseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
+    # permission_classes = [permissions.IsAuthenticated]

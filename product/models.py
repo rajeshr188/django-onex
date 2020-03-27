@@ -14,7 +14,7 @@ from django.utils.translation import pgettext_lazy
 from django_measurement.models import MeasurementField
 from measurement.measures import Weight
 from mptt.managers import TreeManager
-from mptt.models import MPTTModel
+from mptt.models import MPTTModel,TreeForeignKey
 from versatileimagefield.fields import PPOIField, VersatileImageField
 from .weight import WeightUnits, zero_weight
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
@@ -25,17 +25,15 @@ class Category(MPTTModel):
     name = models.CharField(max_length=128,unique=True)
     slug = AutoSlugField(populate_from='name', blank=True)
     description = models.TextField(blank=True)
-    parent = models.ForeignKey(
+    parent = TreeForeignKey(
         'self', null=True, blank=True, related_name='children',
         on_delete=models.CASCADE)
     background_image = VersatileImageField(
         upload_to='category-backgrounds', blank=True, null=True)
 
-    objects = models.Manager()
-    tree = TreeManager()
 
-    class Meta:
-        ordering = ('-pk',)
+    class MPPTMeta:
+        order_insertion_by = ['name']
 
     def __str__(self):
         return self.name
@@ -195,7 +193,7 @@ class Attribute(models.Model):
     slug = AutoSlugField(populate_from='name', blank=True)
 
     class Meta:
-        ordering = ('slug', )
+        ordering = ('id', )
 
     def __str__(self):
         return self.name
@@ -297,6 +295,29 @@ class Stock(models.Model):
     def get_current_qih_weight(self):
         return self.stocktransaction_set.all().aggregate(total=Sum('weight'))
 
+class Stree(MPTTModel):
+    name = models.CharField(max_length=100)
+    parent = TreeForeignKey('self',null = True,blank = True,
+                            related_name = 'children',
+                            on_delete = models.CASCADE)
+    weight = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
+    cost = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
+    created = models.DateTimeField(auto_now_add=True)
+    tracking_type = models.CharField(choices = (('Lot','Lot'),('Unique','Unique')),null = True,max_length=10,default = 'Lot')
+    barcode = models.CharField(max_length=100,null=True,default= '')
+
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('product_stree_list')
+
+    def balance(self):
+        balances = [node.weight for node in self.get_descendants(include_self=True)]
+        return sum(balances)
 
 class StockTransaction(models.Model):
 

@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 class InvoiceTable(tables.Table):
     id = tables.LinkColumn('purchase_invoice_detail',args=[A('pk')])
-    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('supplier.id')])
+    supplier = tables.LinkColumn('contact_customer_detail',args=[A('supplier.id')])
     paid = tables.Column(accessor='get_total_payments',verbose_name="Paid",orderable=False)
     edit = tables.LinkColumn('purchase_invoice_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     delete = tables.LinkColumn('purchase_invoice_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())

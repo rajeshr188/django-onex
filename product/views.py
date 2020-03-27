@@ -1,6 +1,11 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView
-from .models import Category, ProductType, Product, ProductVariant, Attribute, AttributeValue, ProductImage, VariantImage,Stock,StockTransaction
-from .forms import CategoryForm, ProductTypeForm, ProductForm, ProductVariantForm, AttributeForm, AttributeValueForm, ProductImageForm, VariantImageForm,StockForm,StockTransactionForm
+from .models import (Category, ProductType, Product, ProductVariant, Attribute,
+                    AttributeValue, ProductImage, VariantImage,Stock,Stree,
+                    StockTransaction)
+from .forms import (CategoryForm, ProductTypeForm, ProductForm,
+                    ProductVariantForm,AttributeForm, AttributeValueForm,
+                     ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
+                     StockTransactionForm)
 from django.shortcuts import get_object_or_404,redirect,reverse
 from django.template.response import TemplateResponse
 
@@ -216,6 +221,49 @@ class VariantImageUpdateView(UpdateView):
 
 class StockListView(ListView):
     model=Stock
+
+class StreeListView(ListView):
+    model = Stree
+
+class StreeCreateView(CreateView):
+    model =Stree
+    form_class = StreeForm
+
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+def split_lot(request):
+    # If this is a POST request then process the Form data
+    if request.method == 'POST':
+
+        # Create a form instance and populate it with data from the request (binding):
+        form = UniqueForm(request.POST)
+
+        # Check if the form is valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
+            node_to_deduct_from = form.cleaned_data['parent']
+
+            weight = form.cleaned_data['weight']
+            node_to_deduct_from.weight -= weight
+            node_to_deduct_from.save()
+
+            new_node = Stree.objects.create(name='',parent =node_to_deduct_from ,weight = weight)
+            new_node.barcode = node_to_deduct_from.barcode + str(new_node.id)
+            family = new_node.get_family()
+            new_node.name=family[1].name+family[2].name
+            new_node.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect(reverse('product_stree_list') )
+
+    # If this is a GET (or any other method) create the default form.
+    else:
+        form = UniqueForm()
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'product/split_lot.html', context)
 
 class StockCreateView(CreateView):
     model=Stock

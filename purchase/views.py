@@ -46,6 +46,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'purchase/invoice_list.html'
     paginate_by = 25
 
+from product.models import Stree,Attribute,AttributeValue
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -74,8 +75,52 @@ class InvoiceCreateView(CreateView):
     def form_valid(self, form, invoiceitem_form):
         self.object = form.save()
         invoiceitem_form.instance = self.object
-        invoiceitem_form.save()
+        items = invoiceitem_form.save()
 
+        # Algorithm
+        #1 get list of line items
+        #2 extract product_variant / weight / cost ...etc
+        #3 for each product_variant arrange its (product&variant)attributes in attr
+        #4 init a variable path_to_taken with attributes arranged in insertion order
+        #5 start with node = stree.get_or_create[product_variant.product.product_type.name]
+        #6 for each p in path_to_taken:
+        #   if p in attr:
+        #       while attr[p] in node.get_decendants
+        #           node = stree.get(name = attr[p])
+        #       node = Stree.create(name=attr[p],parent = node)
+
+        path_to_take = ['Purity','Weight','Gender','Design','Length','tracking_type']
+        for item in items:
+            product_variant = item.product
+            product = product_variant.product
+            product_type = product.product_type
+            category = product.category
+            p_attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in product.attributes.items()}
+            v_attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in product_variant.attributes.items()}
+            attr = {**p_attr,**v_attr}
+
+            node,status = Stree.objects.get_or_create(name = product_type.name)
+            if status:
+                node.barcode = node.parent.barcode + str(node.id)
+            print(f"product_type : {product_type.name}")
+            print(f"attr : {attr}")
+            print(f"node : {node} type :{type(node)}")
+            for p in path_to_take:
+                if p in attr:
+                    if attr[p] in [item.name for item in node.get_descendants()]:
+                        print(f"node : {node}")
+                        node = Stree.objects.get(name=attr[p],parent = node)
+                    else :
+                        node = Stree.objects.create(name = attr[p],parent = node)
+                        print(f"node : {node}")
+
+            node.weight =node.weight+item.weight
+            node.cost = item.touch
+            n = node.get_family()
+            node.barcode = n[1].barcode+str(node.id)
+            family = node.get_family()
+            node.name = family[1].name + family[2].name
+            node.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):

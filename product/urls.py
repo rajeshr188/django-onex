@@ -84,12 +84,21 @@ urlpatterns += (
     path('variantimage/detail/<int:pk>/', views.VariantImageDetailView.as_view(), name='product_variantimage_detail'),
     path('variantimage/update/<int:pk>/', views.VariantImageUpdateView.as_view(), name='product_variantimage_update'),
 )
-urlpatterns +=(
+
+urlpatterns += (
+    # urls for Stree
+    path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
+    path('stree/create/',views.StreeCreateView.as_view(),name = 'product_stree_create'),
+    path('stree/split_lot/',views.split_lot,name = 'product_stree_splitlot'),
+    path('stree/detail/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_detail'),
+    path('stree/update/<int:pk>/',views.StreeUpdateView.as_view(), name = 'product_stree_update'),
+    path('stree/delete/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_delete'),
+
+)
+
+urlpatterns += (
     #urls for Stock
     path('stock/',views.StockListView.as_view(),name='product_stock_list'),
-    path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
-    path('stree/create',views.StreeCreateView.as_view(),name = 'product_stree_create'),
-    path('stree/split_lot',views.split_lot,name = 'product_stree_splitlot'),
     path('stock/create/',views.StockCreateView.as_view(),name='product_stock_create'),
     path('stock/detail/<slug:slug>/',views.StockDetailView.as_view(),name='product_stock_detail'),
     path('stock/update/<slug:slug>/',views.StockUpdateView.as_view(),name='product_stock_update'),

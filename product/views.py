@@ -1,4 +1,4 @@
-from django.views.generic import DetailView, ListView, UpdateView, CreateView
+from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, VariantImage,Stock,Stree,
                     StockTransaction)
@@ -6,7 +6,8 @@ from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
                      ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
                      StockTransactionForm)
-from django.shortcuts import get_object_or_404,redirect,reverse
+from django.shortcuts import get_object_or_404,redirect
+from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
 
 class CategoryListView(ListView):
@@ -219,8 +220,6 @@ class VariantImageUpdateView(UpdateView):
     model = VariantImage
     form_class = VariantImageForm
 
-class StockListView(ListView):
-    model=Stock
 
 class StreeListView(ListView):
     model = Stree
@@ -231,6 +230,7 @@ class StreeCreateView(CreateView):
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
+
 def split_lot(request):
     # If this is a POST request then process the Form data
     if request.method == 'POST':
@@ -264,6 +264,20 @@ def split_lot(request):
     }
 
     return render(request, 'product/split_lot.html', context)
+
+class StreeUpdateView(UpdateView):
+    model = Stree
+    form_class = StreeForm
+
+class StreeDetailView(DetailView):
+    model = Stree
+
+class StreeDeleteView(DeleteView):
+    model = Stree
+    success_url = reverse_lazy('product_stree_list')
+
+class StockListView(ListView):
+    model=Stock
 
 class StockCreateView(CreateView):
     model=Stock

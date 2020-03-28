@@ -118,8 +118,7 @@ class InvoiceCreateView(CreateView):
             node.cost = item.touch
             n = node.get_family()
             node.barcode = n[1].barcode+str(node.id)
-            family = node.get_family()
-            node.name = family[1].name + family[2].name
+            
             node.save()
         return HttpResponseRedirect(self.get_success_url())
 

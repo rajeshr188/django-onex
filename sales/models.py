@@ -6,11 +6,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from django.db import models
 from contact.models import Customer
-from product.models import ProductVariant
+from product.models import ProductVariant,Stree
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func,F
 # from django.contrib.postgres.indexes import BrinIndex
-
+from mptt.models import TreeForeignKey
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -85,8 +85,8 @@ class InvoiceItem(models.Model):
     quantity = models.IntegerField()
     makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     # Relationship Fields
-    product = models.ForeignKey(
-        ProductVariant,
+    product = TreeForeignKey(
+        Stree,
         on_delete=models.CASCADE
     )
     invoice = models.ForeignKey(

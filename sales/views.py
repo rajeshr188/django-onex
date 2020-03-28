@@ -225,8 +225,11 @@ class InvoiceCreateView(CreateView):
         self.object = form.save()
 
         invoiceitem_form.instance = self.object
-        invoiceitem_form.save()
-
+        items = invoiceitem_form.save()
+        for item in items:
+            print(f"node Wt: {item.product.weight} item wt:{item.weight}")
+            item.product.weight -= item.weight
+            item.product.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):

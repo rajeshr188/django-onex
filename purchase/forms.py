@@ -7,7 +7,7 @@ from django.forms.models import inlineformset_factory
 from django.db.models import Q
 
 class InvoiceForm(forms.ModelForm):
-    supplier=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Su'),widget=Select2Widget)
+    supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier','status']

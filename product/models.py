@@ -85,6 +85,7 @@ class Product(models.Model):
 
     class Meta:
         app_label = 'product'
+        ordering=('name',)
 
     def __iter__(self):
         if not hasattr(self, '__variants'):
@@ -315,9 +316,27 @@ class Stree(MPTTModel):
     def get_absolute_url(self):
         return reverse('product_stree_list')
 
+    def get_update_url(self):
+        return reverse('product_stree_update', args=(self.pk,))
+
     def balance(self):
         balances = [node.weight for node in self.get_descendants(include_self=True)]
         return sum(balances)
+
+    def get_or_create_branch(self,product_variant,weight,cost):
+        pass
+
+    def delete_stock(self):
+        pass
+
+    def empty_stock(self):
+        pass
+
+    def split_stock(self):
+        pass
+
+    def merge_stock(self):
+        purchase_invoice_list
 
 class StockTransaction(models.Model):
 

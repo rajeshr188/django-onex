@@ -117,6 +117,9 @@ def product_edit(request, pk):
         'product': product, 'product_form': form, 'variant_form': variant_form}
     return TemplateResponse(request, 'product/product_form.html', ctx)
 
+class ProductDeleteView(DeleteView):
+    model = Product
+    success_url = reverse_lazy('product_product_list')
 
 class ProductVariantListView(ListView):
     model = ProductVariant
@@ -148,6 +151,9 @@ class ProductVariantUpdateView(UpdateView):
     model = ProductVariant
     form_class = ProductVariantForm
 
+class ProductVariantDeleteView(DeleteView):
+    model = ProductVariant
+    success_url = reverse_lazy('product_productvariant_list')
 
 class AttributeListView(ListView):
     model = Attribute
@@ -246,12 +252,18 @@ def split_lot(request):
             weight = form.cleaned_data['weight']
             node_to_deduct_from.weight -= weight
             node_to_deduct_from.save()
-
-            new_node = Stree.objects.create(name='',parent =node_to_deduct_from ,weight = weight)
-            new_node.barcode = node_to_deduct_from.barcode + str(new_node.id)
-            family = new_node.get_family()
-            new_node.name=family[1].name+family[2].name
-            new_node.save()
+            sibling = None
+            if len(node_to_deduct_from.get_siblings())==0:
+                sibling = Stree(name='Unique')
+                sibling.insert_at(target = node_to_deduct_from,position='left')
+            else:
+                sibling = node_to_deduct_from.get_siblings()[0]
+            sibling.save()
+            newnode = Stree.objects.create(parent = sibling,weight=weight)
+            newnode.barcode = 'je'+str(newnode.id)
+            family = newnode.get_family()
+            newnode.name=family[1].name+family[2].name
+            newnode.save()
             # redirect to a new URL:
             return HttpResponseRedirect(reverse('product_stree_list') )
 
@@ -264,6 +276,18 @@ def split_lot(request):
     }
 
     return render(request, 'product/split_lot.html', context)
+
+def merge_lot(request):
+    if request.method =='POST':
+        form = UniqueForm(request.POST)
+        if form.is_valid():
+            # merge Lot
+            return HttpResponseRedirect(reverse('product_stree_list'))
+    else:
+        form = UniqueForm()
+
+    context = {'form':form}
+    return render(request,'product/split_lot.html',context)
 
 class StreeUpdateView(UpdateView):
     model = Stree

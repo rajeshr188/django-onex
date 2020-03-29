@@ -40,6 +40,6 @@ def generate_name_from_values(attributes_dict):
     Args:
         attributes_dict: dict of attribute_pk: AttributeValue values
     """
-    return ' / '.join(
-        str(attribute_value)
+    return '/'.join(
+        str(attribute_value).strip()
         for attribute_pk, attribute_value in attributes_dict.items())

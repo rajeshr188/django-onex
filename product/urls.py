@@ -43,6 +43,7 @@ urlpatterns += (
     path('product/create/<int:type_pk>/', views.product_create, name='product_product_create'),
     path('product/detail/<int:pk>/', views.ProductDetailView.as_view(), name='product_product_detail'),
     path('product/update/<int:pk>/', views.product_edit, name='product_product_update'),
+    path('product/delete/<int:pk>/', views.ProductDeleteView.as_view(),name='product_product_delete'),
 )
 
 urlpatterns += (
@@ -51,6 +52,7 @@ urlpatterns += (
     path('productvariant/create/<int:pk>', views.variant_create, name='product_productvariant_create'),
     path('productvariant/detail/<int:pk>/', views.ProductVariantDetailView.as_view(), name='product_productvariant_detail'),
     path('productvariant/update/<int:pk>/', views.ProductVariantUpdateView.as_view(), name='product_productvariant_update'),
+    path('productvariant/delete/<int:pk>/', views.ProductVariantDeleteView.as_view(), name='product_productvariant_delete'),
 )
 
 urlpatterns += (
@@ -90,7 +92,7 @@ urlpatterns += (
     path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
     path('stree/create/',views.StreeCreateView.as_view(),name = 'product_stree_create'),
     path('stree/split_lot/',views.split_lot,name = 'product_stree_splitlot'),
-    path('stree/detail/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_detail'),
+    path('stree/detail/<int:pk>/',views.StreeDetailView.as_view(), name = 'product_stree_detail'),
     path('stree/update/<int:pk>/',views.StreeUpdateView.as_view(), name = 'product_stree_update'),
     path('stree/delete/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_delete'),
 

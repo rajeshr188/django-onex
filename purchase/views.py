@@ -33,7 +33,7 @@ def list_balance(request):
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Supplier.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
+    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
 
 
     context={'balance':balance}
@@ -77,49 +77,44 @@ class InvoiceCreateView(CreateView):
         invoiceitem_form.instance = self.object
         items = invoiceitem_form.save()
 
-        # Algorithm
-        #1 get list of line items
-        #2 extract product_variant / weight / cost ...etc
-        #3 for each product_variant arrange its (product&variant)attributes in attr
-        #4 init a variable path_to_taken with attributes arranged in insertion order
-        #5 start with node = stree.get_or_create[product_variant.product.product_type.name]
-        #6 for each p in path_to_taken:
-        #   if p in attr:
-        #       while attr[p] in node.get_decendants
-        #           node = stree.get(name = attr[p])
-        #       node = Stree.create(name=attr[p],parent = node)
-
-        path_to_take = ['Purity','Weight','Gender','Design','Length','tracking_type']
+        path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
         for item in items:
+
             product_variant = item.product
-            product = product_variant.product
-            product_type = product.product_type
-            category = product.category
-            p_attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in product.attributes.items()}
-            v_attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in product_variant.attributes.items()}
-            attr = {**p_attr,**v_attr}
+            product_type = product_variant.product.product_type
+            attr = {**product_variant.product.attributes,**product_variant.attributes}
+            attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in attr.items()}
+            attr['product_type']= product_type.name
+            attr = {i:attr[i]for i in path_to_take if i in attr}
+            path = list(attr.values())
 
-            node,status = Stree.objects.get_or_create(name = product_type.name)
-            if status:
-                node.barcode = node.parent.barcode + str(node.id)
-            print(f"product_type : {product_type.name}")
-            print(f"attr : {attr}")
-            print(f"node : {node} type :{type(node)}")
-            for p in path_to_take:
-                if p in attr:
-                    if attr[p] in [item.name for item in node.get_descendants()]:
-                        print(f"node : {node}")
-                        node = Stree.objects.get(name=attr[p],parent = node)
-                    else :
-                        node = Stree.objects.create(name = attr[p],parent = node)
-                        print(f"node : {node}")
-
-            node.weight =node.weight+item.weight
+            node = Stree.objects.get(name='Gold')
+            # traverse the path creating or traversing nodes
+            for p in path:
+                if p in [item.name for item in node.get_children()]:
+                    node = Stree.objects.get(name=p,parent = node)
+                else :
+                    node = Stree.objects.create(name = p,parent = node)
+            if item.is_return:
+                node.weight -= item.weight
+            else:
+                node.weight +=item.weight
             node.cost = item.touch
             n = node.get_family()
             node.barcode = n[1].barcode+str(node.id)
-            
             node.save()
+
+            if attr['tracking_type'] == 'Unique':
+                if item.is_return:
+                    node.weight -= item.weight
+                else:
+                    node.weight +=item.weight
+                node.weight -= item.weight
+                node.save()
+                newnode = Stree.objects.create(parent = node,weight=item.weight,cost=item.touch)
+                family = newnode.get_family()
+                newnode.barcode = family[1].barcode + str(newnode.id)
+                newnode.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -203,6 +198,7 @@ class PaymentListView(ExportMixin,SingleTableMixin,FilterView):
     filterset_class = PaymentFilter
     template_name="purchase/payment_list.html"
     paginate_by = 25
+
 class PaymentCreateView(CreateView):
     model = Payment
     form_class = PaymentForm

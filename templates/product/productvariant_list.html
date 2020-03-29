@@ -4,7 +4,7 @@
 <p><a class="btn btn-default" href="{% url 'product_productvariant_list' %}">ProductVariant Listing</a></p>
 <table class="table">
 <tr>
-<td>ID</td><td>Link</td>
+<td>ID</td>
     <td>sku</td>
     <td>name</td>
     <td>Product</td>
@@ -14,11 +14,12 @@
     <td>Current qih</td><td>Current Qih Weight</td>
     <td>cost_price</td>
     <td>weight</td>
+    <td>Action</td>
 </tr>
 {% for object in object_list %}
 <tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+
+    <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
     <td>{{ object.sku }}</td>
     <td>{{ object.name }}</td>
     <td>{{object.product}}</td>
@@ -29,6 +30,7 @@
     <td>{{object.stock.get_current_qih_weight.total}}</td>
     <td>{{ object.cost_price }}</td>
     <td>{{ object.weight }}</td>
+    <td><a class = "btn btn-danger" href="{% url 'product_productvariant_delete' object.id%}">Delete</a></td>
 </tr>
 {% endfor %}
 </table>

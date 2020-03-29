@@ -2,78 +2,42 @@
 {% load static %}
 {% block content %}
 {% load mptt_tags %}
-<ul >
-    {% recursetree object_list %}
-        <li >
-            {{ node.name }} {{node.barcode}} ({{node.balance}}) / ({{node.weight}})
-            {% if not node.is_leaf_node %}
-                <ul class="children">
-                  {{children}}
-                </ul>
-            {% else %}
-                 {{children}}<a class="btn btn-default" href="{% url 'product_stree_update' node.id %}">Edit</a>
-                 <a class="btn btn-default" href="{% url 'product_stree_delete' node.id %}">Delete</a>
-            {% endif %}
-        </li>
-    {% endrecursetree %}
-</ul>
-<p><a class="btn btn-default" href="{% url 'product_stree_list' %}">Stocktree Listing</a></p>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>barcode</th>
-            <th>weight</th>
-            <th>cost</th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for node in object_list %}
+<p><a class="btn btn-primary" href="{% url 'product_stree_create' %}">Create new Stock</a></p>
 
-        <tr>
-            <td>
-                <div style="padding-left: {% widthratio node.get_level 1 15 %}px;">
-                    {% if node.is_child_node %}↳{% endif %}
-                    {{ node.name }}
+<ul class="list-group">
+      {% recursetree object_list %}
+      <p>
+        <div class='card'>
+
+
+          <div class="card-body">
+            <a  class="btn btn-outline-primary" data-toggle="collapse" href="#multiCollapseExample{{node.id}}" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
+            {{ node.name }} {{node.barcode}} Bal({{node.balance}}) #({{node.get_descendant_count}})
+            </a>
+            {%if node.is_leaf_node%}
+
+                <a class="btn btn-outline-info btn-sm" href="{% url 'product_stree_update' node.id %}">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_delete' node.id %}">Delete</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_delete' node.id %}">Merge</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_delete' node.id %}">Split</a>
+
+            {%endif%}
+            <div class="row">
+              <div class="col">
+                <div class="collapse multi-collapse show" id="multiCollapseExample{{node.id}}">
+                  <ul class="children">
+                    {%if not node.is_leaf_node%}
+                        {{children}}{{count_attr}}
+                    {%endif%}
+                    </ul>
                 </div>
-            </td>
-            <td>{{ node.get__type_display }}</td>
-            <td>{{ node.barcode }}</td>
-            <td>{{ node.weight|join:', ' }}</td>
-            <td>
-                {% if node.is_leaf_node %}
-                    <a href="" class="btn btn-default btn-xs">Transactions</a>
-                {% else %}
-                <a href="" class="btn btn-default btn-xs">Parent</a>
-                {% endif %}
-            </td>
-            <td>
-                <a href="{% url 'product_stree_update' node.id %}" class="btn btn-default btn-xs">Edit</a>
-            </td>
-        </tr>
-        {% empty %}
-            <tr>
-            <td colspan="6" class="text-center">No accounts exist</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<table class="table">
-<tr>
-<td>ID</td><td>Link</td>
-    <td>name</td><td>Parent</td>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p>
+  {% endrecursetree %}
+</ul>
 
-</tr>
-{% for object in object_list %}
-<tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.name }}</td>
-    <td>{{object.parent}}</td>
-
-{% endfor %}
-</table><a class="btn btn-primary" href="{% url 'product_stree_create' %}">Create new Stock</a>
 {% endblock %}

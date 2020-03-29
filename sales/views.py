@@ -228,7 +228,10 @@ class InvoiceCreateView(CreateView):
         items = invoiceitem_form.save()
         for item in items:
             print(f"node Wt: {item.product.weight} item wt:{item.weight}")
-            item.product.weight -= item.weight
+            if item.is_return:
+                item.product.weight += item.weight
+            else:
+                item.product.weight -=item.weight
             item.product.save()
         return HttpResponseRedirect(self.get_success_url())
 

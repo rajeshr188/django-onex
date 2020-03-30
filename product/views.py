@@ -6,10 +6,11 @@ from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
                      ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
                      StockTransactionForm)
+from .filters import StreeFilter
 from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
-
+from django_filters.views import FilterView
 class CategoryListView(ListView):
     model = Category
 
@@ -237,39 +238,28 @@ class StreeCreateView(CreateView):
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
-def split_lot(request):
+def split_lot(request,pk):
     # If this is a POST request then process the Form data
+    parent= get_object_or_404(Stree,pk=pk)
     if request.method == 'POST':
 
         # Create a form instance and populate it with data from the request (binding):
-        form = UniqueForm(request.POST)
+        form = UniqueForm(request.POST or None)
 
         # Check if the form is valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
-            node_to_deduct_from = form.cleaned_data['parent']
 
+            node_to_deduct_from = form.cleaned_data['parent']
             weight = form.cleaned_data['weight']
-            node_to_deduct_from.weight -= weight
-            node_to_deduct_from.save()
-            sibling = None
-            if len(node_to_deduct_from.get_siblings())==0:
-                sibling = Stree(name='Unique')
-                sibling.insert_at(target = node_to_deduct_from,position='left')
-            else:
-                sibling = node_to_deduct_from.get_siblings()[0]
-            sibling.save()
-            newnode = Stree.objects.create(parent = sibling,weight=weight)
-            newnode.barcode = 'je'+str(newnode.id)
-            family = newnode.get_family()
-            newnode.name=family[1].name+family[2].name
-            newnode.save()
+            node_to_deduct_from.split_node(weight)
+
             # redirect to a new URL:
             return HttpResponseRedirect(reverse('product_stree_list') )
 
     # If this is a GET (or any other method) create the default form.
     else:
-        form = UniqueForm()
+        form = UniqueForm(initial = {"parent":parent})
 
     context = {
         'form': form,
@@ -277,17 +267,12 @@ def split_lot(request):
 
     return render(request, 'product/split_lot.html', context)
 
-def merge_lot(request):
-    if request.method =='POST':
-        form = UniqueForm(request.POST)
-        if form.is_valid():
-            # merge Lot
-            return HttpResponseRedirect(reverse('product_stree_list'))
-    else:
-        form = UniqueForm()
+def merge_lot(request,pk):
+    node = Stree.objects.get(id=pk)
+    print(f"to merge node{node}")
+    node.merge_node()
 
-    context = {'form':form}
-    return render(request,'product/split_lot.html',context)
+    return HttpResponseRedirect(reverse('product_stree_list') )
 
 class StreeUpdateView(UpdateView):
     model = Stree

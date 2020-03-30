@@ -305,7 +305,7 @@ class Stree(MPTTModel):
     cost = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
     created = models.DateTimeField(auto_now_add=True)
     tracking_type = models.CharField(choices = (('Lot','Lot'),('Unique','Unique')),null = True,max_length=10,default = 'Lot')
-    barcode = models.CharField(max_length=100,null=True,default= '')
+    barcode = models.CharField(max_length=100,null=True,default = '')
 
     class Meta:
         ordering = ('id',)
@@ -323,20 +323,54 @@ class Stree(MPTTModel):
         balances = [node.weight for node in self.get_descendants(include_self=True)]
         return sum(balances)
 
-    def get_or_create_branch(self,product_variant,weight,cost):
-        pass
+    def traverse_to(self,product):
+        print(f"self:{self} product:{product}")
+        path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
+        product_variant = product
+        product_type = product_variant.product.product_type
+        attr = {**product_variant.product.attributes,**product_variant.attributes}
+        attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in attr.items()}
+        attr['product_type']= product_type.name
+        attr = {i:attr[i]for i in path_to_take if i in attr}
+        path = list(attr.values())
 
-    def delete_stock(self):
-        pass
+
+        for p in path:
+            self,status = Stree.objects.get_or_create(name=p,parent=self)
+            print(f"-->{self}")
+        self.tracking_type = attr['tracking_type']
+        self.save()
+        return self
 
     def empty_stock(self):
         pass
 
-    def split_stock(self):
-        pass
+    def split_node(self,weight):
+        if self.weight < weight:
+            return
 
-    def merge_stock(self):
-        purchase_invoice_list
+        if self.get_siblings().count() == 0:
+            sibling = Stree.objects.create(name=self.get_family()[1].name + 'Unique',parent = self.parent,tracking_type='Unique')
+            print(f"created sibling{sibling} of family{sibling.get_family()}")
+            # sibling.insert_at(target = self,position='right')
+        sibling = self.get_siblings()[0]
+
+        newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique')
+        newnode.barcode = 'je'+str(newnode.id)
+        family = newnode.get_family()
+        newnode.name=family[1].name+family[2].name
+        newnode.save()
+        self.weight -= weight
+        self.save()
+
+    def merge_node(self):
+        if self.tracking_type == 'Lot':
+            return
+        n = self.get_family()
+        lot,status = Stree.objects.get_or_create(name=n[1].name+'Lot',parent = self.parent.parent)
+        lot.weight += self.weight
+        lot.save()
+        self.delete()
 
 class StockTransaction(models.Model):
 

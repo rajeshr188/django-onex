@@ -1,10 +1,8 @@
 
 from django.urls import path, include
 from rest_framework import routers
-
 from . import api
 from . import views
-
 router = routers.DefaultRouter()
 router.register(r'category', api.CategoryViewSet)
 router.register(r'producttype', api.ProductTypeViewSet)
@@ -91,7 +89,8 @@ urlpatterns += (
     # urls for Stree
     path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
     path('stree/create/',views.StreeCreateView.as_view(),name = 'product_stree_create'),
-    path('stree/split_lot/',views.split_lot,name = 'product_stree_splitlot'),
+    path('stree/split_lot/<int:pk>',views.split_lot,name = 'product_stree_splitlot'),
+    path('stree/merge_lot/<int:pk>',views.merge_lot,name = 'product_stree_mergelot'),
     path('stree/detail/<int:pk>/',views.StreeDetailView.as_view(), name = 'product_stree_detail'),
     path('stree/update/<int:pk>/',views.StreeUpdateView.as_view(), name = 'product_stree_update'),
     path('stree/delete/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_delete'),

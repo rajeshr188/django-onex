@@ -233,6 +233,7 @@ class InvoiceCreateView(CreateView):
             else:
                 item.product.weight -=item.weight
             item.product.save()
+        
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):

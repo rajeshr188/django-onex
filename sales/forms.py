@@ -34,7 +34,9 @@ class InvoiceForm(forms.ModelForm):
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
-    product=TreeNodeChoiceField(queryset=Stree.objects.all(),widget=Select2Widget)
+    product=forms.ModelChoiceField(queryset=Stree.objects.filter(children__isnull = True).exclude(barcode=''),
+                                # widget=Select2Widget
+                                )
 
     class Meta:
         model = InvoiceItem

@@ -34,7 +34,7 @@ def print_loanpledge(request,pk):
     return Render.render('girvi/loan_pdf.html',params)
 
 def print_release(request,pk):
-    release = Release.objects.et(id=pk)
+    release = Release.objects.get(id=pk)
     params = {'release':release}
     return Render.render('girvi/release_pdf.html',params)
 

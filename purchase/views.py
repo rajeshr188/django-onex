@@ -77,44 +77,26 @@ class InvoiceCreateView(CreateView):
         invoiceitem_form.instance = self.object
         items = invoiceitem_form.save()
 
-        path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
         for item in items:
 
-            product_variant = item.product
-            product_type = product_variant.product.product_type
-            attr = {**product_variant.product.attributes,**product_variant.attributes}
-            attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in attr.items()}
-            attr['product_type']= product_type.name
-            attr = {i:attr[i]for i in path_to_take if i in attr}
-            path = list(attr.values())
-
             node = Stree.objects.get(name='Gold')
-            # traverse the path creating or traversing nodes
-            for p in path:
-                if p in [item.name for item in node.get_children()]:
-                    node = Stree.objects.get(name=p,parent = node)
-                else :
-                    node = Stree.objects.create(name = p,parent = node)
+            node = node.traverse_to(item.product)
+
+            if node.tracking_type == 'Unique':
+                node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
+
             if item.is_return:
                 node.weight -= item.weight
             else:
                 node.weight +=item.weight
+
             node.cost = item.touch
             n = node.get_family()
-            node.barcode = n[1].barcode+str(node.id)
+            node.name = n[1].name + node.name
+            node.barcode = 'je'+str(node.id)
             node.save()
 
-            if attr['tracking_type'] == 'Unique':
-                if item.is_return:
-                    node.weight -= item.weight
-                else:
-                    node.weight +=item.weight
-                node.weight -= item.weight
-                node.save()
-                newnode = Stree.objects.create(parent = node,weight=item.weight,cost=item.touch)
-                family = newnode.get_family()
-                newnode.barcode = family[1].barcode + str(newnode.id)
-                newnode.save()
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):

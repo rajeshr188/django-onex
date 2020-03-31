@@ -1,6 +1,6 @@
 from django.db.models import signals
 from django.dispatch import receiver
-from sales.models import Invoice,Receipt,ReceiptLine
+from sales.models import Invoice,InvoiceItem,Receipt,ReceiptLine
 
 # @receiver(signals.pre_delete,sender=ReceiptLine)
 # def delete_status(sender,instance,*args,**kwargs):
@@ -17,7 +17,19 @@ from sales.models import Invoice,Receipt,ReceiptLine
 #     rec = instance.receipt
 #     rec.total -= instance.amount
 #     rec.save()
+@receiver(signals.post_delete,sender = InvoiceItem)
+def submit_stock(sender,instance,*args,**kwargs):
 
+    node = instance.product
+
+    weight = instance.weight
+    print(f"item.product:{node} weight : {weight}")
+    if instance.is_return:
+        node.weight -=weight
+    else :
+        node.weight += weight
+    print(f"after submitting stock node weight :{node.weight}")
+    node.save()
 @receiver(signals.post_delete,sender=ReceiptLine)
 def delete_status(sender,instance,*args,**kwargs):
     # print ('deleting invoice status')

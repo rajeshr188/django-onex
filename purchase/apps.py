@@ -1,8 +1,7 @@
 from django.apps import AppConfig
 
-
-class SalesConfig(AppConfig):
-    name = 'sales'
+class PurchaseConfig(AppConfig):
+    name = 'purchase'
     def ready(self):
         print("ready")
         import purchase.signals

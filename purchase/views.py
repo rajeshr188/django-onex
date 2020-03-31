@@ -83,7 +83,17 @@ class InvoiceCreateView(CreateView):
             node = node.traverse_to(item.product)
 
             if node.tracking_type == 'Unique':
+                # tldr:never return unique item in purchase ,merge and then return from lot
+                # cant create purchase invoice with unique product as being returned,
+                # becoz it will create negative unique item
+                # in case you want to return merge unique to lot and return
+                # other way around is to find and delete unique return item baseed on weight here
+                # and create again when this purchase is deleted and signals activated
+                if item.is_return:
+                    print("you need to merge a unique to lot to be able to return ")
+                    continue
                 node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
+
 
             if item.is_return:
                 node.weight -= item.weight

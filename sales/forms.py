@@ -35,7 +35,7 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(queryset=Stree.objects.filter(children__isnull = True).exclude(barcode=''),
-                                # widget=Select2Widget
+                                widget=Select2Widget
                                 )
 
     class Meta:

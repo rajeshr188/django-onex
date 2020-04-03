@@ -34,7 +34,7 @@ class InvoiceForm(forms.ModelForm):
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
-    product=forms.ModelChoiceField(queryset=Stree.objects.filter(children__isnull = True).exclude(barcode=''),
+    product=forms.ModelChoiceField(queryset=Stree.objects.none(),
                                 widget=Select2Widget
                                 )
 
@@ -42,8 +42,13 @@ class InvoiceItemForm(forms.ModelForm):
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']
 
+    def __init__(self,*args,**kwargs):
+        super(InvoiceItemForm,self).__init__(*args,**kwargs)
+        self.fields['product'].queryset = Stree.objects.filter(children__isnull = True,status = 'Available').exclude(barcode='')
+
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),extra=1,can_delete=True)
+    fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),
+    form = InvoiceItemForm,extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)

@@ -55,7 +55,9 @@ INSTALLED_APPS = [
     'corsheaders',
     # Local
     'users',
-    'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',
+    'pages',
+    'contact','product','girvi','sales','purchase','Chitfund','daybook',
+    'approval',
 ]
 CONTROLCENTER_DASHBOARDS = (
         ('mydash','djangox_project.dashboard.MyDash'),

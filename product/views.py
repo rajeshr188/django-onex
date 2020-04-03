@@ -11,41 +11,34 @@ from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
 from django_filters.views import FilterView
+
 class CategoryListView(ListView):
     model = Category
-
 
 class CategoryCreateView(CreateView):
     model = Category
     form_class = CategoryForm
 
-
 class CategoryDetailView(DetailView):
     model = Category
-
 
 class CategoryUpdateView(UpdateView):
     model = Category
     form_class = CategoryForm
 
-
 class ProductTypeListView(ListView):
     model = ProductType
-
 
 class ProductTypeCreateView(CreateView):
     model = ProductType
     form_class = ProductTypeForm
 
-
 class ProductTypeDetailView(DetailView):
     model = ProductType
-
 
 class ProductTypeUpdateView(UpdateView):
     model = ProductType
     form_class = ProductTypeForm
-
 
 class ProductListView(ListView):
     model = Product
@@ -228,8 +221,10 @@ class VariantImageUpdateView(UpdateView):
     form_class = VariantImageForm
 
 
-class StreeListView(ListView):
+class StreeListView(FilterView):
     model = Stree
+    filterset_class = StreeFilter
+    template_name = 'product/stree_list.html'
 
 class StreeCreateView(CreateView):
     model =Stree

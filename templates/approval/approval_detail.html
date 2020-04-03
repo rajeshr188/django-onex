@@ -1,0 +1,15 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'product_attribute_list' %}">Approval Listing</a></p>
+<table class="table">
+<tr><td>id</td><td>{{ object.id }}</td></tr>
+<tr><td>Person</td><td>{{ object.contact }}</td></tr>
+<tr><td>Quantity</td><td>{{ object.total_qty }}</td></tr>
+<tr><td>Weight</td><td>{{ object.total_wt }}</td></tr>
+<tr><td>Created</td><td>{{ object.created_at }}</td></tr>
+<tr><td>Status</td><td>{{ object.status }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
+
+{% endblock %}

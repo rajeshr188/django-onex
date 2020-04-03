@@ -4,7 +4,10 @@
 {% load mptt_tags %}
 
 <p><a class="btn btn-primary" href="{% url 'product_stree_create' %}">Create new Stock</a></p>
-
+<form method="get">
+        {{ filter.form.as_p }}
+        <input type="submit" />
+    </form>
 <ul class="list-group">
       {% recursetree object_list %}
       <p>
@@ -16,19 +19,21 @@
             {{ node.name }} {{node.barcode}} Bal({{node.balance}}) #({{node.get_descendant_count}}) {{node.tracking_type}}
             </a>
             {%if node.is_leaf_node%}
-
+                Quantity : {{node.quantity}} Status : {{node.status}}
                 <a class="btn btn-outline-info btn-sm"  href="{% url 'product_stree_update' node.id %}">Edit</a>
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_delete' node.id %}">Delete</a>
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_mergelot' node.id %}">Merge</a>
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_splitlot' node.pk %}">Split</a>
 
+            {%elif node.level == 2 %}
+              <a class ="btn btn-outline-danger btn-sm" >Delete all Child Nodes</a>
             {%endif%}
             <div class="row">
               <div class="col">
                 <div class="collapse multi-collapse show" id="multiCollapseExample{{node.id}}">
                   <ul class="children">
                     {%if not node.is_leaf_node%}
-                        {{children}}{{count_attr}}
+                        {{children}}
                     {%endif%}
                     </ul>
                 </div>
@@ -36,7 +41,7 @@
             </div>
           </div>
         </div>
-      </p>
+
   {% endrecursetree %}
 </ul>
 

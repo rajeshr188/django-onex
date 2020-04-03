@@ -1,0 +1,33 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+{% load mptt_tags %}
+
+<p>
+  <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
+  <a class="btn btn-primary" href="{% url 'approval_approval_create' %}">Create new Approval</a>
+</p>
+
+<table class="table">
+  <tr>
+      <td>ID</td>
+      <td>created</td>
+      <td>Customer</td>
+      <td>quantity</td>
+      <td>weight</td>
+      <td>Status</td>
+      <td>Action</td>
+  </tr>
+{% for object in object_list %}
+<tr>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.created_at }}</td>
+    <td>{{object.contact}}</td>
+    <td>{{ object.total_qty }}</td>
+    <td>{{ object.total_wt }}</td>
+    <td>{{object.status}}</td>
+    <td><a href ="{% url 'approval_approval_delete' object.pk%}">Delete</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

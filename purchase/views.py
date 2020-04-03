@@ -46,7 +46,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'purchase/invoice_list.html'
     paginate_by = 25
 
-from product.models import Stree,Attribute,AttributeValue
+from product.models import Stree
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -79,32 +79,51 @@ class InvoiceCreateView(CreateView):
 
         for item in items:
 
-            node = Stree.objects.get(name='Gold')
+            node = Stree.objects.get(name='Stock')
             node = node.traverse_to(item.product)
 
-            if node.tracking_type == 'Unique':
+            if item.is_return:
+
                 # tldr:never return unique item in purchase ,merge and then return from lot
                 # cant create purchase invoice with unique product as being returned,
                 # becoz it will create negative unique item
                 # in case you want to return merge unique to lot and return
                 # other way around is to find and delete unique return item baseed on weight here
                 # and create again when this purchase is deleted and signals activated
-                if item.is_return:
+                if node.tracking_type == 'Unique':
                     print("you need to merge a unique to lot to be able to return ")
                     continue
-                node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
-
-
-            if item.is_return:
+                    
                 node.weight -= item.weight
-            else:
-                node.weight +=item.weight
+                node.quantity -= item.quantity
+                node.save()
+                node.update_status('Empty')
 
-            node.cost = item.touch
-            n = node.get_family()
-            node.name = n[1].name + node.name
-            node.barcode = 'je'+str(node.id)
-            node.save()
+                return_node = Stree.objects.get(name='Return')
+                return_node = return_node.traverse_parellel_to(node)
+                return_node.weight +=item.weight
+                return_node.quantity +=item.quantity
+                return_node.save()
+            else:
+                if node.tracking_type == 'Unique':
+                    print("node is unique")
+                    node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
+                node.weight +=item.weight
+                node.quantity +=item.quantity
+
+                node.cost = item.touch
+                n = node.get_family()
+                node.full_name = n[1].name + node.name
+                node.barcode = 'je'+str(node.id)
+                node.save()
+                node.update_status('Available')
+
+            # node.cost = item.touch
+            # n = node.get_family()
+            # node.full_name = n[1].name + node.name
+            # node.barcode = 'je'+str(node.id)
+            # node.save()
+            # node.update_status('Empty')
 
 
         return HttpResponseRedirect(self.get_success_url())

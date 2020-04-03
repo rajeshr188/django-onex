@@ -298,6 +298,7 @@ class Stock(models.Model):
 
 class Stree(MPTTModel):
     name = models.CharField(max_length=100)
+    full_name = models.CharField(max_length=100,blank = True,null = True,default = '')
     parent = TreeForeignKey('self',null = True,blank = True,
                             related_name = 'children',
                             on_delete = models.CASCADE)
@@ -306,12 +307,13 @@ class Stree(MPTTModel):
     created = models.DateTimeField(auto_now_add=True)
     tracking_type = models.CharField(choices = (('Lot','Lot'),('Unique','Unique')),null = True,max_length=10,default = 'Lot')
     barcode = models.CharField(max_length=100,null=True,default = '')
-
+    quantity = models.IntegerField(default=0,)
+    status = models.CharField(max_length=10,choices = (('Empty','Empty'),('Available','Available'),('Sold','Sold'),('Approval','Approval'),('Return','Return')),default = 'Empty')
     class Meta:
         ordering = ('id',)
 
     def __str__(self):
-        return f"{self.name} {self.barcode}"
+        return f"{self.name or self.full_name} {self.barcode} {self.weight} {self.quantity}"
 
     def get_absolute_url(self):
         return reverse('product_stree_list')
@@ -323,7 +325,7 @@ class Stree(MPTTModel):
         balances = [node.weight for node in self.get_descendants(include_self=True)]
         return sum(balances)
 
-    def traverse_to(self,product):
+    def traverse_to(self,product,category='Gold'):
         print(f"self:{self} product:{product}")
         path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
         product_variant = product
@@ -333,7 +335,7 @@ class Stree(MPTTModel):
         attr['product_type']= product_type.name
         attr = {i:attr[i]for i in path_to_take if i in attr}
         path = list(attr.values())
-
+        path = [category]+path
 
         for p in path:
             self,status = Stree.objects.get_or_create(name=p,parent=self)
@@ -342,6 +344,13 @@ class Stree(MPTTModel):
         self.save()
         return self
 
+    def traverse_parellel_to(self,node):
+        ancestors = [i.name for i in node.get_ancestors(include_self = True)]
+        ancestors.pop(0)
+        print(f"ancestors : {ancestors}")
+        for p in ancestors:
+            self,status = Stree.objects.get_or_create(name=p,parent = self)
+        return self
     def empty_stock(self):
         pass
 
@@ -350,27 +359,36 @@ class Stree(MPTTModel):
             return
 
         if self.get_siblings().count() == 0:
-            sibling = Stree.objects.create(name=self.get_family()[1].name + 'Unique',parent = self.parent,tracking_type='Unique')
+            sibling = Stree.objects.create(full_name=self.get_family()[1].name ,name = 'Unique',parent = self.parent,tracking_type='Unique')
             print(f"created sibling{sibling} of family{sibling.get_family()}")
             # sibling.insert_at(target = self,position='right')
         sibling = self.get_siblings()[0]
 
-        newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique')
+        newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique',quantity=1,status = 'Available')
         newnode.barcode = 'je'+str(newnode.id)
         family = newnode.get_family()
         newnode.name=family[1].name+family[2].name
         newnode.save()
         self.weight -= weight
+        self.quantity -=1
         self.save()
 
     def merge_node(self):
         if self.tracking_type == 'Lot':
             return
         n = self.get_family()
-        lot,status = Stree.objects.get_or_create(name=n[1].name+'Lot',parent = self.parent.parent)
+        lot,status = Stree.objects.get_or_create(full_name=n[1].name+'Lot',name='Lot',parent = self.parent.parent,tracking_type='Lot')
         lot.weight += self.weight
+        lot.quantity +=1
         lot.save()
         self.delete()
+
+    def update_status(self,status):
+        if self.weight == 0:
+            self.status = status
+        else:
+            self.status = 'Available'
+        self.save()
 
 class StockTransaction(models.Model):
 

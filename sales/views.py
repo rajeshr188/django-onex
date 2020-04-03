@@ -240,7 +240,7 @@ class InvoiceCreateView(CreateView):
                     item.product.weight -= item.weight
                     item.product.quantity -= item.quantity
                     item.product.save()
-                    # item.product = sold
+                    item.product.update_status('Empty')
                     sold.weight += item.weight
                     sold.quantity += item.quantity
                     sold.barcode = item.product.barcode
@@ -254,10 +254,9 @@ class InvoiceCreateView(CreateView):
                     item.product.weight += item.weight
                     item.product.quantity += item.quantity
                     item.product.save()
-                    # item.product = sold
+
                     sold.weight -= item.weight
                     sold.quantity -= item.quantity
-
                     sold.save()
                 else:
                     stock = Stree.objects.get(name='Stock')
@@ -268,24 +267,6 @@ class InvoiceCreateView(CreateView):
 
             print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
             print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
-
-            # 0
-            # if item.is_return:
-            #     item.product.weight += item.weight
-            #     item.product.quantity += item.quantity
-            #
-            # else:
-            #     item.product.weight -=item.weight
-            #     item.product.quantity -=item.quantity
-            # if item.product.quantity > 0:
-            #     item.product.status = 'Available'
-            #
-            # else:
-            #     if item.product.tracking_type =='Lot':
-            #         item.product.status = 'Empty'
-            #     else:
-            #         item.product.status='Sold'
-            # item.product.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

@@ -313,7 +313,7 @@ class Stree(MPTTModel):
         ordering = ('id',)
 
     def __str__(self):
-        return f"{self.name or self.full_name} {self.barcode} {self.weight} {self.quantity}"
+        return f"{self.full_name} {self.barcode} wt:{self.weight} qty:{self.quantity}"
 
     def get_absolute_url(self):
         return reverse('product_stree_list')

@@ -93,7 +93,7 @@ class InvoiceCreateView(CreateView):
                 if node.tracking_type == 'Unique':
                     print("you need to merge a unique to lot to be able to return ")
                     continue
-                    
+
                 node.weight -= item.weight
                 node.quantity -= item.quantity
                 node.save()
@@ -113,18 +113,10 @@ class InvoiceCreateView(CreateView):
 
                 node.cost = item.touch
                 n = node.get_family()
-                node.full_name = n[1].name + node.name
+                node.full_name = n[2].name + node.name
                 node.barcode = 'je'+str(node.id)
                 node.save()
                 node.update_status('Available')
-
-            # node.cost = item.touch
-            # n = node.get_family()
-            # node.full_name = n[1].name + node.name
-            # node.barcode = 'je'+str(node.id)
-            # node.save()
-            # node.update_status('Empty')
-
 
         return HttpResponseRedirect(self.get_success_url())
 

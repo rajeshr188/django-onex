@@ -45,6 +45,7 @@ def remove_stock(sender,instance,*args,**kwargs):
             node.weight -= instance.weight
             node.quantity -= instance.quantity
             node.save()
+            node.update_status('Empty')
             print('Removed from Stock lot')
         else:
             node.delete()

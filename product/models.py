@@ -313,7 +313,7 @@ class Stree(MPTTModel):
         ordering = ('id',)
 
     def __str__(self):
-        return f"{self.full_name} {self.barcode} wt:{self.weight} qty:{self.quantity}"
+        return f"{self.full_name or self.name} {self.barcode} wt:{self.weight} qty:{self.quantity}"
 
     def get_absolute_url(self):
         return reverse('product_stree_list')
@@ -344,10 +344,10 @@ class Stree(MPTTModel):
         self.save()
         return self
 
-    def traverse_parellel_to(self,node):
-        ancestors = [i.name for i in node.get_ancestors(include_self = True)]
+    def traverse_parellel_to(self,node,include_self = True):
+        ancestors = [i.name for i in node.get_ancestors(include_self = include_self)]
         ancestors.pop(0)
-        print(f"ancestors : {ancestors}")
+        
         for p in ancestors:
             self,status = Stree.objects.get_or_create(name=p,parent = self)
         return self
@@ -367,7 +367,7 @@ class Stree(MPTTModel):
         newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique',quantity=1,status = 'Available')
         newnode.barcode = 'je'+str(newnode.id)
         family = newnode.get_family()
-        newnode.name=family[1].name+family[2].name
+        newnode.full_name=family[2].name+family[3].name
         newnode.save()
         self.weight -= weight
         self.quantity -=1
@@ -377,15 +377,15 @@ class Stree(MPTTModel):
         if self.tracking_type == 'Lot':
             return
         n = self.get_family()
-        lot,status = Stree.objects.get_or_create(full_name=n[1].name+'Lot',name='Lot',parent = self.parent.parent,tracking_type='Lot')
+        lot,status = Stree.objects.get_or_create(full_name=n[2].name+'Lot',name='Lot',parent = self.parent.parent,tracking_type='Lot')
         lot.weight += self.weight
         lot.quantity +=1
         lot.save()
         self.delete()
 
-    def update_status(self,status):
+    def update_status(self):
         if self.weight == 0:
-            self.status = status
+            self.status = 'Empty'
         else:
             self.status = 'Available'
         self.save()

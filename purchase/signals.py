@@ -35,6 +35,7 @@ def remove_stock(sender,instance,*args,**kwargs):
             node.weight +=instance.weight
             node.quantity +=instance.quantity
             node.save()
+            node.update_status()
             print('Removed lot from Return and added to Stock')
         else:
             print("You need to merge stock to lot and return via purchase return.")
@@ -45,7 +46,7 @@ def remove_stock(sender,instance,*args,**kwargs):
             node.weight -= instance.weight
             node.quantity -= instance.quantity
             node.save()
-            node.update_status('Empty')
+            node.update_status()
             print('Removed from Stock lot')
         else:
             node.delete()

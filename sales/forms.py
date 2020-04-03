@@ -34,10 +34,7 @@ class InvoiceForm(forms.ModelForm):
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
-    product=forms.ModelChoiceField(queryset=Stree.objects.none(),
-                                widget=Select2Widget
-                                )
-
+    product = forms.ModelChoiceField(queryset = Stree.objects.none())
     class Meta:
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']

@@ -76,6 +76,11 @@ class InvoiceCreateView(CreateView):
         self.object = form.save()
         invoiceitem_form.instance = self.object
         items = invoiceitem_form.save()
+        # 2 problems
+        # cant return unique item purchase :
+        #   temp sol:merge with lot and return
+        #       problem:cant delete this purchase
+        #           (usually after splitting no one deletes purchase)
 
         for item in items:
 
@@ -97,7 +102,7 @@ class InvoiceCreateView(CreateView):
                 node.weight -= item.weight
                 node.quantity -= item.quantity
                 node.save()
-                node.update_status('Empty')
+                node.update_status()
 
                 return_node = Stree.objects.get(name='Return')
                 return_node = return_node.traverse_parellel_to(node)
@@ -116,7 +121,7 @@ class InvoiceCreateView(CreateView):
                 node.full_name = n[2].name + node.name
                 node.barcode = 'je'+str(node.id)
                 node.save()
-                node.update_status('Available')
+                node.update_status()
 
         return HttpResponseRedirect(self.get_success_url())
 

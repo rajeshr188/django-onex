@@ -1,7 +1,10 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'product_attribute_list' %}">Approval Listing</a></p>
+<p>
+  <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
+  <a class="btn btn-danger" href="{% url 'approval_approval_delete' object.id%}">Delete</a>
+</p>
 <table class="table">
 <tr><td>id</td><td>{{ object.id }}</td></tr>
 <tr><td>Person</td><td>{{ object.contact }}</td></tr>

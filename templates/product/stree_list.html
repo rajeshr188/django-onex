@@ -16,7 +16,7 @@
 
           <div class="card-body">
             <a  class="btn btn-outline-primary" data-toggle="collapse" href="#multiCollapseExample{{node.id}}" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
-            {{ node.name }} {{node.barcode}} Bal({{node.balance}}) #({{node.get_descendant_count}}) {{node.tracking_type}}
+            {{ node.name }} {{node.barcode}} Bal({{node.balance}}){{node.weight}} #({{node.get_descendant_count}}) {{node.tracking_type}}
             </a>
             {%if node.is_leaf_node%}
                 Quantity : {{node.quantity}} Status : {{node.status}}
@@ -30,7 +30,7 @@
             {%endif%}
             <div class="row">
               <div class="col">
-                <div class="collapse multi-collapse show" id="multiCollapseExample{{node.id}}">
+                <div class="collapse multi-collapse " id="multiCollapseExample{{node.id}}">
                   <ul class="children">
                     {%if not node.is_leaf_node%}
                         {{children}}

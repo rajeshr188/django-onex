@@ -229,44 +229,55 @@ class InvoiceCreateView(CreateView):
         items = invoiceitem_form.save()
         for item in items:
             print(f"In Sale view :")
-            print(f"node Wt: {item.product.weight} item wt:{item.weight}")
+            print(f"item is_return: {item.is_return} ")
 
             sold = Stree.objects.get(name='Sold')
-            sold = sold.traverse_parellel_to(item.product)
 
             if not item.is_return:
-                print(f"traversed parellel to sold {sold}")
                 if item.product.tracking_type =='Lot':
+                    sold = sold.traverse_parellel_to(item.product)
+                    print(f"moving { item.weight} from {item.product.get_family()[0].name} {item.product.weight} to {sold.get_family()[0].name} {sold.weight}")
+
                     item.product.weight -= item.weight
                     item.product.quantity -= item.quantity
                     item.product.save()
-                    item.product.update_status('Empty')
+                    item.product.update_status()
                     sold.weight += item.weight
                     sold.quantity += item.quantity
                     sold.barcode = item.product.barcode
                     sold.save()
+                    sold.update_status()
+                    print(f"moved from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
                 else:
-                    item.product.move_to(sold,position='left')
-                    item.product.save()
-            else:
-                print(f"traversed parellel to sold {sold}")
-                if item.product.tracking_type =='Lot':
-                    item.product.weight += item.weight
-                    item.product.quantity += item.quantity
-                    item.product.save()
+                    sold = sold.traverse_parellel_to(item.product,include_self=False)
+                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
+                    item.product = item.product.move_to(sold,position='first-child')
 
-                    sold.weight -= item.weight
-                    sold.quantity -= item.quantity
-                    sold.save()
+            else:
+                if item.product.tracking_type =='Lot':
+                    stock = Stree.objects.get(name='Stock')
+                    stock = stock.traverse_parellel_to(item.product)
+                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
+
+                    item.product.weight -= item.weight
+                    item.product.quantity -= item.quantity
+                    item.product.save()
+                    item.product.update_status()
+                    stock.weight += item.weight
+                    stock.quantity += item.quantity
+                    stock.save()
+                    sold.update_status()
+                    print(f"moved { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
                 else:
                     stock = Stree.objects.get(name='Stock')
-                    stock.traverse_parellel_to(sold)
-                    item.product.move_to(stock,position='left')
-                    item.product.save()
+                    stock = stock.traverse_parellel_to(item.product,include_self=False)
+                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
+                    item.product = item.product.move_to(stock,position='first-child')
 
 
-            print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
-            print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
+
+            # print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
+            # print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
 
         return HttpResponseRedirect(self.get_success_url())
 

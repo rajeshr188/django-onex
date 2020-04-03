@@ -5,6 +5,7 @@ from.forms import (ApprovalForm,ApprovalLineForm,ApprovalReturnForm,
                 ApprovalReturnLineForm,Approval_formset,ApprovalReturn_formset)
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect,HttpResponse
+from product.models import Stree
 # Create your views here.
 
 class ApprovalListView(ListView):
@@ -46,6 +47,17 @@ class ApprovalCreateView(CreateView):
             i.product.quantity -=i.quantity
             i.product.save()
             i.product.update_status('Approval')
+
+            approval_node = Stree.objects.get(name='Approval')
+            approval_node = approval_node.traverse_parellel_to(i.product)
+
+            if i.product.tracking_type == 'Lot':
+                approval_node.weight += i.weight
+                approval_node.quantity +=i.quantity
+                approval_node.save()
+            else:
+                i.product.move_to(approval_node,position='left')
+                i.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):

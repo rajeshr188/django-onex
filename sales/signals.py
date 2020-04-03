@@ -82,15 +82,17 @@ def submit_stock(sender,instance,*args,**kwargs):
     if instance.is_return:
         if instance.product.tracking_type =='Lot':
             # remove from stock
-            instance.product.weight -= instance.weight
-            instance.product.quantity -=instance.quantity
-            instance.product.save()
+            stock = Stree.objects.get(name='Stock')
+            stock = stock.traverse_parellel_to(instance.product)
+
+            stock.weight -=instance.weight
+            stock.quantity -=instance.quantity
+            stock.save()
             # add to sold
-            sold = Stree.objects.get(name='Sold')
-            sold = sold.traverse_parellel_to(instance.product)
-            sold.weight +=instance.weight
-            sold.quantity +=instance.quantity
-            sold.save()
+
+            instance.product.weight += instance.weight
+            instance.product.quantity +=instance.quantity
+            instance.product.save()
         else:
             # move unique back to sold
             sold = Stree.objects.get(name='Sold')
@@ -109,9 +111,11 @@ def submit_stock(sender,instance,*args,**kwargs):
             instance.product.weight +=instance.weight
             instance.product.quantity +=instance.quantity
             instance.product.save()
+            instance.product.update_status()
 
         else:
             # move unique back to stock
             stock = Stree.objects.get(name='Stock')
-            stock = stock.traverse_parellel_to(instance.product)
+            stock = stock.traverse_parellel_to(instance.product,include_self = False)
             instance.product.move_to(stock)
+            instance.product.save()

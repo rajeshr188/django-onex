@@ -9,10 +9,11 @@ from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
 from django.db.models.functions import Cast,TruncMonth
 from django.db.models.fields import DateField
 
-from .models import License, Loan, Release,Month,Year
-from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset,Loan_formset
+from .models import License, Loan, Release, Adjustment, Month, Year
+from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
+                    ,Loan_formset,AdjustmentForm)
 from .tables import LoanTable,ReleaseTable
-from .filters import LoanFilter,ReleaseFilter
+from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
 from contact.models import Customer
 
 from django_tables2 import RequestConfig
@@ -290,6 +291,28 @@ class LoanUpdateView(UpdateView):
 class LoanDeleteView(DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
+
+class AdjustmentListView(ExportMixin,SingleTableMixin,FilterView):
+    # table_class=AdjustmentTable
+    model = Adjustment
+    filterset_class=AdjustmentFilter
+    paginate_by=50
+
+class AdjustmentCreateView(CreateView):
+    model = Adjustment
+    form_class = AdjustmentForm
+    def get_initial(self):
+        if self.kwargs:
+            loan=Loan.objects.get(id=self.kwargs['pk'])
+            return {'loan':loan,}
+
+class AdjustmentUpdateView(UpdateView):
+    model = Adjustment
+    form_class = AdjustmentForm
+
+class AdjustmentDeleteView(DeleteView):
+    model=Adjustment
+    success_url=reverse_lazy('girvi_adjustments_list')
 
 class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=ReleaseTable

@@ -19,7 +19,6 @@ def submit_approval_stock(sender,instance,*args,**kwargs):
         approval_node.save()
 
     else:
-        stock = Stree.objects.get(name=Stock)
-        stock.traverse_parellel_to(instance.product)
-        instance.product.move_to(stock,position='left')
-        instance.save()
+        stock = Stree.objects.get(name='Stock')
+        stock = stock.traverse_parellel_to(instance.product,include_self=False)
+        instance.product.move_to(stock,position='first-child')

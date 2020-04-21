@@ -2,6 +2,7 @@ from . import models
 from . import serializers
 from rest_framework import viewsets, permissions
 
+from .filters import LoanFilter
 
 class LicenseViewSet(viewsets.ModelViewSet):
     """ViewSet for the License class"""
@@ -17,7 +18,8 @@ class LoanViewSet(viewsets.ModelViewSet):
     queryset = models.Loan.objects.all()
     serializer_class = serializers.LoanSerializer
     # permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ('id','loanid','created','customer','itemtype','license','itemweight','itemdesc','loanamount' )
+    filterset_class = LoanFilter
+    # filterset_fields = ('id','loanid','created','customer','itemtype','license','itemweight','itemdesc','loanamount' )
 
 
 class ReleaseViewSet(viewsets.ModelViewSet):

@@ -2,10 +2,12 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from .models import Approval,ApprovalLine,ApprovalReturn,ApprovalReturnLine
 from product.models import Stree
+from contact.models import Customer
 from django_select2.forms import Select2Widget,ModelSelect2Widget
 from mptt.forms import TreeNodeChoiceField
 
 class ApprovalForm(forms.ModelForm):
+    contact= forms.ModelChoiceField(queryset = Customer.objects.all(),widget = Select2Widget)
     class Meta:
         model = Approval
         fields = ['contact']

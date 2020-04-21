@@ -347,7 +347,7 @@ class Stree(MPTTModel):
     def traverse_parellel_to(self,node,include_self = True):
         ancestors = [i.name for i in node.get_ancestors(include_self = include_self)]
         ancestors.pop(0)
-        
+        print(f"ancestors : {ancestors}")
         for p in ancestors:
             self,status = Stree.objects.get_or_create(name=p,parent = self)
         return self

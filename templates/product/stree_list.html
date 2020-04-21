@@ -24,7 +24,7 @@
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_delete' node.id %}">Delete</a>
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_mergelot' node.id %}">Merge</a>
                 <a class="btn btn-outline-danger btn-sm" href="{% url 'product_stree_splitlot' node.pk %}">Split</a>
-
+                
             {%elif node.level == 2 %}
               <a class ="btn btn-outline-danger btn-sm" >Delete all Child Nodes</a>
             {%endif%}

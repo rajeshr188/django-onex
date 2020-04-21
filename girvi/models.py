@@ -81,7 +81,7 @@ class Loan(models.Model):
     itemweight = models.DecimalField(max_digits=10, decimal_places=2)
     itemvalue = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     loanamount = models.PositiveIntegerField()
-    interestrate = models.PositiveSmallIntegerField()
+    interestrate = models.PositiveSmallIntegerField(default = 2)
     interest = models.PositiveIntegerField()
 
     # Relationship Fields
@@ -131,14 +131,45 @@ class Loan(models.Model):
     def total(self):
         return self.interestdue() + float(self.loanamount)
 
+    def get_total_adjustments(self):
+        as_int =0
+        as_amt =0
+        for a in self.adjustments.all():
+            if a.as_interest:
+                as_int += a.amount_received
+            else:
+                as_amt +=a.amount_received
+        data = {'int': as_int,'amt':as_amt}
+        return data
+
+    def due(self):
+        a = self.get_total_adjustments()
+        return self.loanamount + self.interestdue() - a['int'] - a['amt']
+
     def is_worth(self):
         return self.itemvalue<total
 
     def save(self,*args,**kwargs):
-        self.interest=self.interestdue()
-        self.itemvalue=self.loanamount+500
+        self.interest = self.interestdue()
+        self.itemvalue = self.loanamount+500
         super().save(*args,**kwargs)
 
+class Adjustment(models.Model):
+    created = models.DateTimeField(auto_now_add = True)
+    amount_received = models.IntegerField(default =0)
+    as_interest = models.BooleanField(default = True)
+    loan = models.ForeignKey('girvi.Loan',on_delete = models.CASCADE,
+                                related_name='adjustments')
+
+    class Meta:
+        ordering = ('created',)
+
+    def __str__(self):
+        return f"{self.amount_received}=>loan{self.loan}"
+    def get_absolute_url(self):
+        return reverse('girvi_adjustment_detail', args = (self.pk,))
+    def get_update_url(self):
+        return reverse('girvi_adjustments_update', args = (Self.pk,))
 
 class Release(models.Model):
 
@@ -153,10 +184,6 @@ class Release(models.Model):
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
-    # customer = models.ForeignKey(
-    #     Customer,
-    #     on_delete=models.CASCADE, related_name="releasedby"
-    # )
 
     class Meta:
         ordering = ('-created',)

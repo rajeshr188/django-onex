@@ -1,5 +1,4 @@
 from . import models
-
 from rest_framework import serializers
 
 
@@ -21,7 +20,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 
 
 class LoanSerializer(serializers.ModelSerializer):
-
+    customer = serializers.StringRelatedField()
     class Meta:
         model = models.Loan
         fields = (
@@ -42,7 +41,7 @@ class LoanSerializer(serializers.ModelSerializer):
 
 
 class ReleaseSerializer(serializers.ModelSerializer):
-
+    loan = serializers.StringRelatedField()
     class Meta:
         model = models.Release
         fields = (

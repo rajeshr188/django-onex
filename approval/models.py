@@ -24,7 +24,7 @@ class Approval(models.Model):
 
     def get_absolute_url(self):
         return reverse('approval_approval_detail',args=(self.pk,))
-        
+
     def get_update_url(self):
         return reverse('approval_approval_update',args = (self.pk,))
 

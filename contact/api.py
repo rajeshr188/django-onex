@@ -1,5 +1,6 @@
 from . import models
 from . import serializers
+from .filters import CustomerFilter
 from rest_framework import viewsets, permissions
 
 
@@ -8,6 +9,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = models.Customer.objects.all()
     serializer_class = serializers.CustomerSerializer
+    filterset_class = CustomerFilter
+    search_fields = ['name']
     # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 

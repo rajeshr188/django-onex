@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
 from django_filters.views import FilterView
+# from blabel import Labelwriter
 
 class CategoryListView(ListView):
     model = Category
@@ -229,6 +230,16 @@ class StreeListView(FilterView):
 class StreeCreateView(CreateView):
     model =Stree
     form_class = StreeForm
+
+# def print_qr(self,request):
+#     node = get_object_or_404(Stree,pk = pk)
+#
+#     label_writer = Labelwriter("product/item_qr_template.html",
+#                                 default_stylesheets = ("style.css",))
+#     records = [
+#         dict(sample_id = node.barcode,sample_name=node.full_name)
+#     ]
+#     label_writer.write_labels(records,target='qrcode_and_date.pdf')
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect

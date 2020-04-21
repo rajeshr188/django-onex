@@ -107,6 +107,7 @@ def submit_stock(sender,instance,*args,**kwargs):
             sold.weight -=instance.weight
             sold.quantity -=instance.quantity
             sold.save()
+            sold.update_status()
             # add to stock
             instance.product.weight +=instance.weight
             instance.product.quantity +=instance.quantity
@@ -118,4 +119,3 @@ def submit_stock(sender,instance,*args,**kwargs):
             stock = Stree.objects.get(name='Stock')
             stock = stock.traverse_parellel_to(instance.product,include_self = False)
             instance.product.move_to(stock)
-            instance.product.save()

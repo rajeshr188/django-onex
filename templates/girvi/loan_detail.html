@@ -36,29 +36,7 @@
 <tr><td>interest</td><td>{{ object.interest }}</td></tr>
 </table>
 
-{% if loan.adjustments %}
-Due = Amount: {{loan.loanamount}} + Interest :{{loan.interestdue}} - Adjustments : {{loan.get_total_adjustments}} = {{loan.due}}
-<table class="table table-sm">
-  <thead>
-    <tr>
-      <th scope="col">Adjustment Id</th>
-      <th scope="col">Date</th>
-      <th scope="col">Amount</th>
-      <th scope="col">AS Interest</th>
-    </tr>
-  </thead>
-  <tbody>
-    {%for a in loan.adjustments.all%}
-    <tr>
-      <td>{{a.id}}</td>
-      <td>{{a.created}}</td>
-      <td>{{a.amount_received}}</td>
-      <td>{{a.as_interest}}</td>
-    </tr>
-    {%endfor%}
-  </tbody>
-</table>
-{%endif%}
+
 
 {% if loan.release %}
 <table class="table table-sm">

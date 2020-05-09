@@ -25,7 +25,7 @@ SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
 
 # EXTENSIONS_MAX_UNIQUE_QUERY_ATTEMPTS=1000
 # Application definition
@@ -146,7 +146,7 @@ DATABASES = {
         'default': {
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'oney',
+        'NAME': 'onex',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',

@@ -20,7 +20,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 
 
 class LoanSerializer(serializers.ModelSerializer):
-    customer = serializers.StringRelatedField()
+    # customer = serializers.StringRelatedField()
     class Meta:
         model = models.Loan
         fields = (
@@ -41,7 +41,7 @@ class LoanSerializer(serializers.ModelSerializer):
 
 
 class ReleaseSerializer(serializers.ModelSerializer):
-    loan = serializers.StringRelatedField()
+    # loan = serializers.StringRelatedField()
     class Meta:
         model = models.Release
         fields = (

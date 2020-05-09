@@ -232,7 +232,7 @@ class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=50
+    paginate_by=5
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()

@@ -231,7 +231,7 @@ class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=50
+    paginate_by=5
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()
@@ -261,7 +261,7 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        license=License.objects.get(id=1)
+        license=License.objects.get(id=2)
         if self.kwargs:
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{

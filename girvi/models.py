@@ -100,7 +100,7 @@ class Loan(models.Model):
     unreleased = UnReleasedManager()
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('-created','id')
 
     def __str__(self):
         return f"{self.loanid} - {self.loanamount}"

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Customer, Supplier
+from .models import Customer
 
 
 class CustomerForm(forms.ModelForm):
@@ -8,7 +8,7 @@ class CustomerForm(forms.ModelForm):
         fields = ['type','name','pic','relatedas','relatedto','phonenumber','Address', 'area']
 
 
-class SupplierForm(forms.ModelForm):
-    class Meta:
-        model = Supplier
-        fields = ['name','pic', 'organisation', 'phonenumber', 'initial']
+# class SupplierForm(forms.ModelForm):
+#     class Meta:
+#         model = Supplier
+#         fields = ['name','pic', 'organisation', 'phonenumber', 'initial']

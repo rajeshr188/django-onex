@@ -25,7 +25,7 @@ SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.100","192.168.1.101","localhost","127.0.0.1","192.168.1.102","8ce3b9f4.ngrok.io","192.168.1.103","192.168.1.104","192.168.1.105","192.168.1.106"]
+ALLOWED_HOSTS = ["192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
 
 # EXTENSIONS_MAX_UNIQUE_QUERY_ATTEMPTS=1000
 # Application definition
@@ -55,7 +55,9 @@ INSTALLED_APPS = [
     'corsheaders',
     # Local
     'users',
-    'pages','contact','product','girvi','sales','purchase','Chitfund','daybook',
+    'pages',
+    'contact','product','girvi','sales','purchase','Chitfund','daybook',
+    'approval',
 ]
 CONTROLCENTER_DASHBOARDS = (
         ('mydash','djangox_project.dashboard.MyDash'),
@@ -102,7 +104,12 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
         'rest_framework.permissions.AllowAny',
     ],
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
+                                'rest_framework.filters.SearchFilter',
+                                'rest_framework.filters.OrderingFilter'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
 # CACHE_MIDDLEWARE_ALIAS = 'default'
 # CACHE_MIDDLEWARE_SECONDS = 604800

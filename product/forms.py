@@ -1,7 +1,9 @@
 from django import forms
 from mptt.forms import TreeNodeChoiceField
 from django.utils.translation import pgettext_lazy
-from .models import Category, ProductType, Product, ProductVariant, Attribute, AttributeValue, ProductImage, VariantImage,Stock,StockTransaction
+from .models import (Category, ProductType, Product, ProductVariant, Attribute,
+                    AttributeValue, ProductImage, VariantImage,Stock,
+                    Stree,StockTransaction)
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_text
 from .attributes import get_name_from_attributes,get_product_attributes_data,generate_name_from_values
@@ -206,6 +208,16 @@ class StockForm(forms.ModelForm):
         model=Stock
         fields='__all__'
 
+
+class StreeForm(forms.ModelForm):
+    class Meta:
+        model = Stree
+        fields = ['parent','name','weight','quantity','tracking_type','status']
+
+class UniqueForm(forms.ModelForm):
+    class Meta:
+        model = Stree
+        fields = ['parent','weight']
 class StockTransactionForm(forms.ModelForm):
     class Meta:
         model=StockTransaction

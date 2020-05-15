@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
-from contact.models import Supplier
+from contact.models import Customer
 from .forms import InvoiceForm, InvoiceItemForm,InvoiceItemFormSet, PaymentForm,PaymentLineForm,PaymentLineFormSet
 from django.http import HttpResponseRedirect,HttpResponse
 from django.urls import reverse,reverse_lazy
@@ -33,7 +33,7 @@ def list_balance(request):
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Supplier.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
+    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
 
 
     context={'balance':balance}
@@ -46,6 +46,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'purchase/invoice_list.html'
     paginate_by = 25
 
+from product.models import Stree
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -74,7 +75,53 @@ class InvoiceCreateView(CreateView):
     def form_valid(self, form, invoiceitem_form):
         self.object = form.save()
         invoiceitem_form.instance = self.object
-        invoiceitem_form.save()
+        items = invoiceitem_form.save()
+        # 2 problems
+        # cant return unique item purchase :
+        #   temp sol:merge with lot and return
+        #       problem:cant delete this purchase
+        #           (usually after splitting no one deletes purchase)
+
+        for item in items:
+
+            node = Stree.objects.get(name='Stock')
+            node = node.traverse_to(item.product)
+
+            if item.is_return:
+
+                # tldr:never return unique item in purchase ,merge and then return from lot
+                # cant create purchase invoice with unique product as being returned,
+                # becoz it will create negative unique item
+                # in case you want to return merge unique to lot and return
+                # other way around is to find and delete unique return item baseed on weight here
+                # and create again when this purchase is deleted and signals activated
+                if node.tracking_type == 'Unique':
+                    print("you need to merge a unique to lot to be able to return ")
+                    continue
+
+                node.weight -= item.weight
+                node.quantity -= item.quantity
+                node.save()
+                node.update_status()
+
+                return_node = Stree.objects.get(name='Return')
+                return_node = return_node.traverse_parellel_to(node)
+                return_node.weight +=item.weight
+                return_node.quantity +=item.quantity
+                return_node.save()
+            else:
+                if node.tracking_type == 'Unique':
+                    print("node is unique")
+                    node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
+                node.weight +=item.weight
+                node.quantity +=item.quantity
+
+                node.cost = item.touch
+                n = node.get_family()
+                node.full_name = n[2].name + node.name
+                node.barcode = 'je'+str(node.id)
+                node.save()
+                node.update_status()
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -159,6 +206,7 @@ class PaymentListView(ExportMixin,SingleTableMixin,FilterView):
     filterset_class = PaymentFilter
     template_name="purchase/payment_list.html"
     paginate_by = 25
+
 class PaymentCreateView(CreateView):
     model = Payment
     form_class = PaymentForm

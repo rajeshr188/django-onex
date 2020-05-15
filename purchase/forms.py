@@ -1,13 +1,13 @@
 from django import forms
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from django_select2.forms import Select2Widget,ModelSelect2Widget
-from contact.models import Supplier
+from contact.models import Customer
 from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
 
 class InvoiceForm(forms.ModelForm):
-    supplier=forms.ModelChoiceField(queryset=Supplier.objects.all(),widget=Select2Widget)
+    supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier','status']
@@ -25,7 +25,7 @@ InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):
-    supplier=forms.ModelChoiceField(queryset=Supplier.objects.all(),widget=Select2Widget)
+    supplier=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:
         model = Payment
         fields = ['supplier','created','type', 'weight','touch','nettwt','rate','total', 'description','status']

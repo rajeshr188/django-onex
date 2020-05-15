@@ -1,10 +1,8 @@
 
 from django.urls import path, include
 from rest_framework import routers
-
 from . import api
 from . import views
-
 router = routers.DefaultRouter()
 router.register(r'category', api.CategoryViewSet)
 router.register(r'producttype', api.ProductTypeViewSet)
@@ -43,6 +41,7 @@ urlpatterns += (
     path('product/create/<int:type_pk>/', views.product_create, name='product_product_create'),
     path('product/detail/<int:pk>/', views.ProductDetailView.as_view(), name='product_product_detail'),
     path('product/update/<int:pk>/', views.product_edit, name='product_product_update'),
+    path('product/delete/<int:pk>/', views.ProductDeleteView.as_view(),name='product_product_delete'),
 )
 
 urlpatterns += (
@@ -51,6 +50,7 @@ urlpatterns += (
     path('productvariant/create/<int:pk>', views.variant_create, name='product_productvariant_create'),
     path('productvariant/detail/<int:pk>/', views.ProductVariantDetailView.as_view(), name='product_productvariant_detail'),
     path('productvariant/update/<int:pk>/', views.ProductVariantUpdateView.as_view(), name='product_productvariant_update'),
+    path('productvariant/delete/<int:pk>/', views.ProductVariantDeleteView.as_view(), name='product_productvariant_delete'),
 )
 
 urlpatterns += (
@@ -84,7 +84,20 @@ urlpatterns += (
     path('variantimage/detail/<int:pk>/', views.VariantImageDetailView.as_view(), name='product_variantimage_detail'),
     path('variantimage/update/<int:pk>/', views.VariantImageUpdateView.as_view(), name='product_variantimage_update'),
 )
-urlpatterns +=(
+
+urlpatterns += (
+    # urls for Stree
+    path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
+    path('stree/create/',views.StreeCreateView.as_view(),name = 'product_stree_create'),
+    path('stree/split_lot/<int:pk>',views.split_lot,name = 'product_stree_splitlot'),
+    path('stree/merge_lot/<int:pk>',views.merge_lot,name = 'product_stree_mergelot'),
+    path('stree/detail/<int:pk>/',views.StreeDetailView.as_view(), name = 'product_stree_detail'),
+    path('stree/update/<int:pk>/',views.StreeUpdateView.as_view(), name = 'product_stree_update'),
+    path('stree/delete/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_delete'),
+
+)
+
+urlpatterns += (
     #urls for Stock
     path('stock/',views.StockListView.as_view(),name='product_stock_list'),
     path('stock/create/',views.StockCreateView.as_view(),name='product_stock_create'),

@@ -1,0 +1,36 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load bootstrap4 %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'girvi_adjustment_list' %}">Adjustment Listing</a></p>
+<form method="post">
+{% csrf_token %}
+{{ form.non_field_errors }}
+
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.created.errors }}
+    {% bootstrap_field form.created %}
+  </div>
+  <div class="form-group col-md-4">
+    {{ form.laon.errors }}
+    {% bootstrap_field form.loan %}
+  </div>
+</div>
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.amount_received.errors }}
+    {% bootstrap_field form.amount_received %}
+  </div>
+</div>
+<div class="form-row">
+  <div class="form-group col-md-4">
+    {{ form.as_interest.errors }}
+    {% bootstrap_field form.as_interest %}
+  </div>
+</div>
+<button class="btn btn-primary" type="submit">Submit</button>
+</form>
+
+  </script>
+{% endblock %}

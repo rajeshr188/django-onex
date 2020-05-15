@@ -14,7 +14,7 @@ from django.utils.translation import pgettext_lazy
 from django_measurement.models import MeasurementField
 from measurement.measures import Weight
 from mptt.managers import TreeManager
-from mptt.models import MPTTModel
+from mptt.models import MPTTModel,TreeForeignKey
 from versatileimagefield.fields import PPOIField, VersatileImageField
 from .weight import WeightUnits, zero_weight
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
@@ -25,17 +25,15 @@ class Category(MPTTModel):
     name = models.CharField(max_length=128,unique=True)
     slug = AutoSlugField(populate_from='name', blank=True)
     description = models.TextField(blank=True)
-    parent = models.ForeignKey(
+    parent = TreeForeignKey(
         'self', null=True, blank=True, related_name='children',
         on_delete=models.CASCADE)
     background_image = VersatileImageField(
         upload_to='category-backgrounds', blank=True, null=True)
 
-    objects = models.Manager()
-    tree = TreeManager()
 
-    class Meta:
-        ordering = ('-pk',)
+    class MPPTMeta:
+        order_insertion_by = ['name']
 
     def __str__(self):
         return self.name
@@ -87,6 +85,7 @@ class Product(models.Model):
 
     class Meta:
         app_label = 'product'
+        ordering=('name',)
 
     def __iter__(self):
         if not hasattr(self, '__variants'):
@@ -195,7 +194,7 @@ class Attribute(models.Model):
     slug = AutoSlugField(populate_from='name', blank=True)
 
     class Meta:
-        ordering = ('slug', )
+        ordering = ('id', )
 
     def __str__(self):
         return self.name
@@ -297,6 +296,99 @@ class Stock(models.Model):
     def get_current_qih_weight(self):
         return self.stocktransaction_set.all().aggregate(total=Sum('weight'))
 
+class Stree(MPTTModel):
+    name = models.CharField(max_length=100)
+    full_name = models.CharField(max_length=100,blank = True,null = True,default = '')
+    parent = TreeForeignKey('self',null = True,blank = True,
+                            related_name = 'children',
+                            on_delete = models.CASCADE)
+    weight = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
+    cost = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
+    created = models.DateTimeField(auto_now_add=True)
+    tracking_type = models.CharField(choices = (('Lot','Lot'),('Unique','Unique')),null = True,max_length=10,default = 'Lot')
+    barcode = models.CharField(max_length=100,null=True,default = '')
+    quantity = models.IntegerField(default=0,)
+    status = models.CharField(max_length=10,choices = (('Empty','Empty'),('Available','Available'),('Sold','Sold'),('Approval','Approval'),('Return','Return')),default = 'Empty')
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return f"{self.full_name or self.name} {self.barcode} wt:{self.weight} qty:{self.quantity}"
+
+    def get_absolute_url(self):
+        return reverse('product_stree_list')
+
+    def get_update_url(self):
+        return reverse('product_stree_update', args=(self.pk,))
+
+    def balance(self):
+        balances = [node.weight for node in self.get_descendants(include_self=True)]
+        return sum(balances)
+
+    def traverse_to(self,product,category='Gold'):
+        print(f"self:{self} product:{product}")
+        path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
+        product_variant = product
+        product_type = product_variant.product.product_type
+        attr = {**product_variant.product.attributes,**product_variant.attributes}
+        attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in attr.items()}
+        attr['product_type']= product_type.name
+        attr = {i:attr[i]for i in path_to_take if i in attr}
+        path = list(attr.values())
+        path = [category]+path
+
+        for p in path:
+            self,status = Stree.objects.get_or_create(name=p,parent=self)
+            print(f"-->{self}")
+        self.tracking_type = attr['tracking_type']
+        self.save()
+        return self
+
+    def traverse_parellel_to(self,node,include_self = True):
+        ancestors = [i.name for i in node.get_ancestors(include_self = include_self)]
+        ancestors.pop(0)
+        print(f"ancestors : {ancestors}")
+        for p in ancestors:
+            self,status = Stree.objects.get_or_create(name=p,parent = self)
+        return self
+    def empty_stock(self):
+        pass
+
+    def split_node(self,weight):
+        if self.weight < weight:
+            return
+
+        if self.get_siblings().count() == 0:
+            sibling = Stree.objects.create(full_name=self.get_family()[1].name ,name = 'Unique',parent = self.parent,tracking_type='Unique')
+            print(f"created sibling{sibling} of family{sibling.get_family()}")
+            # sibling.insert_at(target = self,position='right')
+        sibling = self.get_siblings()[0]
+
+        newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique',quantity=1,status = 'Available')
+        newnode.barcode = 'je'+str(newnode.id)
+        family = newnode.get_family()
+        newnode.full_name=family[2].name+family[3].name
+        newnode.save()
+        self.weight -= weight
+        self.quantity -=1
+        self.save()
+
+    def merge_node(self):
+        if self.tracking_type == 'Lot':
+            return
+        n = self.get_family()
+        lot,status = Stree.objects.get_or_create(full_name=n[2].name+'Lot',name='Lot',parent = self.parent.parent,tracking_type='Lot')
+        lot.weight += self.weight
+        lot.quantity +=1
+        lot.save()
+        self.delete()
+
+    def update_status(self):
+        if self.weight == 0:
+            self.status = 'Empty'
+        else:
+            self.status = 'Available'
+        self.save()
 
 class StockTransaction(models.Model):
 

@@ -1,43 +1,45 @@
-from django.views.generic import DetailView, ListView, UpdateView, CreateView
-from .models import Category, ProductType, Product, ProductVariant, Attribute, AttributeValue, ProductImage, VariantImage,Stock,StockTransaction
-from .forms import CategoryForm, ProductTypeForm, ProductForm, ProductVariantForm, AttributeForm, AttributeValueForm, ProductImageForm, VariantImageForm,StockForm,StockTransactionForm
-from django.shortcuts import get_object_or_404,redirect,reverse
+from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
+from .models import (Category, ProductType, Product, ProductVariant, Attribute,
+                    AttributeValue, ProductImage, VariantImage,Stock,Stree,
+                    StockTransaction)
+from .forms import (CategoryForm, ProductTypeForm, ProductForm,
+                    ProductVariantForm,AttributeForm, AttributeValueForm,
+                     ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
+                     StockTransactionForm)
+from .filters import StreeFilter
+from django.shortcuts import get_object_or_404,redirect
+from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
+from django_filters.views import FilterView
+# from blabel import Labelwriter
+
 class CategoryListView(ListView):
     model = Category
-
 
 class CategoryCreateView(CreateView):
     model = Category
     form_class = CategoryForm
 
-
 class CategoryDetailView(DetailView):
     model = Category
-
 
 class CategoryUpdateView(UpdateView):
     model = Category
     form_class = CategoryForm
 
-
 class ProductTypeListView(ListView):
     model = ProductType
-
 
 class ProductTypeCreateView(CreateView):
     model = ProductType
     form_class = ProductTypeForm
 
-
 class ProductTypeDetailView(DetailView):
     model = ProductType
-
 
 class ProductTypeUpdateView(UpdateView):
     model = ProductType
     form_class = ProductTypeForm
-
 
 class ProductListView(ListView):
     model = Product
@@ -110,6 +112,9 @@ def product_edit(request, pk):
         'product': product, 'product_form': form, 'variant_form': variant_form}
     return TemplateResponse(request, 'product/product_form.html', ctx)
 
+class ProductDeleteView(DeleteView):
+    model = Product
+    success_url = reverse_lazy('product_product_list')
 
 class ProductVariantListView(ListView):
     model = ProductVariant
@@ -141,6 +146,9 @@ class ProductVariantUpdateView(UpdateView):
     model = ProductVariant
     form_class = ProductVariantForm
 
+class ProductVariantDeleteView(DeleteView):
+    model = ProductVariant
+    success_url = reverse_lazy('product_productvariant_list')
 
 class AttributeListView(ListView):
     model = Attribute
@@ -212,6 +220,76 @@ class VariantImageDetailView(DetailView):
 class VariantImageUpdateView(UpdateView):
     model = VariantImage
     form_class = VariantImageForm
+
+
+class StreeListView(FilterView):
+    model = Stree
+    filterset_class = StreeFilter
+    template_name = 'product/stree_list.html'
+
+class StreeCreateView(CreateView):
+    model =Stree
+    form_class = StreeForm
+
+# def print_qr(self,request):
+#     node = get_object_or_404(Stree,pk = pk)
+#
+#     label_writer = Labelwriter("product/item_qr_template.html",
+#                                 default_stylesheets = ("style.css",))
+#     records = [
+#         dict(sample_id = node.barcode,sample_name=node.full_name)
+#     ]
+#     label_writer.write_labels(records,target='qrcode_and_date.pdf')
+
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+
+def split_lot(request,pk):
+    # If this is a POST request then process the Form data
+    parent= get_object_or_404(Stree,pk=pk)
+    if request.method == 'POST':
+
+        # Create a form instance and populate it with data from the request (binding):
+        form = UniqueForm(request.POST or None)
+
+        # Check if the form is valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
+
+            node_to_deduct_from = form.cleaned_data['parent']
+            weight = form.cleaned_data['weight']
+            node_to_deduct_from.split_node(weight)
+
+            # redirect to a new URL:
+            return HttpResponseRedirect(reverse('product_stree_list') )
+
+    # If this is a GET (or any other method) create the default form.
+    else:
+        form = UniqueForm(initial = {"parent":parent})
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'product/split_lot.html', context)
+
+def merge_lot(request,pk):
+    node = Stree.objects.get(id=pk)
+    print(f"to merge node{node}")
+    node.merge_node()
+
+    return HttpResponseRedirect(reverse('product_stree_list') )
+
+class StreeUpdateView(UpdateView):
+    model = Stree
+    form_class = StreeForm
+
+class StreeDetailView(DetailView):
+    model = Stree
+
+class StreeDeleteView(DeleteView):
+    model = Stree
+    success_url = reverse_lazy('product_stree_list')
 
 class StockListView(ListView):
     model=Stock

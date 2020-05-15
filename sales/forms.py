@@ -4,13 +4,14 @@ from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
 from django_select2.forms import Select2Widget,ModelSelect2Widget,ModelSelect2MultipleWidget
 from contact.models import Customer
-from product.models import ProductVariant
+from product.models import ProductVariant,Stree
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
+from mptt.forms import TreeNodeChoiceField
 
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
-    
+
 class InvoiceForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
@@ -27,20 +28,24 @@ class InvoiceForm(forms.ModelForm):
             }
         ),
     )
-    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
-    product=forms.ModelChoiceField(queryset=ProductVariant.objects.all(),widget=Select2Widget)
-
+    product = forms.ModelChoiceField(queryset = Stree.objects.filter(children__isnull = True,status = 'Available').exclude(barcode=''))
     class Meta:
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']
 
+    # def __init__(self,*args,**kwargs):
+    #     super(InvoiceItemForm,self).__init__(*args,**kwargs)
+    #     self.fields['product'].queryset = Stree.objects.filter(children__isnull = True,status = 'Available').exclude(barcode='')
+
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),extra=1,can_delete=True)
+    fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),
+    form = InvoiceItemForm,extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)

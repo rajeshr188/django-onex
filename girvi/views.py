@@ -4,15 +4,16 @@ from django.urls import reverse,reverse_lazy
 from django.http import Http404, HttpResponseRedirect
 import re
 from django.utils import timezone
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
 from django.db.models.functions import Cast,TruncMonth
 from django.db.models.fields import DateField
 
-from .models import License, Loan, Release,Month,Year
-from .forms import LicenseForm, LoanForm, ReleaseForm,Release_formset,Loan_formset
+from .models import License, Loan, Release, Adjustment, Month, Year
+from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
+                    ,Loan_formset,AdjustmentForm)
 from .tables import LoanTable,ReleaseTable
-from .filters import LoanFilter,ReleaseFilter
+from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
 from contact.models import Customer
 
 from django_tables2 import RequestConfig
@@ -34,7 +35,7 @@ def print_loanpledge(request,pk):
     return Render.render('girvi/loan_pdf.html',params)
 
 def print_release(request,pk):
-    release = Release.objects.et(id=pk)
+    release = Release.objects.get(id=pk)
     params = {'release':release}
     return Render.render('girvi/release_pdf.html',params)
 
@@ -253,7 +254,7 @@ def increlid():
 def ld():
     last=Loan.objects.all().order_by('id').last()
     if not last:
-        return timezone.now
+        return datetime.date.today()
     return last.created
 
 class LoanCreateView(CreateView):
@@ -261,7 +262,8 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-        license=License.objects.get(id=2)
+
+        license=get_object_or_404(License,id=1)
         if self.kwargs:
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{
@@ -289,6 +291,28 @@ class LoanUpdateView(UpdateView):
 class LoanDeleteView(DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
+
+class AdjustmentListView(ExportMixin,SingleTableMixin,FilterView):
+    # table_class=AdjustmentTable
+    model = Adjustment
+    filterset_class=AdjustmentFilter
+    paginate_by=50
+
+class AdjustmentCreateView(CreateView):
+    model = Adjustment
+    form_class = AdjustmentForm
+    def get_initial(self):
+        if self.kwargs:
+            loan=Loan.objects.get(id=self.kwargs['pk'])
+            return {'loan':loan,}
+
+class AdjustmentUpdateView(UpdateView):
+    model = Adjustment
+    form_class = AdjustmentForm
+
+class AdjustmentDeleteView(DeleteView):
+    model=Adjustment
+    success_url=reverse_lazy('girvi_adjustments_list')
 
 class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=ReleaseTable

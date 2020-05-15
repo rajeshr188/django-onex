@@ -1,7 +1,21 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
+{% load mptt_tags %}
+<ul>
+    {% recursetree object_list %}
+        <li>
+            {{ node.name }}
+            {% if not node.is_leaf_node %}
+                <ul class="children">
+                    {{ children }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endrecursetree %}
+</ul>
 <p><a class="btn btn-default" href="{% url 'product_category_list' %}">Category Listing</a></p>
+
 <table class="table">
 <tr>
 <td>ID</td><td>Link</td>

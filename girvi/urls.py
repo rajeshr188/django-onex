@@ -68,6 +68,14 @@ urlpatterns += (
     path('girvi/loan/update/<int:pk>/', views.LoanUpdateView.as_view(), name='girvi_loan_update'),
     path('girvi/loan/<int:pk>/delete/',views.LoanDeleteView.as_view(),name='girvi_loan_delete'),
 )
+urlpatterns += (
+    # urls for Adjustment
+    path('girvi/adjustment/', views.AdjustmentListView.as_view(), name='girvi_adjustment_list'),
+    path('girvi/adjustment/create/', views.AdjustmentCreateView.as_view(), name='girvi_adjustment_create'),
+    path('girvi/adjustment/<int:pk>/create/', views.AdjustmentCreateView.as_view(), name='girvi_adjustment_create'),
+    path('girvi/adjustment/update/<int:pk>/', views.AdjustmentUpdateView.as_view(), name='girvi_adjustment_update'),
+    path('girvi/adjustment/<int:pk>/delete',views.AdjustmentDeleteView.as_view(),name='girvi_adjustment_delete'),
+)
 
 urlpatterns += (
     # urls for Release

@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from django.db import models
-from contact.models import Supplier
+from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum
@@ -36,7 +36,7 @@ class Invoice(models.Model):
 
     # Relationship Fields
     supplier = models.ForeignKey(
-        Supplier,
+        Customer,
         on_delete=models.CASCADE, related_name="suppliers"
     )
 
@@ -126,7 +126,7 @@ class Payment(models.Model):
 
     # Relationship Fields
     supplier = models.ForeignKey(
-        Supplier,
+        Customer,
         on_delete=models.CASCADE, related_name="supplier"
     )
 

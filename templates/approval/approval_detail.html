@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<p>
+  <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
+  <a class="btn btn-danger" href="{% url 'approval_approval_delete' object.id%}">Delete</a>
+</p>
+<table class="table">
+<tr><td>id</td><td>{{ object.id }}</td></tr>
+<tr><td>Person</td><td>{{ object.contact }}</td></tr>
+<tr><td>Quantity</td><td>{{ object.total_qty }}</td></tr>
+<tr><td>Weight</td><td>{{ object.total_wt }}</td></tr>
+<tr><td>Created</td><td>{{ object.created_at }}</td></tr>
+<tr><td>Status</td><td>{{ object.status }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
+
+{% endblock %}

@@ -9,6 +9,7 @@
   <td>product type</td>
   <td>description</td>
   <td>attributes</td>
+  <td>Action</td>
 </tr>
 {% for object in object_list %}
 <tr>
@@ -17,7 +18,7 @@
     <td>{{object.product_type}}</td>
     <td>{{ object.description }}</td>
     <td>{{object.attributes}}<td>
-
+    <td><a class="btn btn-danger" href="{% url 'product_product_delete' object.id%}">Delete</a></td>
 </tr>
 {% endfor %}
 </table>

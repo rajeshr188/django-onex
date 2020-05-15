@@ -9,6 +9,7 @@
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
       <a class="btn btn-secondary" href="{% url 'loan_pdf' loan.id %}">Print</a>
+      <a class="btn btn-secondary" href="{% url 'girvi_adjustment_create' loan.id %}">Add Adjustment</a>
       <a class="btn btn-secondary" href="{% url 'girvi_release_create' loan.id %}">Release</a>
 
         <a class="btn btn-primary" href="{% url 'girvi_loan_update' loan.id %}">Update</a>
@@ -35,7 +36,7 @@
 <tr><td>interest</td><td>{{ object.interest }}</td></tr>
 </table>
 
-<div class="table-responsive">
+
 
 {% if loan.release %}
 <table class="table table-sm">
@@ -57,7 +58,7 @@
 
   </tbody>
 </table>
-{% else %}
-
 {%endif%}
+
+
 {% endblock %}

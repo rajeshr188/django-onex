@@ -192,18 +192,18 @@ def home(request):
     return render(request,'girvi/home.html',context={'data':data},)
 
 class LoanYearArchiveView(YearArchiveView):
-    queryset = Loan.objects.all()
+    queryset = Loan.unreleased.all()
     date_field = "created"
     make_object_list = True
     allow_future = True
 
 class LoanMonthArchiveView(MonthArchiveView):
-    queryset = Loan.objects.all()
+    queryset = Loan.unreleased.all()
     date_field = "created"
     allow_future = True
 
 class LoanWeekArchiveView(WeekArchiveView):
-    queryset = Loan.objects.all()
+    queryset = Loan.unreleased.all()
     date_field = "created"
     week_format = "%W"
     allow_future = True
@@ -232,7 +232,7 @@ class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=5
+    paginate_by=50
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()

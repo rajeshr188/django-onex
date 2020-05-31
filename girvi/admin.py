@@ -16,7 +16,6 @@ class LicenseAdminForm(forms.ModelForm):
 class LicenseAdmin(admin.ModelAdmin):
     form = LicenseAdminForm
     list_display = ['name', 'id', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
-    readonly_fields = ['name', 'id', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
 
 admin.site.register(License, LicenseAdmin)
 
@@ -43,7 +42,6 @@ class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
     list_display = ['id','loanid','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
-    readonly_fields = ['id','loanid','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
 
 admin.site.register(Loan, LoanAdmin)
 
@@ -70,6 +68,5 @@ class ReleaseAdmin(ImportExportModelAdmin):
     resource_class=ReleaseResource
 
     list_display = ['releaseid','loan','created', 'last_updated', 'interestpaid']
-    readonly_fields = ['releaseid','loan','created', 'last_updated', 'interestpaid']
-
+    
 admin.site.register(Release, ReleaseAdmin)

@@ -24,7 +24,8 @@
 </div>
 <table class="table table-sm table-striped">
 <tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
-<tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a></td></tr>
+<tr><td>License</td><td>{{object.license}}</td></tr>
+<tr><td>Customer</td><td><a href="{% url 'contact_customer_update' object.customer.id %}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>itemtype</td><td>{{ object.itemtype }}</td></tr>

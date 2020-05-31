@@ -229,10 +229,9 @@ class LicenseDeleteView(DeleteView):
 class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
     model = Loan
-    # queryset=Loan.unreleased
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
-    paginate_by=50
+    paginate_by=20
 
 def incloanid():
     last=Loan.objects.all().order_by('id').last()
@@ -329,6 +328,7 @@ class ReleaseCreateView(CreateView):
         if self.kwargs:
             loan=Loan.objects.get(id=self.kwargs['pk'])
             return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
+
 
 class ReleaseDetailView(DetailView):
     model = Release

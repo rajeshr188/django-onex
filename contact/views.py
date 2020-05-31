@@ -28,7 +28,7 @@ def home(request):
     data['customercount']=c.all().count()
 
     data['whcount']=c.filter(type="Wh").count()
-    data['suppliercount']=Supplier.objects.count()
+    
     return render(request,'contact/home.html',context={'data':data},)
 
 class CustomerListView(ExportMixin,SingleTableMixin,FilterView):

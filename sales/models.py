@@ -130,7 +130,7 @@ class Receipt(models.Model):
                     ("Partially Allotted","PartiallyAllotted"),
                     ("Unallotted","Unallotted")
     )
-    status=models.CharField(max_length=15,choices=status_choices,default="Unallotted")
+    status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,

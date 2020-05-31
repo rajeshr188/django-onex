@@ -18,7 +18,7 @@ urlpatterns = [
     path('daybook/',include('daybook.urls')),
     path('select2/', include('django_select2.urls')),
     # path('admin/dashboard/',controlcenter.urls),
-    path('explorer/', include('explorer.urls')),
+    # path('explorer/', include('explorer.urls')),
     # path('silk/',include('silk.urls',namespace='silk')),
     path('api-auth/',include('rest_framework.urls'))
 ]

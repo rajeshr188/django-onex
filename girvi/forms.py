@@ -19,7 +19,7 @@ class LoanForm(forms.ModelForm):
         widget=DateTimePicker(
             options={
                 'defaultDate':(datetime.date.today()).strftime('%Y-%m-%d'),
-                'minDate': '2010-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'minDate': '2018-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,
             },
@@ -56,7 +56,7 @@ class ReleaseForm(forms.ModelForm):
                                     model=Loan,
                                     queryset = Loan.unreleased.all(),
                                     search_fields=['loanid_icontains'],
-                                    # dependent_fields={'customer':'customer'}
+
         ))
 
     class Meta:
@@ -99,4 +99,4 @@ Loan_formset = modelformset_factory(Loan,fields = ('loanid','created',
 
 
 
-Release_formset = modelformset_factory(Release,form = ReleaseForm)
+Release_formset = modelformset_factory(Release,ReleaseForm,fields=('releaseid','loan','interestpaid'))

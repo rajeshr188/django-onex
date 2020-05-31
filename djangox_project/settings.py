@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'tempus_dominus',
     # 'controlcenter',
     'explorer','debug_toolbar','django_extensions',
-    'extra_views',
+    # 'extra_views',
     'corsheaders',
     # Local
     'users',
@@ -59,9 +59,9 @@ INSTALLED_APPS = [
     'contact','product','girvi','sales','purchase','Chitfund','daybook',
     'approval',
 ]
-CONTROLCENTER_DASHBOARDS = (
-        ('mydash','djangox_project.dashboard.MyDash'),
-)
+# CONTROLCENTER_DASHBOARDS = (
+#         ('mydash','djangox_project.dashboard.MyDash'),
+# )
 EXPLORER_CONNECTIONS = { 'Default': 'default' }
 EXPLORER_DEFAULT_CONNECTION = 'default'
 DEBUG_TOOLBAR_PANELS = [
@@ -95,7 +95,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = False
 
 CORS_ORIGIN_WHITELIST = (
-    'localhost:4200',
+    'https://localhost:4200',
 )
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

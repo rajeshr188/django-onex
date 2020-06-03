@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import modelformset_factory
-import datetime
+from datetime import datetime,timezone
 from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import License, Loan, Release, Adjustment
 from django_select2.forms import Select2Widget,ModelSelect2Widget
@@ -18,7 +18,7 @@ class LoanForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'defaultDate':(datetime.date.today()).strftime('%Y-%m-%d'),
+                'defaultDate':datetime.now(timezone.utc),
                 'minDate': '2018-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
                 'collapse': False,
@@ -38,7 +38,7 @@ class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'defaultDate': (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
+                'defaultDate': (datetime.now(timezone.utc)).strftime("%m/%d/%Y, %H:%M:%S"),
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,
@@ -51,13 +51,13 @@ class ReleaseForm(forms.ModelForm):
         ),
     )
 
-    loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
-                                    widget=ModelSelect2Widget(
-                                    model=Loan,
-                                    queryset = Loan.unreleased.all(),
-                                    search_fields=['loanid_icontains'],
-
-        ))
+    # loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
+    #                                 widget = Select2Widget,
+    #                                 # widget=ModelSelect2Widget(
+    #                                 # model=Loan,
+    #                                 # queryset = Loan.unreleased.all(),
+    #                                 # search_fields=['loanid_icontains'],)
+    #                                 )
 
     class Meta:
         model = Release
@@ -67,7 +67,7 @@ class AdjustmentForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'defaultDate': (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
+                'defaultDate': (datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,

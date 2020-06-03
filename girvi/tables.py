@@ -14,8 +14,8 @@ class LoanTable(tables.Table):
     cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
     # def render_release(self):
     #     return 'Release'
-    def render_created(self,value):
-        return value.date
+    # def render_created(self,value):
+    #     return value.date
     def render_id(self, value, column):
         if Release.objects.filter(loan_id=value).exists():
             column.attrs = {'td': {'bgcolor': 'lightgreen'}}

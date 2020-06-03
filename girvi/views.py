@@ -100,7 +100,7 @@ def manage_loans(request):
             return redirect(reverse('girvi_loan_list'))
         else :
             print('formset invalid')
-            return render(request, 'girvi/manage_loans.html', {'formset': formset})
+            return redirect(reverse('manage_loans',kwargs = {'formset': formset}))
     else:
         formset = Loan_formset(queryset=Loan.objects.none())
 
@@ -269,14 +269,14 @@ class LoanCreateView(CreateView):
                 'customer':customer,
                 'loanid':incloanid,
                 'license':license,
-                'created':ld,
+                # 'created':ld,
             }
         else:
             return{
 
                 'loanid':incloanid,
                 'license':license,
-                'created':ld,
+                # 'created':ld,
             }
 
 class LoanDetailView(DetailView):

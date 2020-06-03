@@ -18,9 +18,8 @@ class LoanForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'defaultDate':datetime.now(timezone.utc),
-                'minDate': '2018-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'useCurrent': True,
+                'minDate': '2018-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'collapse': False,
             },
             attrs={

@@ -103,18 +103,3 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS("Done! Success.")
             )
-
-
-
-
-
-        # if options['--i']:
-        #     for release in options['loanid']:
-        #         try:
-        #             self.stdout.write(f"Release id:{id} releaseid:{releaseid} loan:{loan} Paid Int:{interestpaid}")
-        #         except Release.DoesNotExist:
-        #             raise CommandError(f"release {release} doesnot exist")
-
-        # for loan in options['loanid']:
-        #
-        #     self.stdout.write(self.style.SUCCESS(f"Successfully closed loan {loan} with Release {r}"))

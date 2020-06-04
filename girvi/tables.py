@@ -24,7 +24,7 @@ class LoanTable(tables.Table):
         return value
     class Meta:
         model = Loan
-        fields = ('id','cbox','license','loanid','created','customer','itemdesc','itemweight','loanamount')
+        fields = ('id','cbox','license','series','loanid','if_released','created','customer','itemdesc','itemweight','loanamount')
         attrs = {"class":"table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no customers matching the search criteria..."
         template_name = 'django_tables2/bootstrap4.html'

@@ -2,7 +2,7 @@ from django import forms
 from django.forms import modelformset_factory
 from datetime import datetime,timezone
 from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
-from .models import License, Loan, Release, Adjustment
+from .models import License, Loan, Release, Adjustment,Series
 from django_select2.forms import Select2Widget,ModelSelect2Widget
 from contact.models import Customer
 
@@ -11,6 +11,10 @@ class LicenseForm(forms.ModelForm):
         model = License
         fields = ['name', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
 
+class SeriesForm(forms.ModelForm):
+    class Meta:
+        model = Series
+        fields = ['name','license']
 
 class LoanForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),widget=Select2Widget)
@@ -31,7 +35,7 @@ class LoanForm(forms.ModelForm):
 
     class Meta:
         model = Loan
-        fields = [ 'license', 'customer','loanid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
+        fields = [ 'license','series', 'customer','loanid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
 
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(

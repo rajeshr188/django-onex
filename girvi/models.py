@@ -47,6 +47,9 @@ class License(models.Model):
     def get_update_url(self):
         return reverse('girvi_license_update', args=(self.pk,))
 
+    def get_series_count(self):
+        return self.series_set.count()
+
     def loan_count(self):
         return self.loan_set.filter(release__isnull=True).count()
 
@@ -65,10 +68,29 @@ class License(models.Model):
     def total_silver_weight(self):
         return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
 
+class Series(models.Model):
+    name = models.CharField(max_length=30,default ='',blank=True,unique=True)
+    created = models.DateTimeField(auto_now_add = True,editable = False)
+    last_updated = models.DateTimeField(auto_now = True)
+    license = models.ForeignKey(License,on_delete = models.CASCADE)
+
+    class Meta:
+        ordering = ('created',)
+        unique_together = ['license','name']
+
+    def __str__(self):
+        return f"{self.license}: Series {self.name}"
+
+    def get_absolute_url(self):
+        return reverse('girvi_license_series_detail', args=(self.pk,))
+
+    def get_update_url(self):
+        return reverse('girvi_license_series_update', args=(self.pk,))
 
 class Loan(models.Model):
 
     # Fields
+    lid = models.IntegerField(blank=True,null=True)
     loanid = models.CharField(max_length=255,unique=True)
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
@@ -83,12 +105,14 @@ class Loan(models.Model):
     loanamount = models.PositiveIntegerField()
     interestrate = models.PositiveSmallIntegerField(default = 2)
     interest = models.PositiveIntegerField()
-
+    if_released = models.BooleanField(default = False)
     # Relationship Fields
     license = models.ForeignKey(
         License,
         on_delete=models.CASCADE,
     )
+    series = models.ForeignKey(Series,on_delete = models.CASCADE,
+        blank=True,null = True,)
     customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,
@@ -100,7 +124,7 @@ class Loan(models.Model):
     unreleased = UnReleasedManager()
 
     class Meta:
-        ordering = ('-created','id')
+        ordering = ('series','lid')
 
     def __str__(self):
         return f"{self.loanid} - {self.loanamount}"

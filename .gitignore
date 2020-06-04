@@ -1,3 +1,5 @@
 notes.md
 .vscode
 staticfiles/
+*/migrations/*
+!*/migrations/__init__.py

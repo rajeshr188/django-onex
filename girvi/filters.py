@@ -14,7 +14,7 @@ class LoanFilter(django_filters.FilterSet):
         return queryset.filter(release__isnull=value)
     class Meta:
         model=Loan
-        fields=['loanid','license','customer','itemtype']
+        fields=['loanid','license','series','customer','itemtype']
 
 class AdjustmentFilter(django_filters.FilterSet):
     class Meta:

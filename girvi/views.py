@@ -226,6 +226,24 @@ class LicenseDeleteView(DeleteView):
     model=License
     success_url=reverse_lazy('girvi_license_list')
 
+# class SeriesListView(ListView):
+#     model = Series
+#
+# class SeriesCreateView(CreateView):
+#     model = Series
+#     form_class = SeriesForm
+#
+# class SeriesDetailView(DetailView):
+#     model = Series
+#
+# class SeriesUpdateView(UpdateView):
+#     model = Series
+#     form_class = SeriesForm
+
+class LicenseSeriesDeleteView(DeleteView):
+    model=License
+    success_url=reverse_lazy('girvi_license_list')
+
 class LoanListView(ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
     model = Loan

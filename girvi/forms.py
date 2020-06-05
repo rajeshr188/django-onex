@@ -35,7 +35,7 @@ class LoanForm(forms.ModelForm):
 
     class Meta:
         model = Loan
-        fields = [ 'license','series', 'customer','loanid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
+        fields = [ 'series', 'customer','lid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
 
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(

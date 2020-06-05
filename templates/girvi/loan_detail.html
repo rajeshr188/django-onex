@@ -20,11 +20,11 @@
       <button class="btn btn-sm btn-outline-secondary">Export</button>
     </div>
   </div>
-
 </div>
+
 <table class="table table-sm table-striped">
 <tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
-<tr><td>License</td><td>{{object.license}}</td></tr>
+<tr><td>Series</td><td>{{object.series}}</td></tr>
 <tr><td>Customer</td><td><a href="{% url 'contact_customer_update' object.customer.id %}">{{ object.customer }}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
@@ -36,8 +36,6 @@
 <tr><td>interestrate</td><td>{{ object.interestrate }}</td></tr>
 <tr><td>interest</td><td>{{ object.interest }}</td></tr>
 </table>
-
-
 
 {% if loan.release %}
 <table class="table table-sm">
@@ -60,6 +58,13 @@
   </tbody>
 </table>
 {%endif%}
-
+<div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+  {%if previous%}
+  <a href = "{% url 'girvi_loan_detail' previous.pk %}" type="button" class="btn btn-primary mr-2">Previous {{previous.loanid}}</a>
+  {%endif%}
+  {%if next %}
+  <a href = "{% url 'girvi_loan_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.loanid}}</a>
+  {%endif%}
+</div>
 
 {% endblock %}

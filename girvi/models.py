@@ -50,23 +50,23 @@ class License(models.Model):
     def get_series_count(self):
         return self.series_set.count()
 
-    def loan_count(self):
-        return self.loan_set.filter(release__isnull=True).count()
-
-    def total_loan_amount(self):
-        return self.loan_set.filter(release__isnull=True).aggregate(t=Sum('loanamount'))
-
-    def total_gold_loan(self):
-        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('loanamount'))
-
-    def total_silver_loan(self):
-        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('loanamount'))
-
-    def total_gold_weight(self):
-        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('itemweight'))
-
-    def total_silver_weight(self):
-        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
+    # def loan_count(self):
+    #     return self.loan_set.filter(release__isnull=True).count()
+    #
+    # def total_loan_amount(self):
+    #     return self.loan_set.filter(release__isnull=True).aggregate(t=Sum('loanamount'))
+    #
+    # def total_gold_loan(self):
+    #     return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('loanamount'))
+    #
+    # def total_silver_loan(self):
+    #     return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('loanamount'))
+    #
+    # def total_gold_weight(self):
+    #     return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('itemweight'))
+    #
+    # def total_silver_weight(self):
+    #     return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
 
 class Series(models.Model):
     name = models.CharField(max_length=30,default ='',blank=True,unique=True)
@@ -105,12 +105,7 @@ class Loan(models.Model):
     loanamount = models.PositiveIntegerField()
     interestrate = models.PositiveSmallIntegerField(default = 2)
     interest = models.PositiveIntegerField()
-    if_released = models.BooleanField(default = False)
-    # Relationship Fields
-    license = models.ForeignKey(
-        License,
-        on_delete=models.CASCADE,
-    )
+
     series = models.ForeignKey(Series,on_delete = models.CASCADE,
         blank=True,null = True,)
     customer = models.ForeignKey(
@@ -173,9 +168,16 @@ class Loan(models.Model):
     def is_worth(self):
         return self.itemvalue<total
 
+    def get_next(self):
+        return Loan.objects.filter(series = self.series,lid__gt = self.lid).order_by('lid').first()
+
+    def get_previous(self):
+        return Loan.objects.filter(series = self.series,lid__lt = self.lid).order_by('lid').last()
+
     def save(self,*args,**kwargs):
         self.interest = self.interestdue()
         self.itemvalue = self.loanamount+500
+        self.loanid = self.series.name + str(self.lid)
         super().save(*args,**kwargs)
 
 class Adjustment(models.Model):

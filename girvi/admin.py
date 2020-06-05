@@ -22,19 +22,23 @@ admin.site.register(Series)
 admin.site.register(Adjustment)
 
 class LoanResource(resources.ModelResource):
-    customer=fields.Field(column_name='customer',
+    customer = fields.Field(column_name='customer',
                             attribute='customer',
                             widget=ForeignKeyWidget(Customer,'pk'))
-    license=fields.Field(column_name='license',
-                            attribute='license',
-                            widget=ForeignKeyWidget(License,'id'))
+    # license=fields.Field(column_name='license',
+    #                         attribute='license',
+    #                         widget=ForeignKeyWidget(License,'id'))
+    series = fields.Field(column_name='series',
+                            attribute='series',
+                            widget=ForeignKeyWidget(Series,'id'))
     class Meta:
         model=Loan
         #import_id_fields = ('id',)
-        fields=('id','loanid','customer','license','series','created','itemtype','itemweight','itemdesc','loanamount','interestrate','value')
+        fields=('id','loanid','customer','series','created','itemtype','itemweight','itemdesc','loanamount','interestrate','value')
 
 class LoanAdminForm(forms.ModelForm):
-
+    date_heirarchy = 'created'
+    list_filter = ('customer','series','itemtype')
     class Meta:
         model = Loan
         fields = '__all__'
@@ -43,7 +47,7 @@ class LoanAdminForm(forms.ModelForm):
 class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
-    list_display = ['id','loanid','license','series','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
+    list_display = ['id','loanid','customer','series','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
 
 admin.site.register(Loan, LoanAdmin)
 

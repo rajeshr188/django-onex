@@ -279,14 +279,10 @@ class LoanCreateView(CreateView):
     form_class = LoanForm
 
     def get_initial(self):
-
-        license=get_object_or_404(License,id=1)
         if self.kwargs:
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{
                 'customer':customer,
-                'loanid':incloanid,
-                'license':license,
                 # 'created':ld,
             }
         else:
@@ -299,6 +295,12 @@ class LoanCreateView(CreateView):
 
 class LoanDetailView(DetailView):
     model = Loan
+
+    def get_context_data(self, **kwargs):
+        context = super(LoanDetailView, self).get_context_data(**kwargs)
+        context['previous'] = self.object.get_previous()
+        context['next'] = self.object.get_next()
+        return context
 
 
 class LoanUpdateView(UpdateView):

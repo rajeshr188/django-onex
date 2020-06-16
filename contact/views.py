@@ -17,7 +17,10 @@ from sales.models import Invoice,Month
 from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
 from datetime import datetime, timedelta,date
 from sales.tables import InvoiceTable
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def home(request):
     data = dict()
     c=Customer.objects
@@ -28,23 +31,23 @@ def home(request):
     data['customercount']=c.all().count()
 
     data['whcount']=c.filter(type="Wh").count()
-    
+
     return render(request,'contact/home.html',context={'data':data},)
 
-class CustomerListView(ExportMixin,SingleTableMixin,FilterView):
+class CustomerListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class = CustomerTable
     model = Customer
     template_name = 'contact/customer_list.html'
     filterset_class = CustomerFilter
     paginate_by = 25
 
-class CustomerCreateView(CreateView):
+class CustomerCreateView(LoginRequiredMixin,CreateView):
     model = Customer
     form_class = CustomerForm
     success_url=reverse_lazy('contact_customer_list')
 
 
-class CustomerDetailView(DetailView):
+class CustomerDetailView(LoginRequiredMixin,DetailView):
     model = Customer
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -64,32 +67,10 @@ class CustomerDetailView(DetailView):
         context['monthwiserev'] = data.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal'))).values('month','tm','tc')
         return context
 
-class CustomerUpdateView(UpdateView):
+class CustomerUpdateView(LoginRequiredMixin,UpdateView):
     model = Customer
     form_class = CustomerForm
 
-class CustomerDelete(DeleteView):
+class CustomerDelete(LoginRequiredMixin,DeleteView):
     model=Customer
     success_url = reverse_lazy('contact_customer_list')
-
-# class SupplierListView(ExportMixin,SingleTableMixin,FilterView):
-#     table_class = SupplierTable
-#     model = Supplier
-#     template_name = 'contact/supplier_list.html'
-#     filterset_class = SupplierFilter
-#     paginate_by = 25
-#
-# class SupplierCreateView(CreateView):
-#     model = Supplier
-#     form_class = SupplierForm
-#
-# class SupplierDetailView(DetailView):
-#     model = Supplier
-#
-# class SupplierUpdateView(UpdateView):
-#     model = Supplier
-#     form_class = SupplierForm
-#
-# class SupplierDelete(DeleteView):
-#     model=Supplier
-#     success_url = reverse_lazy('contact_supplier_list')

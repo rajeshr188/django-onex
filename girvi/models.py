@@ -9,7 +9,7 @@ from contact.models import Customer
 import datetime
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func
-from .managers import ReleasedManager,UnReleasedManager
+from .managers import LoanManager,ReleasedManager,UnReleasedManager
 
 class Month(Func):
     function = 'EXTRACT'
@@ -50,23 +50,6 @@ class License(models.Model):
     def get_series_count(self):
         return self.series_set.count()
 
-    # def loan_count(self):
-    #     return self.loan_set.filter(release__isnull=True).count()
-    #
-    # def total_loan_amount(self):
-    #     return self.loan_set.filter(release__isnull=True).aggregate(t=Sum('loanamount'))
-    #
-    # def total_gold_loan(self):
-    #     return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('loanamount'))
-    #
-    # def total_silver_loan(self):
-    #     return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('loanamount'))
-    #
-    # def total_gold_weight(self):
-    #     return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('itemweight'))
-    #
-    # def total_silver_weight(self):
-    #     return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
 
 class Series(models.Model):
     name = models.CharField(max_length=30,default ='',blank=True,unique=True)
@@ -79,13 +62,32 @@ class Series(models.Model):
         unique_together = ['license','name']
 
     def __str__(self):
-        return f"{self.license}: Series {self.name}"
+        return f"Series {self.name}"
 
     def get_absolute_url(self):
         return reverse('girvi_license_series_detail', args=(self.pk,))
 
     def get_update_url(self):
         return reverse('girvi_license_series_update', args=(self.pk,))
+
+    def loan_count(self):
+        return self.loan_set.filter(release__isnull=True).count()
+
+    def total_loan_amount(self):
+        return self.loan_set.filter(release__isnull=True).aggregate(t=Sum('loanamount'))
+
+    def total_gold_loan(self):
+        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('loanamount'))
+
+    def total_silver_loan(self):
+        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('loanamount'))
+
+    def total_gold_weight(self):
+        return self.loan_set.filter(release__isnull=True,itemtype='Gold').aggregate(t=Sum('itemweight'))
+
+    def total_silver_weight(self):
+        return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
+
 
 class Loan(models.Model):
 
@@ -114,7 +116,8 @@ class Loan(models.Model):
     )
 
     # Managers
-    objects = models.Manager()
+    # objects = models.Manager()
+    objects = LoanManager()
     released = ReleasedManager()
     unreleased = UnReleasedManager()
 

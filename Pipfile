@@ -28,6 +28,7 @@ django-measurement = "*"
 num2words = "*"
 python-dateutil = "*"
 xhtml2pdf = "*"
+werkzeug = "*"
 
 [dev-packages]
 "autopep8" = "*"

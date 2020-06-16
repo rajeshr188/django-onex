@@ -9,7 +9,7 @@ from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
 from django.db.models.functions import Cast,TruncMonth
 from django.db.models.fields import DateField
 
-from .models import License, Loan, Release, Adjustment, Month, Year
+from .models import License, Series, Loan, Release, Adjustment, Month, Year
 from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
                     ,Loan_formset,AdjustmentForm)
 from .tables import LoanTable,ReleaseTable
@@ -28,19 +28,26 @@ from dateutil.relativedelta import relativedelta
 from django.views.decorators.csrf import csrf_exempt
 
 from utils.render import Render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def print_loanpledge(request,pk):
     loan=Loan.objects.get(id=pk)
     params={'loan':loan}
     return Render.render('girvi/loan_pdf.html',params)
 
+@login_required
 def print_release(request,pk):
     release = Release.objects.get(id=pk)
     params = {'release':release}
     return Render.render('girvi/release_pdf.html',params)
 
+@login_required
 def print_notice(request,pk):
     pass
+
+@login_required
 def notice(request):
     qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
@@ -61,7 +68,7 @@ def notice(request):
 
     return render(request,'girvi/notice.html',context={'data':data})
 
-
+@login_required
 @csrf_exempt
 def multirelease(request,id=None):
     if request.method == 'POST': #<- Checking for method type
@@ -87,6 +94,7 @@ def multirelease(request,id=None):
 
     return HttpResponseRedirect(reverse('girvi_loan_list'))
 
+@login_required
 def manage_loans(request):
 
     formset = Loan_formset(queryset=Loan.objects.none())
@@ -107,6 +115,7 @@ def manage_loans(request):
 
     return render(request, 'girvi/manage_loans.html', {'formset': formset})
 
+@login_required
 def home(request):
     data = dict()
     today = datetime.date.today()
@@ -128,13 +137,13 @@ def home(request):
     l=License.objects.all()
     license['count']=l.count()
     # license['licenses']=','.join(lic.name for lic in l.all())
-    license['totalloans']=l.annotate(t=Sum('loan__loanamount',filter=Q(loan__release__isnull=True)))
-    licchart = l.annotate(la=Sum('loan__loanamount',filter=Q(loan__release__isnull=True))).values('name','la')
-    license['licchart']=list(licchart)
+    series = Series.objects.all()
+    license['totalloans']=series.annotate(t=Sum('loan__loanamount',filter=Q(loan__release__isnull=True)))
+    license['licchart']=list(license['totalloans'])
 
     loan['total_loans'] = loans.count()
     loan['released_loans'] = released.count()
-    loan['unreleased_loans'] = unreleased.count()
+    loan['unreleased_loans'] = loan['total_loans']-loan['released_loans']
 
     l=unreleased
     loan['count']=l.count()
@@ -156,20 +165,20 @@ def home(request):
     loan['chart']=fixed
     datetimel = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
 
-    thismonth = l.filter(created__year = today.year,created__month = today.month)\
+    thismonth = loans.filter(created__year = today.year,created__month = today.month)\
+                    .annotate(date_only=Cast('created', DateField()))\
+                    .values('date_only').annotate(t=Sum('loanamount'))\
+                    .order_by('date_only').values_list('date_only','t',named=True)
+
+    lastmonth =  loans.filter(created__year = today.year,created__month = (today.replace(day=1) - datetime.timedelta(days=1)).month)\
                     .annotate(date_only=Cast('created', DateField()))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('created').values_list('date_only','t',named=True)
 
-    lastmonth =  l.filter(created__year = today.year,created__month = (today.replace(day=1) - datetime.timedelta(days=1)).month)\
-                    .annotate(date_only=Cast('created', DateField()))\
-                    .values('date_only').annotate(t=Sum('loanamount'))\
-                    .order_by('created').values_list('date_only','t',named=True)
-
-    thisyear = l.filter(created__year = today.year).annotate(month=Month('created'))\
+    thisyear = loans.filter(created__year = today.year).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
 
-    lastyear = l.filter(created__year = (today.replace(month=1,day=1)-datetime.timedelta(days=1)).year).annotate(month=Month('created'))\
+    lastyear = loans.filter(created__year = (today.replace(month=1,day=1)-datetime.timedelta(days=1)).year).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
 
 
@@ -191,60 +200,60 @@ def home(request):
     data['release']=release
     return render(request,'girvi/home.html',context={'data':data},)
 
-class LoanYearArchiveView(YearArchiveView):
+class LoanYearArchiveView(LoginRequiredMixin,YearArchiveView):
     queryset = Loan.unreleased.all()
     date_field = "created"
     make_object_list = True
     allow_future = True
 
-class LoanMonthArchiveView(MonthArchiveView):
+class LoanMonthArchiveView(LoginRequiredMixin,MonthArchiveView):
     queryset = Loan.unreleased.all()
     date_field = "created"
     allow_future = True
 
-class LoanWeekArchiveView(WeekArchiveView):
+class LoanWeekArchiveView(LoginRequiredMixin,WeekArchiveView):
     queryset = Loan.unreleased.all()
     date_field = "created"
     week_format = "%W"
     allow_future = True
 
-class LicenseListView(ListView):
+class LicenseListView(LoginRequiredMixin,ListView):
     model = License
 
-class LicenseCreateView(CreateView):
-    model = License
-    form_class = LicenseForm
-
-class LicenseDetailView(DetailView):
-    model = License
-
-class LicenseUpdateView(UpdateView):
+class LicenseCreateView(LoginRequiredMixin,CreateView):
     model = License
     form_class = LicenseForm
 
-class LicenseDeleteView(DeleteView):
+class LicenseDetailView(LoginRequiredMixin,DetailView):
+    model = License
+
+class LicenseUpdateView(LoginRequiredMixin,UpdateView):
+    model = License
+    form_class = LicenseForm
+
+class LicenseDeleteView(LoginRequiredMixin,DeleteView):
     model=License
     success_url=reverse_lazy('girvi_license_list')
 
-# class SeriesListView(ListView):
+# class SeriesListView(LoginRequiredMixin,ListView):
 #     model = Series
 #
-# class SeriesCreateView(CreateView):
+# class SeriesCreateView(LoginRequiredMixin,CreateView):
 #     model = Series
 #     form_class = SeriesForm
 #
-# class SeriesDetailView(DetailView):
+# class SeriesDetailView(LoginRequiredMixin,DetailView):
 #     model = Series
 #
-# class SeriesUpdateView(UpdateView):
+# class SeriesUpdateView(LoginRequiredMixin,UpdateView):
 #     model = Series
 #     form_class = SeriesForm
 
-class LicenseSeriesDeleteView(DeleteView):
+class LicenseSeriesDeleteView(LoginRequiredMixin,DeleteView):
     model=License
     success_url=reverse_lazy('girvi_license_list')
 
-class LoanListView(ExportMixin,SingleTableMixin,FilterView):
+class LoanListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
     model = Loan
     template_name='girvi/loan_list.html'
@@ -274,7 +283,7 @@ def ld():
         return datetime.date.today()
     return last.created
 
-class LoanCreateView(CreateView):
+class LoanCreateView(LoginRequiredMixin,CreateView):
     model = Loan
     form_class = LoanForm
 
@@ -293,7 +302,7 @@ class LoanCreateView(CreateView):
                 # 'created':ld,
             }
 
-class LoanDetailView(DetailView):
+class LoanDetailView(LoginRequiredMixin,DetailView):
     model = Loan
 
     def get_context_data(self, **kwargs):
@@ -303,21 +312,21 @@ class LoanDetailView(DetailView):
         return context
 
 
-class LoanUpdateView(UpdateView):
+class LoanUpdateView(LoginRequiredMixin,UpdateView):
     model = Loan
     form_class = LoanForm
 
-class LoanDeleteView(DeleteView):
+class LoanDeleteView(LoginRequiredMixin,DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
 
-class AdjustmentListView(ExportMixin,SingleTableMixin,FilterView):
+class AdjustmentListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     # table_class=AdjustmentTable
     model = Adjustment
     filterset_class=AdjustmentFilter
     paginate_by=50
 
-class AdjustmentCreateView(CreateView):
+class AdjustmentCreateView(LoginRequiredMixin,CreateView):
     model = Adjustment
     form_class = AdjustmentForm
     def get_initial(self):
@@ -325,22 +334,22 @@ class AdjustmentCreateView(CreateView):
             loan=Loan.objects.get(id=self.kwargs['pk'])
             return {'loan':loan,}
 
-class AdjustmentUpdateView(UpdateView):
+class AdjustmentUpdateView(LoginRequiredMixin,UpdateView):
     model = Adjustment
     form_class = AdjustmentForm
 
-class AdjustmentDeleteView(DeleteView):
+class AdjustmentDeleteView(LoginRequiredMixin,DeleteView):
     model=Adjustment
     success_url=reverse_lazy('girvi_adjustments_list')
 
-class ReleaseListView(ExportMixin,SingleTableMixin,FilterView):
+class ReleaseListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class=ReleaseTable
     model = Release
     template_name='girvi/release_list.html'
     filterset_class=ReleaseFilter
     paginate_by=50
 
-class ReleaseCreateView(CreateView):
+class ReleaseCreateView(LoginRequiredMixin,CreateView):
     model = Release
     form_class = ReleaseForm
 
@@ -350,13 +359,13 @@ class ReleaseCreateView(CreateView):
             return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
 
 
-class ReleaseDetailView(DetailView):
+class ReleaseDetailView(LoginRequiredMixin,DetailView):
     model = Release
 
-class ReleaseUpdateView(UpdateView):
+class ReleaseUpdateView(LoginRequiredMixin,UpdateView):
     model = Release
     form_class = ReleaseForm
 
-class ReleaseDeleteView(DeleteView):
+class ReleaseDeleteView(LoginRequiredMixin,DeleteView):
     model=Release
     success_url=reverse_lazy('girvi_release_list')

@@ -10,79 +10,52 @@
 </div>
 <div class="tab-content col-md-10 " id="v-pills-tabContent">
   <div class="tab-pane fade show active " id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
-    <div class="bd-example">
-      <div id="carouselExampleCaptions" class="carousel slide" data-ride="carousel">
-        <ol class="carousel-indicators">
-          <li data-target="#carouselExampleCaptions" data-slide-to="0" class="active"></li>
-          <li data-target="#carouselExampleCaptions" data-slide-to="1"></li>
-          <li data-target="#carouselExampleCaptions" data-slide-to="2"></li>
-        </ol>
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <canvas id="myChart" width="500" height="200"></canvas>
-            <div class="carousel-caption d-none d-md-block">
-
-              <p>Loans by year</p>
-            </div>
-          </div>
-          <div class="carousel-item">
-            <canvas id="licChart" width="500" height="200"></canvas>
-            <div class="carousel-caption d-none d-md-block">
-
-              <p>Loans by License</p>
-            </div>
-          </div>
-          <div class="carousel-item">
-            <canvas id="loanChart" width="500" height="200"></canvas>
-            <div class="carousel-caption d-none d-md-block">
-              <!-- <h5>Third slide label</h5> -->
-              <p>loans by Type</p>
-            </div>
-          </div>
-        </div>
-        <a class="carousel-control-prev" href="#carouselExampleCaptions" role="button" data-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="sr-only">Previous</span>
-        </a>
-        <a class="carousel-control-next" href="#carouselExampleCaptions" role="button" data-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="sr-only">Next</span>
-        </a>
-      </div>
-    </div>
-    <div class="card-group mb-2">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Loan this month</h5>
-          <canvas id="thismonthChart" width="500" height="200"></canvas>
-          <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-        </div>
-      </div>
-    </div>
-    <div class="card-group mb-2">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Loan this Year</h5>
-          <canvas id="thisyearChart" width="500" height="200"></canvas>
-          <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-        </div>
-      </div>
-    </div>
-    <div class="card-columns">
-      <div class="card text-center">
-        <div class="card-body">
-          <h5 class="card-title">Customers</h5>
-          <p class="card-text">Latest :{{data.customer.latest}}
-          </p>
-        </div>
-      </div>
-      <div class="card">
+    <div class="row row-cols-1 row-cols-md-2">
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="licChart" width="500" height="300"></canvas>
       <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">Customers with Loans : {{data.customer.withloans}}</h6>
-          <p>Customers with/o Loans : {{data.customer.withoutloans}} </p>
-          <p>Total Customers : {{data.customer.count}}</p>
+        <h5 class="card-title">Loans by License(Series)</h5>
       </div>
+    </div>
+  </div>
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="myChart" width="500" height="300"></canvas>
+      <div class="card-body">
+        <h5 class="card-title">Loans By Year</h5>
       </div>
+    </div>
+  </div>
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="loanChart" width="400" height="200"></canvas>
+      <div class="card-body">
+        <h5 class="card-title">By Items</h5>
+      </div>
+    </div>
+  </div>
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="thismonthChart" width="500" height="300"></canvas>
+      <div class="card-body">
+        <h5 class="card-title">Loans By Month</h5>
+      </div>
+    </div>
+  </div>
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="thisyearChart" width="500" height="200"></canvas>
+      <div class="card-body">
+        <h5 class="card-title">Loans By Year</h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="card-columns">
+
+
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Loans</h5>
@@ -161,17 +134,19 @@
   var s2 = {
   label: 'This month loan',
   borderColor: 'red',
+  backgroundColor: 'red',
   data: [{% for i in data.loan.thismonth %} {x:'{{i.date_only}}',y:{{i.t}}},{% endfor %}]
     };
   var lasts2 = {
   label: 'last month loan',
   borderColor: 'blue',
+  backgroundColor: 'blue',
   data: [{% for i in data.loan.lastmonth %} {x:'{{i.date_only}}',y:{{i.t}}},{% endfor %}]
     };
 
   var ctx2 = document.getElementById('thismonthChart').getContext('2d');
   var chart = new Chart(ctx2, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels:[{% for i in data.loan.thismonth %}'{{i.date_only}}',{%endfor%}],
       datasets: [s2,lasts2] },
@@ -186,6 +161,7 @@
     var lastyear = {
     label: 'last year loan',
     borderColor: 'blue',
+
     data: [{% for i in data.loan.lastyear %} {x:'{{i.month}}',y:{{i.t}}},{% endfor %}]
       };
 
@@ -212,14 +188,7 @@
             "#949FB1",
             "#4D5360",
             ],
-            // backgroundColor: [
-            //     'rgba(255, 99, 132, 0.2)',
-            //     'rgba(54, 162, 235, 0.2)',
-            //     'rgba(255, 206, 86, 0.2)',
-            //     'rgba(75, 192, 192, 0.2)',
-            //     'rgba(153, 102, 255, 0.2)',
-            //     'rgba(255, 159, 64, 0.2)'
-            // ],
+
           borderColor: [
               'rgba(255,99,132,1)',
               'rgba(54, 162, 235, 1)',
@@ -254,10 +223,10 @@ var ctx = document.getElementById("licChart");
 var myChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-        labels: [{%for i in data.license.licchart%}{{i.name|slugify}},{%endfor%}],
+        labels: [{%for i in data.license.licchart%}'{{i.name|slugify}}',{%endfor%}],
         datasets: [{
 
-            data:[{% for i in data.license.licchart%}{{i.la}},{%endfor%}],
+            data:[{% for i in data.license.licchart%}{{i.t}},{%endfor%}],
             backgroundColor: [
        "#F7464A",
        "#46BFBD",

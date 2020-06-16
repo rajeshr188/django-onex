@@ -3,48 +3,41 @@ from .models import Contact, Chit, Collection, Allotment
 from .forms import ContactForm, ChitForm, CollectionForm, AllotmentForm
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
-class ContactListView(ListView):
+class ContactListView(LoginRequiredMixin,ListView):
     model = Contact
 
-
-class ContactCreateView(CreateView):
-    model = Contact
-    form_class = ContactForm
-
-
-class ContactDetailView(DetailView):
-    model = Contact
-
-
-class ContactUpdateView(UpdateView):
+class ContactCreateView(LoginRequiredMixin,CreateView):
     model = Contact
     form_class = ContactForm
 
+class ContactDetailView(LoginRequiredMixin,DetailView):
+    model = Contact
 
-class ChitListView(ListView):
+class ContactUpdateView(LoginRequiredMixin,UpdateView):
+    model = Contact
+    form_class = ContactForm
+
+class ChitListView(LoginRequiredMixin,ListView):
     model = Chit
 
-
-class ChitCreateView(CreateView):
-    model = Chit
-    form_class = ChitForm
-
-
-class ChitDetailView(DetailView):
-    model = Chit
-
-
-class ChitUpdateView(UpdateView):
+class ChitCreateView(LoginRequiredMixin,CreateView):
     model = Chit
     form_class = ChitForm
 
+class ChitDetailView(LoginRequiredMixin,DetailView):
+    model = Chit
 
-class CollectionListView(ListView):
+class ChitUpdateView(LoginRequiredMixin,UpdateView):
+    model = Chit
+    form_class = ChitForm
+
+class CollectionListView(LoginRequiredMixin,ListView):
     model = Collection
 
-
-class CollectionCreateView(CreateView):
+class CollectionCreateView(LoginRequiredMixin,CreateView):
     model = Collection
     form_class = CollectionForm
     def get_form(self,form_class=None,*args,**kwargs):
@@ -53,26 +46,21 @@ class CollectionCreateView(CreateView):
         all=Allotment.objects.get(id=self.pk)
         form.fields['allotment'].queryset=Allotment.objects.filter(id=self.pk)
         form.fields['allotment'].initial=all
-
-
         form.fields['amount'].initial=all.installment
         form.fields['member'].queryset=all.chit.members
         return form
 
-class CollectionDetailView(DetailView):
+class CollectionDetailView(LoginRequiredMixin,DetailView):
     model = Collection
 
-
-class CollectionUpdateView(UpdateView):
+class CollectionUpdateView(LoginRequiredMixin,UpdateView):
     model = Collection
     form_class = CollectionForm
 
-
-class AllotmentListView(ListView):
+class AllotmentListView(LoginRequiredMixin,ListView):
     model = Allotment
 
-
-class AllotmentCreateView(CreateView):
+class AllotmentCreateView(LoginRequiredMixin,CreateView):
     model = Allotment
     form_class = AllotmentForm
     extra_context = {}
@@ -103,10 +91,10 @@ class AllotmentCreateView(CreateView):
         form.instance.installment=(form.instance.amount+form.instance.chit.get_commission_amount())/form.instance.chit.members.count()
         return super().form_valid(form)
 
-class AllotmentDetailView(DetailView):
+class AllotmentDetailView(LoginRequiredMixin,DetailView):
     model = Allotment
 
-class AllotmentUpdateView(UpdateView):
+class AllotmentUpdateView(LoginRequiredMixin,UpdateView):
     model = Allotment
     form_class = AllotmentForm
 

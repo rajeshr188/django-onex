@@ -11,39 +11,42 @@ from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
 from django_filters.views import FilterView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 # from blabel import Labelwriter
 
-class CategoryListView(ListView):
+class CategoryListView(LoginRequiredMixin,ListView):
     model = Category
 
-class CategoryCreateView(CreateView):
-    model = Category
-    form_class = CategoryForm
-
-class CategoryDetailView(DetailView):
-    model = Category
-
-class CategoryUpdateView(UpdateView):
+class CategoryCreateView(LoginRequiredMixin,CreateView):
     model = Category
     form_class = CategoryForm
 
-class ProductTypeListView(ListView):
+class CategoryDetailView(LoginRequiredMixin,DetailView):
+    model = Category
+
+class CategoryUpdateView(LoginRequiredMixin,UpdateView):
+    model = Category
+    form_class = CategoryForm
+
+class ProductTypeListView(LoginRequiredMixin,ListView):
     model = ProductType
 
-class ProductTypeCreateView(CreateView):
+class ProductTypeCreateView(LoginRequiredMixin,CreateView):
     model = ProductType
     form_class = ProductTypeForm
 
-class ProductTypeDetailView(DetailView):
+class ProductTypeDetailView(LoginRequiredMixin,DetailView):
     model = ProductType
 
-class ProductTypeUpdateView(UpdateView):
+class ProductTypeUpdateView(LoginRequiredMixin,UpdateView):
     model = ProductType
     form_class = ProductTypeForm
 
-class ProductListView(ListView):
+class ProductListView(LoginRequiredMixin,ListView):
     model = Product
 
+@login_required
 def product_create(request, type_pk):
     track_inventory = True
     product_type = get_object_or_404(ProductType, pk=type_pk)
@@ -75,7 +78,7 @@ def product_create(request, type_pk):
     return TemplateResponse(request, 'product/product_form.html', ctx)
 
 
-class ProductDetailView(DetailView):
+class ProductDetailView(LoginRequiredMixin,DetailView):
     model = Product
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -87,7 +90,7 @@ class ProductDetailView(DetailView):
         context['variants'] =variants
         return context
 
-
+@login_required
 def product_edit(request, pk):
     product = get_object_or_404(
         Product.objects.prefetch_related('variants'), pk=pk)
@@ -112,14 +115,14 @@ def product_edit(request, pk):
         'product': product, 'product_form': form, 'variant_form': variant_form}
     return TemplateResponse(request, 'product/product_form.html', ctx)
 
-class ProductDeleteView(DeleteView):
+class ProductDeleteView(LoginRequiredMixin,DeleteView):
     model = Product
     success_url = reverse_lazy('product_product_list')
 
-class ProductVariantListView(ListView):
+class ProductVariantListView(LoginRequiredMixin,ListView):
     model = ProductVariant
 
-
+@login_required
 def variant_create(request, pk):
     track_inventory = True
     product = get_object_or_404(Product.objects.all(), pk=pk)
@@ -138,96 +141,82 @@ def variant_create(request, pk):
         'product/productvariant_form.html',
         ctx)
 
-class ProductVariantDetailView(DetailView):
+class ProductVariantDetailView(LoginRequiredMixin,DetailView):
     model = ProductVariant
 
 
-class ProductVariantUpdateView(UpdateView):
+class ProductVariantUpdateView(LoginRequiredMixin,UpdateView):
     model = ProductVariant
     form_class = ProductVariantForm
 
-class ProductVariantDeleteView(DeleteView):
+class ProductVariantDeleteView(LoginRequiredMixin,DeleteView):
     model = ProductVariant
     success_url = reverse_lazy('product_productvariant_list')
 
-class AttributeListView(ListView):
+class AttributeListView(LoginRequiredMixin,ListView):
     model = Attribute
 
-
-class AttributeCreateView(CreateView):
-    model = Attribute
-    form_class = AttributeForm
-
-
-class AttributeDetailView(DetailView):
-    model = Attribute
-
-
-class AttributeUpdateView(UpdateView):
+class AttributeCreateView(LoginRequiredMixin,CreateView):
     model = Attribute
     form_class = AttributeForm
 
+class AttributeDetailView(LoginRequiredMixin,DetailView):
+    model = Attribute
 
-class AttributeValueListView(ListView):
+class AttributeUpdateView(LoginRequiredMixin,UpdateView):
+    model = Attribute
+    form_class = AttributeForm
+
+class AttributeValueListView(LoginRequiredMixin,ListView):
     model = AttributeValue
 
-
-class AttributeValueCreateView(CreateView):
-    model = AttributeValue
-    form_class = AttributeValueForm
-
-
-class AttributeValueDetailView(DetailView):
-    model = AttributeValue
-
-
-class AttributeValueUpdateView(UpdateView):
+class AttributeValueCreateView(LoginRequiredMixin,CreateView):
     model = AttributeValue
     form_class = AttributeValueForm
 
+class AttributeValueDetailView(LoginRequiredMixin,DetailView):
+    model = AttributeValue
 
-class ProductImageListView(ListView):
+class AttributeValueUpdateView(LoginRequiredMixin,UpdateView):
+    model = AttributeValue
+    form_class = AttributeValueForm
+
+class ProductImageListView(LoginRequiredMixin,ListView):
     model = ProductImage
 
-
-class ProductImageCreateView(CreateView):
-    model = ProductImage
-    form_class = ProductImageForm
-
-
-class ProductImageDetailView(DetailView):
-    model = ProductImage
-
-
-class ProductImageUpdateView(UpdateView):
+class ProductImageCreateView(LoginRequiredMixin,CreateView):
     model = ProductImage
     form_class = ProductImageForm
 
+class ProductImageDetailView(LoginRequiredMixin,DetailView):
+    model = ProductImage
 
-class VariantImageListView(ListView):
+class ProductImageUpdateView(LoginRequiredMixin,UpdateView):
+    model = ProductImage
+    form_class = ProductImageForm
+
+class VariantImageListView(LoginRequiredMixin,ListView):
+    model = VariantImage
+
+class VariantImageCreateView(LoginRequiredMixin,CreateView):
+    model = VariantImage
+    form_class = VariantImageForm
+
+class VariantImageDetailView(LoginRequiredMixin,DetailView):
     model = VariantImage
 
 
-class VariantImageCreateView(CreateView):
+class VariantImageUpdateView(LoginRequiredMixin,UpdateView):
     model = VariantImage
     form_class = VariantImageForm
 
 
-class VariantImageDetailView(DetailView):
-    model = VariantImage
-
-
-class VariantImageUpdateView(UpdateView):
-    model = VariantImage
-    form_class = VariantImageForm
-
-
-class StreeListView(FilterView):
+class StreeListView(LoginRequiredMixin,FilterView):
     model = Stree
     filterset_class = StreeFilter
     template_name = 'product/stree_list.html'
 
-class StreeCreateView(CreateView):
+class StreeCreateView(LoginRequiredMixin,CreateView):
     model =Stree
     form_class = StreeForm
 

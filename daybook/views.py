@@ -4,7 +4,10 @@ from sales.models import Invoice as salesinvoice,Receipt
 from purchase.models import Invoice as purchaseinvoice,Payment
 from django.db.models import Avg,Count,Sum
 import datetime
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 # Create your views here.
+@login_required
 def daybook(request):
 
     q = request.GET.get('q', '')

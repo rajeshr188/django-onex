@@ -25,7 +25,7 @@ SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
+ALLOWED_HOSTS = ["*","192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
 
 # EXTENSIONS_MAX_UNIQUE_QUERY_ATTEMPTS=1000
 # Application definition
@@ -50,8 +50,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'tempus_dominus',
     # 'controlcenter',
-    'explorer','debug_toolbar','django_extensions',
-    # 'extra_views',
+    'debug_toolbar','django_extensions',
     'corsheaders',
     # Local
     'users',
@@ -62,22 +61,7 @@ INSTALLED_APPS = [
 # CONTROLCENTER_DASHBOARDS = (
 #         ('mydash','djangox_project.dashboard.MyDash'),
 # )
-EXPLORER_CONNECTIONS = { 'Default': 'default' }
-EXPLORER_DEFAULT_CONNECTION = 'default'
-DEBUG_TOOLBAR_PANELS = [
-    'debug_toolbar.panels.versions.VersionsPanel',
-    'debug_toolbar.panels.timer.TimerPanel',
-    'debug_toolbar.panels.settings.SettingsPanel',
-    'debug_toolbar.panels.headers.HeadersPanel',
-    'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.sql.SQLPanel',
-    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-    'debug_toolbar.panels.templates.TemplatesPanel',
-    'debug_toolbar.panels.cache.CachePanel',
-    'debug_toolbar.panels.signals.SignalsPanel',
-    'debug_toolbar.panels.logging.LoggingPanel',
-    'debug_toolbar.panels.redirects.RedirectsPanel',
-    'debug_toolbar.panels.profiling.ProfilingPanel',]
+
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
@@ -116,7 +100,7 @@ REST_FRAMEWORK = {
 # CACHE_MIDDLEWARE_KEY_PREFIX = 'jsk'
 
 ROOT_URLCONF = 'djangox_project.urls'
-INTERNAL_IPS = '127.0.0.1'
+INTERNAL_IPS = ['127.0.0.1',]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

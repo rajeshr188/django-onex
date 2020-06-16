@@ -14,14 +14,17 @@ class LoanTable(tables.Table):
     cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
     # def render_release(self):
     #     return 'Release'
-    # def render_created(self,value):
-    #     return value.date
-    def render_id(self, value, column):
-        if Release.objects.filter(loan_id=value).exists():
-            column.attrs = {'td': {'bgcolor': 'lightgreen'}}
-        else:
-            column.attrs = {'td': {}}
-        return value
+    def render_created(self,value):
+        return value.date
+
+    # Increases sql queries count to 118
+    # def render_id(self, value, column):
+    #     # if value.release__isnull:
+    #     if Release.objects.filter(loan_id=value).exists():
+    #         column.attrs = {'td': {'bgcolor': 'lightgreen'}}
+    #     else:
+    #         column.attrs = {'td': {}}
+    #     return value
     class Meta:
         model = Loan
         fields = ('id','cbox','series','loanid','created','customer','itemdesc','itemweight','loanamount')
@@ -37,4 +40,4 @@ class ReleaseTable(tables.Table):
         fields=('id','releaseid','created','loan','interestpaid')
         attrs={"class":"table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no customers matching the search criteria..."
-        template_name = 'django_tables2/bootstrap4.html'
+        # template_name = 'django_tables2/bootstrap4.html'

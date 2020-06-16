@@ -6,12 +6,14 @@ from.forms import (ApprovalForm,ApprovalLineForm,ApprovalReturnForm,
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect,HttpResponse
 from product.models import Stree
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
-class ApprovalListView(ListView):
+class ApprovalListView(LoginRequiredMixin,ListView):
     model = Approval
 
-class ApprovalCreateView(CreateView):
+class ApprovalCreateView(LoginRequiredMixin,CreateView):
     model = Approval
     form_class = ApprovalForm
 
@@ -66,10 +68,10 @@ class ApprovalCreateView(CreateView):
             form=form,approvalline_form=approvalline_form))
 
 
-class ApprovalDetailView(DetailView):
+class ApprovalDetailView(LoginRequiredMixin,DetailView):
     model = Approval
 
-class ApprovalUpdateView(UpdateView):
+class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
     model = Approval
     form_class = ApprovalForm
 
@@ -117,7 +119,7 @@ class ApprovalUpdateView(UpdateView):
             else:
                 approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
                 i.product.move_to(approval_node,position='first-child')
-    
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):
@@ -125,32 +127,32 @@ class ApprovalUpdateView(UpdateView):
             form=form,approvalline_form=approvalline_form))
 
 
-class ApprovalDeleteView(DeleteView):
+class ApprovalDeleteView(LoginRequiredMixin,DeleteView):
     model = Approval
     success_url = reverse_lazy('approval_approval_list')
 
-class ApprovalLineCreateView(CreateView):
+class ApprovalLineCreateView(LoginRequiredMixin,CreateView):
     model = ApprovalLine
     form_class = ApprovalLineForm
 
-class ApprovalReturnListView(ListView):
+class ApprovalReturnListView(LoginRequiredMixin,ListView):
     model = ApprovalReturn
 
-class ApprovalReturnCreateView(CreateView):
-    model = ApprovalReturn
-    form_class = ApprovalReturnForm
-
-class ApprovalReturnDetailView(DetailView):
-    model = ApprovalReturn
-
-class ApprovalReturnUpdateView(UpdateView):
+class ApprovalReturnCreateView(LoginRequiredMixin,CreateView):
     model = ApprovalReturn
     form_class = ApprovalReturnForm
 
-class ApprovalReturnDeleteView(DeleteView):
+class ApprovalReturnDetailView(LoginRequiredMixin,DetailView):
+    model = ApprovalReturn
+
+class ApprovalReturnUpdateView(LoginRequiredMixin,UpdateView):
+    model = ApprovalReturn
+    form_class = ApprovalReturnForm
+
+class ApprovalReturnDeleteView(LoginRequiredMixin,DeleteView):
     model = ApprovalReturn
     success_url = reverse_lazy('approval_approvalreturn_list')
 
-class ApprovalReturnLineCreateView(CreateView):
+class ApprovalReturnLineCreateView(LoginRequiredMixin,CreateView):
     model = ApprovalReturnLine
     form_class = ApprovalReturnLineForm

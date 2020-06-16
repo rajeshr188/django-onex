@@ -18,35 +18,37 @@
       <tr><td>propreitor</td><td>{{ object.propreitor }}</td></tr>
       </table>
     </div>
+    {%for item in object.series_set.all%}
     <div class="col-sm">
       <ul class="list-group">
         <li class="list-group-item d-flex justify-content-between align-items-center">
-          Loans
-          <span class="badge badge-primary badge-pill">{{object.loan_count}}</span>
+          Loans in {{item}}
+          <span class="badge badge-primary badge-pill">{{item.loan_count}}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Loan Amount
-          <span class="badge badge-primary badge-pill">{{object.total_loan_amount.t}}</span>
+          <span class="badge badge-primary badge-pill">{{item.total_loan_amount.t}}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Gold Loan Amount
-          <span class="badge badge-primary badge-pill">{{object.total_gold_loan.t}}</span>
+          <span class="badge badge-primary badge-pill">{{item.total_gold_loan.t}}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Gold Weight
-          <span class="badge badge-primary badge-pill">{{object.total_gold_weight.t}} gms</span>
+          <span class="badge badge-primary badge-pill">{{item.total_gold_weight.t}} gms</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Silver Loan Amount
-          <span class="badge badge-primary badge-pill">{{object.total_silver_loan.t}}</span>
+          <span class="badge badge-primary badge-pill">{{item.total_silver_loan.t}}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Silver Weight
-          <span class="badge badge-primary badge-pill">  {{object.total_silver_weight.t}} gms</span>
+          <span class="badge badge-primary badge-pill">  {{item.total_silver_weight.t}} gms</span>
         </li>
 
     </ul>
     </div>
+    {%endfor%}
 
   </div>
 

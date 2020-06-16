@@ -51,6 +51,14 @@
       </div>
     </div>
   </div>
+  <div class="col mb-4">
+    <div class="card">
+      <canvas id="loanstatuschart" width="500" height="200"></canvas>
+      <div class="card-body">
+        <h5 class="card-title">Loans Status</h5>
+      </div>
+    </div>
+  </div>
 </div>
 
     <div class="card-columns">
@@ -116,6 +124,25 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js" type="text/javascript"></script>
 <script>
+
+  var loanstatus_data = {
+    label: 'Loan Status',
+    borderColor: 'red',
+    data: {{data.loan.status}}
+  };
+  var lsc = document.getElementById('loanstatuschart').getContext('2d');
+  var lschart = new Chart(lsc,{
+    type:'pie',
+    data: {
+      labels: ['released','Unreleased'],
+      datasets: [loanstatus_data]},
+      borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+
+        ],
+      borderWidth: 1
+  });
 
   var s1 = {
   label: 'loan by year',
@@ -234,14 +261,14 @@ var myChart = new Chart(ctx, {
        "#949FB1",
        "#4D5360",
      ],
-            // backgroundColor: [
-            //     'rgba(255, 99, 132, 0.2)',
-            //     'rgba(54, 162, 235, 0.2)',
-            //     'rgba(255, 206, 86, 0.2)',
-            //     'rgba(75, 192, 192, 0.2)',
-            //     'rgba(153, 102, 255, 0.2)',
-            //     'rgba(255, 159, 64, 0.2)'
-            // ],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
             borderColor: [
                 'rgba(255,99,132,1)',
                 'rgba(54, 162, 235, 1)',

@@ -181,7 +181,7 @@ def home(request):
     lastyear = loans.filter(created__year = (today.replace(month=1,day=1)-datetime.timedelta(days=1)).year).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
 
-
+    loan['status'] = [released.count(),unreleased.count()]
     # fixed = []
     # for row in datetime:
     #     fixed.append([row[0],row[1]])

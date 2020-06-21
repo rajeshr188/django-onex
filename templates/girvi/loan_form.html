@@ -2,6 +2,7 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
+{{form.media}}
 <p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
 <form method="post" class="form">
   {% csrf_token %}

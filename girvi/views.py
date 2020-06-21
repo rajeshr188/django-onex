@@ -82,7 +82,7 @@ def multirelease(request,id=None):
             print('deleted'+ id_list)
         elif action == 'edit':
             print('in edit action'+str(id_list))
-            formset = LoanFormset(queryset = Loan.objects.filter(id__in=id_list))
+            formset = Loan_formset(queryset = Loan.objects.filter(id__in=id_list))
             return render(request, 'girvi/manage_loans.html', {'formset': formset})
         elif action =='release' :
             print('in releaseaction')

@@ -2,6 +2,7 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
+{{form.media}}
 <p><a class="btn btn-default" href="{% url 'sales_receipt_list' %}">Receipt Listing</a></p>
     <form action="." method="post">
         {% csrf_token %}

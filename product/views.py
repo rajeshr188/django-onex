@@ -6,7 +6,7 @@ from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
                      ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
                      StockTransactionForm)
-from .filters import StreeFilter
+from .filters import StreeFilter,ProductFilter,ProductVariantFilter
 from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
@@ -43,8 +43,10 @@ class ProductTypeUpdateView(LoginRequiredMixin,UpdateView):
     model = ProductType
     form_class = ProductTypeForm
 
-class ProductListView(LoginRequiredMixin,ListView):
+class ProductListView(LoginRequiredMixin,FilterView):
     model = Product
+    filterset_class = ProductFilter
+    template_name = 'product/product_list.html'
 
 @login_required
 def product_create(request, type_pk):
@@ -119,8 +121,10 @@ class ProductDeleteView(LoginRequiredMixin,DeleteView):
     model = Product
     success_url = reverse_lazy('product_product_list')
 
-class ProductVariantListView(LoginRequiredMixin,ListView):
+class ProductVariantListView(LoginRequiredMixin,FilterView):
     model = ProductVariant
+    filterset_class = ProductVariantFilter
+    template_name = "product/productvariant_list.html"
 
 @login_required
 def variant_create(request, pk):

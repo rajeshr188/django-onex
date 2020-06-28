@@ -7,7 +7,7 @@
 <td>ID</td><td>Link</td>
     <td>name</td>
     <td>value</td>
-    <td>slug</td>
+    <td>Attribute</td>
 </tr>
 {% for object in object_list %}
 <tr>
@@ -15,7 +15,7 @@
     <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
     <td>{{ object.name }}</td>
     <td>{{ object.value }}</td>
-    <td>{{ object.slug }}</td>
+    <td>{{ object.attribute }}</td>
 </tr>
 {% endfor %}
 </table><a class="btn btn-primary" href="{% url 'product_attributevalue_create' %}">Create new AttributeValue</a>

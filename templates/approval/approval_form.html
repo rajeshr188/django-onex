@@ -3,6 +3,7 @@
 {% load crispy_forms_tags %}
 {% load bootstrap4%}
 {% block content %}
+{{form.media}}
 <p><a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a></p>
 
 <p><h2 class="h3 mb-3 font-weight-normal">Add Approval</h2></p>
@@ -52,7 +53,7 @@
 
   $(function() {
     $(document).ready(function() {
-      
+
     $(".inline.{{ approvalline_form.prefix }}").formset({
       prefix: "{{ approvalline_form.prefix }}",
       //formTemplate: $("#formset-template").clone(),

@@ -3,18 +3,21 @@ from girvi.models import Loan,Release
 from sales.models import Invoice as salesinvoice,Receipt
 from purchase.models import Invoice as purchaseinvoice,Payment
 from django.db.models import Avg,Count,Sum
-import datetime
-from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime,timedelta
 from django.contrib.auth.decorators import login_required
+
 # Create your views here.
 @login_required
 def daybook(request):
 
     q = request.GET.get('q', '')
     if q != '' :
-        today =datetime.datetime.strptime(q, "%d%m%Y").date()
+        today =datetime.strptime(q, "%d/%m/%Y")
     else:
-        today=datetime.date.today()
+        today=datetime.today().date()
+
+    yesterday = (today - timedelta(1)).strftime("%d/%m/%Y")
+    tomorrow = (today + timedelta(1)).strftime("%d/%m/%Y")
 
     loan = dict()
     loans = Loan.objects.filter(created__year=today.year,created__month=today.month,created__day=today.day).values('loanid','loanamount')
@@ -63,6 +66,8 @@ def daybook(request):
     payment['metal']=pay.filter(type="Metal").aggregate(t=Sum('total'))
 
     daybook=dict()
+    daybook['yesterday']=yesterday
+    daybook['tomorrow']=tomorrow
     daybook['date']=today
     daybook['creditsale']=creditsale
     daybook['cashsale']=cashsale

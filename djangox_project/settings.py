@@ -167,8 +167,9 @@ TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
-USE_L10N = True
-
+USE_L10N = False
+SHORT_DATETIME_FORMAT = 'd-m-Y'
+# DATETIME_INPUT_FORMATS = ['%d/%m/%Y %I:%M %p', ]
 USE_TZ = True
 
 

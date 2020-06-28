@@ -115,5 +115,13 @@
   </div>
 
 </div>
+<div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+  {%if daybook.yesterday%}
+  <a href = "{% url 'daybook'  %}?q={{daybook.yesterday}}" type="button" class="btn btn-primary mr-2">{{daybook.yesterday}}</a>
+  {%endif%}
+  {%if daybook.tomorrow %}
+  <a href = "{% url 'daybook'  %}?q={{daybook.tomorrow}}" type="button" class="btn btn-primary mr-2">{{daybook.tomorrow}}</a>
+  {%endif%}
+</div>
 
-{%endblock%}
+{% endblock %}

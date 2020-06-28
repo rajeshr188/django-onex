@@ -5,9 +5,25 @@ from contact.models import Customer
 from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
+from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
+from datetime import datetime
 
 class InvoiceForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
+    created = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+
+                'useCurrent': True,
+                'collapse': False,
+            },
+            attrs={
+               'append': 'fa fa-calendar',
+               'input_toggle': False,
+               'icon_toggle': True,
+            }
+        ),
+    )
     class Meta:
         model = Invoice
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier','status']
@@ -25,6 +41,21 @@ InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):
+    created = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+                'defaultDate': (datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
+                'minDate': '2009-01-20',# 'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
+                'useCurrent': True,
+                'collapse': False,
+            },
+            attrs={
+               'append': 'fa fa-calendar',
+               'input_toggle': False,
+               'icon_toggle': True,
+            }
+        ),
+    )
     supplier=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:
         model = Payment

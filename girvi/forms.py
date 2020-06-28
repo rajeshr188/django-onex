@@ -22,12 +22,13 @@ class LoanForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
+
                 'useCurrent': True,
-                'minDate': '2018-01-01',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
                 'collapse': False,
             },
             attrs={
                'append': 'fa fa-calendar',
+               'input_toggle': False,
                'icon_toggle': True,
             }
         ),
@@ -41,7 +42,7 @@ class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                'defaultDate': (datetime.now(timezone.utc)).strftime("%m/%d/%Y, %H:%M:%S"),
+                
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,
@@ -53,14 +54,6 @@ class ReleaseForm(forms.ModelForm):
             }
         ),
     )
-
-    # loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
-    #                                 widget = Select2Widget,
-    #                                 # widget=ModelSelect2Widget(
-    #                                 # model=Loan,
-    #                                 # queryset = Loan.unreleased.all(),
-    #                                 # search_fields=['loanid_icontains'],)
-    #                                 )
 
     class Meta:
         model = Release

@@ -133,9 +133,9 @@ class Loan(models.Model):
     def get_update_url(self):
         return reverse('girvi_loan_update', args=(self.pk,))
 
-    def noofmonths(self):
-        cd=datetime.datetime.now()
-        nom=(cd.year-self.created.year)*12 +cd.month-self.created.month
+    def noofmonths(self,date = datetime.datetime.now(timezone.utc)):
+        cd = date #datetime.datetime.now()
+        nom = (cd.year-self.created.year)*12 + cd.month - self.created.month
         if(nom<=0):
             return 0
         else:
@@ -144,11 +144,11 @@ class Loan(models.Model):
     def is_released(self):
         return hasattr(self,'release')
 
-    def interestdue(self):
+    def interestdue(self,date):
         if self.is_released() :
             return 0
         else:
-            return int(((self.loanamount)*self.noofmonths()*(self.interestrate))/100)
+            return int(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)

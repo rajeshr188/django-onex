@@ -3,7 +3,8 @@ from django.apps import apps
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from girvi.models import License,Loan,Release
-from datetime import datetime,timezone
+from datetime import datetime
+from django.utils.timezone import make_aware
 
 CREATE = 'create'
 LIST = 'list'
@@ -40,6 +41,10 @@ class Command(BaseCommand):
             )
         )
         parser.add_argument(
+            'date',
+            type=datetime.fromisoformat
+        )
+        parser.add_argument(
             'id', nargs = '+', type =str
         )
 
@@ -50,7 +55,7 @@ class Command(BaseCommand):
             model_name = model
             )
 
-    def create(self,model,id):
+    def create(self,model,id,date):
         model_class = self.get_model(model)
         for loan in id:
             try:
@@ -61,8 +66,13 @@ class Command(BaseCommand):
             try:
                 releaseid = Release.objects.order_by('-id')[0]
                 releaseid = str(int(releaseid.releaseid)+1)
-                r = Release.objects.create(releaseid=releaseid,loan=l,created = datetime.now(timezone.utc),interestpaid =  l.interestdue())
-                self.stdout.write(self.style.SUCCESS(f"Successfully closed Loan:{l} with Release id: {r}"))
+                r = Release.objects.create(
+                                        releaseid=releaseid,
+                                        loan=l,
+                                        created = date,#datetime.now(timezone.utc),
+                                        interestpaid =  l.interestdue(date)
+                                        )
+                self.stdout.write(self.style.SUCCESS(f"Successfully closed Loan:{l} with Release id: {r} nom:{l.noofmonths(date)} interest received:{r.interestpaid}"))
             except IntegrityError:
                 raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
 
@@ -88,13 +98,14 @@ class Command(BaseCommand):
         op = options.get('operation')
         model = options.get('model')
         id = options.get('id')
-
+        date = options.get('date')
+        date = make_aware(date)
         if op == CREATE:
             if model in (LOAN,LICENSE,ADJUSTMENTS):
                 self.stdout.write("Work in Progress")
             else:
                 self.stdout.write("creating Release...")
-                self.create(model,id)
+                self.create(model,id,date)
 
         if op == LIST:
             self.list(model,id)

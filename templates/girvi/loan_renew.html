@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<div class="row">
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Loan Status</h5>
+        <p class="card-text">
+          <ul>
+            <li>{{loan.loanid}} {{loan.created|date}}</li>
+            <li>{{loan.customer}}</li>
+            <li>{{loan.loanamount}} + {{loan.interestdue}}</li>
+            <li>{{loan.get_total_adjustments}}</li>
+            <li>{{loan.total}}</li>
+          </ul>
+        </p>
+
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Renew</h5>
+        <p class="card-text">
+
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p}}
+          <button href="{% url 'girvi_loan_renew' loan.pk%}" type="submit" class="btn btn-primary">Renew</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{%endblock %}

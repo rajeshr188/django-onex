@@ -144,7 +144,7 @@ class Loan(models.Model):
     def is_released(self):
         return hasattr(self,'release')
 
-    def interestdue(self,date):
+    def interestdue(self,date= datetime.datetime.now(timezone.utc)):
         if self.is_released() :
             return 0
         else:
@@ -215,7 +215,7 @@ class Release(models.Model):
     )
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('-id',)
 
     def __str__(self):
         return u'%s' % self.releaseid

@@ -11,7 +11,7 @@ from django.db.models.fields import DateField
 
 from .models import License, Series, Loan, Release, Adjustment, Month, Year
 from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
-                    ,Loan_formset,AdjustmentForm)
+                    ,Loan_formset,AdjustmentForm,LoanRenewForm)
 from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
 from contact.models import Customer
@@ -320,6 +320,28 @@ class LoanDeleteView(LoginRequiredMixin,DeleteView):
     model=Loan
     success_url=reverse_lazy('girvi_loan_list')
 
+def loan_renew(request,pk):
+    loan = get_object_or_404(Loan,pk = pk)
+    # print(loan.interestdue(date=timezone.now))
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = LoanRenewForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            new_loanamount = loan.due() + form.cleaned_data['amount'] + form.cleaned_data['interest']
+            newloan = Loan(series = loan.series,customer = loan.customer,lid = Loan.objects.filter(series=loan.series).latest('lid').lid+1,loanamount=new_loanamount,itemweight=loan.itemweight,itemdesc=loan.itemdesc,interestrate=loan.interestrate)
+            Release.objects.create(releaseid = Release.objects.latest('id').id+1,loan=loan,interestpaid=form.cleaned_data['interest'])
+            newloan.save()
+            # redirect to a new URL:
+            return redirect(newloan)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = LoanRenewForm()
+    return render(request,'girvi/loan_renew.html',{'form':form,'loan':loan})
+
 class AdjustmentListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     # table_class=AdjustmentTable
     model = Adjustment
@@ -347,7 +369,7 @@ class ReleaseListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView
     model = Release
     template_name='girvi/release_list.html'
     filterset_class=ReleaseFilter
-    paginate_by=50
+    paginate_by=10
 
 class ReleaseCreateView(LoginRequiredMixin,CreateView):
     model = Release

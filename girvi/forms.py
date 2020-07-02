@@ -38,11 +38,15 @@ class LoanForm(forms.ModelForm):
         model = Loan
         fields = [ 'series', 'customer','lid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
 
+class LoanRenewForm(forms.Form):
+    amount = forms.IntegerField()
+    interest = forms.IntegerField()
+    
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-                
+
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,

@@ -39,6 +39,10 @@ class ProductTypeCreateView(LoginRequiredMixin,CreateView):
 class ProductTypeDetailView(LoginRequiredMixin,DetailView):
     model = ProductType
 
+class ProductTypeDeleteView(LoginRequiredMixin,DeleteView):
+    model = ProductType
+    success_url = reverse_lazy('product_producttype_list')
+
 class ProductTypeUpdateView(LoginRequiredMixin,UpdateView):
     model = ProductType
     form_class = ProductTypeForm

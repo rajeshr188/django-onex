@@ -2,11 +2,12 @@
 {% load static %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'product_producttype_list' %}">ProductType Listing</a></p>
-<table class="table">
+<table class="table table-sm table-striped">
 <tr>
 <td>ID</td><td>Link</td>
     <td>name</td>
     <td>has_variants</td>
+    <td></td>
 
 </tr>
 {% for object in object_list %}
@@ -15,6 +16,7 @@
     <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
     <td>{{ object.name }}</td>
     <td>{{ object.has_variants }}</td>
+    <td><a class="btn btn-danger" href="{% url 'product_producttype_delete' object.id%}">Delete</a></td>
 
 </tr>
 {% endfor %}

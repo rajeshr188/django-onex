@@ -43,6 +43,42 @@
 
       {% endrecursetree %}
     </ul>
+    <table class="table table-sm table-striped table-responsive">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">name</th>
+      <th scope="col">full_name</th>
+      <th scope="col">parent</th>
+      <th scope="col">weight</th>
+      <th scope="col">cost</th>
+      <th scope="col">created</th>
+      <th scope="col">tracking_type</th>
+      <th scope="col">barcode</th>
+      <th scope="col">quantity</th>
+      <th scope="col">status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for object in object_list%}
+    {%if object.barcode %}
+    <tr>
+      <th scope="row"><a href={% url 'product_stree_detail' object.id%}>{{object.id}}</a></th>
+      <td>{{object.name}}</td>
+      <td>{{object.full_name}}</td>
+      <td>{{object.parent.name}}</td>
+      <td>{{object.weight}}</td>
+      <td>{{object.cost}}</td>
+      <td>{{object.created |date}}</td>
+      <td>{{object.tracking_type}}</td>
+      <td>{{object.barcode}}</td>
+      <td>{{object.quantity}}</td>
+      <td>{{object.status}}</td>
+    </tr>
+    {%endif%}
+    {%endfor%}
+  </tbody>
+</table>
   </div>
   <div class="col-3">
     <div class="sticky-top">

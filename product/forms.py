@@ -212,7 +212,7 @@ class StockForm(forms.ModelForm):
 class StreeForm(forms.ModelForm):
     class Meta:
         model = Stree
-        fields = ['parent','name','weight','quantity','tracking_type','status']
+        fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity']
 
 class UniqueForm(forms.ModelForm):
     class Meta:

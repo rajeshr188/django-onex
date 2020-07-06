@@ -126,7 +126,7 @@ class ProductVariant(models.Model):
         Product, related_name='variants', on_delete=models.CASCADE)
     attributes = HStoreField(default=dict, blank=True)
     images = models.ManyToManyField('ProductImage', through='VariantImage')
-    track_inventory = models.BooleanField(default=True)
+    track_inventory = models.BooleanField('Tracked',default=True)
     quantity = models.IntegerField(
         validators=[MinValueValidator(0)], default=Decimal(1))
     quantity_allocated = models.IntegerField(

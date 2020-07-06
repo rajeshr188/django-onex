@@ -33,7 +33,9 @@ urlpatterns += (
     path('producttype/create/', views.ProductTypeCreateView.as_view(), name='product_producttype_create'),
     path('producttype/detail/<int:pk>/', views.ProductTypeDetailView.as_view(), name='product_producttype_detail'),
     path('producttype/update/<int:pk>/', views.ProductTypeUpdateView.as_view(), name='product_producttype_update'),
+    path('producttype/delete/<int:pk>/', views.ProductTypeDeleteView.as_view(),name='product_producttype_delete'),
 )
+
 
 urlpatterns += (
     # urls for Product

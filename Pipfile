@@ -29,6 +29,10 @@ num2words = "*"
 python-dateutil = "*"
 xhtml2pdf = "*"
 werkzeug = "*"
+gunicorn = "*"
+celery = "*"
+redis = "*"
+gevent = "*"
 
 [dev-packages]
 "autopep8" = "*"

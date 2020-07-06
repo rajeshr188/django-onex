@@ -6,18 +6,16 @@
 <p><a class="btn btn-default" href="{% url 'product_productvariant_list' %}">ProductVariant Listing</a></p>
 <div class="row">
   <div class="col-9">
-    <table class="table table-striped table-hover table-responsive">
-      <thead class = "thead-dark">
+    <table class="table table-sm table-striped table-hover table-responsive">
+      <thead class = "thead-light">
         <tr>
           <th>ID</th>
           <th>sku</th>
           <th>name</th>
           <th>Product</th>
-          <th>Atrributes</th>
-          <th>track_inventory</th>
-          <th>Previous qih</th>
-          <th>Current qih</th><th>Current Qih Weight</th>
-          <th>cost_price</th>
+          <!-- <th>Atrributes</th> -->
+          <th>Tracked</th>
+          <th>cost price</th>
           <th>weight</th>
           <th>Action</th>
         </tr>
@@ -29,11 +27,11 @@
           <td>{{ object.sku }}</td>
           <td>{{ object.name }}</td>
           <td>{{object.product}}</td>
-          <td>{{object.attributes}}</td>
+          <!-- <td>{{object.attributes}}</td> -->
           <td>{{ object.track_inventory }}</td>
-          <td>{{ object.quantity }}</td>
+          <!-- <td>{{ object.quantity }}</td>
           <td>{{object.stock.get_current_qih.total}}</td>
-          <td>{{object.stock.get_current_qih_weight.total}}</td>
+          <td>{{object.stock.get_current_qih_weight.total}}</td> -->
           <td>{{ object.cost_price }}</td>
           <td>{{ object.weight }}</td>
           <td><a class = "btn btn-danger" href="{% url 'product_productvariant_delete' object.id%}">Delete</a></td>

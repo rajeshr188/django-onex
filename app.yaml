@@ -1,0 +1,11 @@
+# [START runtime]
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT djangox_project.wsgi
+
+beta_settings:
+    cloud_sql_instances: 'khatabook-1991:asia-south1:onex-gcloud'
+
+runtime_config:
+  python_version: 3
+# [END runtime]

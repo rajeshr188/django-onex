@@ -84,7 +84,7 @@ class InvoiceCreateView(CreateView):
 
         for item in items:
 
-            node = Stree.objects.get(name='Stock')
+            node,created = Stree.objects.get_or_create(name='Stock')
             node = node.traverse_to(item.product)
 
             if item.is_return:
@@ -118,7 +118,7 @@ class InvoiceCreateView(CreateView):
 
                 node.cost = item.touch
                 n = node.get_family()
-                node.full_name = n[2].name + node.name
+                node.full_name = n[2].name + ' ' + node.name
                 node.barcode = 'je'+str(node.id)
                 node.save()
                 node.update_status()

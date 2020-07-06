@@ -231,7 +231,7 @@ class InvoiceCreateView(CreateView):
             print(f"In Sale view :")
             print(f"item is_return: {item.is_return} ")
 
-            sold = Stree.objects.get(name='Sold')
+            sold,created = Stree.objects.get_or_create(name='Sold')
 
             if not item.is_return:
                 if item.product.tracking_type =='Lot':

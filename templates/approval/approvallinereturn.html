@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+{{approval_items}}
+<ul>
+{% for items in approval_items %}
+  <li>{{items.product}} - {{items.weight}} - {{items.quantity}} - {{items.status}}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

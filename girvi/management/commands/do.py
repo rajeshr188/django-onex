@@ -62,7 +62,9 @@ class Command(BaseCommand):
                 l = Loan.objects.get(loanid=loan)
 
             except Loan.DoesNotExist:
-                    raise CommandError(f"Failed to create Release as {loan} does not exist")
+                    # raise CommandError(f"Failed to create Release as {loan} does not exist")
+                    self.stdout.write(f"Failed to create Release as {loan} does not exist")
+                    continue
             try:
                 releaseid = Release.objects.order_by('-id')[0]
                 releaseid = str(int(releaseid.releaseid)+1)
@@ -74,7 +76,9 @@ class Command(BaseCommand):
                                         )
                 self.stdout.write(self.style.SUCCESS(f"Successfully closed Loan:{l} with Release id: {r} nom:{l.noofmonths(date)} interest received:{r.interestpaid}"))
             except IntegrityError:
-                raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
+                # raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
+                self.stdout.write(f"Failed creating Release as {l} is already Released with {l.release}")
+                
 
     def delete(self,model,ids = None):
         model_class = self.get_model(model)

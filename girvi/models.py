@@ -9,7 +9,7 @@ from contact.models import Customer
 import datetime
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func
-from .managers import LoanManager,ReleasedManager,UnReleasedManager
+from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
 
 class Month(Func):
     function = 'EXTRACT'
@@ -213,7 +213,7 @@ class Release(models.Model):
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
-
+    objects = ReleaseManager
     class Meta:
         ordering = ('-id',)
 

@@ -11,3 +11,7 @@ class ReleasedManager(models.Manager):
 class UnReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull = True)
+
+class ReleaseManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('loan')

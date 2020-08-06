@@ -6,7 +6,7 @@ class StreeFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='iexact')
     class Meta:
         model = Stree
-        fields = ['name','barcode']
+        fields = ['name','barcode','tracking_type','status']
 
 class ProductFilter(django_filters.FilterSet):
     category = django_filters.ModelChoiceFilter(
@@ -17,6 +17,9 @@ class ProductFilter(django_filters.FilterSet):
                         queryset = ProductType.objects.all(),
                         widget = Select2Widget
     )
+    # attributes = django_filters.ModelChoiceFilter(
+    #                     queryset=Attribute.objects.all(),
+    #                     widget = Select2Widget)
     class Meta:
         model = Product
         fields = ['category','product_type']

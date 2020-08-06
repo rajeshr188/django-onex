@@ -324,8 +324,8 @@ class InvoiceUpdateView(UpdateView):
     def form_valid(self, form, invoiceitem_form):
         print("In Sales UpdateView")
         self.object = form.save()
-        print("Deleting previous sales invoiceItems")
-        InvoiceItem.objects.filter(invoice=self.object).delete()
+        # print("Deleting previous sales invoiceItems")
+        # InvoiceItem.objects.filter(invoice=self.object).delete()
         invoiceitem_form.instance = self.object
         items=invoiceitem_form.save()
         for item in items:

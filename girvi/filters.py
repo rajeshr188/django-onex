@@ -5,8 +5,9 @@ from django_select2.forms import Select2Widget
 
 class LoanFilter(django_filters.FilterSet):
     loanid=django_filters.CharFilter(lookup_expr='icontains')
+    itemdesc=django_filters.CharFilter(lookup_expr='icontains')
     customer=django_filters.ModelChoiceFilter(
-                    queryset = Customer.objects.filter(type='Re'),
+                    queryset = Customer.objects.filter(type='Re',active = True),
                     widget=Select2Widget)
     Status = django_filters.BooleanFilter(field_name='release', method='filter_status')
 
@@ -14,7 +15,7 @@ class LoanFilter(django_filters.FilterSet):
         return queryset.filter(release__isnull=value)
     class Meta:
         model=Loan
-        fields=['loanid','series','customer','itemtype']
+        fields=['loanid','series','customer','itemtype','itemweight','itemdesc','loanamount']
 
 class AdjustmentFilter(django_filters.FilterSet):
     class Meta:

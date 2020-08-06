@@ -384,10 +384,14 @@ class Stree(MPTTModel):
         self.delete()
 
     def update_status(self):
-        if self.weight == 0:
-            self.status = 'Empty'
-        else:
-            self.status = 'Available'
+        root = self.get_root()
+        if root.name =='Stock':
+            if self.weight == 0:
+                self.status = 'Empty'
+            else:
+                self.status = 'Available'
+        else :
+            self.status = root.name
         self.save()
 
 class StockTransaction(models.Model):

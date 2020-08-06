@@ -8,11 +8,20 @@
 <table class="table">
 <tr><td>id</td><td>{{ object.id }}</td></tr>
 <tr><td>Person</td><td>{{ object.contact }}</td></tr>
-<tr><td>Quantity</td><td>{{ object.total_qty }}</td></tr>
-<tr><td>Weight</td><td>{{ object.total_wt }}</td></tr>
+<tr><td>Total Quantity</td><td>{{ object.total_qty }}</td></tr>
+<tr><td>Total Weight</td><td>{{ object.total_wt }}</td></tr>
 <tr><td>Created</td><td>{{ object.created_at }}</td></tr>
 <tr><td>Status</td><td>{{ object.status }}</td></tr>
 </table>
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
+{% if object.approvalline_set%}
+<ul>
+  {% for i in object.approvalline_set.all %}
+    <li>
+      {{i.product}} - {{i.quantity}} - {{i.weight}} - {{i.status}}
+    </li>
+  {%endfor%}
+</ul>
 
+{%endif%}
 {% endblock %}

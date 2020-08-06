@@ -6,11 +6,12 @@ from product.models import Stree
 
 @receiver(signals.post_delete,sender = ApprovalLine)
 def submit_approval_stock(sender,instance,*args,**kwargs):
-    print("In suubmit_approval_stock called after Delete of ApprovalLine")
+    print("In submit_approval_stock called after Delete of ApprovalLine")
     if instance.product.tracking_type == 'Lot':
         instance.product.weight += instance.weight
         instance.product.quantity +=instance.quantity
         instance.product.save()
+        instance.product.update_status()
 
         approval_node = Stree.objects.get(name='Approval')
         approval_node = approval_node.traverse_parellel_to(instance.product)

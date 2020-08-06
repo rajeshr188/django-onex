@@ -18,11 +18,9 @@ class SeriesForm(forms.ModelForm):
 
 class LoanForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),widget=Select2Widget)
-
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-
                 'useCurrent': True,
                 'collapse': False,
             },
@@ -41,12 +39,11 @@ class LoanForm(forms.ModelForm):
 class LoanRenewForm(forms.Form):
     amount = forms.IntegerField()
     interest = forms.IntegerField()
-    
+
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-
                 'minDate': '2010-01-01',
                 'useCurrent': True,
                 'collapse': True,

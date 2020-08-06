@@ -12,6 +12,7 @@ urlpatterns = (
 
 urlpatterns +=(
     path('approvalline/create/',views.ApprovalLineCreateView.as_view(),name ='approval_approvalline_create'),
+    path('approvallinereturn/',views.ApprovalLineReturnView,name='approvallinereturn'),
 #approvalreturn urls
 )
 

@@ -17,14 +17,14 @@ class LoanTable(tables.Table):
     def render_created(self,value):
         return value.date
 
-    # Increases sql queries count to 118
-    # def render_id(self, value, column):
-    #     # if value.release__isnull:
-    #     if Release.objects.filter(loan_id=value).exists():
-    #         column.attrs = {'td': {'bgcolor': 'lightgreen'}}
-    #     else:
-    #         column.attrs = {'td': {}}
-    #     return value
+    # Increases sql queries count to 118/48
+    def render_id(self, value, column):
+        # if value.release__isnull:
+        if Release.objects.filter(loan_id=value).exists():
+            column.attrs = {'td': {'bgcolor': 'lightgreen'}}
+        else:
+            column.attrs = {'td': {}}
+        return value
     class Meta:
         model = Loan
         fields = ('id','cbox','series','loanid','created','customer','itemdesc','itemweight','loanamount')

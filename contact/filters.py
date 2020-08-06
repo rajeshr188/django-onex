@@ -6,7 +6,7 @@ class CustomerFilter(django_filters.FilterSet):
     relatedto=django_filters.CharFilter(lookup_expr='icontains')
     class Meta:
         model=Customer
-        fields=['id','name','relatedto','phonenumber','type']
+        fields=['id','name','relatedto','phonenumber','type','active']
 
 # class SupplierFilter(django_filters.FilterSet):
 #     name=django_filters.CharFilter(lookup_expr='icontains')

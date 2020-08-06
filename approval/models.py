@@ -13,7 +13,7 @@ class Approval(models.Model):
     total_wt = models.DecimalField(max_digits=10,decimal_places=3,default =0)
     total_qty = models.IntegerField(default=0)
     status = models.CharField(max_length = 10,choices = (('Pending','Pending'),
-                                ('Invoiced','Invoiced'),('Returned','Returned')),
+                                ('Complete','Complete')),
                                 default = 'Pending')
 
     class Meta:
@@ -37,12 +37,19 @@ class ApprovalLine(models.Model):
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
     touch = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
+    returned_qty = models.IntegerField(default=0,blank = True)
+    returned_wt = models.DecimalField(max_digits=10,decimal_places=3,default=0.0,blank = True)
+    returned_on = models.DateTimeField(auto_now_add= True,blank = True)
 
     approval = models.ForeignKey(Approval,
                                 on_delete = models.CASCADE)
+    status = models.CharField(max_length =30, choices = (('Pending','Pending'),('Returned','Returned'),('Billed','Billed')), default = 'Pending',blank = True )
 
     class Meta:
         ordering = ('approval',)
+
+    def balance(self):
+        return self.weight - self.returned_wt
 
 class ApprovalReturn(models.Model):
 

@@ -6,6 +6,7 @@ from.forms import (ApprovalForm,ApprovalLineForm,ApprovalReturnForm,
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect,HttpResponse
 from product.models import Stree
+from contact.models import Customer
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 # Create your views here.
@@ -46,7 +47,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
             self.object.total_wt +=i.weight
             self.object.save()
 
-            approval_node = Stree.objects.get(name='Approval')
+            approval_node,created = Stree.objects.get_or_create(name='Approval')
 
             if i.product.tracking_type == 'Lot':
                 i.product.weight -= i.weight
@@ -97,7 +98,7 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
 
     def form_valid(self,form,approvalline_form):
         self.object = form.save()
-        ApprovalLine.objects.filter(approval=self.object).delete()
+        # ApprovalLine.objects.filter(approval=self.object).delete()
         approvalline_form.instance = self.object
         items = approvalline_form.save()
         for i in items:
@@ -105,7 +106,7 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
             self.object.total_wt +=i.weight
             self.object.save()
 
-            approval_node = Stree.objects.get(name='Approval')
+            approval_node,created = Stree.objects.get_or_create(name='Approval')
 
             if i.product.tracking_type == 'Lot':
                 i.product.weight -= i.weight
@@ -130,6 +131,13 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
 class ApprovalDeleteView(LoginRequiredMixin,DeleteView):
     model = Approval
     success_url = reverse_lazy('approval_approval_list')
+
+def ApprovalLineReturnView(request):
+    contact = Customer.objects.get(pk = request.GET.get('contact',''))
+    approval_items = ApprovalLine.objects.filter(approval__contact=contact)
+
+    return render(request,'approval/approvallinereturn.html',{'approval_items':approval_items})
+
 
 class ApprovalLineCreateView(LoginRequiredMixin,CreateView):
     model = ApprovalLine

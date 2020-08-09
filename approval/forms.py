@@ -16,11 +16,11 @@ class ApprovalLineForm(forms.ModelForm):
     product = forms.ModelChoiceField(
                             queryset = Stree.objects.filter(
                             children__isnull = True,
-                            status = 'Available').exclude(barcode = ''),
+                            ).exclude(barcode = ''),
                             widget = Select2Widget)
     class Meta:
         model = ApprovalLine
-        fields = ['product','quantity','weight','touch']
+        fields = ['product','quantity','weight','touch','returned_qty','returned_wt']
 
 
 class ApprovalReturnForm(forms.ModelForm):
@@ -35,7 +35,7 @@ class ApprovalReturnLineForm(forms.ModelForm):
         fields = ['product','quantity','weight']
 
 Approval_formset = inlineformset_factory(Approval,ApprovalLine,
-                    fields = ('approval','product','quantity','weight','touch'),
+                    fields = ('approval','product','quantity','weight','touch','returned_wt','returned_qty'),
                     form = ApprovalLineForm,
                     extra=1,can_delete=True)
 

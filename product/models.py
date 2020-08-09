@@ -325,6 +325,27 @@ class Stree(MPTTModel):
         balances = [node.weight for node in self.get_descendants(include_self=True)]
         return sum(balances)
 
+    def subtract(self,qty,wt):
+        if self.quantity >= qty and self.weight >= wt :
+            self.quantity -=qty
+            self.weight -= wt
+            self.save()
+            self.update_status()
+
+    def add(self,qty,wt):
+        self.quantity +=qty
+        self.weight += wt
+        self.save()
+        self.update_status()
+
+    def transfer(self,node,qty,wt):
+        # subtract wt and qty from self
+        print(f"transfering  qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
+        self.subtract(qty,wt)
+        node.add(qty,wt)
+        print(f"transfered qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
+        # add wt and wty to dest_node
+
     def traverse_to(self,product,category='Gold'):
         print(f"self:{self} product:{product}")
         path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
@@ -339,7 +360,7 @@ class Stree(MPTTModel):
 
         for p in path:
             self,status = Stree.objects.get_or_create(name=p,parent=self)
-            print(f"-->{self}")
+            # print(f"-->{self}")
         self.tracking_type = attr['tracking_type']
         self.save()
         return self
@@ -347,7 +368,7 @@ class Stree(MPTTModel):
     def traverse_parellel_to(self,node,include_self = True):
         ancestors = [i.name for i in node.get_ancestors(include_self = include_self)]
         ancestors.pop(0)
-        print(f"ancestors : {ancestors}")
+        # print(f"ancestors : {ancestors}")
         for p in ancestors:
             self,status = Stree.objects.get_or_create(name=p,parent = self)
         return self

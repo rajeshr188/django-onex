@@ -50,14 +50,16 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
             approval_node,created = Stree.objects.get_or_create(name='Approval')
 
             if i.product.tracking_type == 'Lot':
-                i.product.weight -= i.weight
-                i.product.quantity -=i.quantity
-                i.product.save()
-                i.product.update_status()
+                # i.product.weight -= i.weight
+                # i.product.quantity -=i.quantity
+                # i.product.save()
+                # i.product.update_status()
                 approval_node = approval_node.traverse_parellel_to(i.product)
-                approval_node.weight += i.weight
-                approval_node.quantity +=i.quantity
-                approval_node.save()
+                i.product.transfer(approval_node,i.quantity,i.weight)
+                # approval_node.weight += i.weight
+                # approval_node.quantity +=i.quantity
+                # approval_node.save()
+                i.save()
             else:
                 approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
                 i.product.move_to(approval_node,position='first-child')
@@ -76,50 +78,67 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
     model = Approval
     form_class = ApprovalForm
 
-    def get(self,request,*args,**kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        approvalline_form = Approval_formset(instance=self.object)
+    def get_context_data(self,**kwargs):
+        data = super(ApprovalUpdateView,self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['approvalline_form'] = Approval_formset(self.request.POST,instance = self.object)
+        else :
+            data['approvalline_form'] = Approval_formset(instance = self.object)
+        return data
 
-        return self.render_to_response(self.get_context_data(form = form,
-                                        approvalline_form = approvalline_form))
 
-    def post(self,request,*args,**kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        approvalline_form = Approval_formset(self.request.POST,instance=self.object)
+    # def get(self,request,*args,**kwargs):
+    #     self.object = self.get_object()
+    #     form_class = self.get_form_class()
+    #     form = self.get_form(form_class)
+    #     approvalline_form = Approval_formset(instance=self.object)
+    #
+    #     return self.render_to_response(self.get_context_data(form = form,
+    #                                     approvalline_form = approvalline_form))
+    #
+    # def post(self,request,*args,**kwargs):
+    #     self.object = self.get_object()
+    #     form_class = self.get_form_class()
+    #     form = self.get_form(form_class)
+    #     approvalline_form = Approval_formset(self.request.POST,instance=self.object)
+    #
+    #     if (form.is_valid() and approvalline_form.is_valid()):
+    #         return self.form_valid(form,approvalline_form)
+    #     else:
+    #         return self.form_invalid(form,approvalline_form)
 
-        if (form.is_valid() and approvalline_form.is_valid()):
-            return self.form_valid(form,approvalline_form)
-        else:
-            return self.form_invalid(form,approvalline_form)
-
-    def form_valid(self,form,approvalline_form):
+    def form_valid(self,form):
+        context = self.get_context_data()
+        approvalline_form = context['approvalline_form']
         self.object = form.save()
         # ApprovalLine.objects.filter(approval=self.object).delete()
-        approvalline_form.instance = self.object
-        items = approvalline_form.save()
-        for i in items:
-            self.object.total_qty +=i.quantity
-            self.object.total_wt +=i.weight
-            self.object.save()
+        if approvalline_form.is_valid():
+            approvalline_form.instance = self.object
+            print(approvalline_form.has_changed())
+            items = approvalline_form.save(commit = False)
+            for i in items:
+                if i.id:
+                    old_data = ApprovalLine.objects.get(pk=i.id)
+                    approval_node,created = Stree.objects.get_or_create(name='Approval')
+                    if old_data.product.tracking_type == 'Lot':
+                        print('transfering old data')
+                        approval_node = approval_node.traverse_parellel_to(i.product)
+                        approval_node.transfer(i.product,old_data.quantity,old_data.weight)
 
-            approval_node,created = Stree.objects.get_or_create(name='Approval')
+            items = approvalline_form.save(commit = True)
+            for i in items:
+                # create with new data
+                approval_node,created = Stree.objects.get_or_create(name='Approval')
+                if i.product.tracking_type == 'Lot':
+                    print('transferring any updates')
+                    approval_node = approval_node.traverse_parellel_to(i.product)
+                    i.product.transfer(approval_node,i.quantity,i.weight)
 
-            if i.product.tracking_type == 'Lot':
-                i.product.weight -= i.weight
-                i.product.quantity -=i.quantity
-                i.product.save()
-                i.product.update_status()
-                approval_node = approval_node.traverse_parellel_to(i.product)
-                approval_node.weight += i.weight
-                approval_node.quantity +=i.quantity
-                approval_node.save()
-            else:
-                approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
-                i.product.move_to(approval_node,position='first-child')
+                else:
+                    approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
+                    i.product.move_to(approval_node,position='first-child')
+                i.save()
+
 
         return HttpResponseRedirect(self.get_success_url())
 

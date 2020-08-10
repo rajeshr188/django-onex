@@ -1,75 +1,49 @@
 {% extends "_base.html" %}
 {% load static %}
-{% load crispy_forms_tags %}
 {% load bootstrap4%}
 {% block content %}
 {{form.media}}
-<p><a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a></p>
+  <p>
+    <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
+    Add Approval
+  </p>
+<form action="." method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-row">
+    <div class="form-group col-md-3">
+      {{ form.contact.errors }}
+      {% bootstrap_field form.contact size="small"%}
+    </div>
+  </div>
+  {{ approvalline_form.management_form }}
+  {{ approvalline_form.non_form_errors }}
+    {% for form in approvalline_form %}
+      {%csrf_token%}
+      {{form.id}}
+      <table class="table table-sm table-striped">
+        {%if forloop.first%}
+        <thead class="thead-dark">
+          <tr>
+           {% for field in form.visible_fields %}
+           <th>{{field.label}}</th>
+           {%endfor%}
+          </tr>
+        </thead>
+        {% endif %}
+        <tbody>
+          <tr class="inline {{approvalline_form.prefix}}">
+            {% for field in form.visible_fields %}
+            <td class="{{field.name}}" >
+              <!-- {{ field.errors.as_ul }} -->
+              {% bootstrap_field field show_label=False size="small"%}
+            </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+      {% endfor %}
+  <button class="btn btn-primary" type="submit">Save Approval</button>
+</form>
 
-<p><h2 class="h3 mb-3 font-weight-normal">Add Approval</h2></p>
-    <form action="." method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-
-        <div class="form-row">
-            <div class="form-group col-md-3">
-              {{ form.contact.errors }}
-              {% bootstrap_field form.contact size="small"%}
-            </div>
-        </div>
-
-        {{ approvalline_form.management_form }}
-        {{ approvalline_form.non_form_errors }}
-        {% for form in approvalline_form %}
-        {%csrf_token%}
-            {{form.id}}
-
-            <table class="table table-sm table-striped">
-              {%if forloop.first%}
-              <thead class="thead-dark">
-                <tr>
-                   {% for field in form.visible_fields %}
-                   <th>{{field.label}}</th>
-                   {%endfor%}
-                </tr>
-              </thead>
-                  {% endif %}
-              <tbody>
-              <tr class="inline {{approvalline_form.prefix}}">
-                {% for field in form.visible_fields %}
-                <td class="{{field.name}}" >
-                    <!-- {{ field.errors.as_ul }} -->
-                    {% bootstrap_field field show_label=False size="small"%}
-                  </td>
-                  {% endfor %}
-                </tr>
-          </tbody>
-        </table>
-          {% endfor %}
-        <button class="btn btn-primary" type="submit">Save Approval</button>
-    </form>
-
-<script type="text/javascript">
-
-  $(function() {
-    $(document).ready(function() {
-
-    $(".inline.{{ approvalline_form.prefix }}").formset({
-      prefix: "{{ approvalline_form.prefix }}",
-      //formTemplate: $("#formset-template").clone(),
-      // initialize newly created heavy fields on the added callback
-      added: function ($row) {
-         $row.find('.product select').select2();
-         $row.find('.delete-row').addClass('btn-sm btn-danger');
-      },
-  })
-
-  $('.product select').select2();
-  $('.add-row').addClass('btn-sm btn-success');
-  $('.delete-row').addClass('btn-sm btn-danger');
-
-});
-});
-
-</script>
 {% endblock %}

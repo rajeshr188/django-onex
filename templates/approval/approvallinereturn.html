@@ -1,11 +1,28 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-{{approval_items}}
-<ul>
-{% for items in approval_items %}
-  <li>{{items.product}} - {{items.weight}} - {{items.quantity}} - {{items.status}}</li>
-{% endfor %}
-</ul>
+<form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Search</button>
+  </form>
+  <ul>
+  {% for line in filter.qs %}
+    <li>{{line.id}}:{{ line.product }} - {{ line.quantity }} - {{line.weight}}</li>
+  {% endfor %}
+  </ul>
+
+  <hr />
+  {% if formset %}
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
+        {% for form in formset %}
+        {{ form }}
+        {% endfor %}
+    </table>
+    <button class="btn btn-primary" type="submit">Save Approval Return</button>
+</form>
+  {%endif%}
 
 {% endblock %}

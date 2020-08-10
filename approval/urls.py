@@ -13,6 +13,8 @@ urlpatterns = (
 urlpatterns +=(
     path('approvalline/create/',views.ApprovalLineCreateView.as_view(),name ='approval_approvalline_create'),
     path('approvallinereturn/',views.ApprovalLineReturnView,name='approvallinereturn'),
+    path('approvallinereturnlist/',views.ApprovalLineReturnListView.as_view(),name ='approval_approvallinereturn_list'),
+    path('approvallinereturn/delete/<int:pk>/',views.ApprovalLineReturnDeleteView.as_view(),name = 'approval_approvallinereturn_delete'),
 #approvalreturn urls
 )
 

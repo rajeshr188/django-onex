@@ -2,6 +2,7 @@ from django.db import models
 from contact.models import Customer
 from product.models import Stree
 from django.urls import reverse
+from django.db.models import Sum
 # Create your models here.
 class Approval(models.Model):
 
@@ -29,7 +30,14 @@ class Approval(models.Model):
         return reverse('approval_approval_update',args = (self.pk,))
 
     def update_status(self):
-        pass
+        total = self.approvalline_set.aggregate(qty =Sum('quantity'),wt = Sum('weight'))
+        self.total_qty = total['qty']
+        self.total_wt = total['wt']
+        if total['qty'] ==0 and total['wt'] ==0:
+            self.status = 'Complete'
+        else:
+            self.status = 'Pending'
+
 
 class ApprovalLine(models.Model):
     product = models.ForeignKey(Stree,related_name = 'product',
@@ -48,8 +56,28 @@ class ApprovalLine(models.Model):
     class Meta:
         ordering = ('approval',)
 
+    def __str__(self):
+        return f"{self.product}"
+
     def balance(self):
         return self.weight - self.returned_wt
+
+    def save(self,*args,**kwargs):
+        super(ApprovalLine,self).save(*args,**kwargs)
+        self.approval.update_status()
+
+
+class ApprovalLineReturn(models.Model):
+    created_at = models.DateTimeField(auto_now_add = True)
+    line = models.ForeignKey(ApprovalLine,on_delete = models.CASCADE)
+    quantity = models.IntegerField(default = 0)
+    weight = models.DecimalField(max_digits = 10,decimal_places = 3,default =0.0)
+
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return f"{self.line.product}"
 
 class ApprovalReturn(models.Model):
 

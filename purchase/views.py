@@ -98,7 +98,7 @@ class InvoiceCreateView(CreateView):
                 if node.tracking_type == 'Unique':
                     print("you need to merge a unique to lot to be able to return ")
                     continue
-
+                # change to node.transfer(returnnode,qty,wt)
                 node.weight -= item.weight
                 node.quantity -= item.quantity
                 node.save()

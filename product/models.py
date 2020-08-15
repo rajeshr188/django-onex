@@ -342,6 +342,7 @@ class Stree(MPTTModel):
         # subtract wt and qty from self
         print(f"transfering  qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
         self.subtract(qty,wt)
+        # add to destination node if lot ;else if unique shift to newly created destination node 
         node.add(qty,wt)
         print(f"transfered qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
         # add wt and wty to dest_node

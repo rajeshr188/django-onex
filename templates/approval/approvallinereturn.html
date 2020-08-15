@@ -5,6 +5,7 @@
     {{ filter.form.as_p }}
     <button type="submit">Search</button>
   </form>
+
   <ul>
   {% for line in filter.qs %}
     <li>{{line.id}}:{{ line.product }} - {{ line.quantity }} - {{line.weight}}</li>
@@ -12,7 +13,7 @@
   </ul>
 
   <hr />
-  {% if formset %}
+  {% if formset and filter.qs%}
   <form method="post">
     {% csrf_token %}
     {{ formset.management_form }}

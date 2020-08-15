@@ -30,13 +30,18 @@ class Approval(models.Model):
         return reverse('approval_approval_update',args = (self.pk,))
 
     def update_status(self):
-        total = self.approvalline_set.aggregate(qty =Sum('quantity'),wt = Sum('weight'))
-        self.total_qty = total['qty']
-        self.total_wt = total['wt']
-        if total['qty'] ==0 and total['wt'] ==0:
+        total = self.approvalline_set.aggregate(
+                                    qty =Sum('quantity'),wt = Sum('weight'),
+                                    ret_qty = Sum('returned_qty'),ret_wt = Sum('returned_wt'),
+                                    )
+        self.total_qty = total['qty']-total['ret_qty']
+        self.total_wt = total['wt']-total['ret_wt']
+        print(total)
+        if self.total_qty ==0 and self.total_wt ==0:
             self.status = 'Complete'
         else:
             self.status = 'Pending'
+        self.save()
 
 
 class ApprovalLine(models.Model):
@@ -64,6 +69,7 @@ class ApprovalLine(models.Model):
 
     def save(self,*args,**kwargs):
         super(ApprovalLine,self).save(*args,**kwargs)
+        print("calling approval.update_status from approvalline.save()")
         self.approval.update_status()
 
 

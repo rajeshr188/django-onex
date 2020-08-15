@@ -18,7 +18,7 @@
 <ul>
   {% for i in object.approvalline_set.all %}
     <li>
-      {{i.product}} - {{i.quantity}} - {{i.weight}} - {{i.status}}
+      {{i.product}} | {{i.quantity}}({{i.returned_qty}}) | {{i.weight}}({{i.returned_wt}}) | {{i.status}}
     </li>
   {%endfor%}
 </ul>

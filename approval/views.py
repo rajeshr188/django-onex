@@ -43,20 +43,16 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
         approvalline_form.instance = self.object
         items = approvalline_form.save()
         for i in items:
-            self.object.total_qty +=i.quantity
-            self.object.total_wt +=i.weight
-            self.object.save()
-
             approval_node,created = Stree.objects.get_or_create(name='Approval')
 
             if i.product.tracking_type == 'Lot':
                 approval_node = approval_node.traverse_parellel_to(i.product)
                 i.product.transfer(approval_node,i.quantity,i.weight)
-                i.save()
             else:
                 approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
                 i.product.move_to(approval_node,position='first-child')
-                i.save()
+            i.save()
+        self.object.update_status()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):
@@ -88,6 +84,7 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
             approvalline_form.instance = self.object
             # print(approvalline_form.has_changed())
             items = approvalline_form.save(commit = False)
+            # deleting old data if changed i.e submitting stock
             for i in items:
                 if i.id:
                     old_data = ApprovalLine.objects.get(pk=i.id)
@@ -135,21 +132,19 @@ def ApprovalLineReturnView(request):
     approvallinereturn_formset = modelformset_factory(ApprovalLineReturn,
                                         fields = ('line','quantity','weight'),
                                         extra = approvalline_filter.qs.count(),
+                                        max_num = approvalline_filter.qs.count(),
                                         )
-    formset = approvallinereturn_formset(initial = approvalline_filter.qs.values('quantity','weight'))
     if request.method == 'POST':
-        returnformset = approvallinereturn_formset(request.POST)
-        if returnformset.is_valid():
+        formset = approvallinereturn_formset(request.POST)
+        if formset.is_valid():
             # do something with the formset.cleaned_data
             # submit lines approval node to stock
             # update lines return_qty & return weight & status
-            for form in returnformset:
+            for form in formset:
                 if form.cleaned_data['line'].product.tracking_type == 'Lot':
-
                     approval_node,created = Stree.objects.get_or_create(name='Approval')
                     approval_node = approval_node.traverse_parellel_to(form.cleaned_data['line'].product)
                     approval_node.transfer(form.cleaned_data['line'].product,form.cleaned_data['quantity'],form.cleaned_data['weight'])
-
                 else:
                     stock = Stree.objects.get(name='Stock')
                     stock = stock.traverse_parellel_to(form.cleaned_data['line'].product,include_self=False)
@@ -157,16 +152,30 @@ def ApprovalLineReturnView(request):
 
 
                 if form.cleaned_data['line'].quantity == form.cleaned_data['quantity'] and form.cleaned_data['line'].weight == form.cleaned_data['weight']:
+                    form.cleaned_data['line'].returned_qty = form.cleaned_data['quantity']
+                    form.cleaned_data['line'].returned_wt = form.cleaned_data['weight']
                     form.cleaned_data['line'].status = 'Returned'
-                    form.cleaned_data['line'].save()
-                form.save()
-    else:
-        returnformset = formset
+                    # form.cleaned_data['line'].save()
+                result = form.save()
+                result.line.save()
+    elif request.method == 'GET':
+        contact = request.GET.get('approval__contact',False)
+        if contact:
+            formset = approvallinereturn_formset(
+            initial = approvalline_filter.qs.values('product','quantity','weight'),
+            )
+
+            for form in formset:
+                form.fields['line'].queryset = ApprovalLine.objects.filter(status = 'Pending',approval__contact_id = contact)
+        else:
+            formset = approvallinereturn_formset(
+                                queryset = ApprovalLineReturn.objects.none()
+                                )
 
 
     return render(request,'approval/approvallinereturn.html',{
                                     'filter':approvalline_filter,
-                                    'formset':returnformset
+                                    'formset':formset
                                     })
 
 class ApprovalLineReturnListView(LoginRequiredMixin,ListView):

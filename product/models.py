@@ -326,11 +326,17 @@ class Stree(MPTTModel):
         return sum(balances)
 
     def subtract(self,qty,wt):
-        if self.quantity >= qty and self.weight >= wt :
-            self.quantity -=qty
-            self.weight -= wt
-            self.save()
-            self.update_status()
+        # if self.quantity >= qty and self.weight >= wt :
+        #     self.quantity -=qty
+        #     self.weight -= wt
+        #     self.save()
+        #     # print('in subtrt')
+        #     self.update_status()
+
+        self.quantity -=qty
+        self.weight -= wt
+        self.save()
+        self.update_status()
 
     def add(self,qty,wt):
         self.quantity +=qty
@@ -339,13 +345,9 @@ class Stree(MPTTModel):
         self.update_status()
 
     def transfer(self,node,qty,wt):
-        # subtract wt and qty from self
-        print(f"transfering  qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
         self.subtract(qty,wt)
-        # add to destination node if lot ;else if unique shift to newly created destination node 
         node.add(qty,wt)
-        print(f"transfered qty:{qty} wt:{wt} from {self.get_root().name}{self} to {node.get_root().name}{node}")
-        # add wt and wty to dest_node
+        node.save()
 
     def traverse_to(self,product,category='Gold'):
         print(f"self:{self} product:{product}")

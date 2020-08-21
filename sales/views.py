@@ -197,6 +197,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'sales/invoice_list.html'
     paginate_by = 25
 
+from approval.models import Approval,ApprovalLine
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -205,11 +206,22 @@ class InvoiceCreateView(CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet()
 
+        invoiceitem_form = InvoiceItemFormSet()
+        if 'approvalid' in request.GET:
+            aid = request.GET['approvalid']
+            print(aid)
+            approval = Approval.objects.get(id = aid)
+            approvallines = approval.approvalline_set.values()
+            print(approvallines)
+            form.fields['customer'].queryset = Customer.objects.filter(id=approval.contact.id)
+            for subform, data in zip(invoiceitem_form.forms, approvallines):
+                subform.initial = data
+                print(data)
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
+
 
     def post(self, request, *args, **kwargs):
         self.object = None
@@ -227,46 +239,34 @@ class InvoiceCreateView(CreateView):
 
         invoiceitem_form.instance = self.object
         items = invoiceitem_form.save()
+        print(f"In Sale view :")
         for item in items:
-            print(f"In Sale view :")
+
             print(f"item is_return: {item.is_return} ")
 
             sold,created = Stree.objects.get_or_create(name='Sold')
 
-            if not item.is_return:
+            if not item.is_return:#if sold
                 if item.product.tracking_type =='Lot':
                     sold = sold.traverse_parellel_to(item.product)
                     print(f"moving { item.weight} from {item.product.get_family()[0].name} {item.product.weight} to {sold.get_family()[0].name} {sold.weight}")
 
-                    item.product.weight -= item.weight
-                    item.product.quantity -= item.quantity
-                    item.product.save()
-                    item.product.update_status()
-                    sold.weight += item.weight
-                    sold.quantity += item.quantity
-                    sold.barcode = item.product.barcode
-                    sold.save()
-                    sold.update_status()
+                    item.product.transfer(sold,item.quantity,item.weight)
+
                     print(f"moved from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
                 else:
                     sold = sold.traverse_parellel_to(item.product,include_self=False)
                     print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
                     item.product = item.product.move_to(sold,position='first-child')
 
-            else:
+            else:#if returned
                 if item.product.tracking_type =='Lot':
                     stock = Stree.objects.get(name='Stock')
                     stock = stock.traverse_parellel_to(item.product)
                     print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
 
-                    item.product.weight -= item.weight
-                    item.product.quantity -= item.quantity
-                    item.product.save()
-                    item.product.update_status()
-                    stock.weight += item.weight
-                    stock.quantity += item.quantity
-                    stock.save()
-                    sold.update_status()
+                    item.product.transfer(stock,item.quantity,item.weight)
+
                     print(f"moved { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
                 else:
                     stock = Stree.objects.get(name='Stock')
@@ -328,8 +328,9 @@ class InvoiceUpdateView(UpdateView):
         # InvoiceItem.objects.filter(invoice=self.object).delete()
         invoiceitem_form.instance = self.object
         items=invoiceitem_form.save()
+        print(f"In Sale updateview :")
         for item in items:
-            print(f"In Sale view :")
+
             print(f"item is_return: {item.is_return} ")
 
             sold = Stree.objects.get(name='Sold')

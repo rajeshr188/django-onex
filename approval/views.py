@@ -42,17 +42,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
         self.object = form.save()
         approvalline_form.instance = self.object
         items = approvalline_form.save()
-        for i in items:
-            approval_node,created = Stree.objects.get_or_create(name='Approval')
 
-            if i.product.tracking_type == 'Lot':
-                approval_node = approval_node.traverse_parellel_to(i.product)
-                i.product.transfer(approval_node,i.quantity,i.weight)
-            else:
-                approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
-                i.product.move_to(approval_node,position='first-child')
-            i.save()
-        self.object.update_status()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):
@@ -80,34 +70,9 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
         approvalline_form = context['approvalline_form']
         self.object = form.save()
 
+
         if approvalline_form.is_valid():
-            approvalline_form.instance = self.object
-            # print(approvalline_form.has_changed())
-            items = approvalline_form.save(commit = False)
-            # deleting old data if changed i.e submitting stock
-            for i in items:
-                if i.id:
-                    old_data = ApprovalLine.objects.get(pk=i.id)
-                    approval_node,created = Stree.objects.get_or_create(name='Approval')
-                    if old_data.product.tracking_type == 'Lot':
-                        # print('transfering old data')
-                        approval_node = approval_node.traverse_parellel_to(i.product)
-                        approval_node.transfer(i.product,old_data.quantity,old_data.weight)
-
-            items = approvalline_form.save(commit = True)
-            for i in items:
-                # create with new data
-                approval_node,created = Stree.objects.get_or_create(name='Approval')
-                if i.product.tracking_type == 'Lot':
-                    # print('transferring any updates')
-                    approval_node = approval_node.traverse_parellel_to(i.product)
-                    i.product.transfer(approval_node,i.quantity,i.weight)
-
-                else:
-                    approval_node = approval_node.traverse_parellel_to(i.product,include_self=False)
-                    i.product.move_to(approval_node,position='first-child')
-                i.save()
-
+            instances = approvalline_form.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

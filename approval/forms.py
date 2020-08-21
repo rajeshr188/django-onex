@@ -23,6 +23,17 @@ class ApprovalLineForm(forms.ModelForm):
         model = ApprovalLine
         fields = ['product','quantity','weight','touch','returned_qty','returned_wt']
 
+    def save(self,commit = True):
+
+        approvalline = super(ApprovalLineForm,self).save(commit = False)
+        if approvalline.id:
+
+            if any( x in self.changed_data for x in ['product','quantity','weight']):
+                ApprovalLine.objects.get(id = approvalline.id).delete()
+            
+        if commit:
+            approvalline.save()
+        return approvalline
 
 class ApprovalReturnForm(forms.ModelForm):
     class Meta:

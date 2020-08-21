@@ -89,10 +89,10 @@ class AdjustmentForm(forms.ModelForm):
         model = Adjustment
         fields = ['loan', 'amount_received','as_interest']
 
-Loan_formset = modelformset_factory(Loan,fields = ('loanid','created',
+Loan_formset = modelformset_factory(Loan,fields = ('id','series','lid','created',
                                     'customer','loanamount','itemtype',
                                     'itemdesc','interestrate','itemweight'),
-                                    extra=2)
+                                    extra=0)
 
 
 

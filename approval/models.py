@@ -30,18 +30,27 @@ class Approval(models.Model):
         return reverse('approval_approval_update',args = (self.pk,))
 
     def update_status(self):
-        total = self.approvalline_set.aggregate(
-                                    qty =Sum('quantity'),wt = Sum('weight'),
-                                    ret_qty = Sum('returned_qty'),ret_wt = Sum('returned_wt'),
-                                    )
-        self.total_qty = total['qty']-total['ret_qty']
-        self.total_wt = total['wt']-total['ret_wt']
-        print(total)
-        if self.total_qty ==0 and self.total_wt ==0:
-            self.status = 'Complete'
+        # print('in approval save()')
+        # print(self.approvalline_set.all().count())
+        if self.approvalline_set.all().count():
+            total = self.approvalline_set.aggregate(
+                                        qty =Sum('quantity'),wt = Sum('weight'),
+                                        ret_qty = Sum('returned_qty'),ret_wt = Sum('returned_wt'),
+                                        )
+            self.total_qty = total['qty']-total['ret_qty']
+            self.total_wt = total['wt']-total['ret_wt']
+            # print(f"total:{total}")
+            if self.total_qty ==0 and self.total_wt ==0:
+                self.status = 'Complete'
+            else:
+                self.status = 'Pending'
+            self.save()
+            # print(f"status: {self.status}")
         else:
-            self.status = 'Pending'
-        self.save()
+            self.total_qty = 0
+            self.total_wt = 0
+            self.status = "Complete"
+            self.save()
 
 
 class ApprovalLine(models.Model):
@@ -62,16 +71,27 @@ class ApprovalLine(models.Model):
         ordering = ('approval',)
 
     def __str__(self):
-        return f"{self.product}"
+        return f"product:{self.id} wt:{self.weight} qty:{self.quantity} "
 
     def balance(self):
         return self.weight - self.returned_wt
 
     def save(self,*args,**kwargs):
         super(ApprovalLine,self).save(*args,**kwargs)
-        print("calling approval.update_status from approvalline.save()")
-        self.approval.update_status()
+        approval_node,created = Stree.objects.get_or_create(name='Approval')
+        print(self.product.refresh_from_db())
+        if self.product.tracking_type == 'Lot':
 
+            approval_node = approval_node.traverse_parellel_to(self.product)
+            approval_node.barcode = self.product.barcode
+            approval_node.full_name = self.product.get_family()[2].name
+            self.product.transfer(approval_node,self.quantity,self.weight)
+            # self.product = approval_node
+        else:
+            approval_node = approval_node.traverse_parellel_to(self.product,include_self=False)
+            self.product.move_to(approval_node,position='first-child')
+
+        self.approval.update_status()
 
 class ApprovalLineReturn(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)

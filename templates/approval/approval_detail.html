@@ -15,13 +15,33 @@
 </table>
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
 {% if object.approvalline_set%}
-<ul>
-  {% for i in object.approvalline_set.all %}
-    <li>
-      {{i.product}} | {{i.quantity}}({{i.returned_qty}}) | {{i.weight}}({{i.returned_wt}}) | {{i.status}}
-    </li>
-  {%endfor%}
-</ul>
+<form action="{% url 'sales_invoice_create' %}?cid={{object.approval.contact.id|urlencode}}" method="GET">
+  <table class="table-sm table-bordered table-striped">
+  {% csrf_token %}
+    <thead>
+      <th>select</th>
+      <th>Product</th>
+      <th>Quantity</th>
+      <th>Weight</th>
+      <th>Status</th>
+    </thead>
+    <tbody>
+      <tr><input type="hidden" name = "approvalid" value ={{object.id}}></tr>
+      {% for i in object.approvalline_set.all %}
+      <tr>
+        <td><input type="checkbox" name="approvalline" value={{i.id}}></td>
+        <td> {{i.product}} </td>
+        <td> {{i.quantity}} R({{i.returned_qty}})  </td>
+        <td> {{i.weight}} R({{i.returned_wt}})  </td>
+        <td> {{i.status}}</td>
+      </tr>
+      {%endfor%}
+    </tbody>
+
+  </table>
+  <input class = "btn btn-primary" type="submit" value='Create POS'>
+</form>
+
 
 {%endif%}
 {% endblock %}

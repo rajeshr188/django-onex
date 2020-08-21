@@ -109,6 +109,38 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch)/100
 
+    def save(self,*args,**kwargs):
+        super(InvoiceItem,self).save(*args,**kwargs)
+        print(f"In Sale Modelform save() :")
+        print(f"item is_return: {self.is_return} ")
+        print(self.product.refresh_from_db())
+
+        sold,created = Stree.objects.get_or_create(name='Sold')
+        if not self.is_return:#if sold
+            if self.product.tracking_type =='Lot':
+                sold = sold.traverse_parellel_to(self.product)
+                print(f"moving { self.weight} from {self.product.get_family()[0].name} {self.product.weight} to {sold.get_family()[0].name}")
+                self.product.transfer(sold,self.quantity,self.weight)
+                print(f"moved from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]}")
+            else:
+                sold = sold.traverse_parellel_to(self.product,include_self=False)
+                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]} {sold.weight}")
+                self.product = self.product.move_to(sold,position='first-child')
+        else:#if returned
+            stock,created = Stree.objects.get_or_create(name='Stock')
+            if self.product.tracking_type =='Lot':
+                stock = stock.traverse_parellel_to(self.product)
+                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
+                self.product.transfer(stock,self.quantity,self.weight)
+                print(f"moved { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
+            else:
+                stock = stock.traverse_parellel_to(self.product,include_self=False)
+                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
+                self.product = self.product.move_to(stock,position='first-child')
+
+        # print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
+        # print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
+
 class Receipt(models.Model):
 
     # Fields

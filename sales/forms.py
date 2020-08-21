@@ -34,10 +34,25 @@ class InvoiceForm(forms.ModelForm):
         fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
-    product = forms.ModelChoiceField(queryset = Stree.objects.filter(children__isnull = True,status = 'Available').exclude(barcode=''))
+    product = forms.ModelChoiceField(
+                        queryset = Stree.objects.filter(children__isnull = True,
+                        # status = 'Available'
+                        ).exclude(barcode=''))
     class Meta:
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']
+
+    def save(self,commit = True):
+
+        invoiceitem = super(InvoiceItemForm,self).save(commit = False)
+        if invoiceitem.id:
+
+            if any( x in self.changed_data for x in ['product','quantity','weight']):
+                InvoiceItem.objects.get(id = invoiceitem.id).delete()
+
+        if commit:
+            invoiceitem.save()
+        return invoiceitem
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),

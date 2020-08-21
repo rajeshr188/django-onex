@@ -9,6 +9,7 @@ from product.models import Stree
 from contact.models import Customer
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 # Create your views here.
 
 class ApprovalListView(LoginRequiredMixin,ListView):
@@ -38,6 +39,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
         else:
             return self.form_invalid(form,approvalline_form)
 
+    @transaction.atomic()
     def form_valid(self,form,approvalline_form):
         self.object = form.save()
         approvalline_form.instance = self.object
@@ -60,16 +62,17 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
     def get_context_data(self,**kwargs):
         data = super(ApprovalUpdateView,self).get_context_data(**kwargs)
         if self.request.POST:
-            data['approvalline_form'] = Approval_formset(self.request.POST,instance = self.object)
+            data['approvalline_form'] = Approval_formset(self.request.POST,
+                                            instance = self.object)
         else :
             data['approvalline_form'] = Approval_formset(instance = self.object)
         return data
 
+    @transaction.atomic()
     def form_valid(self,form):
         context = self.get_context_data()
         approvalline_form = context['approvalline_form']
         self.object = form.save()
-
 
         if approvalline_form.is_valid():
             instances = approvalline_form.save()

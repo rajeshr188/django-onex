@@ -19,6 +19,7 @@ from .tables import InvoiceTable,ReceiptTable
 from django.http import JsonResponse
 import json
 from product.models import Stree
+from django.db import transaction
 
 def home(request):
     inv = Invoice.objects
@@ -234,50 +235,11 @@ class InvoiceCreateView(CreateView):
         else:
             return self.form_invalid(form, invoiceitem_form)
 
+    @transaction.atomic()
     def form_valid(self, form, invoiceitem_form):
         self.object = form.save()
-
         invoiceitem_form.instance = self.object
-        items = invoiceitem_form.save()
-        print(f"In Sale view :")
-        for item in items:
-
-            print(f"item is_return: {item.is_return} ")
-
-            sold,created = Stree.objects.get_or_create(name='Sold')
-
-            if not item.is_return:#if sold
-                if item.product.tracking_type =='Lot':
-                    sold = sold.traverse_parellel_to(item.product)
-                    print(f"moving { item.weight} from {item.product.get_family()[0].name} {item.product.weight} to {sold.get_family()[0].name} {sold.weight}")
-
-                    item.product.transfer(sold,item.quantity,item.weight)
-
-                    print(f"moved from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                else:
-                    sold = sold.traverse_parellel_to(item.product,include_self=False)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                    item.product = item.product.move_to(sold,position='first-child')
-
-            else:#if returned
-                if item.product.tracking_type =='Lot':
-                    stock = Stree.objects.get(name='Stock')
-                    stock = stock.traverse_parellel_to(item.product)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-
-                    item.product.transfer(stock,item.quantity,item.weight)
-
-                    print(f"moved { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                else:
-                    stock = Stree.objects.get(name='Stock')
-                    stock = stock.traverse_parellel_to(item.product,include_self=False)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                    item.product = item.product.move_to(stock,position='first-child')
-
-
-
-            # print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
-            # print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
+        invoiceitem_form.save()
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -298,84 +260,22 @@ class InvoiceUpdateView(UpdateView):
     model = Invoice
     form_class = InvoiceForm
 
-    def get(self, request, *args, **kwargs):
-
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(instance=self.object)
-
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
-
-    def post(self, request, *args, **kwargs):
-
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(self.request.POST,instance=self.object)
-
-        if (form.is_valid() and invoiceitem_form.is_valid()):
-            return self.form_valid(form, invoiceitem_form)
+    def get_context_data(self,*args,**kwargs):
+        data = super(InvoiceUpdateView,self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
         else:
-            return self.form_invalid(form, invoiceitem_form)
+            data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
+        return data
 
-    def form_valid(self, form, invoiceitem_form):
-        print("In Sales UpdateView")
+    def form_valid(self, form):
+        context = self.get_context_data()
+        invoiceitem = context['invoiceitem_form']
+
         self.object = form.save()
-        # print("Deleting previous sales invoiceItems")
-        # InvoiceItem.objects.filter(invoice=self.object).delete()
-        invoiceitem_form.instance = self.object
-        items=invoiceitem_form.save()
-        print(f"In Sale updateview :")
-        for item in items:
-
-            print(f"item is_return: {item.is_return} ")
-
-            sold = Stree.objects.get(name='Sold')
-
-            if not item.is_return:
-                if item.product.tracking_type =='Lot':
-                    sold = sold.traverse_parellel_to(item.product)
-                    print(f"moving { item.weight} from {item.product.get_family()[0].name} {item.product.weight} to {sold.get_family()[0].name} {sold.weight}")
-
-                    item.product.weight -= item.weight
-                    item.product.quantity -= item.quantity
-                    item.product.save()
-                    item.product.update_status()
-                    sold.weight += item.weight
-                    sold.quantity += item.quantity
-                    sold.barcode = item.product.barcode
-                    sold.save()
-                    sold.update_status()
-                    print(f"moved from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                else:
-                    sold = sold.traverse_parellel_to(item.product,include_self=False)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                    item.product = item.product.move_to(sold,position='first-child')
-
-            else:
-                if item.product.tracking_type =='Lot':
-                    stock = Stree.objects.get(name='Stock')
-                    stock = stock.traverse_parellel_to(item.product)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-
-                    item.product.weight -= item.weight
-                    item.product.quantity -= item.quantity
-                    item.product.save()
-                    item.product.update_status()
-                    stock.weight += item.weight
-                    stock.quantity += item.quantity
-                    stock.save()
-                    sold.update_status()
-                    print(f"moved { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                else:
-                    stock = Stree.objects.get(name='Stock')
-                    stock = stock.traverse_parellel_to(item.product,include_self=False)
-                    print(f"moving { item.weight} from {item.product.get_family()[0]} {item.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                    item.product = item.product.move_to(stock,position='first-child')
-
+        print(invoiceitem.is_valid())
+        if invoiceitem.is_valid():
+            invoiceitem.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

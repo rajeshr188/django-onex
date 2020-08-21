@@ -309,6 +309,7 @@ class Stree(MPTTModel):
     barcode = models.CharField(max_length=100,null=True,default = '')
     quantity = models.IntegerField(default=0,)
     status = models.CharField(max_length=10,choices = (('Empty','Empty'),('Available','Available'),('Sold','Sold'),('Approval','Approval'),('Return','Return')),default = 'Empty')
+
     class Meta:
         ordering = ('id',)
 

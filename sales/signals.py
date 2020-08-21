@@ -85,14 +85,8 @@ def submit_stock(sender,instance,*args,**kwargs):
             stock = Stree.objects.get(name='Stock')
             stock = stock.traverse_parellel_to(instance.product)
 
-            stock.weight -=instance.weight
-            stock.quantity -=instance.quantity
-            stock.save()
-            # add to sold
-
-            instance.product.weight += instance.weight
-            instance.product.quantity +=instance.quantity
-            instance.product.save()
+            stock.transfer(instance.product,instance.quantity,instance.weight)
+            
         else:
             # move unique back to sold
             sold = Stree.objects.get(name='Sold')
@@ -104,15 +98,7 @@ def submit_stock(sender,instance,*args,**kwargs):
             # remove from sold
             sold = Stree.objects.get(name='Sold')
             sold = sold.traverse_parellel_to(instance.product)
-            sold.weight -=instance.weight
-            sold.quantity -=instance.quantity
-            sold.save()
-            sold.update_status()
-            # add to stock
-            instance.product.weight +=instance.weight
-            instance.product.quantity +=instance.quantity
-            instance.product.save()
-            instance.product.update_status()
+            sold.transfer(instance.product,instance.quantity,instance.weight)
 
         else:
             # move unique back to stock

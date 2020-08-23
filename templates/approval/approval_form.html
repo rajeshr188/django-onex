@@ -21,6 +21,7 @@
     {% for form in approvalline_form %}
       {%csrf_token%}
       {{form.id}}
+      {{form.errors}}
       <table class="table table-sm table-striped">
         {%if forloop.first%}
         <thead class="thead-dark">

@@ -29,10 +29,10 @@ class ProductVariantFilter(django_filters.FilterSet):
                     queryset = Product.objects.all(),
                     widget = Select2Widget
     )
-    atttributes = django_filters.ModelChoiceFilter(
-                    queryset = Attribute.objects.all(),
-                    widget = Select2Widget
-    )
+    # atttributes = django_filters.ModelChoiceFilter(
+    #                 queryset = Attribute.objects.all(),
+    #                 widget = Select2Widget
+    # )
     class Meta:
         model = ProductVariant
         fields = ['product',]

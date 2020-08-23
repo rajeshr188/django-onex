@@ -77,20 +77,24 @@ class ApprovalLine(models.Model):
         return self.weight - self.returned_wt
 
     def save(self,*args,**kwargs):
-        super(ApprovalLine,self).save(*args,**kwargs)
+        # super(ApprovalLine,self).save(*args,**kwargs)
         approval_node,created = Stree.objects.get_or_create(name='Approval')
-        print(self.product.refresh_from_db())
+        print(f"refreshing :{self.product.refresh_from_db()}")
         if self.product.tracking_type == 'Lot':
 
             approval_node = approval_node.traverse_parellel_to(self.product)
             approval_node.barcode = self.product.barcode
             approval_node.full_name = self.product.get_family()[2].name
-            self.product.transfer(approval_node,self.quantity,self.weight)
+            try:
+                self.product.transfer(approval_node,self.quantity,self.weight)
+            except Exception:
+                print("utter Failure")
+                raise Exception("Utter failure")
             # self.product = approval_node
         else:
             approval_node = approval_node.traverse_parellel_to(self.product,include_self=False)
             self.product.move_to(approval_node,position='first-child')
-
+        super(ApprovalLine,self).save(*args,**kwargs)
         self.approval.update_status()
 
 class ApprovalLineReturn(models.Model):

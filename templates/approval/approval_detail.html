@@ -20,6 +20,7 @@
   {% csrf_token %}
     <thead>
       <th>select</th>
+      <th>id</th>
       <th>Product</th>
       <th>Quantity</th>
       <th>Weight</th>
@@ -30,6 +31,7 @@
       {% for i in object.approvalline_set.all %}
       <tr>
         <td><input type="checkbox" name="approvalline" value={{i.id}}></td>
+        <td>{{i.id}}</td>
         <td> {{i.product}} </td>
         <td> {{i.quantity}} R({{i.returned_qty}})  </td>
         <td> {{i.weight}} R({{i.returned_wt}})  </td>

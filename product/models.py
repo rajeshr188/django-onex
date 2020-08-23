@@ -269,32 +269,7 @@ class VariantImage(models.Model):
     def get_update_url(self):
         return reverse('product_variantimage_update', args=(self.pk,))
 
-class Stock(models.Model):
-    variant=models.OneToOneField(ProductVariant,on_delete=models.CASCADE)
-    slug = AutoSlugField(populate_from='variant', blank=True)
-    Qih=models.IntegerField()
-    reorderat=models.IntegerField(default=1)
-    created=models.DateTimeField(auto_now_add=True)
-    updated_on=models.DateTimeField(auto_now=True)
-    totalwt=models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
 
-    class Meta:
-        ordering=('-created',)
-
-    def __str__(self):
-        return self.slug
-
-    def get_absolute_url(self):
-        return reverse('product_stock_detail', args=(self.slug,))
-
-    def get_update_url(self):
-        return reverse('product_stock_update', args=(self.slug,))
-
-    def get_current_qih(self):
-        return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
-
-    def get_current_qih_weight(self):
-        return self.stocktransaction_set.all().aggregate(total=Sum('weight'))
 
 class Stree(MPTTModel):
     name = models.CharField(max_length=100)
@@ -327,17 +302,21 @@ class Stree(MPTTModel):
         return sum(balances)
 
     def subtract(self,qty,wt):
-        # if self.quantity >= qty and self.weight >= wt :
-        #     self.quantity -=qty
-        #     self.weight -= wt
-        #     self.save()
-        #     # print('in subtrt')
-        #     self.update_status()
+        # assert(self.quantity >= qty),"quantity is higher than avaialble"
+        # assert(self.weight >= wt),"weight more than available"
+        if self.quantity >= qty and self.weight >= wt :
+            self.quantity -=qty
+            self.weight -= wt
+            self.save()
+            # print('in subtrt')
+            self.update_status()
+        else:
+            raise Exception(f" {self.quantity} > {qty} and {self.weight} > {wt} .hence exception")
 
-        self.quantity -=qty
-        self.weight -= wt
-        self.save()
-        self.update_status()
+        # self.quantity -=qty
+        # self.weight -= wt
+        # self.save()
+        # self.update_status()
 
     def add(self,qty,wt):
         self.quantity +=qty
@@ -346,9 +325,22 @@ class Stree(MPTTModel):
         self.update_status()
 
     def transfer(self,node,qty,wt):
-        self.subtract(qty,wt)
-        node.add(qty,wt)
-        node.save()
+        # try:
+        #     self.subtract(qty,wt)
+        # except AssertionError as E:
+        #     print(E)
+        # else:
+        #     node.add(qty,wt)
+        #     node.save()
+        try:
+            self.subtract(qty,wt)
+        except Exception:
+            print("transfer failed")
+            raise Exception("transfer failed")
+        else:
+            node.add(qty,wt)
+            node.save()
+
 
     def traverse_to(self,product,category='Gold'):
         print(f"self:{self} product:{product}")
@@ -418,6 +410,36 @@ class Stree(MPTTModel):
         else :
             self.status = root.name
         self.save()
+
+class StreeTransaction(models.Model):
+    pass
+
+class Stock(models.Model):
+    variant=models.OneToOneField(ProductVariant,on_delete=models.CASCADE)
+    slug = AutoSlugField(populate_from='variant', blank=True)
+    Qih=models.IntegerField()
+    reorderat=models.IntegerField(default=1)
+    created=models.DateTimeField(auto_now_add=True)
+    updated_on=models.DateTimeField(auto_now=True)
+    totalwt=models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
+
+    class Meta:
+        ordering=('-created',)
+
+    def __str__(self):
+        return self.slug
+
+    def get_absolute_url(self):
+        return reverse('product_stock_detail', args=(self.slug,))
+
+    def get_update_url(self):
+        return reverse('product_stock_update', args=(self.slug,))
+
+    def get_current_qih(self):
+        return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
+
+    def get_current_qih_weight(self):
+        return self.stocktransaction_set.all().aggregate(total=Sum('weight'))
 
 class StockTransaction(models.Model):
 

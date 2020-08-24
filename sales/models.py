@@ -120,7 +120,10 @@ class InvoiceItem(models.Model):
             if self.product.tracking_type =='Lot':
                 sold = sold.traverse_parellel_to(self.product)
                 print(f"moving { self.weight} from {self.product.get_family()[0].name} {self.product.weight} to {sold.get_family()[0].name}")
-                self.product.transfer(sold,self.quantity,self.weight)
+                try:
+                    self.product.transfer(sold,self.quantity,self.weight)
+                except Exception:
+                    raise Exception("failed transfer")
                 print(f"moved from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]}")
             else:
                 sold = sold.traverse_parellel_to(self.product,include_self=False)

@@ -121,6 +121,9 @@ class Customer(models.Model):
     def get_total_invoice_balance(self):
         pass
 
+    def get_receipts(self):
+        pass
+
 # class Supplier(models.Model):
 #
 #     # Fields

@@ -289,7 +289,7 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
-        series ={s.id:list(s.loan_set.values_list('lid').latest('id')) for s in Series.objects.all()}
+        series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) for s in Series.objects.all()}
 
 
         context['series']= series

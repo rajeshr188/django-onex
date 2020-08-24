@@ -88,7 +88,6 @@ class ApprovalLine(models.Model):
             try:
                 self.product.transfer(approval_node,self.quantity,self.weight)
             except Exception:
-                print("utter Failure")
                 raise Exception("Utter failure")
             # self.product = approval_node
         else:

@@ -308,15 +308,9 @@ class Stree(MPTTModel):
             self.quantity -=qty
             self.weight -= wt
             self.save()
-            # print('in subtrt')
             self.update_status()
         else:
             raise Exception(f" {self.quantity} > {qty} and {self.weight} > {wt} .hence exception")
-
-        # self.quantity -=qty
-        # self.weight -= wt
-        # self.save()
-        # self.update_status()
 
     def add(self,qty,wt):
         self.quantity +=qty
@@ -325,13 +319,6 @@ class Stree(MPTTModel):
         self.update_status()
 
     def transfer(self,node,qty,wt):
-        # try:
-        #     self.subtract(qty,wt)
-        # except AssertionError as E:
-        #     print(E)
-        # else:
-        #     node.add(qty,wt)
-        #     node.save()
         try:
             self.subtract(qty,wt)
         except Exception:
@@ -340,7 +327,6 @@ class Stree(MPTTModel):
         else:
             node.add(qty,wt)
             node.save()
-
 
     def traverse_to(self,product,category='Gold'):
         print(f"self:{self} product:{product}")

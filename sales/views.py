@@ -239,7 +239,12 @@ class InvoiceCreateView(CreateView):
     def form_valid(self, form, invoiceitem_form):
         self.object = form.save()
         invoiceitem_form.instance = self.object
-        invoiceitem_form.save()
+        try:
+            invoiceitem_form.save()
+        except Exception:
+            raise Exception("Failed Form Save")
+            form.add_error(None,'error i n transfer')
+            return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -268,14 +273,20 @@ class InvoiceUpdateView(UpdateView):
             data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
         return data
 
+    @transaction.atomic()
     def form_valid(self, form):
         context = self.get_context_data()
-        invoiceitem = context['invoiceitem_form']
+        invoiceitem_form = context['invoiceitem_form']
 
         self.object = form.save()
-        print(invoiceitem.is_valid())
-        if invoiceitem.is_valid():
-            invoiceitem.save()
+        print(invoiceitem_form.is_valid())
+        if invoiceitem_form.is_valid():
+            try:
+                invoiceitem_form.save()
+            except Exception:
+                raise Exception("Failed Form Save")
+                form.add_error(None,'error in transfer qty or wt mismatch')
+                return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
         return HttpResponseRedirect(self.get_success_url())
 

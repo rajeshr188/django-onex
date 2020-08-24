@@ -51,7 +51,10 @@ class InvoiceItemForm(forms.ModelForm):
                 InvoiceItem.objects.get(id = invoiceitem.id).delete()
 
         if commit:
-            invoiceitem.save()
+            try:
+                invoiceitem.save()
+            except Exception:
+                raise Exception("failed From Model Save")
         return invoiceitem
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,

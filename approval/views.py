@@ -82,15 +82,12 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
         self.object = form.save()
         print(approvalline_form.is_valid())
         if approvalline_form.is_valid():
-            print("cleaned now save with commit false")
             try:
                 instances = approvalline_form.save(commit = True)
             except Exception:
                 print("failed")
                 form.add_error(None,'error i n transfer')
                 return self.form_invalid(form = form,approvalline_form = approvalline_form)
-            
-
 
         return HttpResponseRedirect(self.get_success_url())
 

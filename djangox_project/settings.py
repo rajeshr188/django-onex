@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
     'widget_tweaks',
     'tempus_dominus',
+    'actstream',
     # 'controlcenter',
     'debug_toolbar','django_extensions',
     'corsheaders',
@@ -194,6 +195,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SITE_ID = 1
+ACTSTREAM_SETTINGS = {
+    'MANAGER': 'girvi.managers.MyActionManager',
+    'FETCH_RELATIONS': True,
+    'USE_PREFETCH': True,
+    'USE_JSONFIELD': False,
+    'GFK_FETCH_DEPTH': 1,
+}
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False

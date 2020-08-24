@@ -19,7 +19,8 @@ urlpatterns = [
     path('select2/', include('django_select2.urls')),
     # path('admin/dashboard/',controlcenter.urls),
     # path('silk/',include('silk.urls',namespace='silk')),
-    path('api-auth/',include('rest_framework.urls'))
+    path('api-auth/',include('rest_framework.urls')),
+    path('activity/',include('actstream.urls'))
 ]
 
 if settings.DEBUG:

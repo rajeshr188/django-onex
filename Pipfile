@@ -33,6 +33,7 @@ gunicorn = "*"
 celery = "*"
 redis = "*"
 gevent = "*"
+django-activity-stream = "*"
 
 [dev-packages]
 "autopep8" = "*"

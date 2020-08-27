@@ -9,6 +9,7 @@ from contact.models import Customer
 from product.models import ProductVariant,Stree
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func,F
+from datetime import date,timedelta
 # from django.contrib.postgres.indexes import BrinIndex
 from mptt.models import TreeForeignKey
 class Month(Func):
@@ -20,6 +21,20 @@ class Year(Func):
     function = 'EXTRACT'
     template = '%(function)s(YEAR from %(expressions)s)'
     output_field = models.IntegerField()
+
+class Terms(models.Model):
+    name = models.CharField(max_length = 30)
+    description = models.TextField()
+    due_days = models.PositiveSmallIntegerField()
+    discount_days = models.PositiveSmallIntegerField()
+    discount = models.DecimalField(max_digits = 10,decimal_places = 2)
+
+    class Meta:
+        ordering = ('due_days',)
+
+    def __str__(self):
+        return f"{self.name} ({self.due_days})"
+
 
 class Invoice(models.Model):
 
@@ -37,6 +52,7 @@ class Invoice(models.Model):
     )
     balancetype = models.CharField(max_length=30,choices=btype_choices,default="Metal")
     paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
+    term = models.ForeignKey(Terms,on_delete = models.SET_NULL,blank = True,null = True)
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
                     ("Paid","Paid"),
@@ -44,7 +60,7 @@ class Invoice(models.Model):
                     ("Unpaid","Unpaid")
     )
     status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
-
+    due_date = models.DateField(blank = True,null = True)
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -77,6 +93,12 @@ class Invoice(models.Model):
 
     def update_status(self):
         print('updating invoice status')
+
+    def save(self,*args,**kwargs):
+        if self.term.due_days:
+            self.due_date = self.created + timedelta(days=self.term.due_days)
+        super(Invoice,self).save(*args,**kwargs)
+
 
 
 class InvoiceItem(models.Model):

@@ -67,6 +67,8 @@
           {% endfor %}
 
         <div class="form-group row">
+          {{ form.term.errors }}
+          <div class="col-sm-3">{% bootstrap_field form.term size="small"%}</div>
           {{ form.balance.errors }}
           <div class="col-sm-3">{% bootstrap_field form.balance size="small"%}</div>
           {{ form.status.errors }}

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django import forms
-from .models import Invoice, InvoiceItem, Receipt
+from .models import Invoice, InvoiceItem, Receipt,Terms
 from contact.models import Customer
 from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
@@ -20,6 +20,8 @@ class customerWidget(ForeignKeyWidget):
 
     def clean(self, value, row=None, *args, **kwargs):
         return self.model.objects.get_or_create(name = value,type='Wh')[0]
+
+admin.site.register(Terms)
 
 class InvoiceAdminForm(forms.ModelForm):
 

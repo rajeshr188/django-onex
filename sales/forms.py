@@ -31,7 +31,7 @@ class InvoiceForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
-        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'customer','status']
+        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance','term', 'customer','status']
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(

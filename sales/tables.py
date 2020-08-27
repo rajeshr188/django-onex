@@ -12,6 +12,8 @@ class InvoiceTable(tables.Table):
 
     def render_created(self,value):
         return value.date
+    def render_due_date(self,value):
+        return value.strftime("%d/%m/%Y")
     def render_edit(self):
         return 'Edit'
     def render_delete(self):
@@ -20,7 +22,7 @@ class InvoiceTable(tables.Table):
     class Meta:
         model = Invoice
         fields = ('id','created','customer','balancetype','paymenttype',
-                    'balance','status')
+                    'balance','status','term','due_date')
 
         attrs = {"class": "table table-sm table-striped table-bordered"}
         empty_text = "No Invoices Found matching your search..."

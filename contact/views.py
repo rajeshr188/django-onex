@@ -46,6 +46,14 @@ class CustomerCreateView(LoginRequiredMixin,CreateView):
     form_class = CustomerForm
     success_url=reverse_lazy('contact_customer_list')
 
+def reallot_receipts(request,id):
+    customer = Customer.objects.get(id = id)
+    customer.reallot_receipts()
+    return reverse(self.get_absolute_url())
+    # get customer from request
+    # get receipts for customer or redirect
+    # self.reallot_receipts
+    # redirect
 
 class CustomerDetailView(LoginRequiredMixin,DetailView):
     model = Customer

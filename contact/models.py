@@ -122,7 +122,19 @@ class Customer(models.Model):
         pass
 
     def get_receipts(self):
-        pass
+        return Receipt.objects.get_object_or_404(customer = self)
+
+    def reallot_receipts(self):
+        # get all receipts
+            # deallot each receipt
+        # alloot each receipt
+        receipts = self.get_receipts()
+        for i in receipts:
+            i.deallot()
+        for i in receipts:
+            i.allot()
+
+
 
 # class Supplier(models.Model):
 #

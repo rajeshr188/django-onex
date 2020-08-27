@@ -189,6 +189,9 @@ class Receipt(models.Model):
                 self.status="Unallotted"
         self.save()
 
+    def deallot(self):
+        self.receiptline_set.all().delete()
+
     def allot(self):
         print(f"allotting receipt {self.id} amount: {self.total}")
 

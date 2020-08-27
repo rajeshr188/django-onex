@@ -12,24 +12,24 @@ urlpatterns = (
 
 urlpatterns +=(
     path('approvalline/create/',views.ApprovalLineCreateView.as_view(),name ='approval_approvalline_create'),
-    path('approvallinereturn/',views.ApprovalLineReturnView,name='approvallinereturn'),
+    path('approvallinereturn/',views.ApprovalLineReturnView,name='approval_approvallinereturn_create'),
     path('approvallinereturnlist/',views.ApprovalLineReturnListView.as_view(),name ='approval_approvallinereturn_list'),
     path('approvallinereturn/delete/<int:pk>/',views.ApprovalLineReturnDeleteView.as_view(),name = 'approval_approvallinereturn_delete'),
-
-#approvalreturn urls
 )
-
-
-urlpatterns +=(
-    path('approvalreturn/',views.ApprovalReturnListView.as_view(),name = 'approval_approvalreturn_list'),
-    path('approvalreturn/detail/<int:pk>/',views.ApprovalReturnDetailView.as_view(),name = 'approval_approvalreturn_detail'),
-    path('approvalreturn/create/',views.ApprovalReturnCreateView.as_view(),name ='approval_approvalreturn_create'),
-    path('approvalreturn/update/<int:pk>/',views.ApprovalReturnUpdateView.as_view(),name = 'approval_approvalreturn_update'),
-    path('approvalreturn/delete/<int:pk>/',views.ApprovalReturnDeleteView.as_view(),name = 'approval_approvalreturn_delete'),
 #approvalreturn urls
-)
-
-urlpatterns +=(
-    path('approvalreturnline/create/',views.ApprovalReturnLineCreateView.as_view(),name ='approval_approvalRtuenline_create'),
-#approvalreturn urls
-)
+# )
+#
+#
+# urlpatterns +=(
+#     path('approvalreturn/',views.ApprovalReturnListView.as_view(),name = 'approval_approvalreturn_list'),
+#     path('approvalreturn/detail/<int:pk>/',views.ApprovalReturnDetailView.as_view(),name = 'approval_approvalreturn_detail'),
+#     path('approvalreturn/create/',views.ApprovalReturnCreateView.as_view(),name ='approval_approvalreturn_create'),
+#     path('approvalreturn/update/<int:pk>/',views.ApprovalReturnUpdateView.as_view(),name = 'approval_approvalreturn_update'),
+#     path('approvalreturn/delete/<int:pk>/',views.ApprovalReturnDeleteView.as_view(),name = 'approval_approvalreturn_delete'),
+# #approvalreturn urls
+# )
+#
+# urlpatterns +=(
+#     path('approvalreturnline/create/',views.ApprovalReturnLineCreateView.as_view(),name ='approval_approvalRtuenline_create'),
+# #approvalreturn urls
+# )

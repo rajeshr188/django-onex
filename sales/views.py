@@ -242,7 +242,8 @@ class InvoiceCreateView(CreateView):
         try:
             invoiceitem_form.save()
         except Exception:
-            raise Exception("Failed Form Save")
+            # raise Exception("Failed Form Save")
+            self.object.delete()
             form.add_error(None,'error i n transfer')
             return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
@@ -284,7 +285,7 @@ class InvoiceUpdateView(UpdateView):
             try:
                 invoiceitem_form.save()
             except Exception:
-                raise Exception("Failed Form Save")
+                # raise Exception("Failed Form Save")
                 form.add_error(None,'error in transfer qty or wt mismatch')
                 return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
@@ -355,7 +356,7 @@ class ReceiptCreateView(CreateView):
         self.object = form.save()
         receiptline_form.instance = self.object
         receiptline_form.save()
-        amount=self.object.total
+        # amount=self.object.total
         # last updated till here
         # invpaid = 0
         # for item in items:

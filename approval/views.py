@@ -1,8 +1,14 @@
 from django.shortcuts import render
 from django.views.generic import ListView,CreateView,DetailView,UpdateView,DeleteView
-from .models import Approval,ApprovalLine,ApprovalReturn,ApprovalReturnLine
-from.forms import (ApprovalForm,ApprovalLineForm,ApprovalReturnForm,
-                ApprovalReturnLineForm,Approval_formset,ApprovalReturn_formset)
+from .models import (Approval,ApprovalLine,ApprovalLineReturn)
+                    # ApprovalReturn,ApprovalReturnLine
+from .forms import (ApprovalForm,ApprovalLineForm,
+                                # ApprovalReturnForm,ApprovalReturnLineForm,
+                                Approval_formset,
+                                # ApprovalReturn_formset
+                                )
+from .filters import ApprovalLineFilter
+from django.forms import modelformset_factory
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect,HttpResponse
 from product.models import Stree
@@ -47,6 +53,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
             items = approvalline_form.save()
         except Exception:
             print("failed")
+            self.object.delete()
             form.add_error(None,'error i n transfer')
             return self.form_invalid(form = form,approvalline_form = approvalline_form)
             # raise Exception("aha failure")
@@ -99,10 +106,6 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
 class ApprovalDeleteView(LoginRequiredMixin,DeleteView):
     model = Approval
     success_url = reverse_lazy('approval_approval_list')
-
-from .filters import ApprovalLineFilter
-from django.forms import modelformset_factory
-from .models import ApprovalLineReturn
 
 def ApprovalLineReturnView(request):
 
@@ -169,24 +172,24 @@ class ApprovalLineCreateView(LoginRequiredMixin,CreateView):
     model = ApprovalLine
     form_class = ApprovalLineForm
 
-class ApprovalReturnListView(LoginRequiredMixin,ListView):
-    model = ApprovalReturn
-
-class ApprovalReturnCreateView(LoginRequiredMixin,CreateView):
-    model = ApprovalReturn
-    form_class = ApprovalReturnForm
-
-class ApprovalReturnDetailView(LoginRequiredMixin,DetailView):
-    model = ApprovalReturn
-
-class ApprovalReturnUpdateView(LoginRequiredMixin,UpdateView):
-    model = ApprovalReturn
-    form_class = ApprovalReturnForm
-
-class ApprovalReturnDeleteView(LoginRequiredMixin,DeleteView):
-    model = ApprovalReturn
-    success_url = reverse_lazy('approval_approvalreturn_list')
-
-class ApprovalReturnLineCreateView(LoginRequiredMixin,CreateView):
-    model = ApprovalReturnLine
-    form_class = ApprovalReturnLineForm
+# class ApprovalReturnListView(LoginRequiredMixin,ListView):
+#     model = ApprovalReturn
+#
+# class ApprovalReturnCreateView(LoginRequiredMixin,CreateView):
+#     model = ApprovalReturn
+#     form_class = ApprovalReturnForm
+#
+# class ApprovalReturnDetailView(LoginRequiredMixin,DetailView):
+#     model = ApprovalReturn
+#
+# class ApprovalReturnUpdateView(LoginRequiredMixin,UpdateView):
+#     model = ApprovalReturn
+#     form_class = ApprovalReturnForm
+#
+# class ApprovalReturnDeleteView(LoginRequiredMixin,DeleteView):
+#     model = ApprovalReturn
+#     success_url = reverse_lazy('approval_approvalreturn_list')
+#
+# class ApprovalReturnLineCreateView(LoginRequiredMixin,CreateView):
+#     model = ApprovalReturnLine
+#     form_class = ApprovalReturnLineForm

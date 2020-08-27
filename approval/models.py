@@ -108,36 +108,36 @@ class ApprovalLineReturn(models.Model):
     def __str__(self):
         return f"{self.line.product}"
 
-class ApprovalReturn(models.Model):
-
-    created_at = models.DateTimeField(auto_now_add = True,editable = False)
-    updated_at = models.DateTimeField(auto_now = True,editable = False)
-    total_wt = models.DecimalField(max_digits=10,decimal_places=3,default =0)
-    total_qty = models.IntegerField(default=0)
-    approval = models.ForeignKey(Approval,
-                                    on_delete = models.CASCADE)
-
-    class Meta:
-        ordering = ('created_at',)
-
-    def __str__(self):
-        return self.id
-
-    def get_absolute_url(self):
-        return reverse('approval_approvalreturn_detail',args=(self.pk,))
-
-
-class ApprovalReturnLine(models.Model):
-    product = models.ForeignKey(Stree,
-                                on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0)
-    weight = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
-
-    approvalreturn = models.ForeignKey(ApprovalReturn,
-                                on_delete = models.CASCADE)
-
-    class Meta:
-        ordering = ('approvalreturn',)
-
-    def __str__(self):
-        return self.id
+# class ApprovalReturn(models.Model):
+#
+#     created_at = models.DateTimeField(auto_now_add = True,editable = False)
+#     updated_at = models.DateTimeField(auto_now = True,editable = False)
+#     total_wt = models.DecimalField(max_digits=10,decimal_places=3,default =0)
+#     total_qty = models.IntegerField(default=0)
+#     approval = models.ForeignKey(Approval,
+#                                     on_delete = models.CASCADE)
+#
+#     class Meta:
+#         ordering = ('created_at',)
+#
+#     def __str__(self):
+#         return self.id
+#
+#     def get_absolute_url(self):
+#         return reverse('approval_approvalreturn_detail',args=(self.pk,))
+#
+#
+# class ApprovalReturnLine(models.Model):
+#     product = models.ForeignKey(Stree,
+#                                 on_delete=models.CASCADE)
+#     quantity = models.IntegerField(default=0)
+#     weight = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
+#
+#     approvalreturn = models.ForeignKey(ApprovalReturn,
+#                                 on_delete = models.CASCADE)
+#
+#     class Meta:
+#         ordering = ('approvalreturn',)
+#
+#     def __str__(self):
+#         return self.id

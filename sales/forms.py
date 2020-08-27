@@ -82,6 +82,20 @@ class ReceiptForm(forms.ModelForm):
         model = Receipt
         fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description','status']
 
+    def save(self,commit = True):
+        instance = super(ReceiptForm,self).save(commit=False)
+        if instance.id:
+            print('deleting previous receiptlines')
+            ReceiptLine.objects.filter(receipt = instance.id).delete()
+        if commit:
+            print(f"Receipt ModelForm Save()commit:{commit}")
+
+            print("saving receipt and updating status")
+            instance.save()
+            print("allotting")
+            instance.allot()
+        return instance
+
 class ReceiptLineForm(forms.ModelForm):
     # invoice=forms.ModelChoiceField(
     #                                 queryset=Invoice.objects.all(),

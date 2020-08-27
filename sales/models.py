@@ -75,6 +75,10 @@ class Invoice(models.Model):
             return self.balance - self.get_total_receipts()
         return self.balance
 
+    def update_status(self):
+        print('updating invoice status')
+
+
 class InvoiceItem(models.Model):
 
     # Fields
@@ -110,7 +114,7 @@ class InvoiceItem(models.Model):
         return (self.weight * self.touch)/100
 
     def save(self,*args,**kwargs):
-        super(InvoiceItem,self).save(*args,**kwargs)
+
         print(f"In Sale Modelform save() :")
         print(f"item is_return: {self.is_return} ")
         print(self.product.refresh_from_db())
@@ -140,7 +144,8 @@ class InvoiceItem(models.Model):
                 stock = stock.traverse_parellel_to(self.product,include_self=False)
                 print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
                 self.product = self.product.move_to(stock,position='first-child')
-
+        super(InvoiceItem,self).save(*args,**kwargs)
+        self.invoice.update_status()
         # print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
         # print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
 
@@ -175,16 +180,45 @@ class Receipt(models.Model):
     class Meta:
         ordering = ('-created',)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Call the "real" save() method.
-        # print('insave')
+    def update_status(self):
         total_allotted=self.get_line_totals()
         if total_allotted is not None :
             if total_allotted == self.total:
                 self.status="Allotted"
             else:
                 self.status="Unallotted"
-        super().save(*args, **kwargs)
+        self.save()
+
+    def allot(self):
+        print(f"allotting receipt {self.id} amount: {self.total}")
+
+        invpaid = 0 if self.get_line_totals() is None else self.get_line_totals()
+        print(f"invpaid{invpaid}")
+
+        remaining_amount = self.total - invpaid
+        print(f"amount : {remaining_amount}")
+
+        try:
+            invtopay = Invoice.objects.filter(customer=self.customer,balancetype=self.type).exclude(status="Paid").order_by('created')
+        except IndexError:
+            invtopay = None
+        print(invtopay)
+
+        for i in invtopay:
+            print(f"i:{i} bal:{i.get_balance()}")
+            if remaining_amount<=0 : break
+            bal=i.get_balance()
+            if remaining_amount >= bal :
+                remaining_amount -= bal
+                ReceiptLine.objects.create(receipt=self,invoice=i,amount=bal)
+                i.status="Paid"
+            else :
+                ReceiptLine.objects.create(receipt=self,invoice=i,amount=remaining_amount)
+                i.status="PartiallyPaid"
+                remaining_amount=0
+            i.save()
+        print('allotted receipt')
+        self.update_status()
 
     def __str__(self):
         return u'%s' % self.id
@@ -215,3 +249,11 @@ class ReceiptLine(models.Model):
 
     def get_update_url(self):
         return reverse('sales_receiptline_update', args=(self.pk,))
+
+    # def save(self,*args,**kwargs):
+    #     super(ReceiptLine,self).save(**kwargs)
+        # allot to unpaid invoices
+            # update invoice status()
+        # update Receipt allotted amount
+
+        # update Receipt status

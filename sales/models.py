@@ -12,6 +12,7 @@ from django.db.models import Avg,Count,Sum,Func,F
 from datetime import date,timedelta
 # from django.contrib.postgres.indexes import BrinIndex
 from mptt.models import TreeForeignKey
+
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -64,7 +65,8 @@ class Invoice(models.Model):
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE,related_name="invoicee"
+        on_delete=models.CASCADE,
+        related_name="sales"
     )
 
     class Meta:
@@ -105,7 +107,7 @@ class InvoiceItem(models.Model):
 
     # Fields
     weight = models.DecimalField(max_digits=10, decimal_places=3)
-    touch = models.PositiveSmallIntegerField()
+    touch = models.DecimalField(max_digits=10, decimal_places=3)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
     quantity = models.IntegerField()
@@ -196,7 +198,7 @@ class Receipt(models.Model):
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE, related_name="receivedfrom"
+        on_delete=models.CASCADE, related_name="receipts"
     )
 
     class Meta:
@@ -274,11 +276,3 @@ class ReceiptLine(models.Model):
 
     def get_update_url(self):
         return reverse('sales_receiptline_update', args=(self.pk,))
-
-    # def save(self,*args,**kwargs):
-    #     super(ReceiptLine,self).save(**kwargs)
-        # allot to unpaid invoices
-            # update invoice status()
-        # update Receipt allotted amount
-
-        # update Receipt status

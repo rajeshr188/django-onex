@@ -196,7 +196,7 @@ AUTHENTICATION_BACKENDS = (
 
 SITE_ID = 1
 ACTSTREAM_SETTINGS = {
-    'MANAGER': 'girvi.managers.MyActionManager',
+    # 'MANAGER': 'dashboard.managers.MyActionManager',
     'FETCH_RELATIONS': True,
     'USE_PREFETCH': True,
     'USE_JSONFIELD': False,

@@ -37,7 +37,7 @@ class Invoice(models.Model):
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE, related_name="suppliers"
+        on_delete=models.CASCADE, related_name="purchases"
     )
 
     class Meta:
@@ -70,7 +70,7 @@ class InvoiceItem(models.Model):
 
     # Fields
     weight = models.DecimalField(max_digits=10, decimal_places=2)
-    touch = models.PositiveSmallIntegerField()
+    touch = models.DecimalField(max_digits=10, decimal_places=3)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
     quantity = models.IntegerField()
@@ -127,7 +127,7 @@ class Payment(models.Model):
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE, related_name="supplier"
+        on_delete=models.CASCADE, related_name="payments"
     )
 
     class Meta:

@@ -33,7 +33,7 @@ def list_balance(request):
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Customer.objects.annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
+    balance=Customer.objects.filter(type="Wh").annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
 
 
     context={'balance':balance}
@@ -276,7 +276,6 @@ class PaymentCreateView(CreateView):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   paymentline_form=paymentline_form))
-
 
 
 class PaymentDetailView(DetailView):

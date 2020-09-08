@@ -61,8 +61,7 @@ class CustomerDetailView(LoginRequiredMixin,DetailView):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
 
-        data=self.object.invoicee.all()
-
+        data=self.object.sales.all()
         table = InvoiceTable(data,exclude=('customer','edit','delete',))
         table.paginate(page=self.request.GET.get('page', 1), per_page=25)
         context['invoices']=table

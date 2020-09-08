@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+ledger goes like ....
+<ul>
+  {%for i in data.ledger%}
+  <li>{{i.type}} -- {%if i.balance%}{{i.balance}} {%else%} {{i.total}} {%endif%}{{i.cur_bal}}</li>
+  {%endfor%}
+</ul>
+Closing Balance : Cash :-  Metal :- {{data.metalbal}}
+{%endblock%}

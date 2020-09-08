@@ -114,7 +114,7 @@ def manage_loans(request):
 
 
     return render(request, 'girvi/manage_loans.html', {'formset': formset})
-
+from dateutil import relativedelta
 @login_required
 def home(request):
     data = dict()
@@ -157,6 +157,8 @@ def home(request):
     loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
     loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
     loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
+
+
     chart=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
     fixed = []
     fixed.append(chart['gold'])

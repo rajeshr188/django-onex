@@ -7,10 +7,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from django_extensions.db import fields as extension_fields
 from django.db.models import Avg,Count,Sum
+from itertools import chain
 # from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 import uuid
-
+from itertools import tee, islice, chain
+from dateutil import relativedelta
+from django.utils import timezone
 # class Contacts(models.Model):
 #     created = models.DateTimeField(default = timezone.now)
 #     updated = models.DateTimeField(auto_now = True)
@@ -57,6 +60,7 @@ class Customer(models.Model):
     relatedto = models.CharField(max_length=30,blank=True)
     area = models.CharField(max_length=50,blank=True)
     active = models.BooleanField(blank = True,default = True)
+
     class Meta:
         ordering = ('-created','name','relatedto')
         unique_together = ('name','relatedas','relatedto')
@@ -69,6 +73,8 @@ class Customer(models.Model):
 
     def get_update_url(self):
         return reverse('contact_customer_update', args=(self.pk,))
+
+    # loan queries
     @property
     def get_loans(self):
         return self.loan_set.all()
@@ -76,6 +82,7 @@ class Customer(models.Model):
     def get_total_loanamount(self):
         amount=self.loan_set.aggregate(total=Sum('loanamount'))
         return amount['total']
+
     @property
     def get_loans_count(self):
         return self.loan_set.count()
@@ -91,14 +98,30 @@ class Customer(models.Model):
         silver=self.loan_set.filter(itemtype='Silver').aggregate(total=Sum('itemweight'))
         return silver['total']
 
+    def get_release_average(self):
+        no_of_months =0
+        for i in self.loan_set.filter(release__isnull = False).all():
+            delta= relativedelta.relativedelta(i.release.created,i.created)
+            no_of_months += delta.years *12 + delta.months
+
+        for i in self.loan_set.filter(release__isnull = True).all():
+            delta = relativedelta.relativedelta(timezone.now(),i.created)
+            no_of_months += delta.years*12 + delta.months
+
+        return round(no_of_months / self.loan_set.count()) if self.loan_set.count() else 0
+
+    # sales queries
+    def get_sales_invoice(self):
+        return self.sales.all()
+
     def get_total_invoice_cash(self):
-        return self.invoicee.filter(balancetype="Cash").aggregate(total=Sum('balance'))['total']
+        return self.sales.filter(balancetype="Cash").aggregate(total=Sum('balance'))['total']
 
     def get_total_invoice_metal(self):
-        return self.invoicee.filter(balancetype="Metal").aggregate(total=Sum('balance'))['total']
+        return self.sales.filter(balancetype="Metal").aggregate(total=Sum('balance'))['total']
 
     def get_unpaid(self):
-        return self.invoicee.exclude(status="Paid")
+        return self.sales.exclude(status="Paid")
 
     def get_unpaid_cash(self):
         return self.get_unpaid().filter(balancetype="Cash").values('created','id','balance')
@@ -118,23 +141,74 @@ class Customer(models.Model):
     def get_total_invoice_paid_metal(self):
         pass
 
-    def get_total_invoice_balance(self):
-        pass
+    def get_cash_receipts_total(self):
+        return self.receipts.filter(type='Cash').aggregate(total = Sum('total'))['total']
+    def get_metal_receipts_total(self):
+        return self.receipts.filter(type='Metal').aggregate(total = Sum('total'))['total']
+
+    def get_metal_balance(self):
+        return self.get_total_invoice_metal() - self.get_metal_receipts_total()
+
+    def get_cash_balance(self):
+        return self.get_total_invoice_cash() - self.get_cash_receipts_total()
 
     def get_receipts(self):
-        return Receipt.objects.get_object_or_404(customer = self)
+        return self.receipt_set.all()
+        # return Receipt.objects.get_object_or_404(customer = self)
 
     def reallot_receipts(self):
-        # get all receipts
-            # deallot each receipt
-        # alloot each receipt
         receipts = self.get_receipts()
         for i in receipts:
             i.deallot()
         for i in receipts:
             i.allot()
 
+    def previous_and_next(self,some_iterable):
+        prevs, items, nexts = tee(some_iterable, 3)
+        prevs = chain([None], prevs)
+        nexts = chain(islice(nexts, 1, None), [None])
+        return zip(prevs, items, nexts)
 
+    def get_all_cars(self):
+        sales = self.sales.all().values()
+        for s in sales:
+            s['type'] = 'sale'
+            s['cur_bal'] = 0
+
+        receipts = self.receipts.all().values()
+        for r in receipts:
+            r['type'] = 'receipt'
+            r['cur_bal'] = 0
+
+        purchases = self.purchases.all().values()
+        for p in purchases:
+            p['type'] = 'purchase'
+            p['cur_bal'] = 0
+        payments = self.payments.all().values()
+        for pay in payments:
+            pay['type'] = 'payment'
+            pay['cur_bal'] = 0
+
+        txn_list = sorted(
+            chain(sales, receipts,purchases,payments),
+            key=lambda i: i['created'])
+        for prev,item,next in self.previous_and_next(txn_list):
+
+            if item['type'] in ['sale','payment']:
+                if prev:
+                    if item['type'] == 'sale':
+                        item['cur_bal'] = prev['cur_bal'] - item['balance']
+                    else:
+                        item['cur_bal'] = prev['cur_bal'] - item['total']
+            elif item['type'] in ['receipt','purchase']:
+                if prev:
+                    if item['type'] == 'purchase':
+                        print(item)
+                        item['cur_bal'] = prev['cur_bal'] + item['balance']
+                    else:
+                        item['cur_bal'] = prev['cur_bal'] + item['total']
+
+        return txn_list
 
 # class Supplier(models.Model):
 #

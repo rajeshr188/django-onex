@@ -21,7 +21,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
 class Category(MPTTModel):
-    # mens/womens/kids/uni
+    # gold ,silver ,other
     name = models.CharField(max_length=128,unique=True)
     slug = AutoSlugField(populate_from='name', blank=True)
     description = models.TextField(blank=True)
@@ -131,6 +131,7 @@ class ProductVariant(models.Model):
         validators=[MinValueValidator(0)], default=Decimal(1))
     quantity_allocated = models.IntegerField(
         validators=[MinValueValidator(0)], default=Decimal(0))
+    # add melting,wh_va,ret_va
     cost_price = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
     selling_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
     weight = models.DecimalField(max_digits=10,decimal_places=2,default=0.0)

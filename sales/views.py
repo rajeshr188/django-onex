@@ -304,14 +304,12 @@ class InvoiceDeleteView(DeleteView):
 class InvoiceItemListView(ListView):
     model = InvoiceItem
 
-
 class InvoiceItemCreateView(CreateView):
     model = InvoiceItem
     form_class = InvoiceItemForm
 
 class InvoiceItemDetailView(DetailView):
     model = InvoiceItem
-
 
 class InvoiceItemUpdateView(UpdateView):
     model = InvoiceItem
@@ -409,6 +407,8 @@ class ReceiptUpdateView(UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   receiptline_form=receiptline_form))
+
+# create a function view on receipt list page  to reallot all receipts
 
 class ReceiptDeleteView(DeleteView):
     model = Receipt

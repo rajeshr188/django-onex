@@ -6,7 +6,7 @@ import re
 from django.utils import timezone
 from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
-from django.db.models.functions import Cast,TruncMonth
+from django.db.models.functions import Cast,TruncMonth,Coalesce
 from django.db.models.fields import DateField
 
 from .models import License, Series, Loan, Release, Adjustment, Month, Year
@@ -138,8 +138,10 @@ def home(request):
     license['count']=l.count()
     # license['licenses']=','.join(lic.name for lic in l.all())
     series = Series.objects.all()
-    license['totalloans']=series.annotate(t=Sum('loan__loanamount',filter=Q(loan__release__isnull=True)))
+    license['totalloans']=series.annotate(t=Coalesce(Sum('loan__loanamount',filter=Q(loan__release__isnull=True)),0))
+    license['totalunreleasedloans']= series.annotate(t=Coalesce(Sum('loan__loanamount',filter=Q(loan__release__isnull=False)),0))
     license['licchart']=list(license['totalloans'])
+    license['licunrchart']=list(license['totalunreleasedloans'])
 
     loan['total_loans'] = loans.count()
     loan['released_loans'] = released.count()
@@ -165,7 +167,9 @@ def home(request):
     fixed.append(chart['silver'])
     fixed.append(chart['bronze'])
     loan['chart']=fixed
-    datetimel = l.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+    datetimel = loans.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+    datetime2 = unreleased.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
+
 
     thismonth = loans.filter(created__year = today.year,created__month = today.month)\
                     .annotate(date_only=Cast('created', DateField()))\
@@ -175,7 +179,7 @@ def home(request):
     lastmonth =  loans.filter(created__year = today.year,created__month = (today.replace(day=1) - datetime.timedelta(days=1)).month)\
                     .annotate(date_only=Cast('created', DateField()))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
-                    .order_by('created').values_list('date_only','t',named=True)
+                    .order_by('date_only').values_list('date_only','t',named=True)
 
     thisyear = loans.filter(created__year = today.year).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
@@ -188,6 +192,7 @@ def home(request):
     # for row in datetime:
     #     fixed.append([row[0],row[1]])
     loan['datechart']=datetimel
+    loan['datechart1']=datetime2
     loan['thismonth']=thismonth
     loan['lastmonth']=lastmonth
     loan['thisyear']=thisyear

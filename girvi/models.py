@@ -140,7 +140,7 @@ class Loan(models.Model):
             return 0
         else:
             return nom
-
+    @property
     def is_released(self):
         return hasattr(self,'release')
 

@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -74,7 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
 
 CORS_ORIGIN_ALLOW_ALL = False
@@ -101,7 +102,7 @@ REST_FRAMEWORK = {
 # CACHE_MIDDLEWARE_KEY_PREFIX = 'jsk'
 
 ROOT_URLCONF = 'djangox_project.urls'
-INTERNAL_IPS = ['127.0.0.1',]
+INTERNAL_IPS = ['127.0.0.1','localhost']
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

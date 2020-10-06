@@ -12,19 +12,18 @@ class LoanTable(tables.Table):
     loanid=tables.LinkColumn('girvi_loan_detail',args=[A('pk')])
     # release = tables.LinkColumn('girvi_release_create', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
-    # def render_release(self):
-    #     return 'Release'
+
     def render_created(self,value):
         return value.date
 
-    # Increases sql queries count to 118/48
-    def render_id(self, value, column):
-        # if value.release__isnull:
-        if Release.objects.filter(loan_id=value).exists():
+    def render_id(self, value, column,record):
+
+        if record.is_released:
             column.attrs = {'td': {'bgcolor': 'lightgreen'}}
         else:
             column.attrs = {'td': {}}
         return value
+
     class Meta:
         model = Loan
         fields = ('id','cbox','series','loanid','lid','created','customer','itemdesc','itemweight','loanamount')

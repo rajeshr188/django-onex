@@ -33,7 +33,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'pk',
             'name',
             'description',
-            
+
         )
 
 
@@ -47,8 +47,10 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'name',
             'track_inventory',
             'quantity',
-            'cost_price',
-            'weight',
+            'melting',
+            'cost',
+            'touch',
+            'wastage',
         )
 
 

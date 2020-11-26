@@ -49,6 +49,11 @@ urlpatterns += (
          name="archive_week"),
 )
 urlpatterns += (
+    path('girvi/check/',views.check_girvi,name='check_girvi'),
+    path('girvi/bulk_release/',views.bulk_release,name='bulk_release'),
+    path('girvi/bulk_release_detail/',views.bulk_release_detail,name='bulk_release_detail'),
+)
+urlpatterns += (
     # urls for License
     path('girvi/license/', views.LicenseListView.as_view(), name='girvi_license_list'),
     path('girvi/license/create/', views.LicenseCreateView.as_view(), name='girvi_license_create'),

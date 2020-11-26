@@ -1,0 +1,58 @@
+{% extends '_base.html' %}
+
+{% load static %}
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile">
+    <button type="submit">Upload</button>
+  </form>
+
+  {% if uploaded_file_url %}
+    <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
+  {% endif %}
+  <table>
+    <tr>
+      <td>Total Records</td>
+      <td>{{data.records}}</td>
+    </tr>
+    <tr>
+      <td>Total Items</td>
+      <td>{{data.items}}</td>
+    </tr>
+  
+  </table>
+  <div class="row">
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Missing records : {{data.missing_records|length}}</h5>
+        <p class="card-text">
+          {% if data.records %}
+          records: {{data.records}}
+        {%endif%}
+        <br>
+        {{data.missing_items}}
+      </p>
+        <a href="#" class="btn btn-primary">Go somewhere</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Missing Items : {{data.missing_items|length}}</h5>
+        <p class="card-text">  {%if data.items %}
+            extra: {{data.items}}
+          {%endif%}
+          <br>
+          {{data.missing_records}}
+        </p>
+        <a href="#" class="btn btn-primary">Go somewhere</a>
+      </div>
+    </div>
+  </div>
+</div>
+  <p><a href="{% url 'home' %}">Return to home</a></p>
+{% endblock %}

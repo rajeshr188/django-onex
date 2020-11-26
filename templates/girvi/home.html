@@ -60,25 +60,39 @@
     </div>
   </div>
 </div>
-
     <div class="card-columns">
-
-
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Loans</h5>
           <ul class="list-group list-group-flush">
             <li>License Total :{% for c in data.license.totalloans %} {{c.id}}:{{c.t}}</li>{%endfor%}
             <li class="list-group-item">Count :{{data.loan.count}}</li>
-            <li class="list-group-item">Latest :{{data.loan.latest}}</li>
-            <li class="list-group-item">Amount :{{data.loan.amount.t}} {{data.loan.amount_words}}</li>
+            <li class="list-group-item">Amount :{{data.loan.amount.t}} </li>
+            <li class="list-group-item">{{data.loan.amount_words}}</li>
+
+          </ul>
+        </div>
+      </div>
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Average</h5>
+          <ul class="list-group list-group-flush">
             <li class="list-group-item">Gold Loan Avg :{{data.loan.gold_amount.t}}/{{data.loan.gold_weight.t}}={{data.loan.gavg}}</li>
             <li class="list-group-item">Silver Loan Avg :{{data.loan.silver_amount.t}}/{{data.loan.silver_weight.t}}={{data.loan.savg}}</li>
           </ul>
         </div>
       </div>
-
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Interest Due</h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">{{data.loan.interestdue.t}}</li>
+          </ul>
+        </div>
+      </div>
     </div>
+
+
   </div>
   <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
     <div class="card text-center">
@@ -122,6 +136,7 @@
   <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...4s</div>
 </div>
 </div>
+
 <script src = "{% static 'js/Chart.bundle.js' %}"></script>
 <script>
 
@@ -139,10 +154,9 @@
       borderColor: [
           'rgba(255,99,132,1)',
           'rgba(54, 162, 235, 1)',
-
-        ],
+          ],
       borderWidth: 1
-  });
+          });
 
   var s1 = {
   label: 'loan by year',
@@ -257,64 +271,36 @@ var myChart = new Chart(ctx, {
     data: {
         labels: [{%for i in data.license.licchart%}'{{i.name|slugify}}',{%endfor%}],
         datasets: [{
-
-            data:[{% for i in data.license.licunrchart%}{{i.t}},{%endfor%}],
-            backgroundColor: [
-       "#F7464A",
-       "#46BFBD",
-       "#FDB45C",
-       "#949FB1",
-       "#4D5360",
-     ],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-            ],
-            borderColor: [
-                'rgba(255,99,132,1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
-            borderWidth: 1
-        },
-        {data:[{% for i in data.license.licchart%}{{i.t}},{%endfor%}],
-        backgroundColor: [
-   "#F7464A",
-   "#46BFBD",
-   "#FDB45C",
-   "#949FB1",
-   "#4D5360",
- ],
-        backgroundColor: [
-            'rgba(255, 99, 132, 0.2)',
-            'rgba(54, 162, 235, 0.2)',
-            'rgba(255, 206, 86, 0.2)',
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(255, 159, 64, 0.2)'
-        ],
-        borderColor: [
-            'rgba(255,99,132,1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)'
-        ],
-        borderWidth: 1
-    },
-        ]
+                    data:[{% for i in data.license.licunrchart%}{{i.t}},{%endfor%}],
+                    backgroundColor: [
+                                       "#F7464A",
+                                       "#46BFBD",
+                                       "#FDB45C",
+                                       "#949FB1",
+                                       "#4D5360",
+                                     ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+        }]
     },
     options : {
       tooltips: {
-    callbacks: {
+      callbacks: {
       label: function(tooltipItem, data) {
         var dataset = data.datasets[tooltipItem.datasetIndex];
         var meta = dataset._meta[Object.keys(dataset._meta)[0]];

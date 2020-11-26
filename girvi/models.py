@@ -145,7 +145,7 @@ class Loan(models.Model):
         return hasattr(self,'release')
 
     def interestdue(self,date= datetime.datetime.now(timezone.utc)):
-        if self.is_released() :
+        if self.is_released :
             return 0
         else:
             return int(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100)

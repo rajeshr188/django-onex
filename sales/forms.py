@@ -40,7 +40,7 @@ class InvoiceItemForm(forms.ModelForm):
                         ).exclude(barcode=''))
     class Meta:
         model = InvoiceItem
-        fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']
+        fields = ['invoice','is_return','product','quantity','weight', 'less_stone','touch','wastage','makingcharge','total',]
 
     def save(self,commit = True):
 
@@ -58,7 +58,7 @@ class InvoiceItemForm(forms.ModelForm):
         return invoiceitem
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','product','quantity','weight', 'touch', 'makingcharge','total', 'invoice'),
+    fields=('is_return','product','quantity','weight','less_stone', 'touch', 'wastage','makingcharge','total', 'invoice'),
     form = InvoiceItemForm,extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):

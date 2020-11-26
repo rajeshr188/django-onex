@@ -81,47 +81,81 @@ class InvoiceCreateView(CreateView):
         #   temp sol:merge with lot and return
         #       problem:cant delete this purchase
         #           (usually after splitting no one deletes purchase)
+        #   permanent sol:
+        #       since each unique stree node created by this purchases
+        #       having related to this product variant search for the product and transfer it appropriatelya
 
+        # old logic stree w/o pv
+        # for item in items:
+        #
+        #     node,created = Stree.objects.get_or_create(name='Stock')
+        #     node = node.traverse_to(item.product)
+        #
+        #     if item.is_return:
+        #
+        #         # tldr:never return unique item in purchase ,merge and then return from lot
+        #         # cant create purchase invoice with unique product as being returned,
+        #         # becoz it will create negative unique item
+        #         # in case you want to return merge unique to lot and return
+        #         # other way around is to find and delete unique return item baseed on weight here
+        #         # and create again when this purchase is deleted and signals activated
+        #         if node.tracking_type == 'Unique':
+        #             print("you need to merge a unique to lot to be able to return ")
+        #             continue
+        #         # change to node.transfer(returnnode,qty,wt)
+        #         node.weight -= item.weight
+        #         node.quantity -= item.quantity
+        #         node.save()
+        #         node.update_status()
+        #
+        #         return_node = Stree.objects.get(name='Return')
+        #         return_node = return_node.traverse_parellel_to(node)
+        #         return_node.weight +=item.weight
+        #         return_node.quantity +=item.quantity
+        #         return_node.save()
+        #     else:
+        #         if node.tracking_type == 'Unique':
+        #             print("node is unique")
+        #             node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
+        #         node.weight +=item.weight
+        #         node.quantity +=item.quantity
+        #
+        #         node.cost = item.touch
+        #         n = node.get_family()
+        #         node.full_name = n[2].name + ' ' + node.name
+        #         node.barcode = 'je'+str(node.id)
+        #         node.save()
+        #         node.update_status()
+
+        # new logic stree with productvariant
+        stock_node,created = Stree.objects.get_or_create(name='Stock')
+        return_node,created = Stree.objects.get_or_create(name='Return')
         for item in items:
-
-            node,created = Stree.objects.get_or_create(name='Stock')
-            node = node.traverse_to(item.product)
-
             if item.is_return:
-
-                # tldr:never return unique item in purchase ,merge and then return from lot
-                # cant create purchase invoice with unique product as being returned,
-                # becoz it will create negative unique item
-                # in case you want to return merge unique to lot and return
-                # other way around is to find and delete unique return item baseed on weight here
-                # and create again when this purchase is deleted and signals activated
-                if node.tracking_type == 'Unique':
-                    print("you need to merge a unique to lot to be able to return ")
-                    continue
-                # change to node.transfer(returnnode,qty,wt)
-                node.weight -= item.weight
-                node.quantity -= item.quantity
-                node.save()
-                node.update_status()
-
-                return_node = Stree.objects.get(name='Return')
-                return_node = return_node.traverse_parellel_to(node)
-                return_node.weight +=item.weight
-                return_node.quantity +=item.quantity
-                return_node.save()
+                pass
+                # add product code to purchase invoice item to save all problems
+                # if lotitem then sub item from lot and transfer to return_node
+                # else transfer item to return nodes if product code mentioned else throw eror
             else:
-                if node.tracking_type == 'Unique':
-                    print("node is unique")
-                    node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
-                node.weight +=item.weight
-                node.quantity +=item.quantity
+                # if unique then create new unique node
+                tt ='lot' if 'lot' in item.product.name else 'Unique'
+                node,created = Stree.objects.get_or_create(name = item.product.name,
+                                                parent = stock_node,
+                                                tracking_type=tt,
+                                                productvariant = item.product,cost = item.touch,
+                                                weight = item.weight)
 
+                node.weight += item.weight
+                node.quantity += item.quantity
                 node.cost = item.touch
-                n = node.get_family()
-                node.full_name = n[2].name + ' ' + node.name
-                node.barcode = 'je'+str(node.id)
+                if created :
+                    node.barcode = 'je'+str(node.id)
+
                 node.save()
                 node.update_status()
+
+
+
 
         return HttpResponseRedirect(self.get_success_url())
 

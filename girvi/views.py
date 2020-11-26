@@ -11,7 +11,7 @@ from django.db.models.fields import DateField
 
 from .models import License, Series, Loan, Release, Adjustment, Month, Year
 from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
-                    ,Loan_formset,AdjustmentForm,LoanRenewForm)
+                    ,Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm)
 from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
 from contact.models import Customer
@@ -30,7 +30,8 @@ from django.views.decorators.csrf import csrf_exempt
 from utils.render import Render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-
+import openpyxl
+from openpyxl import Workbook,load_workbook
 @login_required
 def print_loanpledge(request,pk):
     loan=Loan.objects.get(id=pk)
@@ -159,6 +160,9 @@ def home(request):
     loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
     loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
     loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
+    total_interest_due =0
+
+    loan['interestdue']= l.aggregate(t=Sum('interest'))
 
 
     chart=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
@@ -206,6 +210,79 @@ def home(request):
     data['loan']=loan
     data['release']=release
     return render(request,'girvi/home.html',context={'data':data},)
+
+def check_girvi(request):
+    data ={}
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+
+        wb=load_workbook(myfile,read_only=True)
+        sheet = wb.active
+
+        django_set = set()
+        physical_set = set()
+        for l in Loan.unreleased.filter(itemtype='Gold').values('loanid'):
+            django_set.add(l['loanid'])
+        for r in sheet.iter_rows(min_row=0):
+            physical_set.add(r[0].value)
+
+        data['records'] = len(django_set)
+        data['items'] =  len(physical_set)
+
+        data['missing_records'] = list(physical_set - django_set)
+        data['missing_items'] = list(django_set - physical_set)
+
+        return render(request, 'girvi/girvi_upload.html',context={'data':data})
+
+    return render(request, 'girvi/girvi_upload.html')
+from django.db import IntegrityError
+def bulk_release(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = BulkReleaseForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            date = form.cleaned_data['date']
+            loans = form.cleaned_data['loans']
+            success = []
+            failed = []
+            if not date:
+                date = timezone.now().date()
+
+            for loan in loans:
+                try:
+                    l = Loan.objects.get(loanid=loan.loanid)
+                except Loan.DoesNotExist:
+                        # raise CommandError(f"Failed to create Release as {loan} does not exist")
+                        print(f"Failed to create Release as {loan} does not exist")
+                        continue
+                try:
+                    releaseid = Release.objects.order_by('-id')[0]
+                    releaseid = str(int(releaseid.releaseid)+1)
+                    r = Release.objects.create(
+                                            releaseid=releaseid,
+                                            loan=l,
+                                            created = date,#datetime.now(timezone.utc),
+                                            interestpaid =  l.interestdue(date)
+                                            )
+                    success.append(l)
+                except IntegrityError:
+                    # raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
+                    failed.append(l)
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return render(request,'girvi/bulk_release_detail.html',{'success':success,'failed':failed})
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = BulkReleaseForm()
+
+    return render(request, 'girvi/bulk_release.html', {'form': form})
+
+def bulk_release_detail(request):
+    return render(request,'girvi/bulk_release_detail.html')
 
 class LoanYearArchiveView(LoginRequiredMixin,YearArchiveView):
     queryset = Loan.unreleased.all()

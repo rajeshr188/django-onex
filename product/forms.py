@@ -150,8 +150,8 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
     class Meta:
         model = ProductVariant
         fields = [
-            'sku','weight',
-            'quantity', 'cost_price', 'selling_price','track_inventory']
+            'sku',
+            'quantity','melting', 'cost', 'touch','wastage','track_inventory']
         labels = {
             'sku': pgettext_lazy('SKU', 'SKU'),
             'quantity': pgettext_lazy('Integer number', 'Number in stock'),
@@ -210,9 +210,11 @@ class StockForm(forms.ModelForm):
 
 
 class StreeForm(forms.ModelForm):
+    # make parent as level 1 or root nodes such as stock approval sold return damaged old kacha ft
+    #  
     class Meta:
         model = Stree
-        fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity']
+        fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity','productvariant']
 
 class UniqueForm(forms.ModelForm):
     class Meta:

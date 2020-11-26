@@ -118,18 +118,12 @@
                   sum += parseFloat(this.value);
               }
           });
-        // $(".Nettwt input").each(function () {
-        //       if (!isNaN(this.value) && this.value.length != 0) {
-        //           nwt += parseFloat(this.value);
-        //       }
-        //   });
         $(".weight input").each(function () {
               if (!isNaN(this.value) && this.value.length != 0) {
                   twt += parseFloat(this.value);
               }
           });
-          // show values in netto, steuer, brutto fields
-          // show values in netto, steuer, brutto fields
+
         $("#id_balance").val(sum.toFixed(3));
         $('#id_weight').val(Number(twt).toFixed(3));
 

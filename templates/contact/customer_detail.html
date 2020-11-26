@@ -47,6 +47,7 @@
       <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge badge-info badge-pill">{{customer.get_gold_weight}}</span>
       <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge badge-info badge-pill">{{customer.get_silver_weight}}</span></li>
       <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge badge-info badge-pill"></span></li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge badge-info badge-pill">{{customer.get_total_interest_due}}</span></li>
       <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge badge-info badge-pill">{{customer.get_release_average}}</span></li>
       </ul>
       </div>
@@ -180,7 +181,7 @@
                       <td>{{loan.loanamount}}</td>
                       <td>{{loan.noofmonths}} </td>
                       <td>{{loan.release}} </td>
-                      <td>{{loan.interest}}</td>
+                      <td>{{loan.interestdue}}</td>
                       <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a></td>
 
                     </tr>
@@ -207,7 +208,7 @@
                     <td>{{loan.loanamount}}</td>
                     <td>{{loan.noofmonths}} </td>
                     <td>{{loan.release}} </td>
-                    <td>{{loan.interest}}</td>
+                    <td>{{loan.interestdue}}</td>
                     <td><a href="{% url 'girvi_loan_update' loan.id %}">Update</a> / <a href="{%url 'girvi_loan_delete' loan.id%}">Delete</a>/
                     <a href="{%url 'girvi_release_create' loan.id%}">Release</a></td>
 

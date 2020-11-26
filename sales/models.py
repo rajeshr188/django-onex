@@ -106,11 +106,14 @@ class Invoice(models.Model):
 class InvoiceItem(models.Model):
 
     # Fields
+    quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
+    less_stone = models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
+    wastage = models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-    quantity = models.IntegerField()
+
     makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     # Relationship Fields
     product = TreeForeignKey(
@@ -136,6 +139,10 @@ class InvoiceItem(models.Model):
 
     def get_nettwt(self):
         return (self.weight * self.touch)/100
+
+    def get_charged_wt(self):
+        pass
+        
 
     def save(self,*args,**kwargs):
 

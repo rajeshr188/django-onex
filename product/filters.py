@@ -1,7 +1,7 @@
-from .models import Stree,Category,ProductType,Product,ProductVariant,Attribute
+from .models import Stree,Category,ProductType,Product,ProductVariant,Attribute,AttributeValue
 import django_filters
-from django_select2.forms import Select2Widget
-
+from django_select2.forms import Select2Widget,Select2MultipleWidget
+from django.db import models
 class StreeFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='iexact')
     class Meta:
@@ -29,10 +29,12 @@ class ProductVariantFilter(django_filters.FilterSet):
                     queryset = Product.objects.all(),
                     widget = Select2Widget
     )
-    # atttributes = django_filters.ModelChoiceFilter(
-    #                 queryset = Attribute.objects.all(),
-    #                 widget = Select2Widget
-    # )
+    attributes = django_filters.ModelMultipleChoiceFilter(
+                    queryset = AttributeValue.objects.all(),
+                    widget = Select2MultipleWidget,
+
+    )
+
     class Meta:
         model = ProductVariant
         fields = ['product',]

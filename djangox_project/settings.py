@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*","192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
 
-# EXTENSIONS_MAX_UNIQUE_QUERY_ATTEMPTS=1000
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,8 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     # Third-party
-    'allauth',  # new
-    'allauth.account',  # new
+    'allauth','allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
     'widget_tweaks',
@@ -56,8 +54,7 @@ INSTALLED_APPS = [
     # Local
     'users',
     'pages',
-    'contact','product','girvi','sales','purchase','Chitfund','daybook',
-    'approval',
+    'contact','product','girvi','sales','purchase','Chitfund','daybook','approval',
 ]
 # CONTROLCENTER_DASHBOARDS = (
 #         ('mydash','djangox_project.dashboard.MyDash'),
@@ -78,7 +75,7 @@ MIDDLEWARE = [
 
 ]
 
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ORIGIN_WHITELIST = (
     'https://localhost:4200',
@@ -95,7 +92,7 @@ REST_FRAMEWORK = {
                                 'rest_framework.filters.OrderingFilter'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    # 'PAGE_SIZE': 100
 }
 # CACHE_MIDDLEWARE_ALIAS = 'default'
 # CACHE_MIDDLEWARE_SECONDS = 604800

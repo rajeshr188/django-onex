@@ -31,7 +31,6 @@ class Category(MPTTModel):
     background_image = VersatileImageField(
         upload_to='category-backgrounds', blank=True, null=True)
 
-
     class MPPTMeta:
         order_insertion_by = ['name']
 
@@ -103,10 +102,8 @@ class Product(models.Model):
     def get_absolute_url(self):
         return reverse('product_product_detail', args=(self.pk,))
 
-
     def get_update_url(self):
         return reverse('product_product_update', args=(self.pk,))
-
 
     def get_slug(self):
         return slugify(smart_text(unidecode(self.name)))
@@ -121,7 +118,6 @@ class Product(models.Model):
 class ProductVariant(models.Model):
     sku = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255, blank=True)
-
     product = models.ForeignKey(
         Product, related_name='variants', on_delete=models.CASCADE)
     attributes = HStoreField(default=dict, blank=True)
@@ -132,9 +128,12 @@ class ProductVariant(models.Model):
     quantity_allocated = models.IntegerField(
         validators=[MinValueValidator(0)], default=Decimal(0))
     # add melting,wh_va,ret_va
-    cost_price = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    selling_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
-    weight = models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    # weight = models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    melting = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    touch = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    wastage = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    # selling_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
 
     class Meta:
         app_label = 'product'
@@ -160,7 +159,6 @@ class ProductVariant(models.Model):
     def get_absolute_url(self):
         return reverse('product_productvariant_detail', args=(self.pk,))
 
-
     def get_update_url(self):
         return reverse('product_productvariant_update', args=(self.pk,))
 
@@ -184,6 +182,7 @@ class ProductVariant(models.Model):
         if images:
             return images[0].image
         return self.product.get_first_image()
+
     def get_ajax_label(self):
         return '%s, %s' % (
             self.sku, self.display_product())
@@ -199,9 +198,9 @@ class Attribute(models.Model):
 
     def __str__(self):
         return self.name
+
     def get_absolute_url(self):
         return reverse('product_attribute_detail', args=(self.slug,))
-
 
     def get_update_url(self):
         return reverse('product_attribute_update', args=(self.slug,))
@@ -228,7 +227,6 @@ class AttributeValue(models.Model):
     def get_absolute_url(self):
         return reverse('product_attributevalue_detail', args=(self.slug,))
 
-
     def get_update_url(self):
         return reverse('product_attributevalue_update', args=(self.slug,))
 
@@ -247,9 +245,9 @@ class ProductImage(models.Model):
     class Meta:
         ordering = ('-id', )
         app_label = 'product'
+
     def get_absolute_url(self):
         return reverse('product_productimage_detail', args=(self.pk,))
-
 
     def get_update_url(self):
         return reverse('product_productimage_update', args=(self.pk,))
@@ -263,28 +261,42 @@ class VariantImage(models.Model):
         on_delete=models.CASCADE)
     image = models.ForeignKey(
         ProductImage, related_name='variant_images', on_delete=models.CASCADE)
+
     def get_absolute_url(self):
         return reverse('product_variantimage_detail', args=(self.pk,))
-
 
     def get_update_url(self):
         return reverse('product_variantimage_update', args=(self.pk,))
 
-
-
 class Stree(MPTTModel):
+    # need a foreignkey to variant ?counter arguments?
+    # each stree is a node or shadow of product variant in lot or unique
+
+    created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
     full_name = models.CharField(max_length=100,blank = True,null = True,default = '')
     parent = TreeForeignKey('self',null = True,blank = True,
                             related_name = 'children',
                             on_delete = models.CASCADE)
+    # duplicates of weight cost touch wastage from product variant
     weight = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
     cost = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
-    created = models.DateTimeField(auto_now_add=True)
-    tracking_type = models.CharField(choices = (('Lot','Lot'),('Unique','Unique')),null = True,max_length=10,default = 'Lot')
+    touch = models.DecimalField(decimal_places=3,max_digits=10,default=0)
+    wastage = models.DecimalField(decimal_places=2,max_digits=10,null=True,default=0)
+
+    tracking_type = models.CharField(choices = (
+                                            ('Lot','Lot'),('Unique','Unique')),
+                                            null = True,max_length=10,
+                                            default = 'Lot')
     barcode = models.CharField(max_length=100,null=True,default = '')
     quantity = models.IntegerField(default=0,)
-    status = models.CharField(max_length=10,choices = (('Empty','Empty'),('Available','Available'),('Sold','Sold'),('Approval','Approval'),('Return','Return')),default = 'Empty')
+    status = models.CharField(max_length=10,choices = (
+                                    ('Empty','Empty'),
+                                    ('Available','Available'),('Sold','Sold'),
+                                    ('Approval','Approval'),('Return','Return')
+                                    ),
+                                    default = 'Empty')
+    productvariant = models.ForeignKey('ProductVariant',on_delete = models.CASCADE,null = True)
 
     class Meta:
         ordering = ('id',)
@@ -443,6 +455,7 @@ class StockTransaction(models.Model):
     content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,null=True,blank=True)
     object_id=models.PositiveIntegerField(null=True,blank=True)
     content_object=GenericForeignKey('content_type','object_id')
+
     class Meta:
         ordering=('-created',)
 

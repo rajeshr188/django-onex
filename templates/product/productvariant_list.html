@@ -15,9 +15,10 @@
           <th>Product</th>
           <th>Atrributes</th>
           <th>Tracked</th>
-          <th>cost price</th>
-          <th>selling price</th>
-          <th>weight</th>
+          <th>Melting</th>
+          <th>cost</th>
+          <th>touch</th>
+          <th>wastage</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -30,12 +31,12 @@
           <td>{{object.product}}</td>
           <td>{{object.attributes}}</td>
           <td>{{ object.track_inventory }}</td>
-          <!-- <td>{{ object.quantity }}</td>
-          <td>{{object.stock.get_current_qih.total}}</td>
+          <td>{{ object.melting }}</td>
+          <!-- <td>{{object.stock.get_current_qih.total}}</td>
           <td>{{object.stock.get_current_qih_weight.total}}</td> -->
-          <td>{{ object.cost_price }}</td>
-          <td>{{object.selling_price}}</td>
-          <td>{{ object.weight }}</td>
+          <td>{{ object.cost }}</td>
+          <td>{{object.touch}}</td>
+          <td>{{ object.wastage }}</td>
           <td><a class = "btn btn-danger" href="{% url 'product_productvariant_delete' object.id%}">Delete</a></td>
         </tr>
         {% endfor %}

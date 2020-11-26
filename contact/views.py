@@ -31,6 +31,8 @@ def home(request):
     data['customercount']=c.all().count()
 
     data['whcount']=c.filter(type="Wh").count()
+    data['withph'] = round((c.exclude(phonenumber = '911').count()/c.count())*100,2)
+    data['religionwise']= c.values('religion').annotate(Count('religion')).order_by('religion')
 
     return render(request,'contact/home.html',context={'data':data},)
 

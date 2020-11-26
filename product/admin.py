@@ -58,7 +58,7 @@ class ProductVariantAdminForm(forms.ModelForm):
 
 class ProductVariantAdmin(admin.ModelAdmin):
     form = ProductVariantAdminForm
-    list_display = ['sku', 'name', 'track_inventory', 'quantity', 'cost_price', 'weight']
+    list_display = ['sku', 'name', 'track_inventory', 'quantity', 'melting','cost','touch','wastage']
     # readonly_fields = ['sku', 'name', 'track_inventory', 'quantity', 'cost_price', 'weight']
 
 admin.site.register(ProductVariant, ProductVariantAdmin)

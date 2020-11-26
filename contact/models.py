@@ -48,6 +48,15 @@ class Customer(models.Model):
 
     # Fields
     name = models.CharField(max_length=255)
+    firstname = models.CharField(max_length =255,blank = True)
+    lastname = models.CharField(max_length =255,blank = True)
+    gender = models.CharField( max_length = 1,
+                                choices = (('M','M'),('F','F'),('N','N')),
+                                default = 'M')
+    religion = models.CharField(max_length = 10,choices = (
+                                ('Hindu','Hindu'),('Muslim','Muslim'),
+                                ('Christian','Christian'),('Atheist','Atheist')
+                                ),default = 'Hindu' )
     pic = models.ImageField(upload_to='contacts/customer/pic/',null=True,blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
@@ -83,10 +92,17 @@ class Customer(models.Model):
         amount=self.loan_set.aggregate(total=Sum('loanamount'))
         return amount['total']
 
+    def get_total_interest_due(self):
+        total_int = 0
+        for i in self.get_loans:
+            total_int += i.interestdue()
+        return total_int
     @property
     def get_loans_count(self):
         return self.loan_set.count()
 
+    def get_religion_count(self):
+        return self.values('religion').annotate(Count('religion')).order_by('religion')
     # def get_interestdue(Self):
     #     interestdue=self.loan_set.aggregate(total=Sum('interestdue'))
 

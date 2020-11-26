@@ -1,0 +1,40 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<div class="row">
+  <div class="col-sm-6">
+    <div class="card text-black bg-success mb-3" style="max-width: 18rem;">
+      <div class="card-header">Released </div>
+      <div class="card-body">
+        <h5 class="card-title">Success card title</h5>
+        <p class="card-text">
+          <ul class="list-group">
+            {%for i in success %}
+            <li class="list-group-item">{{i}}</li>
+            {%endfor%}
+          </ul>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="card text-black bg-danger mb-3" style="max-width: 18rem;">
+      <div class="card-header">Release Failed</div>
+      <div class="card-body">
+        <h5 class="card-title">Danger card title</h5>
+        <p class="card-text">
+          <ul class="list-group">
+            {%for i in failed %}
+            <li class="list-group-item">{{i}}</li>
+            {%endfor%}
+          </ul>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+{%endblock%}

@@ -3,7 +3,8 @@ from django.forms import modelformset_factory
 from datetime import datetime,timezone
 from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import License, Loan, Release, Adjustment,Series
-from django_select2.forms import Select2Widget,ModelSelect2Widget
+from django_select2.forms import Select2Widget,ModelSelect2Widget,Select2MultipleWidget
+from django.forms.widgets import CheckboxSelectMultiple
 from contact.models import Customer
 
 class LicenseForm(forms.ModelForm):
@@ -59,6 +60,25 @@ class ReleaseForm(forms.ModelForm):
     class Meta:
         model = Release
         fields = ['releaseid','loan', 'interestpaid',]
+
+class BulkReleaseForm(forms.Form):
+    date = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+                'minDate': '2010-01-01',
+                'useCurrent': True,
+                'collapse': True,
+            },
+            attrs={
+               'append': 'fa fa-calendar',
+               'input_toggle': False,
+               'icon_toggle': True,
+            }
+        ),
+    )
+    loans = forms.ModelMultipleChoiceField(
+        widget=Select2MultipleWidget,
+        queryset=Loan.unreleased.all())
 
 class AdjustmentForm(forms.ModelForm):
     created = forms.DateTimeField(

@@ -37,4 +37,4 @@ class ProductVariantFilter(django_filters.FilterSet):
 
     class Meta:
         model = ProductVariant
-        fields = ['product',]
+        fields = ['product','product_code']

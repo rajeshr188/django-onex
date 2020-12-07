@@ -120,6 +120,8 @@ class ProductVariant(models.Model):
     name = models.CharField(max_length=255, blank=True)
     product = models.ForeignKey(
         Product, related_name='variants', on_delete=models.CASCADE)
+
+    product_code = models.CharField(max_length=32,default='kas')
     attributes = HStoreField(default=dict, blank=True)
     images = models.ManyToManyField('ProductImage', through='VariantImage')
     track_inventory = models.BooleanField('Tracked',default=True)
@@ -139,7 +141,7 @@ class ProductVariant(models.Model):
         app_label = 'product'
 
     def __str__(self):
-        return self.name or self.sku
+        return f"{self.name} {self.product_code}"
 
     @property
     def quantity_available(self):
@@ -302,7 +304,7 @@ class Stree(MPTTModel):
         ordering = ('id',)
 
     def __str__(self):
-        return f"{self.get_root().name}:{self.full_name or self.name} {self.barcode} wt:{self.weight} qty:{self.quantity}"
+        return f"{self.get_root().name}:{self.productvariant} {self.barcode} wt:{self.weight} qty:{self.quantity}"
 
     def get_absolute_url(self):
         return reverse('product_stree_list')
@@ -313,6 +315,10 @@ class Stree(MPTTModel):
     def balance(self):
         balances = [node.weight for node in self.get_descendants(include_self=True)]
         return sum(balances)
+
+    def qty(self):
+        qt = [node.quantity for node in self.get_descendants(include_self = True)]
+        return sum(qt)
 
     def subtract(self,qty,wt):
         # assert(self.quantity >= qty),"quantity is higher than avaialble"
@@ -367,6 +373,7 @@ class Stree(MPTTModel):
         for p in ancestors:
             self,status = Stree.objects.get_or_create(name=p,parent = self)
         return self
+
     def empty_stock(self):
         pass
 

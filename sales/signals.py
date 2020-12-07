@@ -103,3 +103,4 @@ def submit_stock(sender,instance,*args,**kwargs):
             stock = Stree.objects.get(name='Stock')
             stock = stock.traverse_parellel_to(instance.product,include_self = False)
             instance.product.move_to(stock)
+        instance.product.update_status()

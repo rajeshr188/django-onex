@@ -35,8 +35,10 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-                        queryset = Stree.objects.filter(children__isnull = True,
-                        # status = 'Available'
+                        queryset = Stree.objects.filter(
+                        level=1,
+                        # children__isnull = True,
+                        status = 'Available'
                         ).exclude(barcode=''))
     class Meta:
         model = InvoiceItem

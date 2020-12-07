@@ -134,28 +134,38 @@ class InvoiceCreateView(CreateView):
             if item.is_return:
                 pass
                 # add product code to purchase invoice item to save all problems
-                # if lotitem then sub item from lot and transfer to return_node
+                # if lotitem then subtract item from lot and transfer to return_node
                 # else transfer item to return nodes if product code mentioned else throw eror
             else:
                 # if unique then create new unique node
-                tt ='lot' if 'lot' in item.product.name else 'Unique'
-                node,created = Stree.objects.get_or_create(name = item.product.name,
+                if 'Lot' in item.product.name:
+                    # get or create lot
+                    node,created = Stree.objects.get_or_create(name = item.product.name,
+                                                productvariant = item.product,
                                                 parent = stock_node,
-                                                tracking_type=tt,
-                                                productvariant = item.product,cost = item.touch,
-                                                weight = item.weight)
+                                                tracking_type='Lot')
+                    if created :
+                        # if newly created first ever lot
+                        node.barcode = 'je'+str(node.id)
+                        # node.save()
+                    # if lot already present add current lot as child node
+                    # node = Stree.objects.create(name = item.product.name,
+                    #                                 parent = node,
+                    #                                 tracking_type='Lot',)
+
+                else:
+                    node = Stree.objects.create(name = item.product.name,
+                                                parent = stock_node,
+                                                productvariant=item.product,
+                                                tracking_type='Unique')
+                    node.barcode = 'je'+str(node.id)
 
                 node.weight += item.weight
                 node.quantity += item.quantity
                 node.cost = item.touch
-                if created :
-                    node.barcode = 'je'+str(node.id)
 
                 node.save()
                 node.update_status()
-
-
-
 
         return HttpResponseRedirect(self.get_success_url())
 

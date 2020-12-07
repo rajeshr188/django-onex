@@ -10,7 +10,7 @@
       <thead class = "thead-light">
         <tr>
           <th>ID</th>
-          <th>sku</th>
+          <th>product_code</th>
           <th>name</th>
           <th>Product</th>
           <th>Atrributes</th>
@@ -26,7 +26,7 @@
         {% for object in object_list %}
         <tr>
           <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
-          <td>{{ object.sku }}</td>
+          <td>{{ object.product_code }}</td>
           <td>{{ object.name }}</td>
           <td>{{object.product}}</td>
           <td>{{object.attributes}}</td>

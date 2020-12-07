@@ -14,7 +14,7 @@ class Invoice(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now_add=True)
     rate = models.PositiveSmallIntegerField(default=3000)
     btype_choices=(
             ("Cash","Cash"),

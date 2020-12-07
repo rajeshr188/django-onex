@@ -19,8 +19,10 @@ def delete_status(sender,instance,*args,**kwargs):
 def remove_stock(sender,instance,*args,**kwargs):
     print('removing newly created stock')
 
-    node = Stree.objects.get(name='Stock')
-    node = node.traverse_to(instance.product)
+    stock_node = Stree.objects.get(name='Stock')
+    # node = node.traverse_to(instance.product)
+
+    node = Stree.objects.get(name = instance.product.name,parent = stock_node)
 
     if instance.is_return:
         # remove from is return
@@ -43,10 +45,19 @@ def remove_stock(sender,instance,*args,**kwargs):
     else:
         # remove from stock
         if node.tracking_type =='Lot':
+
             node.weight -= instance.weight
             node.quantity -= instance.quantity
             node.save()
             node.update_status()
+            # new logic
+            # inv_date=instance.invoice.created
+            # to_remove_node = Stree.objects.get(parent = node,
+            #                             created__date = instance.invoice.created,
+            #                             weight =instance.weight,
+            #                             quantity = instance.quantity,
+            #                             )
+            # to_remove_node.delete()
             print('Removed from Stock lot')
         else:
             node.delete()

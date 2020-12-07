@@ -18,8 +18,11 @@ class ApprovalForm(forms.ModelForm):
 class ApprovalLineForm(forms.ModelForm):
     product = forms.ModelChoiceField(
                             queryset = Stree.objects.filter(
-                            children__isnull = True,
-                            ).exclude(barcode = ''),
+                            level=1,status = 'Available'
+                            ),
+                            # queryset = Stree.objects.filter(
+                            # children__isnull = True,
+                            # ).exclude(barcode = ''),
                             widget = Select2Widget)
     class Meta:
         model = ApprovalLine

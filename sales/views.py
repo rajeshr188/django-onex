@@ -244,7 +244,7 @@ class InvoiceCreateView(CreateView):
         except Exception:
             # raise Exception("Failed Form Save")
             self.object.delete()
-            form.add_error(None,'error i n transfer')
+            form.add_error(None,'error in transfer')
             return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
         return HttpResponseRedirect(self.get_success_url())

@@ -13,7 +13,7 @@ class InvoiceTable(tables.Table):
     def render_created(self,value):
         return value.date
     def render_due_date(self,value):
-        return value.strftime("%d/%m/%Y")
+        return value.strftime("%d/%m/%Y") if value else value
     def render_edit(self):
         return 'Edit'
     def render_delete(self):

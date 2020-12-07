@@ -122,6 +122,7 @@ class AttributesMixin:
                     value.save()
                 attributes[smart_text(attr.pk)] = smart_text(value.pk)
         return attributes
+
 class ProductForm(forms.ModelForm, AttributesMixin):
     category = TreeNodeChoiceField(
         queryset=Category.objects.all(),label=pgettext_lazy('Category', 'Category'))
@@ -144,6 +145,7 @@ class ProductForm(forms.ModelForm, AttributesMixin):
         self.instance.name = self.instance.product_type.name + ' /'+generate_name_from_values(attrs)
         instance = super().save()
         return instance
+
 class ProductVariantForm(forms.ModelForm, AttributesMixin):
     model_attributes_field = 'attributes'
 
@@ -151,6 +153,7 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
         model = ProductVariant
         fields = [
             'sku',
+            'product_code',
             'quantity','melting', 'cost', 'touch','wastage','track_inventory']
         labels = {
             'sku': pgettext_lazy('SKU', 'SKU'),
@@ -211,7 +214,7 @@ class StockForm(forms.ModelForm):
 
 class StreeForm(forms.ModelForm):
     # make parent as level 1 or root nodes such as stock approval sold return damaged old kacha ft
-    #  
+    #
     class Meta:
         model = Stree
         fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity','productvariant']

@@ -97,11 +97,10 @@ class Invoice(models.Model):
         print('updating invoice status')
 
     def save(self,*args,**kwargs):
+
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
         super(Invoice,self).save(*args,**kwargs)
-
-
 
 class InvoiceItem(models.Model):
 
@@ -142,7 +141,7 @@ class InvoiceItem(models.Model):
 
     def get_charged_wt(self):
         pass
-        
+
 
     def save(self,*args,**kwargs):
 
@@ -153,26 +152,53 @@ class InvoiceItem(models.Model):
         sold,created = Stree.objects.get_or_create(name='Sold')
         if not self.is_return:#if sold
             if self.product.tracking_type =='Lot':
-                sold = sold.traverse_parellel_to(self.product)
-                print(f"moving { self.weight} from {self.product.get_family()[0].name} {self.product.weight} to {sold.get_family()[0].name}")
+                # defrafmented tree logic
+                sold_product,created = Stree.objects.get_or_create(name = self.product.name,
+                                                            parent = sold,
+                                                            barcode = self.product.barcode,
+                                                            productvariant = self.product.productvariant
+                                                            )
                 try:
-                    self.product.transfer(sold,self.quantity,self.weight)
+                    self.product.transfer(sold_product,self.quantity,self.weight)
                 except Exception:
                     raise Exception("failed transfer")
-                print(f"moved from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]}")
+                # end defragmentation logic
+                # old logic
+                # sold = sold.traverse_parellel_to(self.product)
+                # print(f"moving { self.weight} from {self.product.get_family()[0].name} {self.product.weight} to {sold.get_family()[0].name}")
+                # try:
+                #     self.product.transfer(sold,self.quantity,self.weight)
+                # except Exception:
+                #     raise Exception("failed transfer")
+                # print(f"moved from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]}")
+                # end old logic
             else:
-                sold = sold.traverse_parellel_to(self.product,include_self=False)
-                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                self.product = self.product.move_to(sold,position='first-child')
+                # defragmented tree logic
+                # print("in else block saving unique node to sold")
+                #
+                self.product.move_to(sold,'first-child')
+                self.product.update_status()
+                # move_node(self.product,sold,position='last-child')
+
+                # end defragmented tree logic
+                # old logic
+                # sold = sold.traverse_parellel_to(self.product,include_self=False)
+                # print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]} {sold.weight}")
+                # self.product = self.product.move_to(sold,position='first-child')
+                # old logic
         else:#if returned
             stock,created = Stree.objects.get_or_create(name='Stock')
             if self.product.tracking_type =='Lot':
-                stock = stock.traverse_parellel_to(self.product)
+                stock_product = Stree.object.create(name = self.product.name,
+                                            barcode = self.barcode,parent = stock,
+                                            productvariant = self.item.product.produtvariant
+                                            )
+                # stock = stock.traverse_parellel_to(self.product)
                 print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                self.product.transfer(stock,self.quantity,self.weight)
+                self.product.transfer(stock_product,self.quantity,self.weight)
                 print(f"moved { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
             else:
-                stock = stock.traverse_parellel_to(self.product,include_self=False)
+                # stock = stock.traverse_parellel_to(self.product,include_self=False)
                 print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
                 self.product = self.product.move_to(stock,position='first-child')
         super(InvoiceItem,self).save(*args,**kwargs)

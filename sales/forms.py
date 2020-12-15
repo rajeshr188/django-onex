@@ -4,7 +4,7 @@ from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
 from django_select2.forms import Select2Widget,ModelSelect2Widget,ModelSelect2MultipleWidget
 from contact.models import Customer
-from product.models import ProductVariant,Stree
+from product.models import ProductVariant,Stree,Stock
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
 from mptt.forms import TreeNodeChoiceField
@@ -35,33 +35,29 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-                        queryset = Stree.objects.filter(
-                        level=1,
-                        # children__isnull = True,
-                        status = 'Available'
-                        ).exclude(barcode=''))
+                        queryset = Stock.objects.all().order_by('-Qih','-Wih'),
+                        widget = Select2Widget,
+                        )
     class Meta:
         model = InvoiceItem
         fields = ['invoice','is_return','product','quantity','weight', 'less_stone','touch','wastage','makingcharge','total',]
 
-    def save(self,commit = True):
-
-        invoiceitem = super(InvoiceItemForm,self).save(commit = False)
-        if invoiceitem.id:
-
-            if any( x in self.changed_data for x in ['product','quantity','weight']):
-                InvoiceItem.objects.get(id = invoiceitem.id).delete()
-
-        if commit:
-            try:
-                invoiceitem.save()
-            except Exception:
-                raise Exception("failed From Model Save")
-        return invoiceitem
+    # def save(self,commit = True):
+    #     invoiceitem = super(InvoiceItemForm,self).save(commit = False)
+    #     if invoiceitem.id:
+    #         if any( x in self.changed_data for x in ['product','quantity','weight']):
+    #             InvoiceItem.objects.get(id = invoiceitem.id).delete()
+    #     if commit:
+    #         try:
+    #             invoiceitem.save()
+    #         except Exception:
+    #             raise Exception("failed From Model Save")
+    #     return invoiceitem
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','product','quantity','weight','less_stone', 'touch', 'wastage','makingcharge','total', 'invoice'),
-    form = InvoiceItemForm,extra=1,can_delete=True)
+    fields=('is_return','product','quantity',
+    'weight','less_stone', 'touch', 'wastage','makingcharge','total', 'invoice'),
+    form = InvoiceItemForm,extra=2,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)

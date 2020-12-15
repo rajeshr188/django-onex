@@ -103,8 +103,8 @@ urlpatterns += (
     #urls for Stock
     path('stock/',views.StockListView.as_view(),name='product_stock_list'),
     path('stock/create/',views.StockCreateView.as_view(),name='product_stock_create'),
-    path('stock/detail/<slug:slug>/',views.StockDetailView.as_view(),name='product_stock_detail'),
-    path('stock/update/<slug:slug>/',views.StockUpdateView.as_view(),name='product_stock_update'),
+    path('stock/detail/<int:pk>/',views.StockDetailView.as_view(),name='product_stock_detail'),
+    path('stock/update/<int:pk>/',views.StockUpdateView.as_view(),name='product_stock_update'),
 )
 urlpatterns +=(
     #urls for Stocktransaction

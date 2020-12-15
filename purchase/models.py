@@ -10,6 +10,9 @@ from product.models import ProductVariant
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum
 
+from django.contrib.contenttypes.fields import GenericRelation
+from product.models import Stock,StockTransaction
+
 class Invoice(models.Model):
 
     # Fields
@@ -39,6 +42,8 @@ class Invoice(models.Model):
         Customer,
         on_delete=models.CASCADE, related_name="purchases"
     )
+    posted = models.BooleanField(default = False)
+    # txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -48,7 +53,6 @@ class Invoice(models.Model):
 
     def get_absolute_url(self):
         return reverse('purchase_invoice_detail', args=(self.pk,))
-
 
     def get_update_url(self):
         return reverse('purchase_invoice_update', args=(self.pk,))
@@ -65,16 +69,18 @@ class Invoice(models.Model):
             return self.balance - self.get_total_payments()
         return self.balance
 
+    def delete(self, *args, **kwargs):
+        if not self.posted:
+            super(Invoice, self).delete(*args, **kwargs)
 
 class InvoiceItem(models.Model):
-
     # Fields
-    weight = models.DecimalField(max_digits=10, decimal_places=2)
+    weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
     quantity = models.IntegerField()
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default=0)
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant,
@@ -82,7 +88,7 @@ class InvoiceItem(models.Model):
     )
     invoice = models.ForeignKey(
         'purchase.Invoice',
-        on_delete=models.CASCADE, related_name="purchaseinvoices"
+        on_delete=models.CASCADE, related_name="purchaseitems"
     )
 
     class Meta:
@@ -100,6 +106,109 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch)/100
 
+    def post(self):
+        if not self.is_return:
+            if 'Lot' in self.product.name:
+                stock,created = Stock.objects.get_or_create(variant = self.product,
+                                                    tracking_type = 'Lot',
+                                                    )
+                if created:
+                    stock.barcode='je'+ str(stock.id)
+                    stock.save()
+                print(type(stock.weight))
+                print(type(self.weight))
+                stock.add(self.weight,self.quantity,
+                            self.weight,self.quantity,
+                            self.invoice,'P')
+            else:
+                stock = Stock.objects.create(variant = self.product,
+                                            tracking_type = 'Unique')
+
+                stock.barcode='je'+ str(stock.id)
+                stock.add(self.weight,self.quantity,
+                            self.weight,self.quantity,
+                            self.invoice,'P')
+
+        else:
+            # is return true
+            if 'Lot' in self.product.name:
+                stock = Stock.get(name = self.product.name)
+                stock.remove(self.weight,self.quantity,
+                                self.weight,self.quantity,
+                                self.invoice,'PR')
+            else:
+                print("merge unique to lot before returning")
+
+    def unpost(self):
+        if self.is_return:
+            if 'Lot' in self.product.name:
+                pass
+            else :
+                pass
+        else:
+            if 'Lot' in self.product.name:
+                stock = Stock.objects.get(variant = self.product)
+                stock.remove(
+                self.weight,self.quantity,
+                self.weight,self.quantity,
+                cto = self.invoice,
+                at = 'PR'
+                )
+            else:
+                # Pass the self we created in the snippet above
+                ct = ContentType.objects.get_for_model(self.invoice)
+
+                # Get the list of likes
+                txns = StockTransaction.objects.filter(content_type=ct,
+                                                    object_id=self.invoice.id,
+                                                    # activity_type=StockTransaction.PURCHASE,
+                                                    stock__weight = self.weight,
+                                                    stock__quantity= self.quantity,
+                                                    )
+
+                txns[0].stock.remove(
+                self.weight,self.quantity,
+                self.weight,self.quantity,
+                cto = self.invoice,
+                at = 'PR'
+                )
+
+
+    # def save(self,*args,**kwargs):
+    #     print("In purchase line item model save()")
+        # if not self.is_return:
+        #     if 'Lot' in self.product.name:
+        #         stock,created = Stock.objects.get_or_create(variant = self.product,
+        #                                             tracking_type = 'Lot',
+        #                                             )
+        #         if created:
+        #             stock.barcode='je'+ str(stock.id)
+        #             stock.save()
+        #         print(type(stock.weight))
+        #         print(type(self.weight))
+        #         stock.add(self.weight,self.quantity,
+        #                     self.weight,self.quantity,
+        #                     self.invoice,'P')
+        #     else:
+        #         stock = Stock.objects.create(variant = self.product,
+        #                                     tracking_type = 'Unique')
+        #
+        #         stock.barcode='je'+ str(stock.id)
+        #         stock.add(self.weight,self.quantity,
+        #                     self.weight,self.quantity,
+        #                     self.invoice,'P')
+        #
+        # else:
+        #     # is return true
+        #     if 'Lot' in self.product.name:
+        #         stock = Stock.get(name = self.product.name)
+        #         stock.remove(self.weight,self.quantity,
+        #                         self.weight,self.quantity,
+        #                         self.invoice,'PR')
+        #     else:
+        #         print("merge unique to lot before returning")
+        # super(InvoiceItem,self).save(*args,**kwargs)
+        # print("actually saving purchase line item")
 
 class Payment(models.Model):
 

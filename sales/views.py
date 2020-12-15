@@ -11,7 +11,7 @@ from .render import Render
 from num2words import num2words
 from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
 from django.db.models.functions import TruncMonth,Coalesce
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
@@ -207,8 +207,8 @@ class InvoiceCreateView(CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-
         invoiceitem_form = InvoiceItemFormSet()
+
         if 'approvalid' in request.GET:
             aid = request.GET['approvalid']
             print(aid)
@@ -237,15 +237,16 @@ class InvoiceCreateView(CreateView):
 
     @transaction.atomic()
     def form_valid(self, form, invoiceitem_form):
-        self.object = form.save()
-        invoiceitem_form.instance = self.object
-        try:
-            invoiceitem_form.save()
-        except Exception:
-            # raise Exception("Failed Form Save")
-            self.object.delete()
-            form.add_error(None,'error in transfer')
-            return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
+        if invoiceitem_form.is_valid():
+            try:
+                self.object = form.save()
+                invoiceitem_form.instance = self.object
+                invoiceitem_form.save()
+            except Exception:
+                # raise Exception("Failed Form Save")
+                # self.object.delete()
+                form.add_error(None,'error in transfer')
+                return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -271,7 +272,11 @@ class InvoiceUpdateView(UpdateView):
         if self.request.POST:
             data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
         else:
+
             data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
+            # submit stock and represent form
+            # for line in InvoiceItem.objects.filter(invoice=self.object):
+            #     line.product.add(0,0,line.weight,line.quantity,line.invoice,'SR')
         return data
 
     @transaction.atomic()
@@ -279,10 +284,10 @@ class InvoiceUpdateView(UpdateView):
         context = self.get_context_data()
         invoiceitem_form = context['invoiceitem_form']
 
-        self.object = form.save()
-        print(invoiceitem_form.is_valid())
         if invoiceitem_form.is_valid():
             try:
+                self.object = form.save()
+                invoiceitem_form.instance = self.object
                 invoiceitem_form.save()
             except Exception:
                 # raise Exception("Failed Form Save")
@@ -295,7 +300,24 @@ class InvoiceUpdateView(UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
-
+@transaction.atomic()
+def post_sales(request,pk):
+    sales_inv = Invoice.objects.get(id = pk)
+    if not sales_inv.posted:
+        for item in sales_inv.saleitems.all():
+            item.post()
+        sales_inv.posted = True
+        sales_inv.save()
+    return redirect(sales_inv)
+@transaction.atomic()
+def unpost_sales(request,pk):
+    sales_inv = Invoice.objects.get(id = pk)
+    if sales_inv.posted:
+        for item in sales_inv.saleitems.all():
+            item.unpost()
+        sales_inv.posted = False
+        sales_inv.save()
+    return redirect(sales_inv)
 
 class InvoiceDeleteView(DeleteView):
     model = Invoice

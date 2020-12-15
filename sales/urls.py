@@ -23,6 +23,8 @@ urlpatterns += (
     path('sales/invoice/detail/<int:pk>/pdf', views.print_invoice,name='sales_invoicepdf'),
     path('sales/invoice/update/<int:pk>/', views.InvoiceUpdateView.as_view(), name='sales_invoice_update'),
     path('sales/invoice/delete/<int:pk>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
+    path('sales/invoice/<int:pk>/post/',views.post_sales,name = 'sales_invoice_post'),
+    path('sales/invoice/<int:pk>/unpost/',views.unpost_sales,name='sales_invoice_unpost'),
 )
 urlpatterns+=(
             path('sales/',views.home,name='sales_home'),

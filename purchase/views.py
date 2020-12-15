@@ -9,11 +9,12 @@ from .filters import InvoiceFilter,PaymentFilter
 from .render import Render
 from num2words import num2words
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,PaymentTable
+from django.db import transaction
 
 def print_invoice(request,pk):
     invoice=Invoice.objects.get(id=pk)
@@ -46,7 +47,6 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'purchase/invoice_list.html'
     paginate_by = 25
 
-from product.models import Stree
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
@@ -72,101 +72,15 @@ class InvoiceCreateView(CreateView):
         else:
             return self.form_invalid(form, invoiceitem_form)
 
+    @transaction.atomic()
     def form_valid(self, form, invoiceitem_form):
-        self.object = form.save()
-        invoiceitem_form.instance = self.object
-        items = invoiceitem_form.save()
-        # 2 problems
-        # cant return unique item purchase :
-        #   temp sol:merge with lot and return
-        #       problem:cant delete this purchase
-        #           (usually after splitting no one deletes purchase)
-        #   permanent sol:
-        #       since each unique stree node created by this purchases
-        #       having related to this product variant search for the product and transfer it appropriatelya
-
-        # old logic stree w/o pv
-        # for item in items:
-        #
-        #     node,created = Stree.objects.get_or_create(name='Stock')
-        #     node = node.traverse_to(item.product)
-        #
-        #     if item.is_return:
-        #
-        #         # tldr:never return unique item in purchase ,merge and then return from lot
-        #         # cant create purchase invoice with unique product as being returned,
-        #         # becoz it will create negative unique item
-        #         # in case you want to return merge unique to lot and return
-        #         # other way around is to find and delete unique return item baseed on weight here
-        #         # and create again when this purchase is deleted and signals activated
-        #         if node.tracking_type == 'Unique':
-        #             print("you need to merge a unique to lot to be able to return ")
-        #             continue
-        #         # change to node.transfer(returnnode,qty,wt)
-        #         node.weight -= item.weight
-        #         node.quantity -= item.quantity
-        #         node.save()
-        #         node.update_status()
-        #
-        #         return_node = Stree.objects.get(name='Return')
-        #         return_node = return_node.traverse_parellel_to(node)
-        #         return_node.weight +=item.weight
-        #         return_node.quantity +=item.quantity
-        #         return_node.save()
-        #     else:
-        #         if node.tracking_type == 'Unique':
-        #             print("node is unique")
-        #             node = Stree.objects.create(parent = node,tracking_type='Unique',cost=item.touch)
-        #         node.weight +=item.weight
-        #         node.quantity +=item.quantity
-        #
-        #         node.cost = item.touch
-        #         n = node.get_family()
-        #         node.full_name = n[2].name + ' ' + node.name
-        #         node.barcode = 'je'+str(node.id)
-        #         node.save()
-        #         node.update_status()
-
-        # new logic stree with productvariant
-        stock_node,created = Stree.objects.get_or_create(name='Stock')
-        return_node,created = Stree.objects.get_or_create(name='Return')
-        for item in items:
-            if item.is_return:
-                pass
-                # add product code to purchase invoice item to save all problems
-                # if lotitem then subtract item from lot and transfer to return_node
-                # else transfer item to return nodes if product code mentioned else throw eror
-            else:
-                # if unique then create new unique node
-                if 'Lot' in item.product.name:
-                    # get or create lot
-                    node,created = Stree.objects.get_or_create(name = item.product.name,
-                                                productvariant = item.product,
-                                                parent = stock_node,
-                                                tracking_type='Lot')
-                    if created :
-                        # if newly created first ever lot
-                        node.barcode = 'je'+str(node.id)
-                        # node.save()
-                    # if lot already present add current lot as child node
-                    # node = Stree.objects.create(name = item.product.name,
-                    #                                 parent = node,
-                    #                                 tracking_type='Lot',)
-
-                else:
-                    node = Stree.objects.create(name = item.product.name,
-                                                parent = stock_node,
-                                                productvariant=item.product,
-                                                tracking_type='Unique')
-                    node.barcode = 'je'+str(node.id)
-
-                node.weight += item.weight
-                node.quantity += item.quantity
-                node.cost = item.touch
-
-                node.save()
-                node.update_status()
-
+        if invoiceitem_form.is_valid():
+            self.object = form.save()
+            invoiceitem_form.instance = self.object
+            items = invoiceitem_form.save()
+            if self.object.posted:
+                for i in item:
+                    i.post()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -186,41 +100,55 @@ class InvoiceUpdateView(UpdateView):
     model = Invoice
     form_class = InvoiceForm
 
-    def get(self, request, *args, **kwargs):
-
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(instance=self.object)
-
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
-
-    def post(self, request, *args, **kwargs):
-
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(self.request.POST,instance=self.object)
-
-        if (form.is_valid() and invoiceitem_form.is_valid()):
-            return self.form_valid(form, invoiceitem_form)
+    def get_context_data(self,*args,**kwargs):
+        data = super(InvoiceUpdateView,self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,
+                                                    instance = self.object)
         else:
-            return self.form_invalid(form, invoiceitem_form)
+            data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
+        return data
 
-    def form_valid(self, form, invoiceitem_form):
+    @transaction.atomic()
+    def form_valid(self, form):
+        context = self.get_context_data()
+        invoiceitem_form = context['invoiceitem_form']
 
-        self.object = form.save()
-        invoiceitem_form.instance = self.object
-        items=invoiceitem_form.save()
-
+        print(f"form_valid:{invoiceitem_form.is_valid()}")
+        if invoiceitem_form.is_valid():
+            self.object = form.save()
+            # invoiceitem_form.instance = self.object
+            items=invoiceitem_form.save()
+            if self.object.posted:
+                for i in items:
+                    i.post()
+            else :
+                for i in items:
+                    i.unpost()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
+
+def post_purchase(request,pk):
+    purchase_inv = Invoice.objects.get(id = pk)
+    if not purchase_inv.posted:
+        for item in purchase_inv.purchaseitems.all():
+            item.post()
+        purchase_inv.posted = True
+        purchase_inv.save()
+    return redirect(purchase_inv)
+
+def unpost_purchase(request,pk):
+    purchase_inv = Invoice.objects.get(id = pk)
+    if purchase_inv.posted:
+        for item in purchase_inv.purchaseitems.all():
+            item.unpost()
+        purchase_inv.posted = False
+        purchase_inv.save()
+    return redirect(purchase_inv)
 
 class InvoiceDeleteView(DeleteView):
     model = Invoice
@@ -229,20 +157,16 @@ class InvoiceDeleteView(DeleteView):
 class InvoiceItemListView(ListView):
     model = InvoiceItem
 
-
 class InvoiceItemCreateView(CreateView):
     model = InvoiceItem
     form_class = InvoiceItemForm
 
-
 class InvoiceItemDetailView(DetailView):
     model = InvoiceItem
-
 
 class InvoiceItemUpdateView(UpdateView):
     model = InvoiceItem
     form_class = InvoiceItemForm
-
 
 class PaymentListView(ExportMixin,SingleTableMixin,FilterView):
     model = Payment
@@ -321,10 +245,8 @@ class PaymentCreateView(CreateView):
             self.get_context_data(form=form,
                                   paymentline_form=paymentline_form))
 
-
 class PaymentDetailView(DetailView):
     model = Payment
-
 
 class PaymentUpdateView(UpdateView):
     model = Payment

@@ -13,8 +13,9 @@
           <th>product_code</th>
           <th>name</th>
           <th>Product</th>
-          <th>Atrributes</th>
-          <th>Tracked</th>
+
+          <th>Weight</th>
+          <th>Quanitity</th>
           <th>Melting</th>
           <th>cost</th>
           <th>touch</th>
@@ -29,9 +30,9 @@
           <td>{{ object.product_code }}</td>
           <td>{{ object.name }}</td>
           <td>{{object.product}}</td>
-          <td>{{object.attributes}}</td>
-          <td>{{ object.track_inventory }}</td>
-          <td>{{ object.melting }}</td>
+
+          <td>{{ object.get_weight.t }}/{{object.get_wih.t}}</td>
+          <td>{{ object.get_qty.t }}/{{object.get_qih.t}}</td>
           <!-- <td>{{object.stock.get_current_qih.total}}</td>
           <td>{{object.stock.get_current_qih_weight.total}}</td> -->
           <td>{{ object.cost }}</td>

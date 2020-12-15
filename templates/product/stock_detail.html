@@ -4,12 +4,27 @@
 <p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
 <table class="table">
 <tr><td>Created</td><td>{{ object.created }}</td></tr>
-<tr><td>Updated</td><td>{{ object.updated }}</td></tr>
+<tr><td>Updated</td><td>{{ object.updated_on }}</td></tr>
 <tr><td>Product</td><td>{{ object.variant }}</td></tr>
-<tr><td>Quantity</td><td>{{ object.slug }}</td></tr>
+<tr><td>Weight</td><td>{{object.weight}}/{{object.Wih}}</td></tr>
+<tr><td>Quantity</td><td>{{ object.quantity}}/{{object.Qih}}</td></tr>
+<tr><td>Status</td><td>{{object.status}}</td></tr>
 <tr><td>Reorderat</td><td>{{ object.reorderat }}</td></tr>
-<tr><td>Total Weight</td><td>{{ object.totalwt }}</td></tr>
+
 </table>
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a>
 
+{%if object.stocktransaction_set %}
+<table>
+  <thead>
+    <tr><th>type</th><th>activity_type</th><th>weight</th><th>quantity</th></tr>
+  </thead>
+  <tbody>
+  {%for i in object.stocktransaction_set.all %}
+    <tr><td>{{i.type}}</td><td>{{i.activity_type}}</td><td>{{i.weight}}</td>
+        <td>{{i.quantity}}</td><td>{{i.content_object}}</td></tr>
+  {%endfor%}
+  </tbody>
+</table>
+{%endif%}
 {% endblock %}

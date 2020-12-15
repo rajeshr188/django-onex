@@ -79,28 +79,7 @@ def delete_status(sender,instance,*args,**kwargs):
 #     finally:
 #         del instance._dirty
 
-@receiver(signals.post_delete,sender = InvoiceItem)
+@receiver(signals.pre_delete,sender = InvoiceItem)
 def submit_stock(sender,instance,*args,**kwargs):
-
-    if instance.is_return:
-        if instance.product.tracking_type =='Lot':
-            # remove from stock
-            stock = Stree.objects.get(name='Stock')
-            stock = stock.traverse_parellel_to(instance.product)
-            stock.transfer(instance.product,instance.quantity,instance.weight)
-        else:
-            # move unique back to sold
-            sold = Stree.objects.get(name='Sold')
-            instance.product.move_to(sold)
-    else:
-        if instance.product.tracking_type =='Lot':
-            # remove from sold
-            sold = Stree.objects.get(name='Sold')
-            sold = sold.traverse_parellel_to(instance.product)
-            sold.transfer(instance.product,instance.quantity,instance.weight)
-        else:
-            # move unique back to stock
-            stock = Stree.objects.get(name='Stock')
-            stock = stock.traverse_parellel_to(instance.product,include_self = False)
-            instance.product.move_to(stock)
-        instance.product.update_status()
+    if instance.invoice.posted:
+        instance.unpost()

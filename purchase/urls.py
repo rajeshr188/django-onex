@@ -20,9 +20,11 @@ urlpatterns += (
     path('purchase/invoice/', views.InvoiceListView.as_view(), name='purchase_invoice_list'),
     path('purchase/invoice/create/', views.InvoiceCreateView.as_view(), name='purchase_invoice_create'),
     path('purchase/invoice/detail/<int:pk>/', views.InvoiceDetailView.as_view(), name='purchase_invoice_detail'),
-    path('invoice/detail/<int:pk>/pdf', views.print_invoice,name='invoicepdf'),
+    path('purchase/invoice/detail/<int:pk>/pdf', views.print_invoice,name='invoicepdf'),
     path('purchase/invoice/update/<int:pk>/', views.InvoiceUpdateView.as_view(), name='purchase_invoice_update'),
     path('purchase/invoice/delete/<int:pk>/', views.InvoiceDeleteView.as_view(), name='purchase_invoice_delete'),
+    path('purchase/invoice/<int:pk>/post/',views.post_purchase,name = 'purchase_invoice_post'),
+    path('purchase/invoice/<int:pk>/unpost/',views.unpost_purchase,name='purchase_invoice_unpost'),
 )
 urlpatterns+=(
             path('purchase/balance/',views.list_balance,name='purchase_balance'),

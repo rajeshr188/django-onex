@@ -3,9 +3,14 @@
 {% load humanize %}
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a>
+  {%if not object.posted%}
+  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
   <a class="btn btn-danger" href="{% url 'sales_invoice_delete' object.id %}">Delete</a>
+  {%endif%}
+
   <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Invoice</a>
-  <a class="btn btn-secondary" href="{% url 'sales_invoicepdf'  object.id %}">Print</a></p>
+  <a class="btn btn-secondary" href="{% url 'sales_invoicepdf'  object.id %}">Print</a>
+</p>
 <table class="table table-sm table-striped table-bordered">
 <tr><td>Id</td><td>{{ object.id }}</td></tr>
 <tr><td>Customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a></td></tr>
@@ -19,16 +24,26 @@
 <tr>
   <td>Due Date</td><td>{{object.due_date}}</td>
 </tr>
+<tr>
+  <td>Posted</td>
+  <td>
+  {%if object.posted%}
+  <a href="{% url 'sales_invoice_unpost' object.pk%}">Unpost</a>
+  {%else%}
+  <a href="{% url 'sales_invoice_post' object.pk%}">Post</a>
+  {%endif%}
+  </td>
+</tr>
 </table>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
-{% if object.invoiceitem_set %}
+
+{% if object.saleitems %}
 <table class="table table-sm table-striped">
   <thead>
     <tr>
       <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th><th>Total</th>
     </tr>
   </thead>
-  {% for i in object.invoiceitem_set.all %}
+  {% for i in object.saleitems.all %}
   <tr>
     <td>{{i.is_return}}</td>
     <td>{{i.product}}</td>

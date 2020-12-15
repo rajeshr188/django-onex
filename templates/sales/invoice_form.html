@@ -3,6 +3,9 @@
 {% load bootstrap4 %}
 {% block content %}
 {{form.media}}
+{% for form in invoiceitem_form%}
+  {{form.empty_permitted}}/has_changed:{{form.has_changed}}
+{%endfor%}
 <p><h2 class="h3 mb-3 font-weight-normal">Add Sales</h2></p>
     <form action="." method="post">
         {% csrf_token %}
@@ -76,39 +79,13 @@
         </div>
         <button class="btn btn-primary" type="submit">Save Invoice</button>
     </form>
-
 <script type="text/javascript">
-
-  $(function() {
     $(document).ready(function() {
-      update_row();
-      update_amounts();
-      $(document).on('change', '.weight', function() {
+      $(document).on('change', '.weight,.touch,#id_balancetype,#id_rate,.makingcharge,.is_return', function() {
         console.log('wt here')
         update_row();
         update_amounts();
       });
-      $(document).on('change', '.touch', function() {
-        update_row();
-        update_amounts();
-      });
-      $(document).on('change', '#id_balancetype', function() {
-        update_row();
-        update_amounts();
-      });
-      $(document).on('change', '#id_rate', function() {
-        update_row();
-        update_amounts();
-      });
-      $(document).on('change', '.makingcharge', function() {
-        update_row();
-        update_amounts();
-      });
-      $(document).on('change', '.is_return', function() {
-        update_row();
-        update_amounts();
-      });
-
       function update_amounts(){
         var sum = 0;
         var nwt=0;
@@ -123,14 +100,10 @@
                   twt += parseFloat(this.value);
               }
           });
-
         $("#id_balance").val(sum.toFixed(3));
         $('#id_weight').val(Number(twt).toFixed(3));
-
-
       }
       function update_row() {
-
         var rate=$('#id_rate').val();
         $('.inline').each(function() {
         var wt = $(this).find('.weight input').val();
@@ -148,26 +121,7 @@
         $(this).find('.total input').val(total.toFixed(3));
         console.log(wt,touch,nettwt,rate,total.toFixed(3))
       });
-
     }
-
-    $(".inline.{{ invoiceitem_form.prefix }}").formset({
-      prefix: "{{ invoiceitem_form.prefix }}",
-      //formTemplate: $("#formset-template").clone(),
-      // initialize newly created heavy fields on the added callback
-      added: function ($row) {
-         $row.find('.product select').select2();
-         $row.find('.delete-row').addClass('btn-sm btn-danger');
-      },
-      removed: function($row){
-        update_amounts();
-      }
-  })
-  $('.product select').select2();
-  $('.add-row').addClass('btn-sm btn-success');
-  $('.delete-row').addClass('btn-sm btn-danger');
-
-})
 })
 
 </script>

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from django.db import models
 from contact.models import Customer
-from product.models import ProductVariant,Stree
+from product.models import ProductVariant,Stree,Stock
 from django.utils import timezone
 from django.db.models import Avg,Count,Sum,Func,F
 from datetime import date,timedelta
@@ -68,7 +68,7 @@ class Invoice(models.Model):
         on_delete=models.CASCADE,
         related_name="sales"
     )
-
+    posted = models.BooleanField(default = False)
     class Meta:
         ordering = ('-created',)
 
@@ -97,31 +97,33 @@ class Invoice(models.Model):
         print('updating invoice status')
 
     def save(self,*args,**kwargs):
-
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
         super(Invoice,self).save(*args,**kwargs)
 
+    def delete(self, *args, **kwargs):
+        if not self.posted:
+            super(Invoice, self).delete(*args, **kwargs)
+            
 class InvoiceItem(models.Model):
-
     # Fields
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
-    less_stone = models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
+    less_stone = models.DecimalField(max_digits=10,decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
-    wastage = models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
+    wastage = models.DecimalField(max_digits=10,decimal_places=3)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default=0)
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
     # Relationship Fields
-    product = TreeForeignKey(
-        Stree,
+    product = models.ForeignKey(
+        Stock,
         on_delete=models.CASCADE
     )
     invoice = models.ForeignKey(
         'sales.Invoice',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="saleitems"
     )
 
     class Meta:
@@ -142,69 +144,24 @@ class InvoiceItem(models.Model):
     def get_charged_wt(self):
         pass
 
-
-    def save(self,*args,**kwargs):
-
-        print(f"In Sale Modelform save() :")
-        print(f"item is_return: {self.is_return} ")
-        print(self.product.refresh_from_db())
-
-        sold,created = Stree.objects.get_or_create(name='Sold')
+    def post(self):
         if not self.is_return:#if sold
-            if self.product.tracking_type =='Lot':
-                # defrafmented tree logic
-                sold_product,created = Stree.objects.get_or_create(name = self.product.name,
-                                                            parent = sold,
-                                                            barcode = self.product.barcode,
-                                                            productvariant = self.product.productvariant
-                                                            )
-                try:
-                    self.product.transfer(sold_product,self.quantity,self.weight)
-                except Exception:
-                    raise Exception("failed transfer")
-                # end defragmentation logic
-                # old logic
-                # sold = sold.traverse_parellel_to(self.product)
-                # print(f"moving { self.weight} from {self.product.get_family()[0].name} {self.product.weight} to {sold.get_family()[0].name}")
-                # try:
-                #     self.product.transfer(sold,self.quantity,self.weight)
-                # except Exception:
-                #     raise Exception("failed transfer")
-                # print(f"moved from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]}")
-                # end old logic
-            else:
-                # defragmented tree logic
-                # print("in else block saving unique node to sold")
-                #
-                self.product.move_to(sold,'first-child')
-                self.product.update_status()
-                # move_node(self.product,sold,position='last-child')
-
-                # end defragmented tree logic
-                # old logic
-                # sold = sold.traverse_parellel_to(self.product,include_self=False)
-                # print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {sold.get_family()[0]} {sold.weight}")
-                # self.product = self.product.move_to(sold,position='first-child')
-                # old logic
+            self.product.remove(0,0,self.weight,self.quantity,self.invoice,'S')
         else:#if returned
-            stock,created = Stree.objects.get_or_create(name='Stock')
-            if self.product.tracking_type =='Lot':
-                stock_product = Stree.object.create(name = self.product.name,
-                                            barcode = self.barcode,parent = stock,
-                                            productvariant = self.item.product.produtvariant
-                                            )
-                # stock = stock.traverse_parellel_to(self.product)
-                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                self.product.transfer(stock_product,self.quantity,self.weight)
-                print(f"moved { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
-            else:
-                # stock = stock.traverse_parellel_to(self.product,include_self=False)
-                print(f"moving { self.weight} from {self.product.get_family()[0]} {self.product.weight} to {stock.get_family()[0]} {stock.weight}")
-                self.product = self.product.move_to(stock,position='first-child')
-        super(InvoiceItem,self).save(*args,**kwargs)
-        self.invoice.update_status()
-        # print(f"item node : {item.product.get_family()} wt : {item.product.weight} {item.product.barcode}")
-        # print(f"sold node : {sold.get_family()} wt : {sold.weight} {sold.barcode}")
+            self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
+    def unpost(self):
+        if self.is_return:
+            self.product.remove(0,0,self.weight,self.quantity,self.invoice,'SR')
+        else:
+            self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
+    # def save(self,*args,**kwargs):
+    #     if not self.is_return:#if sold
+    #         self.product.remove(0,0,self.weight,self.quantity,self.invoice,'S')
+    #     else:#if returned
+    #         self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
+    #
+    #     super(InvoiceItem,self).save(*args,**kwargs)
+    #     # self.invoice.update_status()
 
 class Receipt(models.Model):
 

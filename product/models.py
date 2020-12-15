@@ -6,7 +6,8 @@ from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q,Sum
+from django.db.models import F,Q,Sum
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.encoding import smart_text
 from django.utils.text import slugify
@@ -164,6 +165,18 @@ class ProductVariant(models.Model):
     def get_update_url(self):
         return reverse('product_productvariant_update', args=(self.pk,))
 
+    def get_weight(self):
+        return Stock.objects.filter(variant = self).aggregate(t = Sum('weight'))
+
+    def get_wih(self):
+        return Stock.objects.filter(variant = self).aggregate(t = Sum('Wih'))
+
+    def get_qty(self):
+        return Stock.objects.filter(variant = self).aggregate(t = Sum('quantity'))
+
+    def get_qih(self):
+        return Stock.objects.filter(variant = self).aggregate(t = Sum('Qih'))
+
     def is_in_stock(self):
         return self.quantity_available > 0
 
@@ -188,7 +201,6 @@ class ProductVariant(models.Model):
     def get_ajax_label(self):
         return '%s, %s' % (
             self.sku, self.display_product())
-
 
 class Attribute(models.Model):
 
@@ -226,6 +238,7 @@ class AttributeValue(models.Model):
 
     def __str__(self):
         return self.name
+
     def get_absolute_url(self):
         return reverse('product_attributevalue_detail', args=(self.slug,))
 
@@ -271,9 +284,7 @@ class VariantImage(models.Model):
         return reverse('product_variantimage_update', args=(self.pk,))
 
 class Stree(MPTTModel):
-    # need a foreignkey to variant ?counter arguments?
     # each stree is a node or shadow of product variant in lot or unique
-
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
     full_name = models.CharField(max_length=100,blank = True,null = True,default = '')
@@ -417,35 +428,127 @@ class Stree(MPTTModel):
             self.status = root.name
         self.save()
 
-class StreeTransaction(models.Model):
-    pass
-
 class Stock(models.Model):
-    variant=models.OneToOneField(ProductVariant,on_delete=models.CASCADE)
-    slug = AutoSlugField(populate_from='variant', blank=True)
-    Qih=models.IntegerField()
-    reorderat=models.IntegerField(default=1)
-    created=models.DateTimeField(auto_now_add=True)
-    updated_on=models.DateTimeField(auto_now=True)
-    totalwt=models.DecimalField(max_digits=10,decimal_places=3,default=0.0)
+    created = models.DateTimeField(auto_now_add = True)
+    updated_on = models.DateTimeField(auto_now=True)
+
+    # cost = models.DecimalField(max_digits = 10,decimal_places = 3)
+    weight = models.DecimalField(max_digits = 10, decimal_places = 3,
+                                    default =0)
+    quantity = models.IntegerField(default =0)
+    Wih = models.DecimalField(max_digits=10,decimal_places=3,default=0)
+    Qih = models.IntegerField(default=0)
+    reorderat = models.IntegerField(default=1)
+    tracking_type = models.CharField(choices = (
+                                            ('Lot','Lot'),('Unique','Unique')),
+                                            null = True,max_length=10,
+                                            default = 'Lot')
+    barcode = models.CharField(max_length=100,null=True,default = '',unique = True)
+    status = models.CharField(max_length=10,choices = (
+                                    ('Empty','Empty'),
+                                    ('Available','Available'),('Sold','Sold'),
+                                    ('Approval','Approval'),('Return','Return')
+                                    ),
+                                    default = 'Empty')
+    variant=models.ForeignKey(ProductVariant,on_delete=models.CASCADE)
 
     class Meta:
         ordering=('-created',)
 
     def __str__(self):
-        return self.slug
+        return f"{self.variant} {self.barcode} wt:{self.Wih} qty:{self.Qih}"
 
     def get_absolute_url(self):
-        return reverse('product_stock_detail', args=(self.slug,))
+        return reverse('product_stock_detail', args=(self.pk,))
 
     def get_update_url(self):
-        return reverse('product_stock_update', args=(self.slug,))
+        return reverse('product_stock_update', args=(self.pk,))
 
-    def get_current_qih(self):
-        return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
+    def get_computed_qih(self):
+        # return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
+        sum= self.stocktransaction_set.aggregate(
+                                inw = Coalesce(Sum('quantity',filter = Q(type='In')),0),
+                                out = Coalesce(Sum('quantity',filter = Q(type ='Out')),0),
+                                )
+        return (sum['inw']+sum['out'])
 
-    def get_current_qih_weight(self):
-        return self.stocktransaction_set.all().aggregate(total=Sum('weight'))
+    def get_computed_wih(self):
+        sum= self.stocktransaction_set.aggregate(
+                                inw = Coalesce(Sum('weight',filter = Q(type='In')),0),
+                                out = Coalesce(Sum('weight',filter = Q(type ='Out')),0),
+                                )
+        return (sum['inw']+sum['out'])
+
+    def check_stock(self):
+        return (self.Wih == self.get_computed_wih) and (self.Qih == self.Qih)
+
+    def get_age(self):
+        pass
+        # if self.tracking_type == 'Lot':
+        #     get average of purchase date from today and average of sale dates from today then sub both
+        #     return 0
+        # else:
+            # check if sold then timedelta between created and last sales transaction
+            # else timedelta between today and date created
+    def add(self,weight,qty,Wih,Qih,cto,at):
+        if self.check_stock():
+            self.weight += weight
+            self.quantity += qty
+            self.Qih += Qih
+            self.Wih += Wih
+
+            StockTransaction.objects.create(
+                    stock = self,
+                    type = "In",
+                    weight = Wih,
+                    quantity = Qih,
+                    content_object = cto,
+                    activity_type=at
+            )
+            self.update_status()
+        else:
+            raise Exception(f"Stock.check_stock() failed")
+
+    def remove(self,weight,qty,Wih,Qih,cto,at):
+        if self.check_stock():
+            if (self.weight >= weight and self.quantity >= qty) and (self.Wih >= Wih and self.Qih >=Qih):
+                self.weight -= weight
+                self.quantity -= qty
+                self.Qih -= Qih
+                self.Wih -= Wih
+                StockTransaction.objects.create(
+                        stock = self,
+                        type = "Out",
+                        weight = Wih,
+                        quantity = Qih,
+                        content_object = cto,
+                        activity_type=at
+                )
+                self.update_status()
+
+            else:
+                raise Exception(f" qty/wt mismatch .hence exception")
+        else:
+            raise Exception(f" Stock.check_Stock failed")
+
+    def split(self,weight,qty,cto,at):
+        if self.tracking_type == "Lot":
+            print('splitting')
+        else:
+            print('unique nodes cant be split')
+    def merge(self,weight,qty,cto,at):
+        if self.tracking_type == "Unique":
+            print('merging')
+        else:
+            print('lot cant be merged further')
+
+    def update_status(self):
+        if self.Wih <= 0.0 or self.Qih <=0:
+            self.status = "Empty"
+        else:
+            self.status = "Available"
+        self.save()
+
 
 class StockTransaction(models.Model):
 
@@ -453,13 +556,34 @@ class StockTransaction(models.Model):
     updated=models.DateTimeField(auto_now=True)
     type_choices=(("In","In"),("Out","Out"))
     type=models.CharField(max_length=3,choices=type_choices)
-    quantity=models.IntegerField()
-    weight=models.DecimalField(max_digits=10,decimal_places=3)
+    quantity=models.IntegerField(default=0)
+    weight=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     description=models.TextField()
+    PURCHASE = 'P'
+    PURCHASERETURN = 'PR'
+    SALES = 'S'
+    SALESRETURN = 'SR'
+    APPROVAL = 'A'
+    APPROVALRETURN = 'AR'
+    SPLIT = 'SP'
+    MERGE = 'M'
+    ACTIVITY_TYPES = (
+        (PURCHASE, 'Purchase'),
+        (PURCHASERETURN, 'Purchase Return'),
+        (SALES, 'Sales'),
+        (SALESRETURN, 'Sales Return'),
+        (APPROVAL, 'Approval'),
+        (APPROVALRETURN, 'Approval Return'),
+        (SPLIT,'Split'),
+        (MERGE,'Merge'),
+    )
 
+    # user = models.ForeignKey(User)
+    activity_type = models.CharField(max_length=2, choices=ACTIVITY_TYPES)
     #relational Fields
     stock=models.ForeignKey(Stock,on_delete=models.CASCADE)
-    content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,null=True,blank=True)
+    content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
+                                                        null=True,blank=True)
     object_id=models.PositiveIntegerField(null=True,blank=True)
     content_object=GenericForeignKey('content_type','object_id')
 

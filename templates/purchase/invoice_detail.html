@@ -4,8 +4,11 @@
 <p>
   <a class="btn btn-primary" href="{% url 'purchase_invoice_list' %}">Purchase Listing</a>
   <a class="btn btn-secondary" href="{% url 'invoicepdf'  object.id %}">Print</a>
-  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
-  <a class="btn btn-danger" href ="{% url 'purchase_invoice_delete' object.id %}">Delete </a>
+  {%if not object.posted %}
+    <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
+    <a class="btn btn-danger" href ="{% url 'purchase_invoice_delete' object.id %}">Delete </a>
+  {%endif%}
+
 </p>
 
 <table class="table table-striped table-bordered">
@@ -18,16 +21,26 @@
   <tr><td>balance</td><td>{{ object.balance }}</td></tr>
   <tr><td>status</td><td>{{ object.status }}</td></tr>
   <tr><td>Paid</td><td>{{object.get_total_payments}}</td></tr>
+  <tr>
+    <td>Posted</td>
+    <td>
+    {%if object.posted%}
+    <a href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
+    {%else%}
+    <a href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
+    {%endif%}
+    </td>
+  </tr>
 </table>
 
-{% if object.purchaseinvoices %}
+{% if object.purchaseitems %}
   <table class="table table-sm table-striped table-bordered">
     <thead class="thead-dark">
       <tr>
         <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th><th>Total</th>
       </tr>
     </thead>
-    {% for i in object.purchaseinvoices.all %}
+    {% for i in object.purchaseitems.all %}
   <tr>
     <td>{{i.is_return}}</td>
     <td>{{i.product}}</td>

@@ -4,24 +4,31 @@
 <p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
 <table class="table">
 <tr>
-<td>ID</td><td>Link</td>
-    <td>slug</td>
+<td>created</td>
+    <td>Barcode</td>
     <td>Product</td>
+    <td>Weight</td>
     <td>Quantity</td>
-    <td>reorderat</td>
+    <td>Wih</td>
+    <td>Qih</td>
+
     <td>updated_on</td>
-    <td>Total Weight</td>
+    <td>Status</td>
+
 </tr>
 {% for object in object_list %}
 <tr>
-    <td>{{object.pk}}</td>
+    <td>{{object.created}}</td>
+    <td>{{object.barcode}}</td>
     <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.slug }}</td>
-    <td>{{ object.variant }}</td>
-    <td>{{object.Qih}}</td>
-    <td>{{object.reorderat}}</td>
+    <td>{{object.weight}}</td>
+    <td>{{object.quantity}}</td>
+    <td>{{object.Wih}}[{{object.get_computed_wih}}]</td>
+    <td>{{object.Qih}}[{{object.get_computed_qih}}]</td>
+
     <td>{{object.updated_on}}</td>
-    <td>{{object.totalwt}}
+    <td>{{object.status}}</td>
+
 </tr>
 {% endfor %}
 </table><a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>

@@ -1,12 +1,29 @@
-from .models import Stree,Category,ProductType,Product,ProductVariant,Attribute,AttributeValue
+from .models import (Stree,Category,ProductType,Product,
+                        Stock,StockTransaction,ProductVariant,
+                        Attribute,AttributeValue)
 import django_filters
 from django_select2.forms import Select2Widget,Select2MultipleWidget
 from django.db import models
+
 class StreeFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='iexact')
     class Meta:
         model = Stree
         fields = ['name','barcode','tracking_type','status']
+
+class StockFilter(django_filters.FilterSet):
+    variant = django_filters.ModelChoiceFilter(
+                    queryset = ProductVariant.objects.all(),
+                    widget = Select2Widget
+    )
+    class Meta:
+        model = Stock
+        fields = ['variant']
+
+class StockTransactionFilter(django_filters.FilterSet):
+    class Meta:
+        model = StockTransaction
+        fields = '__all__'
 
 class ProductFilter(django_filters.FilterSet):
     category = django_filters.ModelChoiceFilter(
@@ -32,9 +49,7 @@ class ProductVariantFilter(django_filters.FilterSet):
     attributes = django_filters.ModelMultipleChoiceFilter(
                     queryset = AttributeValue.objects.all(),
                     widget = Select2MultipleWidget,
-
     )
-
     class Meta:
         model = ProductVariant
         fields = ['product','product_code']

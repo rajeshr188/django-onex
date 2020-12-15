@@ -12,10 +12,10 @@ class CustomerSerializer(serializers.ModelSerializer):
             'created',
             'last_updated',
             'phonenumber',
-            'Address',
+            'Address','area',
             'type',
             'relatedas',
-            'relatedto',
+            'relatedto','active','gender','religion',
             # 'loan_set',
         )
 

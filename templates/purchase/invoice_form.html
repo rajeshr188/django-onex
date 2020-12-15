@@ -3,6 +3,9 @@
 {% load bootstrap4 %}
 {% block content %}
 {{form.media}}
+{% for form in invoiceitem_form%}
+  {{form.empty_permitted}}/has_changed:{{form.has_changed}}
+{%endfor%}
 <p><h2 class="h3 mb-3 font-weight-normal">Add Purchase</h2></p>
     <form action="." method="post">
         {% csrf_token %}
@@ -76,8 +79,8 @@
 
   $(function() {
     $(document).ready(function() {
-      update_row();
-      update_amounts();
+      // update_row();
+      // update_amounts();
       $(document).on('change', '.weight', function() {
         console.log('wt here')
         update_row();
@@ -106,28 +109,21 @@
 
       function update_amounts(){
         var sum = 0;
-        var nwt=0;
-        var twt=0;
+        var nwt=0.0;
+        var twt=0.0;
         $(".total input").each(function () {
               if (!isNaN(this.value) && this.value.length != 0) {
                   sum += parseFloat(this.value);
               }
           });
-        // $(".Nettwt input").each(function () {
-        //       if (!isNaN(this.value) && this.value.length != 0) {
-        //           nwt += parseFloat(this.value);
-        //       }
-        //   });
+
         $(".weight input").each(function () {
               if (!isNaN(this.value) && this.value.length != 0) {
-                  twt += parseFloat(this.value);
+                  twt += parseFloat(this.value).toFixed(3);
               }
           });
-          // show values in netto, steuer, brutto fields
-          // show values in netto, steuer, brutto fields
         $("#id_balance").val(sum.toFixed(3));
         $('#id_weight').val(Number(twt).toFixed(3));
-
 
       }
       function update_row() {

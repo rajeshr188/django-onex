@@ -152,7 +152,6 @@ def variant_create(request, pk):
 class ProductVariantDetailView(LoginRequiredMixin,DetailView):
     model = ProductVariant
 
-
 class ProductVariantUpdateView(LoginRequiredMixin,UpdateView):
     model = ProductVariant
     form_class = ProductVariantForm
@@ -213,11 +212,9 @@ class VariantImageCreateView(LoginRequiredMixin,CreateView):
 class VariantImageDetailView(LoginRequiredMixin,DetailView):
     model = VariantImage
 
-
 class VariantImageUpdateView(LoginRequiredMixin,UpdateView):
     model = VariantImage
     form_class = VariantImageForm
-
 
 class StreeListView(LoginRequiredMixin,FilterView):
     model = Stree
@@ -302,6 +299,10 @@ class StockUpdateView(UpdateView):
 class StockDetailView(DetailView):
     model=Stock
 
+class StockDeleteView(DeleteView):
+    model = Stock
+    success_url = reverse_lazy('product_stock_list')
+
 class StockTransactionCreateView(CreateView):
     model=StockTransaction
     form_class=StockTransactionForm
@@ -315,3 +316,7 @@ class StockTransactionDetailView(DetailView):
 class StockTransactionUpdateView(UpdateView):
     model=StockTransaction
     form_class=StockTransactionForm
+
+class StockTransactionDeleteView(DeleteView):
+    model = StockTransaction
+    success_url = reverse_lazy('product_stocktransaction_list')

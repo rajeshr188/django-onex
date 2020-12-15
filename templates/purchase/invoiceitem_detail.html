@@ -8,7 +8,10 @@
 <tr><td>total</td><td>{{ object.total }}</td></tr>
 <tr><td>is_return</td><td>{{ object.is_return }}</td></tr>
 <tr><td>quantity</td><td>{{ object.quantity }}</td></tr>
+
 </table>
+{%if not object.invoice.posted%}
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit InvoiceItem</a>
+{%endif%}
 
 {% endblock %}

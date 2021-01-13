@@ -17,6 +17,7 @@ urlpatterns = [
     path('purchase/',include('purchase.urls')),
     path('daybook/',include('daybook.urls')),
     path('ledger/',include('ledger.urls')),
+    path('dea/',include('dea.urls')),
     path('select2/', include('django_select2.urls')),
     # path('admin/dashboard/',controlcenter.urls),
     # path('silk/',include('silk.urls',namespace='silk')),

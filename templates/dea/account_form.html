@@ -1,0 +1,12 @@
+{% extends '_base.html' %}
+{% block title %}Account Creation{% endblock %}
+
+{% block content %}
+<h1>Add Account</h1>
+<p><a class="btn btn-default" href="{% url 'dea_home' %}">License Listing</a></p>
+<form method="post">
+    {% csrf_token %}
+    {{form}}
+    <button class="btn btn-primary" type="submit">Submit</button>
+</form>
+{% endblock content %}

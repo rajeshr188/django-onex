@@ -53,7 +53,7 @@ class InvoiceItemForm(forms.ModelForm):
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch',
-    'makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=2,can_delete=True)
+    'makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(

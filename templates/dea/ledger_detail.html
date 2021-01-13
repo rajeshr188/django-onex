@@ -1,0 +1,48 @@
+{% extends '_base.html' %}
+
+{% block title %}Acount detail{% endblock %}
+
+{% block content %}
+<h1>{{object}} Details</h1>
+<div class="card">
+    <div class="card-body">
+        Opening Bal: {{ object.ledgerstatement_set.latest.ClosingBalance}} | {{object.ledgerstatement_set.latest.created|date}}
+        <a href="{% url 'dea_ledger_setob' object.id%}">Set Op Bal</a>
+
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Credit Txns</h5>
+                <p class="card-text">
+                    {% for i in object.credit_txns.all%}
+                    <li>{{i.created|date}} {{i.ledgerno}} {{i.ledgerno_dr}} {{i.amount}}</li>
+                    {%endfor%}
+                </p>
+                <a href="#" class="btn btn-primary">Add</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Debit Txns</h5>
+                <p class="card-text">
+                    {% for i in object.debit_txns.all%}
+                    <li>{{i.created|date}} {{i.ledgerno}} {{i.ledgerno_dr}} {{i.amount}}</li>
+                    {%endfor%}
+                </p>
+                <a href="#" class="btn btn-primary">Add</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card text-right">
+    <div class="card-body">
+        Closing Bal: {{object.current_balance}}
+    </div>
+</div>
+
+{% endblock %}

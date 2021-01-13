@@ -54,7 +54,12 @@ INSTALLED_APPS = [
     # Local
     'users',
     'pages',
-    'contact','product','girvi','sales','purchase','Chitfund','daybook','approval',
+    'contact',
+    'product',
+    'girvi',
+    'sales','purchase','approval',
+    'Chitfund',
+    'daybook','dea',
 ]
 # CONTROLCENTER_DASHBOARDS = (
 #         ('mydash','djangox_project.dashboard.MyDash'),

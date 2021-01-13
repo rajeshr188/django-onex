@@ -1,0 +1,57 @@
+{% extends '_base.html' %}
+
+{% block title %}Acount detail{% endblock %}
+
+{% block content %}
+<h1>{{object}} Details</h1>
+
+<a class = "btn btn-danger" href="{% url 'dea_pledge_loan' object.id%}">pledge loan</a>
+<a class = "btn btn-success" href="{% url 'dea_repay_loan' object.id%}">repay loan</a>
+
+<div class="card">
+    <div class="card-body">
+        Opening Bal: {{ object.accountstatement_set.latest.ClosingBalance}} | {{object.accountstatement_set.latest.created}}
+        <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
+
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Credit </h5>
+                <p class="card-text">
+                    {% for i in object.accounttransaction_set.all%}
+                    {%if i.XactTypeCode.XactTypeCode == 'cr'%}
+                    <li>{{i.created|date}} {{i.ledgerno}} {{i.XactTypeCode}} {{i.XactTypeCode_Ext}} {{i.Account}} {{i.Amount}}</li>
+                    {%endif%}
+                    {%endfor%}
+                </p>
+                <a href="#" class="btn btn-primary">Add</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Debit </h5>
+                <p class="card-text">
+                    {% for i in object.accounttransaction_set.all%}
+                    {%if i.XactTypeCode.XactTypeCode == 'dr'%}
+                    <li>{{i.created|date}} {{i.ledgerno}} {{i.XactTypeCode}} {{i.XactTypeCode_Ext}} {{i.Account}} {{i.Amount}}</li>
+                    {%endif%}
+                    {%endfor%}
+                </p>
+                <a href="#" class="btn btn-primary">Add</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card text-right">
+    <div class="card-body">
+        Closing Bal: {{object.current_balance}}
+        <a class="btn btn-info" href="">Audit</a>
+    </div>
+</div>
+
+{% endblock %}

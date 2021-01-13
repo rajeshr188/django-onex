@@ -2,7 +2,10 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+
 {{form.media}}
+
 {% for form in invoiceitem_form%}
   {{form.empty_permitted}}/has_changed:{{form.has_changed}}
 {%endfor%}
@@ -148,25 +151,28 @@
 
     }
 
-    $(".inline.{{ invoiceitem_form.prefix }}").formset({
+    
+
+})
+})
+
+</script>
+<script type = "text/javascript">
+  $(".inline.{{ invoiceitem_form.prefix }}").formset({
       prefix: "{{ invoiceitem_form.prefix }}",
       //formTemplate: $("#formset-template").clone(),
       // initialize newly created heavy fields on the added callback
       added: function ($row) {
-         $row.find('.product select').select2();
-         $row.find('.delete-row').addClass('btn-sm btn-danger');
+        $row.find('.product select').select2();
+        $row.find('.delete-row').addClass('btn-sm btn-danger');
       },
-      removed: function($row){
+      removed: function ($row) {
         update_amounts();
       }
-  })
-  $('.product select').select2();
-  $('.add-row').addClass('btn-sm btn-success');
-  $('.delete-row').addClass('btn-sm btn-danger');
-
-})
-})
-
+    })
+    $('.product select').select2();
+    $('.add-row').addClass('btn-sm btn-success');
+    $('.delete-row').addClass('btn-sm btn-danger');
 </script>
 
 {% endblock %}

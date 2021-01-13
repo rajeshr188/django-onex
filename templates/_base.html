@@ -14,10 +14,12 @@
 {% block css %}
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
-<link rel="stylesheet" href="{% static 'bootstrap-4.4.1-dist/css/bootstrap.min.css' %}">
-<script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
-{{form.media.css}}
+<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
 {% endblock %}
+<script src="{% static 'js/jquery.js' %}"></script>
+
+{% block extra_js %}
+{% endblock%}
 </head>
 
 <body>
@@ -30,6 +32,9 @@
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
             <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'about' %}">About <span class="sr-only">(current)</span></a>
           </li>
           {% if user.is_authenticated %}
           <li class="nav-item dropdown">
@@ -137,24 +142,24 @@
             <a class="nav-link" href="{% url 'ledger_home' %}">Ledger <span class="sr-only">(current)</span></a>
           </li>
           {% endif %}
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'about' %}">About <span class="sr-only">(current)</span></a>
-          </li>
+         
         </ul>
 
         {% if user.is_authenticated %}
           <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-            <a class="nav-link" href="#">Dashboard</a>
-          </li>
-          <li class="nav-item">
-          <a class="nav-link" href="#">Daybook</a>
-        </li>
+              <a class="nav-link" href="#">Dashboard</a>
+            </li>
+            <li class = "nav-item">
+              <a class = "nav-link" href="{% url 'dea_home'%}">DEA</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 {{ user.email }}
               </a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenu">
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Preferences</a>
                 <a class="dropdown-item" href="{% url 'account_change_password' %}">Change password</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
@@ -187,13 +192,8 @@
 
   {% block javascript %}
   <!-- Bootstrap JavaScript -->
-
-  <script src="{% static 'bootstrap-4.4.1-dist/js/bootstrap.min.js' %}" ></script>
-  <script src="{% static 'js/jquery.formset.js' %}"></script>
-  <script src="{% static 'js/moment.js' %}"></script>
-  <script src="{% static 'js/tempusdominus-bootstrap-4.min.js' %}"></script>
-  <script src = "{% static 'js/select2.js' %}"></script>
-  {{form.media.js}}
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}" ></script>
+ 
   {% endblock javascript %}
 
 </body>

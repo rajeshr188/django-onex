@@ -57,7 +57,7 @@ class InvoiceItemForm(forms.ModelForm):
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity',
     'weight','less_stone', 'touch', 'wastage','makingcharge','total', 'invoice'),
-    form = InvoiceItemForm,extra=2,can_delete=True)
+    form = InvoiceItemForm,extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)

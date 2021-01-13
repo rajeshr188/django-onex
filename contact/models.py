@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from django_extensions.db import fields as extension_fields
 from django.db.models import Avg,Count,Sum
+from django.db.models.functions import Coalesce
 from itertools import chain
 # from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
@@ -89,7 +90,7 @@ class Customer(models.Model):
         return self.loan_set.all()
 
     def get_total_loanamount(self):
-        amount=self.loan_set.aggregate(total=Sum('loanamount'))
+        amount=self.loan_set.aggregate(total=Coalesce(Sum('loanamount'),0))
         return amount['total']
 
     def get_total_interest_due(self):
@@ -97,14 +98,16 @@ class Customer(models.Model):
         for i in self.get_loans:
             total_int += i.interestdue()
         return total_int
+        
     @property
     def get_loans_count(self):
         return self.loan_set.count()
 
     def get_religion_count(self):
         return self.values('religion').annotate(Count('religion')).order_by('religion')
-    # def get_interestdue(Self):
-    #     interestdue=self.loan_set.aggregate(total=Sum('interestdue'))
+
+    def get_interestdue(self):
+        return self.loan_set.aggregate(total=Sum('interest'))
 
     def get_gold_weight(self):
         gold=self.loan_set.filter(itemtype='Gold').aggregate(total=Sum('itemweight'))
@@ -131,25 +134,31 @@ class Customer(models.Model):
         return self.sales.all()
 
     def get_total_invoice_cash(self):
-        return self.sales.filter(balancetype="Cash").aggregate(total=Sum('balance'))['total']
+        return self.sales.filter(balancetype="Cash").\
+                aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_total_invoice_metal(self):
-        return self.sales.filter(balancetype="Metal").aggregate(total=Sum('balance'))['total']
+        return self.sales.filter(balancetype="Metal").\
+                aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_unpaid(self):
         return self.sales.exclude(status="Paid")
 
     def get_unpaid_cash(self):
-        return self.get_unpaid().filter(balancetype="Cash").values('created','id','balance')
+        return self.get_unpaid().filter(balancetype="Cash")\
+                .values('created','id','balance')
 
     def get_unpaid_cash_total(self):
-        return self.get_unpaid_cash().aggregate(total=Sum('balance'))['total']
+        return self.get_unpaid_cash()\
+                .aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_unpaid_metal(self):
-        return self.get_unpaid().filter(balancetype="Metal").values('created','id','balance')
+        return self.get_unpaid().filter(balancetype="Metal")\
+                .values('created','id','balance')
 
     def get_unpaid_metal_total(self):
-        return self.get_unpaid_metal().aggregate(total=Sum('balance'))['total']
+        return self.get_unpaid_metal()\
+                .aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_total_invoice_paid_cash(self):
         pass
@@ -158,9 +167,12 @@ class Customer(models.Model):
         pass
 
     def get_cash_receipts_total(self):
-        return self.receipts.filter(type='Cash').aggregate(total = Sum('total'))['total']
+        return self.receipts.filter(type='Cash').aggregate(
+                                            total = Sum('total'))['total']
+
     def get_metal_receipts_total(self):
-        return self.receipts.filter(type='Metal').aggregate(total = Sum('total'))['total']
+        return self.receipts.filter(type='Metal').\
+                    aggregate(total = Coalesce(Sum('total'),0))['total']
 
     def get_metal_balance(self):
         return self.get_total_invoice_metal() - self.get_metal_receipts_total()
@@ -169,8 +181,7 @@ class Customer(models.Model):
         return self.get_total_invoice_cash() - self.get_cash_receipts_total()
 
     def get_receipts(self):
-        return self.receipt_set.all()
-        # return Receipt.objects.get_object_or_404(customer = self)
+        return self.receipts.all()
 
     def reallot_receipts(self):
         receipts = self.get_receipts()
@@ -185,44 +196,49 @@ class Customer(models.Model):
         nexts = chain(islice(nexts, 1, None), [None])
         return zip(prevs, items, nexts)
 
-    def get_all_cars(self):
+    def get_all_txns(self):
         sales = self.sales.all().values()
         for s in sales:
             s['type'] = 'sale'
-            s['cur_bal'] = 0
 
         receipts = self.receipts.all().values()
         for r in receipts:
             r['type'] = 'receipt'
-            r['cur_bal'] = 0
 
         purchases = self.purchases.all().values()
         for p in purchases:
             p['type'] = 'purchase'
-            p['cur_bal'] = 0
+
         payments = self.payments.all().values()
         for pay in payments:
             pay['type'] = 'payment'
-            pay['cur_bal'] = 0
 
         txn_list = sorted(
-            chain(sales, receipts,purchases,payments),
-            key=lambda i: i['created'])
+            chain(sales, receipts, purchases, payments),
+            key=lambda i: i['created'],reverse=True)
+
         for prev,item,next in self.previous_and_next(txn_list):
 
-            if item['type'] in ['sale','payment']:
+            if item['type'] =='sale':
                 if prev:
-                    if item['type'] == 'sale':
-                        item['cur_bal'] = prev['cur_bal'] - item['balance']
-                    else:
-                        item['cur_bal'] = prev['cur_bal'] - item['total']
-            elif item['type'] in ['receipt','purchase']:
+                    item['metal_bal'] = prev['metal_bal'] - item['balance']
+                else:
+                    item['metal_bal'] = item['balance']
+            elif item['type'] == 'purchase':
                 if prev:
-                    if item['type'] == 'purchase':
-                        print(item)
-                        item['cur_bal'] = prev['cur_bal'] + item['balance']
-                    else:
-                        item['cur_bal'] = prev['cur_bal'] + item['total']
+                    item['metal_bal'] = prev['metal_bal'] + item['balance']
+                else:
+                    item['metal_bal'] = item['balance']
+            elif item['type'] == 'receipt':
+                if prev:
+                    item['metal_bal'] = prev['metal_bal'] + item['total']
+                else:
+                    item['metal_bal'] = item['balance']
+            elif item['type'] == 'payment':
+                if prev:
+                    item['metal_bal'] = prev['metal_bal'] - item['total']
+                else:
+                    item['metal_bal'] = item['total']
 
         return txn_list
 

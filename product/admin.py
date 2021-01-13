@@ -10,7 +10,6 @@ class CategoryAdminForm(forms.ModelForm):
         model = Category
         fields = '__all__'
 
-
 class CategoryAdmin(admin.ModelAdmin):
     form = CategoryAdminForm
     list_display = ['name', 'description']
@@ -25,7 +24,6 @@ class ProductTypeAdminForm(forms.ModelForm):
         model = ProductType
         fields = '__all__'
 
-
 class ProductTypeAdmin(admin.ModelAdmin):
     form = ProductTypeAdminForm
     list_display = ['name', 'has_variants']
@@ -33,13 +31,11 @@ class ProductTypeAdmin(admin.ModelAdmin):
 
 admin.site.register(ProductType, ProductTypeAdmin)
 
-
 class ProductAdminForm(forms.ModelForm):
 
     class Meta:
         model = Product
         fields = '__all__'
-
 
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
@@ -47,7 +43,6 @@ class ProductAdmin(admin.ModelAdmin):
     # readonly_fields = ['name', 'description']
 
 admin.site.register(Product, ProductAdmin)
-
 
 class ProductVariantAdminForm(forms.ModelForm):
 
@@ -58,18 +53,16 @@ class ProductVariantAdminForm(forms.ModelForm):
 
 class ProductVariantAdmin(admin.ModelAdmin):
     form = ProductVariantAdminForm
-    list_display = ['sku', 'name', 'track_inventory', 'quantity', 'melting','cost','touch','wastage']
+    list_display = ['sku', 'name', 'track_inventory', 'quantity']
     # readonly_fields = ['sku', 'name', 'track_inventory', 'quantity', 'cost_price', 'weight']
 
 admin.site.register(ProductVariant, ProductVariantAdmin)
-
 
 class AttributeAdminForm(forms.ModelForm):
 
     class Meta:
         model = Attribute
         fields = '__all__'
-
 
 class AttributeAdmin(admin.ModelAdmin):
     form = AttributeAdminForm
@@ -78,13 +71,11 @@ class AttributeAdmin(admin.ModelAdmin):
 
 admin.site.register(Attribute, AttributeAdmin)
 
-
 class AttributeValueAdminForm(forms.ModelForm):
 
     class Meta:
         model = AttributeValue
         fields = '__all__'
-
 
 class AttributeValueAdmin(admin.ModelAdmin):
     form = AttributeValueAdminForm
@@ -93,13 +84,11 @@ class AttributeValueAdmin(admin.ModelAdmin):
 
 admin.site.register(AttributeValue, AttributeValueAdmin)
 
-
 class ProductImageAdminForm(forms.ModelForm):
 
     class Meta:
         model = ProductImage
         fields = '__all__'
-
 
 class ProductImageAdmin(admin.ModelAdmin):
     form = ProductImageAdminForm
@@ -108,13 +97,11 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 admin.site.register(ProductImage, ProductImageAdmin)
 
-
 class VariantImageAdminForm(forms.ModelForm):
 
     class Meta:
         model = VariantImage
         fields = '__all__'
-
 
 class VariantImageAdmin(admin.ModelAdmin):
     form = VariantImageAdminForm

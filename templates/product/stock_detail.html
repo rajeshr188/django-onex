@@ -6,6 +6,9 @@
 <tr><td>Created</td><td>{{ object.created }}</td></tr>
 <tr><td>Updated</td><td>{{ object.updated_on }}</td></tr>
 <tr><td>Product</td><td>{{ object.variant }}</td></tr>
+<tr><td>Cost</td><td>{{object.cost}}</td></tr>
+<tr><td>Touch</td><td>{{object.touch}}</td></tr>
+<tr><td>Wastage</td><td>{{object.wastage}}</td></tr>
 <tr><td>Weight</td><td>{{object.weight}}/{{object.Wih}}</td></tr>
 <tr><td>Quantity</td><td>{{ object.quantity}}/{{object.Qih}}</td></tr>
 <tr><td>Status</td><td>{{object.status}}</td></tr>
@@ -15,14 +18,14 @@
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a>
 
 {%if object.stocktransaction_set %}
-<table>
+<table class=" table table-sm">
   <thead>
     <tr><th>type</th><th>activity_type</th><th>weight</th><th>quantity</th></tr>
   </thead>
   <tbody>
   {%for i in object.stocktransaction_set.all %}
-    <tr><td>{{i.type}}</td><td>{{i.activity_type}}</td><td>{{i.weight}}</td>
-        <td>{{i.quantity}}</td><td>{{i.content_object}}</td></tr>
+    <tr><td>{{i.type}}</td><td><a href="url '' {{i.content_object}}">{{i.activity_type}}:{{i.content_object}}</a></td><td>{{i.weight}}</td>
+        <td>{{i.quantity}}</td></tr>
   {%endfor%}
   </tbody>
 </table>

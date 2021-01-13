@@ -374,8 +374,6 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) for s in Series.objects.all()}
-
-
         context['series']= series
         return context
 
@@ -384,14 +382,12 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
             customer=Customer.objects.get(id=self.kwargs['pk'])
             return{
                 'customer':customer,
-                # 'created':ld,
+                'created':ld,
             }
         else:
             return{
-
-                'loanid':incloanid,
-                'license':license,
-                # 'created':ld,
+                # 'loanid':incloanid,
+                'created':ld,
             }
 
 class LoanDetailView(LoginRequiredMixin,DetailView):

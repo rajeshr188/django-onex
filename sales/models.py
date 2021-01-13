@@ -36,9 +36,7 @@ class Terms(models.Model):
     def __str__(self):
         return f"{self.name} ({self.due_days})"
 
-
 class Invoice(models.Model):
-
     # Fields
     created = models.DateTimeField(default=timezone.now,db_index=True)
     last_updated = models.DateTimeField(default=timezone.now)
@@ -69,6 +67,7 @@ class Invoice(models.Model):
         related_name="sales"
     )
     posted = models.BooleanField(default = False)
+
     class Meta:
         ordering = ('-created',)
 
@@ -104,11 +103,14 @@ class Invoice(models.Model):
     def delete(self, *args, **kwargs):
         if not self.posted:
             super(Invoice, self).delete(*args, **kwargs)
-            
+        else:
+            raise Exception("Cant delete sale if posted")
+
 class InvoiceItem(models.Model):
     # Fields
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
+    # remove less stone
     less_stone = models.DecimalField(max_digits=10,decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
     wastage = models.DecimalField(max_digits=10,decimal_places=3)
@@ -154,14 +156,6 @@ class InvoiceItem(models.Model):
             self.product.remove(0,0,self.weight,self.quantity,self.invoice,'SR')
         else:
             self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
-    # def save(self,*args,**kwargs):
-    #     if not self.is_return:#if sold
-    #         self.product.remove(0,0,self.weight,self.quantity,self.invoice,'S')
-    #     else:#if returned
-    #         self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
-    #
-    #     super(InvoiceItem,self).save(*args,**kwargs)
-    #     # self.invoice.update_status()
 
 class Receipt(models.Model):
 
@@ -194,6 +188,18 @@ class Receipt(models.Model):
     class Meta:
         ordering = ('-created',)
 
+    def __str__(self):
+        return u'%s' % self.id
+
+    def get_absolute_url(self):
+        return reverse('sales_receipt_detail', args=(self.pk,))
+
+    def get_update_url(self):
+        return reverse('sales_receipt_update', args=(self.pk,))
+
+    def get_line_totals(self):
+        return self.receiptline_set.aggregate(t=Sum('amount'))['t']
+
     def update_status(self):
         total_allotted=self.get_line_totals()
         if total_allotted is not None :
@@ -205,6 +211,7 @@ class Receipt(models.Model):
 
     def deallot(self):
         self.receiptline_set.all().delete()
+        self.update_status()
 
     def allot(self):
         print(f"allotting receipt {self.id} amount: {self.total}")
@@ -216,7 +223,10 @@ class Receipt(models.Model):
         print(f"amount : {remaining_amount}")
 
         try:
-            invtopay = Invoice.objects.filter(customer=self.customer,balancetype=self.type).exclude(status="Paid").order_by('created')
+            invtopay = Invoice.objects.filter(customer=self.customer,
+                                        balancetype=self.type,
+                                        posted = True).exclude(
+                                        status="Paid").order_by('created')
         except IndexError:
             invtopay = None
         print(invtopay)
@@ -237,17 +247,11 @@ class Receipt(models.Model):
         print('allotted receipt')
         self.update_status()
 
-    def __str__(self):
-        return u'%s' % self.id
-
-    def get_absolute_url(self):
-        return reverse('sales_receipt_detail', args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse('sales_receipt_update', args=(self.pk,))
-
-    def get_line_totals(self):
-        return self.receiptline_set.aggregate(t=Sum('amount'))['t']
+    def save(self,*args,**kwargs):
+        if self.id:
+            self.deallot()
+        super(self,Receipt).save(*args,**kwargs)
+        self.allot()
 
 class ReceiptLine(models.Model):
 

@@ -203,36 +203,34 @@ class PaymentCreateView(CreateView):
         self.object = form.save()
         paymentline_form.instance = self.object
         items=paymentline_form.save()
-        amount=self.object.total
-        invpaid = 0
-        for item in items:
-            if item.invoice.balance == item.amount :
-                invpaid += item.amount
-                # Invoice.objects.filter(id=item.invoice.id).update(status="Paid")
-                item.invoice.status="Paid"
-                item.invoice.save()
-            elif item.invoice.balance > item.amount:
-                invpaid += item.amount
-                # Invoice.objects.filter(id=item.invoice.id).update(status="PartiallyPaid")
-                item.invoice.status="PartiallyPaid"
-                item.invoice.save()
-
-        remaining=amount-invpaid
-        while remaining>0 :
-            try:
-                invtopay = Invoice.objects.filter(supplier=self.object.supplier,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
-            except IndexError:
-                invtopay = None
-            if invtopay !=None :
-                if remaining >= invtopay.get_balance() :
-                    remaining -= invtopay.get_balance()
-                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.get_balance())
-                    invtopay.status="Paid"
-                else :
-                    PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=remaining)
-                    invtopay.status="PartiallyPaid"
-                    remaining=0
-                invtopay.save()
+        # amount=self.object.total
+        # invpaid = 0
+        # for item in items:
+        #     if item.invoice.balance == item.amount :
+        #         invpaid += item.amount
+        #         item.invoice.status="Paid"
+        #         item.invoice.save()
+        #     elif item.invoice.balance > item.amount:
+        #         invpaid += item.amount
+        #         item.invoice.status="PartiallyPaid"
+        #         item.invoice.save()
+        #
+        # remaining=amount-invpaid
+        # while remaining>0 :
+        #     try:
+        #         invtopay = Invoice.objects.filter(supplier=self.object.supplier,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
+        #     except IndexError:
+        #         invtopay = None
+        #     if invtopay !=None :
+        #         if remaining >= invtopay.get_balance() :
+        #             remaining -= invtopay.get_balance()
+        #             PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.get_balance())
+        #             invtopay.status="Paid"
+        #         else :
+        #             PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=remaining)
+        #             invtopay.status="PartiallyPaid"
+        #             remaining=0
+        #         invtopay.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

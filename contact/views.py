@@ -11,7 +11,7 @@ from django.urls import reverse,reverse_lazy
 from girvi.models import Loan
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from sales.models import Invoice,Month
 from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
@@ -48,15 +48,11 @@ class CustomerCreateView(LoginRequiredMixin,CreateView):
     form_class = CustomerForm
     success_url=reverse_lazy('contact_customer_list')
 
-def reallot_receipts(request,id):
-    customer = Customer.objects.get(id = id)
+def reallot_receipts(request,pk):
+    customer = Customer.objects.get(pk = pk)
     customer.reallot_receipts()
-    return reverse(self.get_absolute_url())
-    # get customer from request
-    # get receipts for customer or redirect
-    # self.reallot_receipts
-    # redirect
-
+    return redirect(customer.get_absolute_url())
+    
 class CustomerDetailView(LoginRequiredMixin,DetailView):
     model = Customer
     def get_context_data(self, **kwargs):

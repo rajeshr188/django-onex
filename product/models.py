@@ -132,10 +132,10 @@ class ProductVariant(models.Model):
         validators=[MinValueValidator(0)], default=Decimal(0))
     # add melting,wh_va,ret_va
     # weight = models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
-    melting = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
-    cost = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    touch = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    wastage = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    # melting = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
+    # cost = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    # touch = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    # wastage = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
     # selling_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
 
     class Meta:
@@ -432,7 +432,10 @@ class Stock(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     updated_on = models.DateTimeField(auto_now=True)
 
-    # cost = models.DecimalField(max_digits = 10,decimal_places = 3)
+    melting = models.DecimalField(max_digits =10,decimal_places=3, default =100)
+    cost = models.DecimalField(max_digits = 10,decimal_places = 3,default = 100)
+    touch = models.DecimalField(max_digits =10,decimal_places =3,default = 0)
+    wastage = models.DecimalField(max_digits =10 ,decimal_places =3,default = 0)
     weight = models.DecimalField(max_digits = 10, decimal_places = 3,
                                     default =0)
     quantity = models.IntegerField(default =0)
@@ -443,7 +446,7 @@ class Stock(models.Model):
                                             ('Lot','Lot'),('Unique','Unique')),
                                             null = True,max_length=10,
                                             default = 'Lot')
-    barcode = models.CharField(max_length=100,null=True,default = '',unique = True)
+    barcode = models.CharField(max_length=100,null=True,unique = True)
     status = models.CharField(max_length=10,choices = (
                                     ('Empty','Empty'),
                                     ('Available','Available'),('Sold','Sold'),
@@ -480,7 +483,7 @@ class Stock(models.Model):
         return (sum['inw']+sum['out'])
 
     def check_stock(self):
-        return (self.Wih == self.get_computed_wih) and (self.Qih == self.Qih)
+        return (self.Wih == self.get_computed_wih()) and (self.Qih == self.get_computed_qih())
 
     def get_age(self):
         pass
@@ -536,6 +539,7 @@ class Stock(models.Model):
             print('splitting')
         else:
             print('unique nodes cant be split')
+
     def merge(self,weight,qty,cto,at):
         if self.tracking_type == "Unique":
             print('merging')

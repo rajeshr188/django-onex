@@ -17,6 +17,10 @@
               {{ form.created.errors }}
               {% bootstrap_field form.created size="small" %}
             </div>
+            <div class="form-group col-md-3">
+              {{ form.status.errors }}
+              {% bootstrap_field form.status size="small"%}
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-4">
@@ -43,7 +47,6 @@
           {{ form.total.errors }}
           <div class="col-sm-3">{% bootstrap_field form.total size="small" %}</div>
         </div>
-
 
         {{ paymentline_form.management_form }}
         {{ paymentline_form.non_form_errors }}
@@ -78,7 +81,7 @@
 
             </div>
 
-        <button class="btn btn-primary" type="submit">Save Invoice</button>
+        <button class="btn btn-primary" type="submit">Save Payment</button>
     </form>
     <script type="text/javascript">
       $(".inline.{{ paymentline_form.prefix }}").formset({

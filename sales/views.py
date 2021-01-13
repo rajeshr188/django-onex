@@ -272,11 +272,7 @@ class InvoiceUpdateView(UpdateView):
         if self.request.POST:
             data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
         else:
-
             data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
-            # submit stock and represent form
-            # for line in InvoiceItem.objects.filter(invoice=self.object):
-            #     line.product.add(0,0,line.weight,line.quantity,line.invoice,'SR')
         return data
 
     @transaction.atomic()
@@ -293,13 +289,13 @@ class InvoiceUpdateView(UpdateView):
                 # raise Exception("Failed Form Save")
                 form.add_error(None,'error in transfer qty or wt mismatch')
                 return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
-
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
+                                  
 @transaction.atomic()
 def post_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
@@ -309,6 +305,7 @@ def post_sales(request,pk):
         sales_inv.posted = True
         sales_inv.save()
     return redirect(sales_inv)
+
 @transaction.atomic()
 def unpost_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)

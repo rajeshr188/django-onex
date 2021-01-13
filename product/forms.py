@@ -154,7 +154,7 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
         fields = [
             'sku',
             'product_code',
-            'quantity','melting', 'cost', 'touch','wastage','track_inventory']
+            'quantity','track_inventory']
         labels = {
             'sku': pgettext_lazy('SKU', 'SKU'),
             'quantity': pgettext_lazy('Integer number', 'Number in stock'),

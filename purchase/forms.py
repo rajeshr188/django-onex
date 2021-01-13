@@ -87,4 +87,4 @@ class PaymentLineForm(forms.ModelForm):
         fields=['invoice','amount']
 
 PaymentLineFormSet=inlineformset_factory(Payment,PaymentLine,
-    fields=('invoice','amount','payment'),extra=1,can_delete=True,form=PaymentLineForm)
+    fields=('invoice','amount','payment'),extra=0,can_delete=True,form=PaymentLineForm)

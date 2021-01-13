@@ -35,10 +35,6 @@
               {% bootstrap_field form.rate size="small"%}
             </div>
         </div>
-        <div class="form-group row">
-
-
-        </div>
 
         {{ invoiceitem_form.management_form }}
         {{ invoiceitem_form.non_form_errors }}
@@ -106,6 +102,7 @@
       function update_row() {
         var rate=$('#id_rate').val();
         $('.inline').each(function() {
+        $(this).find('.touch input').val();
         var wt = $(this).find('.weight input').val();
         var touch = $(this).find('.touch input').val();
         var ret =$(this).find('.is_return input').is(':checked');

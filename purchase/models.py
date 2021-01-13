@@ -11,8 +11,9 @@ from django.utils import timezone
 from django.db.models import Avg,Count,Sum
 
 from django.contrib.contenttypes.fields import GenericRelation
-from product.models import Stock,StockTransaction
-
+from product.models import Stock,StockTransaction,Attribute
+from product.attributes import get_product_attributes_data
+from django.db import transaction
 class Invoice(models.Model):
 
     # Fields
@@ -40,7 +41,8 @@ class Invoice(models.Model):
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE, related_name="purchases"
+        on_delete=models.CASCADE,
+        related_name="purchases"
     )
     posted = models.BooleanField(default = False)
     # txns = GenericRelation(StockTransaction)
@@ -70,8 +72,10 @@ class Invoice(models.Model):
         return self.balance
 
     def delete(self, *args, **kwargs):
-        if not self.posted:
+        if not self.posted :
             super(Invoice, self).delete(*args, **kwargs)
+        else:
+            raise Exception("Cant delete Purchase if its used or Posted")
 
 class InvoiceItem(models.Model):
     # Fields
@@ -106,6 +110,7 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch)/100
 
+    @transaction.atomic()
     def post(self):
         if not self.is_return:
             if 'Lot' in self.product.name:
@@ -114,6 +119,12 @@ class InvoiceItem(models.Model):
                                                     )
                 if created:
                     stock.barcode='je'+ str(stock.id)
+                    attributes = get_product_attributes_data(self.product.product)
+                    purity = Attribute.objects.get(name='Purity')
+                    melting = int(attributes[purity].name)
+                    stock.cost = self.touch
+                    stock.touch = stock.cost+2
+                    stock.wastage = 10
                     stock.save()
                 print(type(stock.weight))
                 print(type(self.weight))
@@ -125,6 +136,13 @@ class InvoiceItem(models.Model):
                                             tracking_type = 'Unique')
 
                 stock.barcode='je'+ str(stock.id)
+                attributes = get_product_attributes_data(self.product.product)
+                purity = Attribute.objects.get(name='Purity')
+                melting = int(attributes[purity].name)
+                stock.cost = self.touch
+                stock.touch = cost+2
+                stock.wastage = 10
+                # set melting,cost,touch,wastage
                 stock.add(self.weight,self.quantity,
                             self.weight,self.quantity,
                             self.invoice,'P')
@@ -138,7 +156,7 @@ class InvoiceItem(models.Model):
                                 self.invoice,'PR')
             else:
                 print("merge unique to lot before returning")
-
+    @transaction.atomic()
     def unpost(self):
         if self.is_return:
             if 'Lot' in self.product.name:
@@ -173,6 +191,11 @@ class InvoiceItem(models.Model):
                 at = 'PR'
                 )
 
+    def delete(self,*args,**kwargs):
+        if self.weight == self.Wih and self.quantity == self.Qih:
+            super(InvoiceItem,self,*Args,**kwargs).delete()
+        else:
+            raise Exception("wt or qty from this invoice item is used!hence cant delete")
 
     # def save(self,*args,**kwargs):
     #     print("In purchase line item model save()")
@@ -253,6 +276,57 @@ class Payment(models.Model):
 
     def get_line_totals(self):
         return self.paymentline_set.aggregate(t=Sum('amount'))['t']
+
+    def update_status(self):
+        total_allotted=self.get_line_totals()
+        if total_allotted is not None :
+            if total_allotted == self.total:
+                self.status="Allotted"
+            else:
+                self.status="Unallotted"
+        self.save()
+
+    def allot(self):
+        print(f"allotting payment {self.id} type:{self.type} amount{self.total}")
+        invpaid = 0 if self.get_line_totals() is None else self.get_line_totals()
+        print(f" invpaid : {invpaid}")
+        remaining_amount = self.total - invpaid
+        print(f"remaining : {remaining_amount}")
+        try:
+            invtopay = Invoice.objects.filter(customer = self.supplier,
+                                                balancetype = self.type,
+                                                posted = True).exclude(
+                                                status = "Paid"
+                                                ).order_by("created")
+        except IndexError:
+            invtopay = None
+        print(f" invtopay :{invtopay}")
+
+        for i in invtopay:
+            print(f"i:{i} bal:{i.get_balance()}")
+            if remaining_amount<=0 : break
+            bal=i.get_balance()
+            if remaining_amount >= bal :
+                remaining_amount -= bal
+                PaymentLine.objects.create(payment=self,invoice=i,amount=bal)
+                i.status="Paid"
+            else :
+                PaymentLine.objects.create(payment=self,invoice=i,amount=remaining_amount)
+                i.status="PartiallyPaid"
+                remaining_amount=0
+            i.save()
+        print('allotted payment')
+        self.update_status()
+
+    def deallot(self):
+        self.paymentline_set.all().delete()
+        self.update_status()
+
+    def save(self,*args,**kwargs):
+        if self.pk :
+            self.deallot()
+        super(self,Payment).save(*args,**kwargs)
+        self.allot()
 
 class PaymentLine(models.Model):
 

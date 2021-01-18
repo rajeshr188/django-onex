@@ -1,7 +1,7 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'dea_home' %}">License Listing</a></p>
+<p><a class="btn btn-default" href="{% url 'dea_home' %}">Ledger Listing</a></p>
 <form method="post">
     {% csrf_token %}
     {{form}}

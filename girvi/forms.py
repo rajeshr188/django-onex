@@ -18,7 +18,7 @@ class SeriesForm(forms.ModelForm):
         fields = ['name','license']
 
 class LoanForm(forms.ModelForm):
-    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Re'),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={

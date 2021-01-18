@@ -19,11 +19,11 @@
     <div class="col-sm-6">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Credit </h5>
+                <h5 class="card-title">Debit </h5>
                 <p class="card-text">
                     {% for i in object.accounttransaction_set.all%}
-                    {%if i.XactTypeCode.XactTypeCode == 'cr'%}
-                    <li>{{i.created|date}} {{i.ledgerno}} {{i.XactTypeCode}} {{i.XactTypeCode_Ext}} {{i.Account}} {{i.Amount}}</li>
+                    {%if i.XactTypeCode.XactTypeCode == 'Cr'%}
+                    <li>{{i.amount}} | {{i.created|date}} From : {{i.ledgerno}} via : {{i.XactTypeCode_ext.description}}</li>
                     {%endif%}
                     {%endfor%}
                 </p>
@@ -34,11 +34,11 @@
     <div class="col-sm-6">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Debit </h5>
+                <h5 class="card-title">Credit </h5>
                 <p class="card-text">
                     {% for i in object.accounttransaction_set.all%}
-                    {%if i.XactTypeCode.XactTypeCode == 'dr'%}
-                    <li>{{i.created|date}} {{i.ledgerno}} {{i.XactTypeCode}} {{i.XactTypeCode_Ext}} {{i.Account}} {{i.Amount}}</li>
+                    {%if i.XactTypeCode.XactTypeCode == 'Dr'%}
+                    <li>{{i.amount}} | {{i.created|date}} To : {{i.ledgerno}} Via : {{i.XactTypeCode_ext.description }} </li>
                     {%endif%}
                     {%endfor%}
                 </p>

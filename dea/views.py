@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 # Create your views here.
-from .models import Account, AccountStatement, Ledger, LedgerStatement, pledge_loan, repay_loan
+from .models import Account, AccountStatement, Ledger, LedgerStatement
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
 
@@ -57,14 +57,14 @@ def set_acc_ob(request, pk):
 
 def mock_pledge_loan(request, pk):
     acc = Account.objects.get(id=pk)
-    pledge_loan(acc, 6500)
-    return redirect("/")
+    acc.pledge_loan(6500)
+    return redirect("/dea")
 
 
 def mock_repay_loan(request, pk):
     acc = Account.objects.get(id=pk)
-    repay_loan(acc, 6500)
-    return redirect("/")
+    acc.repay_loan(6500)
+    return redirect("/dea")
 
 
 class AccountCreateView(CreateView):

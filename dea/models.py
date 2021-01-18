@@ -2,11 +2,13 @@ from django.db import models
 
 # Create your models here.
 from django.db import models
+from django.urls import reverse
 from mptt.models import MPTTModel,TreeForeignKey
 import datetime
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
-
+from django.db import transaction
+from contact.models import Customer
 # Create your models here.
 # cr credit,dr debit
 class TransactionType_DE(models.Model):
@@ -40,11 +42,19 @@ class Account(models.Model):
                         on_delete = models.SET_NULL)
     AccountType_Ext = models.ForeignKey(AccountType_Ext,
                         on_delete = models.CASCADE)
-    name = models.CharField(max_length=50)
+    # not sure
+    contact = models.OneToOneField(Customer,
+                        on_delete = models.CASCADE,
+                        )
+    # derive from contact_name
+    # name = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.name
-
+        return self.contact.name
+        
+    def get_absolute_url(self):
+        return reverse("dea_account_detail", kwargs={"pk": self.pk})
+    
     def set_opening_bal(self,amount,tc=0,tb=0):
         # ensure there aint no txns before setting op bal if present then audit and adjust
         return AccountStatement.objects.create(self,amount,0,0)
@@ -68,22 +78,22 @@ class Account(models.Model):
         try:
             ls = AccountStatement.object.latest()
             return self.accounttransaction_set.filter(created_ge = ls.created,
-                XactTypeCode__XactTypeCode='cr').\
+                XactTypeCode__XactTypeCode='Cr').\
                 aggregate(t=Sum('Amount')).t
         except:
             ls=None
-            return self.accounttransaction_set.filter(XactTypeCode__XactTypeCode = 'cr').\
+            return self.accounttransaction_set.filter(XactTypeCode__XactTypeCode = 'Cr').\
                     aggregate(t = Sum('Amount')).t
         
     def total_debit(self):
         try:
             ls = AccountStatement.object.latest()
             return self.accounttransaction_set.filter(created_ge=ls.created,
-                                                      XactTypeCode__XactTypeCode='dr').\
+                                                      XactTypeCode__XactTypeCode='Dr').\
                 aggregate(t=Sum('Amount')).t
         except:
             ls = None
-            return self.accounttransaction_set.filter(XactTypeCode__XactTypeCode='dr').\
+            return self.accounttransaction_set.filter(XactTypeCode__XactTypeCode='Dr').\
                 aggregate(t=Sum('Amount')).t
 
     def current_balance(self,since = None):
@@ -96,16 +106,151 @@ class Account(models.Model):
         closing_balance = latest_acc_stmt.ClosingBalance if latest_acc_stmt else 0
         
         credit = self.accounttransaction_set\
-                    .filter(XactTypeCode_ext__in = ['LG'])\
+                    .filter(XactTypeCode_ext__in = ['LT','LR','IR'])\
                     .aggregate(
-                    t = Coalesce(Sum('Amount'),0))
+                    t = Coalesce(Sum('amount'),0))
         
         debit = self.accounttransaction_set\
-                    .filter(XactTypeCode_ext__in = ['LP'])\
+                    .filter(XactTypeCode_ext__in = ['LG','LP','IP'])\
                     .aggregate(
-                    t=Coalesce(Sum('Amount'),0))
+                    t=Coalesce(Sum('amount'),0))
         
         return closing_balance + (credit['t'] - debit['t'])
+    
+
+    @transaction.atomic()
+    def pledge_loan(self, amount, interest=0):
+       
+        lt = TransactionType_Ext.objects.get(XactTypeCode_ext='LT')
+        lg = TransactionType_Ext.objects.get(XactTypeCode_ext='LG')
+        cr = TransactionType_DE.objects.get(XactTypeCode='Cr') 
+        dr = TransactionType_DE.objects.get(XactTypeCode = 'Dr')
+        cash_ledger_Acc = Ledger.objects.get(name="Cash In Drawer")
+
+        if self.AccountType_Ext.description == 'Creditor':
+            liability_loan = Ledger.objects.get(name="LoansTaken")
+            # txns for receiving loan from creditor
+            AccountTransaction.objects.create(
+                ledgerno=liability_loan,
+                XactTypeCode=dr,
+                XactTypeCode_ext=lt,
+                Account=self,
+                amount=amount
+            )
+            LedgerTransaction.objects.create(
+                ledgerno=liability_loan,
+                ledgerno_dr= cash_ledger_Acc,
+                amount=amount)     
+        else:
+            # txns for alloting loan to debtor
+            asset_loan = Ledger.objects.get(name="LoansGiven")
+            
+            LedgerTransaction.objects.create(
+                ledgerno=cash_ledger_Acc, 
+                ledgerno_dr=asset_loan, amount=amount
+            )
+            AccountTransaction.objects.create(
+                ledgerno=asset_loan, XactTypeCode=cr,
+                XactTypeCode_ext=lg, Account=self, amount=amount
+            )
+
+    @transaction.atomic()
+    def repay_loan(self, amount):
+        # opposite of pledge_loan
+        lp = TransactionType_Ext.objects.get(XactTypeCode_ext='LP')
+        lr = TransactionType_Ext.objects.get(XactTypeCode_ext='LR')
+        cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
+        dr = TransactionType_DE.objects.get(XactTypeCode='Dr')
+        cash_ledger_acc = Ledger.objects.get(name="Cash In Drawer")
+
+        if self.AccountType_Ext.description == "Creditor":
+            liability_loan = Ledger.objects.get(name="LoansTaken")
+
+            AccountTransaction.objects.create(
+                ledgerno=liability_loan, XactTypeCode=cr,
+                XactTypeCode_ext=lp, Account=self, amount=amount)
+                
+            LedgerTransaction.objects.create(
+                ledgerno=cash_ledger_acc,
+                ledgerno_dr=liability_loan, amount=amount)
+
+        else:
+            asset_loan = Ledger.objects.get(name="LoansGiven")
+            LedgerTransaction.objects.create(
+                ledgerno=asset_loan, ledgerno_dr=cash_ledger_acc, amount=amount
+            )
+            AccountTransaction.objects.create(
+                ledgerno=asset_loan, XactTypeCode=dr,
+                XactTypeCode_ext=lr, Account=self, amount=amount
+            )
+
+    def paid_int(self,interest):
+        ip = TransactionType_Ext.objects.get(XactTypeCode_ext = 'IP')
+        int_paid = Ledger.objects.get(name='Interest Paid')
+        int_payable = Ledger.objects.get(name='Interest Payable')
+        cash_ledger_Acc = Ledger.objects.get(name="Cash In Drawer")
+        dr = TransactionType_DE.objects.get(XactTypeCode='Dr')
+        cr = TransactionType_DE.objects.get(XactTypeCode='Cr')
+
+        LedgerTransaction.objects.create(
+            ledgerno = cash_ledger_Acc,
+            ledgerno_dr = int_payable,amount = interest
+            )
+        LedgerTransaction.objects.create(
+            ledgerno = int_payable,
+            ledgerno_dr = int_paid,amount = interest
+        )
+        AccountTransaction.objects.create(
+            ledgerno = int_payable,XactTypeCode = cr,
+            XactTypeCode_ext = ip,Account = self,amount = interest
+        )
+
+    def received_int(self,interest):
+        int_received = Ledger.objects.get(name = "Interest Received")
+        cash_ledger_Acc = Ledger.objects.get(name = "Cash In Drawer")
+        int_receivable = Ledger.objects.get(name = 'Interest Receivable')
+
+        ir = TransactionType_Ext.objects.get(XactTypeCode_ext='IR')
+        dr = TransactionType_DE.objects.get(XactTypeCode = 'Dr')
+        cr = TransactionType_DE.objects.get(XactTypeCode = "Cr")
+        
+        LedgerTransaction.objects.create(
+            ledgerno = int_received,
+            ledgerno_dr = int_receivable,amount = interest
+        )
+        LedgerTransaction.objects.create(
+            ledgerno=int_receivable,
+            ledgerno_dr=cash_ledger_Acc,amount=interest
+        )
+        AccountTransaction.objects.create(
+            ledgerno=int_received,
+            XactTypeCode=dr, XactTypeCode_ext=ir,
+            Account=self, amount=interest
+        )
+        
+    
+    def sale():
+        pass
+
+
+    def receipt():
+        pass
+
+
+    def sale_return():
+        pass
+
+
+    def purchase():
+        pass
+
+
+    def payment():
+        pass
+
+
+    def purchase_return():
+        pass
 
 # account statement for ext account
 class AccountStatement(models.Model):
@@ -155,6 +300,10 @@ class Ledger(MPTTModel):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse("dea_ledger_detail", kwargs={"pk": self.pk})
+    
     
     def ledger_txn(self,dr_ledger,amount):
         # check if ledger exists
@@ -198,9 +347,9 @@ class Ledger(MPTTModel):
             print("no recent trxns in this ledger")
         closing_balance = latest_acc_statement.ClosingBalance if latest_acc_statement else 0
         decendants = self.get_descendants(include_self = True)
-        bal = [ acc.credit_txns.aggregate(t = Coalesce(Sum('amount'),0))['t']
-                 - 
-                acc.debit_txns.aggregate(t = Coalesce(Sum('amount'), 0))['t']
+        bal = [acc.debit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
+                 -       
+                acc.credit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
                     for acc in decendants]
         return closing_balance + sum(bal)
 
@@ -243,101 +392,7 @@ class AccountTransaction(models.Model):
 
 # alex deposit 50
 # accountxact+
-from django.db import transaction
-@transaction.atomic()
-def pledge_loan(self,amount,interest=0):
-    # if acc is creditor ledger is liabilility-loans
-        # move money from LiabilityLoan to cash [debit:Ll,credit:cash]
-        # ledger to ledger txn
-        # money came from creditor to cash [debit:creditor-acc,credit:Liabilityloans]
-        # ledger to Acc txn
-    # elif acc is debtor ledger is asset-loans
-        # move money from cash to AssetLoan [debit:cash,credit:AL]
-        # ledger to ledger txn
-        # then [debit:AL , credit:debtor-acc]
-        # ledger to acc txn
-    lt = TransactionType_Ext.objects.get(XactTypeCode_ext = 'LT')
-    lg = TransactionType_Ext.objects.get(XactTypeCode_ext='LG')
-    cr = TransactionType_DE.objects.get(XactTypeCode='cr')
-    # ip = TransactionType_Ext.objects.get(XactTypeCode_ext = 'LP')
-    # int_paid = Ledger.objects.get(name='Interest Paid')
-    cash_ledger_Acc = Ledger.objects.get(name="Cash_in_drawer")
-    if self.AccountType_Ext.description == "creditors":
-        liability_loan = Ledger.objects.get(name="Loans Received")
-        
-        # txns for receiving loan
-        LedgerTransaction.objects.create(
-            ledgerno = cash_ledger_Acc,ledgerno_dr =  liability_loan,amount =  amount)
 
-        AccountTransaction.objects.create(
-            ledgerno = liability_loan,XactTypeCode = cr,
-            XactTypeCode_ext = lt,Account = self,Amount = amount
-            )
-        # txns for corresponding loan interest
-        # LedgerTransaction.objects.create(
-        #     ledgerno = int_paid,ledgerno_dr = cash_ledger_Acc,amount = interest
-        #     )
-        # AccountTransaction.objects.create(
-        #     ledgerno = cash_ledger_Acc,XactTypeCode = 'dr',
-        #     XacTtypeCode_ext = ip,Account = self,Amount = interest
-        # )
-    else:
-        # tsns for alloting loan
-        asset_loan = Ledger.objects.get(name="Loans")
-        # int_received = Ledger.objects.get(name = "Interest Received")
-        # ir = TransactionType_Ext.objects.get(XactTypeCode_ext = 'IR')
-        LedgerTransaction.objects.create(
-            ledgerno=asset_loan,ledgerno_dr=cash_ledger_Acc,amount=amount
-        )
-        
-        AccountTransaction.objects.create(
-            ledgerno=asset_loan, XactTypeCode=cr,
-            XactTypeCode_ext = lg,Account = self,Amount = amount
-        )
-        # txns for corresponding loan interest
-        # LedgerTransaction.objects.create(
-        #     ledgerno = cash_ledger_Acc,ledgerno_dr = int_received,amount = interest
-        #     )
-        # AccountTransaction.objects.create(
-        #     ledgerno = int_received,XactTypeCode = 'cr',
-        #     XacTtypeCode_ext = ir,Account = self,Amount = interest
-        # )
-@transaction.atomic()
-def repay_loan(self,amount):
-    # opposite of pledge_loan
-    lp = TransactionType_Ext.objects.get(XactTypeCode_ext = 'LP')
-    dr = TransactionType_DE.objects.get(XactTypeCode='dr')
-    cash_ledger_acc = Ledger.objects.get(name="Cash_in_drawer")
-
-    if self.AccountType_Ext.description == "creditors":
-        liability_loan = Ledger.objects.get(name="Loans Received")
-        LedgerTransaction.objects.create(
-            ledgerno = liability_loan,ledgerno_dr = cash_ledger_acc,amount =  amount)
-        AccountTransaction.objects.create(
-            ledgerno=liability_loan, XactTypeCode=dr,
-            XactTypeCode_ext = lp, Account = self,Amount =  amount)
-    else:
-        asset_loan = Ledger.objects.get(name="Loans")
-        LedgerTransaction.objects.create(
-            ledgerno = cash_ledger_acc,ledgerno_dr = asset_loan,amount =  amount
-        )
-        AccountTransaction.objects.create(
-            ledgerno=asset_loan, XactTypeCode = dr,
-            XactTypeCode_ext =  lp, Account = self,Amount =  amount
-        )
-
-def sale():
-    pass
-def receipt():
-    pass
-def sale_return():
-    pass
-def purchase():
-    pass
-def payment():
-    pass
-def purchase_return():
-    pass
 
 # add a way to import ledger and account iniital balance
 # i.e import each bal to corresponding acc by creating that particulat statement with closing balance
@@ -353,3 +408,7 @@ def purchase_return():
 # a common function audit_all() to audit ledger and accounts i.e report daybook or something like that
 # for acc and ledger get txns after statement if any
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created
+
+# when in doubt about credit and debit
+# Acc - Ledger debit:+ credit:-
+# Ledger - Ledger debit:- ,credit:+

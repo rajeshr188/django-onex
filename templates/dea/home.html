@@ -14,18 +14,20 @@
             aria-selected="false">Accounts</a>
     </li>
 </ul>
-<div class="tab-content" id="myTabContent">
+<div class="tab-content p-3" id="myTabContent">
     <div class="tab-pane fade show active" id="internal" role="tabpanel" aria-labelledby="home-internal">
-        <a class="btn btn-primary" href="{% url 'dea_ledger_create' %}">Add Ledger</a>
-        <a class = "btn btn-primary" href="{% url 'dea_account_create' %}">Add txn</a>
-        <a class="btn btn-primary" href="{% url 'dea_account_create' %}">Audit all</a>
-
-        <ul>
+        <div class="btn-group" role="group" aria-label="Basic outlined example">
+            <button type="button" class="btn btn-outline-success" href="{% url 'dea_ledger_create' %}">Add Ledger</button>
+            <button type="button" class="btn btn-outline-primary" href="{% url 'dea_account_create' %}">Add txn</button>
+            <button type="button" class="btn btn-outline-info" href="{% url 'dea_account_create' %}">Audit</button>
+        </div>
+      
+        <ul class="list-group list-group-flush p-3">
             {% recursetree data.ledger %}
-            <li>
-                <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a> - {{node.current_balance}}
+            <li class = "list-group-item">
+                <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a> : {{node.current_balance}}
                 {% if not node.is_leaf_node %}
-                <ul class="children">
+                <ul class="list-group children">
                     {{ children }}
                 </ul>
                 {% endif %}
@@ -48,7 +50,7 @@
             <tbody>
                 {% for i in data.accounts%}
                 <tr>
-                    <td><a href="{% url 'dea_account_detail' i.id%}">{{i.name}}</a></td>
+                    <td><a href="{% url 'dea_account_detail' i.id%}">{{i.contact.name}}</a></td>
                     <td>{{i.current_balance}}</td>
                 </tr>
                 {% endfor %}

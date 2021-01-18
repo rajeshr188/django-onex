@@ -169,7 +169,7 @@ class Loan(models.Model):
         return self.loanamount + self.interestdue() - a['int'] - a['amt']
 
     def is_worth(self):
-        return self.itemvalue<total
+        return self.itemvalue<self.total
 
     def get_next(self):
         return Loan.objects.filter(series = self.series,lid__gt = self.lid).order_by('lid').first()
@@ -182,6 +182,21 @@ class Loan(models.Model):
         self.itemvalue = self.loanamount+500
         self.loanid = self.series.name + str(self.lid)
         super().save(*args,**kwargs)
+        if not hasattr(self.customer,'account'):
+            from dea.models import Account,AccountType_Ext
+            Account.objects.create(
+                contact = self.customer,
+                AccountType_Ext = AccountType_Ext.objects.get(description = 'Debtor')
+            )
+        self.customer.account.pledge_loan(amount = self.loanamount)
+        if self.customer.type == "Su":
+            self.customer.account.paid_int(
+            interest = (self.loanamount * self.interestrate)/100
+            )
+        else:
+            self.customer.account.received_int(
+                interest=(self.loanamount * self.interestrate)/100
+            )
 
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add = True)
@@ -198,7 +213,7 @@ class Adjustment(models.Model):
     def get_absolute_url(self):
         return reverse('girvi_adjustment_detail', args = (self.pk,))
     def get_update_url(self):
-        return reverse('girvi_adjustments_update', args = (Self.pk,))
+        return reverse('girvi_adjustments_update', args = (self.pk,))
 
 class Release(models.Model):
 

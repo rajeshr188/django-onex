@@ -73,6 +73,9 @@ urlpatterns += (
     path('girvi/loan/detail/<int:pk>/pdf', views.print_loanpledge, name='loan_pdf'),
     path('girvi/loan/update/<int:pk>/', views.LoanUpdateView.as_view(), name='girvi_loan_update'),
     path('girvi/loan/<int:pk>/delete/',views.LoanDeleteView.as_view(),name='girvi_loan_delete'),
+    path('girvi/loan/<int:pk>/post/',views.post_loan,name = 'girvi_loan_post'),
+    path('girvi/loan/<int:pk>/unpost/', views.unpost_loan, name='girvi_loan_unpost'),
+
 )
 urlpatterns += (
     # urls for Adjustment

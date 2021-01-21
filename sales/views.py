@@ -55,7 +55,7 @@ def randomsales(request):
     data['cust']=c
 
     now = datetime.datetime.now()
-    daterange = calendar.monthrange(now.year,now.month)
+    # daterange = calendar.monthrange(now.year,now.month)
     row = dict()
 
 

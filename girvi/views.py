@@ -373,8 +373,11 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
-        series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) for s in Series.objects.all()}
-        context['series']= series
+        try:
+            series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) for s in Series.objects.all()}
+            context['series']= series
+        except Loan.DoesNotExist:
+            context['series']=None
         return context
 
     def get_initial(self):
@@ -389,6 +392,20 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
                 # 'loanid':incloanid,
                 'created':ld,
             }
+
+from django.shortcuts import get_object_or_404
+def post_loan(request,pk):
+    loan = get_object_or_404(Loan, pk=pk)
+    if not loan.posted:
+        loan.post()
+    return redirect(loan)
+
+
+def unpost_loan(request, pk):
+    loan = get_object_or_404(Loan, pk=pk)
+    if loan.posted:
+        loan.unpost()
+    return redirect(loan)
 
 class LoanDetailView(LoginRequiredMixin,DetailView):
     model = Loan

@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 # Create your views here.
-from .models import Account, AccountStatement, Ledger, LedgerStatement
+from .models import Account, AccountStatement, Journal, Ledger, LedgerStatement
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
 
@@ -11,7 +11,7 @@ def home(request):
     context = {}
     context['accounts'] = Account.objects.all()
     context['ledger'] = Ledger.objects.all()
-
+    context['journal'] = Journal.objects.all()
     return render(request, 'dea/home.html', {'data': context})
 
 
@@ -66,6 +66,8 @@ def mock_repay_loan(request, pk):
     acc.repay_loan(6500)
     return redirect("/dea")
 
+class JournalListView(ListView):
+    model = Journal
 
 class AccountCreateView(CreateView):
     model = Account

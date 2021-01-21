@@ -23,5 +23,6 @@ urlpatterns = [
          views.mock_pledge_loan, name="dea_pledge_loan"),
     path('accounts/<int:pk>/mock_repay_loan/',
          views.mock_repay_loan, name='dea_repay_loan'),
+     path('journals/',views.JournalListView.as_view(),name='dea_journals_list'),
 
 ]

@@ -134,7 +134,7 @@ DATABASES = {
         'default': {
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'onex',
+        'NAME': 'onex_test_features',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',

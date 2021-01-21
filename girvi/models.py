@@ -1,15 +1,13 @@
+from dea.models import Journal,LoanJournal
 from django.urls import reverse
-from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth import get_user_model
-from django.contrib.auth import models as auth_models
-from django.db import models
+from decimal import Decimal
+from django.db import models,transaction
 from contact.models import Customer
 import datetime
 from django.utils import timezone
-from django.db.models import Avg,Count,Sum,Func
+from django.db.models import Sum,Func
 from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
+from django.contrib.contenttypes.fields import GenericRelation
 
 class Month(Func):
     function = 'EXTRACT'
@@ -28,7 +26,7 @@ class License(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     lt=(('PBL','Pawn Brokers License'),
-            ('GST','Goods & Service Tax'))
+        ('GST','Goods & Service Tax'))
     type = models.CharField(max_length=30,choices=lt,default='PBL')
     shopname = models.CharField(max_length=30)
     address = models.TextField(max_length=100)
@@ -114,6 +112,8 @@ class Loan(models.Model):
         Customer,
         on_delete=models.CASCADE,
     )
+    posted = models.BooleanField(default = False)
+    journals = GenericRelation(Journal)
 
     # Managers
     # objects = models.Manager()
@@ -143,12 +143,12 @@ class Loan(models.Model):
     @property
     def is_released(self):
         return hasattr(self,'release')
-
+    
     def interestdue(self,date= datetime.datetime.now(timezone.utc)):
         if self.is_released :
-            return 0
+            return Decimal(0)
         else:
-            return int(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100)
+            return Decimal(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)
@@ -177,26 +177,45 @@ class Loan(models.Model):
     def get_previous(self):
         return Loan.objects.filter(series = self.series,lid__lt = self.lid).order_by('lid').last()
 
-    def save(self,*args,**kwargs):
-        self.interest = self.interestdue()
-        self.itemvalue = self.loanamount+500
-        self.loanid = self.series.name + str(self.lid)
-        super().save(*args,**kwargs)
-        if not hasattr(self.customer,'account'):
-            from dea.models import Account,AccountType_Ext
+    @transaction.atomic()
+    def post(self):
+        # get contact.Account
+        if not hasattr(self.customer, 'account'):
+            from dea.models import Account, AccountType_Ext
             Account.objects.create(
-                contact = self.customer,
-                AccountType_Ext = AccountType_Ext.objects.get(description = 'Debtor')
+                contact=self.customer,
+                AccountType_Ext=AccountType_Ext.objects.get(
+                    description='Debtor')
             )
-        self.customer.account.pledge_loan(amount = self.loanamount)
-        if self.customer.type == "Su":
-            self.customer.account.paid_int(
-            interest = (self.loanamount * self.interestrate)/100
-            )
+        # create journal LG or LT based on user Type
+        if self.customer.type == 'Su':
+            jrnl = LoanJournal.objects.create(content_object = self,desc = 'Loan Taken')
+            jrnl.take_loan(self.customer.account,self.loanamount)
+            jrnl.pay_interest(self.customer.account,
+                                    (self.loanamount * self.interestrate)/100)
         else:
-            self.customer.account.received_int(
-                interest=(self.loanamount * self.interestrate)/100
-            )
+            jrnl = LoanJournal.objects.create(content_object = self,desc = 'Loan Given')
+            jrnl.pledge_loan(self.customer.account,self.loanamount)
+            jrnl.receive_interest(self.customer.account,
+                                  (self.loanamount * self.interestrate)/100)
+        self.posted = True
+        self.save()
+
+    @transaction.atomic()
+    def unpost(self):
+        # delete journals if accounts and ledger not closed
+        # otherwise intimate / hint to do adjustment
+        self.journals.clear()
+        self.posted = False
+        self.save()
+    
+    def save(self,*args,**kwargs):
+        if not self.pk:
+            self.interest = self.interestdue()
+            self.itemvalue = self.loanamount+500
+            self.loanid = self.series.name + str(self.lid)
+        super().save(*args,**kwargs)
+        
 
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add = True)

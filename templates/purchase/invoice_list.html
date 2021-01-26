@@ -1,7 +1,8 @@
 {% extends "_base.html" %}
 {% load static %}
-{%load django_tables2%}
-{%load bootstrap4%}
+{% load humanize %}
+{% load django_tables2 %}
+{% load bootstrap4 %}
 {% block content %}
 {{form.media}}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -10,20 +11,17 @@
     <div class="btn-group mr-2">
      <a class="btn btn-primary mr-2" href="{% url 'purchase_invoice_create' %}" role="button">Add Purchase</a>
      <a class="btn btn-primary mr-2" href="{% url 'purchase_invoice_list' %}" role="button">Purchase List</a>
-     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
+     <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
 
     </div>
   </div>
 </div>
 
 {% if filter %}
-    <form action="" method="get" class="form form-inline mb-4">
-        {% bootstrap_form filter.form layout='inline' %}
-        {% bootstrap_button 'filter' %}
-    </form>
+<form action="" method="get" class="form form-inline">
+  {% bootstrap_form filter.form layout='inline' %}
+  {% bootstrap_button 'filter' %}
+</form>
 {% endif %}
-<div class="table-responsive-sm">
-{% render_table table 'django_tables2/bootstrap.html'  %}
-</div>
-
+{% render_table table 'django_tables2/bootstrap.html' %}
 {% endblock %}

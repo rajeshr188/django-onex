@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'actstream',
     # 'controlcenter',
     'debug_toolbar','django_extensions',
-    'corsheaders',
+    'corsheaders','djmoney',
     # Local
     'users',
     'pages',
@@ -134,7 +134,7 @@ DATABASES = {
         'default': {
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'onex_test_features',
+        'NAME': 'onex_dea_array',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',

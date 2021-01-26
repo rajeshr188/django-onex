@@ -393,7 +393,6 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
                 'created':ld,
             }
 
-from django.shortcuts import get_object_or_404
 def post_loan(request,pk):
     loan = get_object_or_404(Loan, pk=pk)
     if not loan.posted:
@@ -406,6 +405,7 @@ def unpost_loan(request, pk):
     if loan.posted:
         loan.unpost()
     return redirect(loan)
+
 
 class LoanDetailView(LoginRequiredMixin,DetailView):
     model = Loan
@@ -496,3 +496,16 @@ class ReleaseUpdateView(LoginRequiredMixin,UpdateView):
 class ReleaseDeleteView(LoginRequiredMixin,DeleteView):
     model=Release
     success_url=reverse_lazy('girvi_release_list')
+    
+def post_release(request, pk):
+    release = get_object_or_404(Release, pk=pk)
+    if not release.posted:
+        release.post()
+    return redirect(release)
+
+
+def unpost_release(request, pk):
+    release = get_object_or_404(Release, pk=pk)
+    if release.posted:
+        release.unpost()
+    return redirect(release)

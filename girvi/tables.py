@@ -9,7 +9,7 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 class LoanTable(tables.Table):
 
-    loanid=tables.LinkColumn('girvi_loan_detail',args=[A('pk')])
+    loanid=tables.Column(linkify = True)
     # release = tables.LinkColumn('girvi_release_create', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
 
@@ -32,7 +32,7 @@ class LoanTable(tables.Table):
         template_name = 'django_tables2/bootstrap4.html'
 
 class ReleaseTable(tables.Table):
-    releaseid = tables.LinkColumn('girvi_release_detail',args=[A('pk')])
+    releaseid = tables.Column(linkify = True)
 
     class Meta:
         model = Release

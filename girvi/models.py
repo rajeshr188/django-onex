@@ -189,12 +189,16 @@ class Loan(models.Model):
             )
         # create journal LG or LT based on user Type
         if self.customer.type == 'Su':
-            jrnl = LoanJournal.objects.create(content_object = self,desc = 'Loan Taken')
+            jrnl = LoanJournal.objects.create(content_object = self,
+                                type = Journal.Types.LT,
+                                desc = 'Loan Taken')
             jrnl.take_loan(self.customer.account,self.loanamount)
             jrnl.pay_interest(self.customer.account,
                                     (self.loanamount * self.interestrate)/100)
         else:
-            jrnl = LoanJournal.objects.create(content_object = self,desc = 'Loan Given')
+            jrnl = LoanJournal.objects.create(content_object = self,
+                                type = Journal.Types.LG,
+                                desc = 'Loan Given')
             jrnl.pledge_loan(self.customer.account,self.loanamount)
             jrnl.receive_interest(self.customer.account,
                                   (self.loanamount * self.interestrate)/100)
@@ -205,6 +209,7 @@ class Loan(models.Model):
     def unpost(self):
         # delete journals if accounts and ledger not closed
         # otherwise intimate / hint to do adjustment
+        # prevent edit
         self.journals.clear()
         self.posted = False
         self.save()
@@ -241,13 +246,16 @@ class Release(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     interestpaid = models.IntegerField(default=0)
-
+    posted = models.BooleanField(default = False)
     # Relationship Fields
     loan = models.OneToOneField(
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
+    journals = GenericRelation(Journal)
+    # manager
     objects = ReleaseManager
+
     class Meta:
         ordering = ('-id',)
 
@@ -262,3 +270,24 @@ class Release(models.Model):
 
     def total_received(self):
         return self.loan.loanamount + self.interestpaid
+    
+    def post(self):
+        acc = self.loan.customer.account
+        amount = self.loan.loanamount
+        if self.loan.customer.type == 'Su':
+            jrnl = LoanJournal.objects.create(content_object = self,
+                            type = Journal.Types.LP,
+                            desc = 'Loan Repaid')
+            jrnl.repay(acc,amount)
+        else:
+            jrnl = LoanJournal.objects.create(content_object = self,
+                            type = Journal.Types.LR,
+                            desc = 'Loan Released')
+            jrnl.release(acc,amount)
+        self.posted = True
+        self.save()
+
+    def unpost(self):
+        self.journals.clear()
+        self.posted = False
+        self.save()

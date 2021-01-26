@@ -1,12 +1,78 @@
-from django.db import models,transaction
+import decimal
+from django.db import models,transaction,connection
+from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from moneyed.classes import Currency
 from mptt.models import MPTTModel,TreeForeignKey
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from contact.models import Customer
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from djmoney.models.fields import MoneyField
+from moneyed import Money
+from .utils.currency import Balance
+from psycopg2.extras import register_composite
+from psycopg2.extensions import register_adapter, adapt, AsIs
+
+MoneyValue = register_composite(
+    'money_value',
+    connection.cursor().cursor,
+    globally=True
+).type
+
+def moneyvalue_adapter(value):
+    return AsIs("(%s,%s)::money_value" % (
+        adapt(value.amount),
+        adapt(value.currency.code)))
+
+register_adapter(Money, moneyvalue_adapter)
+
+class MoneyValueField(models.Field):
+    description = "wrapper for money_value composite type in postgres"
+    
+    def from_db_value(self,value,expression,connection):
+        if value is None:
+            return value
+        return Money(value.amount,value.currency)
+        
+    def to_python(self,value):
+        if isinstance(value,Money):
+            return value
+        if value is None:
+            return value
+        return Money(value.amount,value.currency.code)
+
+    def get_prep_value(self, value):
+        # in input box we enter 10 USD,20 INR,30 AUD
+        amount,currency = value.split()
+        return Money(amount,currency)
+        
+    def db_type(self,connection):
+        return 'money_value'
+
 # Create your models here.
+
+# class BalanceType(models.Model):
+#     name = models.CharField(max_length = 10)
+
+#     def __str__(self):
+#         return self.name
+
+# class Balance(models.Model):
+#     type = models.models.ForeignKey("dea.BalanceType", on_delete=models.CASCADE)
+#     total = models.DecimalField(max_digits=11, decimal_places=3)
+
+#     class Meta:
+#         abstract = True
+#     def __str__(self):
+#         return f"{self.type}:{self.total}"
+
+# class LedgerBalance(Balance):
+#     ledger = models.ForeignKey("dea.Ledger", on_delete=models.CASCADE)
+
+# class AccountBalance(Balance):
+#     acc = models.ForeignKey('Account', on_delete = models.CASCADE)
 
 # cr credit,dr debit
 class TransactionType_DE(models.Model):
@@ -112,15 +178,18 @@ class Account(models.Model):
                     t=Coalesce(Sum('amount'),0))
         
         return closing_balance + (credit['t'] - debit['t'])
-        
+
 # account statement for ext account
 class AccountStatement(models.Model):
     AccountNo = models.ForeignKey(Account,
                         on_delete = models.CASCADE)
-    created = models.DateTimeField(unique = True,auto_now_add = True)
-    ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
-    TotalCredit = models.DecimalField(max_digits=13, decimal_places=3)
-    TotalDebit = models.DecimalField(max_digits=13, decimal_places=3)
+    created = models.DateTimeField(unique = True, auto_now_add = True)
+    ClosingBalance = ArrayField(MoneyValueField(null = True,blank = True))
+    TotalCredit = ArrayField(MoneyValueField(null = True,blank = True))
+    TotalDebit = ArrayField(MoneyValueField(null=True, blank=True))
+    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
+    # TotalCredit = models.DecimalField(max_digits=13, decimal_places=3)
+    # TotalDebit = models.DecimalField(max_digits=13, decimal_places=3)
 
     class Meta:
         get_latest_by = 'created'
@@ -128,9 +197,9 @@ class AccountStatement(models.Model):
     def __str__(self):
         return f"{self.id}"
 
-# sales,purchase,receipt,payment
+# sales,purchase,receipt,payment,loan,release
 class TransactionType_Ext(models.Model):
-    XactTypeCode_ext = models.CharField(max_length=3,primary_key= True)
+    XactTypeCode_ext = models.CharField(max_length=4,primary_key= True)
     description = models.CharField(max_length=100)
 
     def __str__(self):
@@ -149,7 +218,7 @@ class AccountType(models.Model):
 class Ledger(MPTTModel):
     AccountType = models.ForeignKey(AccountType,
                     on_delete = models.CASCADE)
-    name = models.CharField(max_length=100, unique = True)
+    name = models.CharField(max_length=100)
     parent = TreeForeignKey('self',
                             null = True,
                             blank = True,
@@ -158,6 +227,9 @@ class Ledger(MPTTModel):
 
     class MPTTMeta:
         order_insertion_by = ['name']
+        constraints = [
+        models.UniqueConstraint(fields=['name', 'parent'], name='unique ledgername-parent')
+        ]
 
     def __str__(self):
         return self.name
@@ -172,12 +244,12 @@ class Ledger(MPTTModel):
                                     ledgerno_dr = dr_ledger,
                                     amount=amount)
 
-    def acc_txn(self,ledger,xacttypecode,xacttypecode_ext,amount):
-        # check if acc exists
-        return AccountTransaction.objects.create(ledgerno = ledger,
-                                        XactTypeCode = xacttypecode,
-                                        XactTypeCode_ext = xacttypecode_ext,
-                                        amount = amount)
+    # def acc_txn(self,ledger,xacttypecode,xacttypecode_ext,amount):
+    #     # check if acc exists
+    #     return AccountTransaction.objects.create(ledgerno = ledger,
+    #                                     XactTypeCode = xacttypecode,
+    #                                     XactTypeCode_ext = xacttypecode_ext,
+    #                                     amount = amount)
 
     def set_opening_bal(self,amount):
         # ensure there aint no txns before setting op bal if present then audit and adjust
@@ -194,25 +266,42 @@ class Ledger(MPTTModel):
         # then crunch debit and credit and find closing bal
         # then save that closing bal as latest statement 
         # this statement will serve as opening balance for this acc
-        credit = self.credit_txns.aggregate(Sum('amount'))
-        debit = self.debit_txns.aggregate(Sum('amount'))
 
-        return LedgerStatement.objects.create(self,credit - debit)
+        # credit = self.credit_txns.aggregate(Sum('amount'))
+        # debit = self.debit_txns.aggregate(Sum('amount'))
 
+        # return LedgerStatement.objects.create(self,credit - debit)
+        credit_bal = Balance([Money(r["total"], r["amount_currency"]) 
+                        for r in self.debit_txns.annotate(total = Sum("amount"))])
+        debit_bal = Balance([Money(r["total"], r["amount_currency"])
+                             for r in self.credit_txns.annotate(total=Sum("amount"))])
+        return debit_bal - credit_bal
 
     def current_balance(self):
+
         latest_acc_statement =0
+
         try:
             latest_acc_statement = self.ledgerstatement_set.latest()
         except:
             print("no recent trxns in this ledger")
-        closing_balance = latest_acc_statement.ClosingBalance if latest_acc_statement else 0
+
+        closing_balance = Balance(latest_acc_statement.ClosingBalance) if latest_acc_statement else Balance()
         decendants = self.get_descendants(include_self = True)
-        bal = [acc.debit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
-                 -       
-                acc.credit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
-                    for acc in decendants]
-        return closing_balance + sum(bal)
+
+        bal = [Balance([Money(r["total"], r["amount_currency"]) 
+                        for r in acc.debit_txns.annotate(total = Sum("amount"))])
+                - 
+               Balance([Money(r["total"], r["amount_currency"])
+                        for r in acc.credit_txns.annotate(total = Sum("amount"))])
+                for acc in decendants
+                ]
+        # bal = [acc.debit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
+        #          -       
+        #         acc.credit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
+        #             for acc in decendants]
+        # return closing_balance + sum(bal)
+        return sum(bal,closing_balance)
 
     def audit(self):
         pass
@@ -221,6 +310,17 @@ class Ledger(MPTTModel):
 class Journal(models.Model):
 
     created = models.DateTimeField(auto_now_add =True)
+    class Types(models.TextChoices):
+        BJ = "Base Journal","base journal"
+        SJ = "Sales Journal","Sales journal"
+        LJ = "Loan Journal","Loan journal"
+        PJ = "Purchase Journal","Purchase journal"
+        LT = "Loan Taken","Loan taken"
+        LG = "Loan Given","Loan given"
+        LR = "Loan Released","Loan released"
+        LP = "Loan Paid","Loan paid"
+    base_type = Types.SJ
+    type = models.CharField(max_length = 50,choices = Types.choices,default = base_type)
     desc = models.TextField(blank = True,null = True)
     # Below the mandatory fields for generic relation
     content_type = models.ForeignKey(ContentType,
@@ -235,13 +335,19 @@ class Journal(models.Model):
     def get_url_string(self):
         if self.content_type:
             return f"{self.content_type.app_label}_{self.content_type.model}_detail"
+    
+    def save(self,*args,**kwargs):
+        if not self.id:
+            self.type = self.base_type
+        return super().save(*args,**kwargs)
 
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE)
     ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,related_name='credit_txns')
     created = models.DateTimeField(unique = True, auto_now_add = True)
     ledgerno_dr = models.ForeignKey(Ledger ,on_delete =models.CASCADE, related_name= 'debit_txns')
-    amount = models.DecimalField(max_digits=13, decimal_places=3)
+    # amount = models.DecimalField(max_digits=13, decimal_places=3)
+    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
 
     def __str__(self):
         return self.ledgerno.name
@@ -249,13 +355,17 @@ class LedgerTransaction(models.Model):
 class LedgerStatement(models.Model):
     ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE)
     created = models.DateTimeField(unique = True,auto_now_add=True)
-    ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
-
+    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
+    ClosingBalance = ArrayField(MoneyValueField(null=True, blank=True))
+    
     class Meta:
         get_latest_by = 'created'
 
     def __str__(self):
-        return f"{self.created} - {self.ClosingBalance}"
+        return f"{self.created.date()} - {self.ledgerno} - {self.ClosingBalance}"
+
+    def get_cb(self):
+        return Balance(self.ClosingBalance)
 
 
 class AccountTransaction(models.Model):
@@ -267,7 +377,8 @@ class AccountTransaction(models.Model):
     XactTypeCode_ext = models.ForeignKey(TransactionType_Ext,
                         on_delete=models.CASCADE)
     Account = models.ForeignKey(Account,on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=13,decimal_places=3)
+    # amount = models.DecimalField(max_digits=13,decimal_places=3)
+    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
 
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
@@ -278,6 +389,7 @@ from .managers import (LoanGivenJournalManager,LoanTakenJournalManager,
                         LoanReleaseJournalmanager,LoanRepayJournalmanager)
 
 class LoanJournal(Journal):
+    base_type = Journal.Types.LJ
     loanstaken = LoanTakenJournalManager()
     loansgiven = LoanGivenJournalManager()
     loanreleased = LoanReleaseJournalmanager()
@@ -412,6 +524,110 @@ class LoanJournal(Journal):
                 journal=self,
                 ledgerno=cash_ledger_acc,
                 ledgerno_dr=liability_loan, amount=amount)
+
+class SalesJournal(Journal):
+    base_type = Journal.Types.SJ
+    class Meta:
+        proxy = True
+
+    def sale(self,account,amount,payment_term,balance_type):
+        # payment_term[Cash,Credit]
+        # balance_type[Cash,Gold]
+        cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
+        sl_cash = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slh')
+        sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slc')
+
+        if payment_term == 'Cash':
+            cash_acc = Ledger.objects.get(name=balance_type,parent__name = 'Cash In Drawer')
+            debit_ac = cash_acc
+            txn_ext = sl_cash
+        else:
+            acc_receivable = Ledger.objects.get(name=balance_type,parent__name = 'Accounts Receivable')
+            debit_ac = acc_receivable
+            txn_ext = sl_credit
+
+        # cash/gold
+        revenue_acc = Ledger.objects.get(name = balance_type,parent__name = 'Revenue')
+        inventory = Ledger.objects.get(name=balance_type,parent__name = 'Inventory')
+        COGS = Ledger.objects.get(name =balance_type,parent__name =  'COGS')   
+
+        LedgerTransaction(
+                journal=self,
+                ledgeno = revenue_acc,ledgeno_dr = debit_ac,amount = amount)
+        LedgerTransaction(
+                journal=self,
+                ledgerno = inventory,ledgerno_dr = COGS ,amount = amount
+            )
+
+        AccountTransaction.objects.create(
+            journal = self,
+            ledgerno = revenue_acc,XactTypeCode = cr,
+            XactTypeCode_ext = txn_ext,Account = account,amount = amount
+        )
+    def sale_return():
+        pass
+    def Receipt(self,account,amount,balance_type):
+        cash_ac = Ledger.objects.get(name = balance_type,parent__name ='Cash In Drawer')
+        acc_recv = Ledger.objects.get(name = balance_type,parent__name = 'Accounts Receivable')
+        cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')
+        sre = TransactionType_Ext.objects.get(XactTypeCode_ext = 'SRE')
+        LedgerTransaction.objects.create(
+            journal = self,
+            ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = amount
+        )
+        AccountTransaction.objects.create(
+            journal = self,
+            ledgerno = acc_recv,XactTypeCode =cr,
+            XactTypeCode_ext =sre, Account = account,amount = amount
+        )
+
+class PurchaseJournal(Journal):
+    base_type = Journal.Types.PJ
+    class Meta:
+        proxy =True
+
+    @transaction.atomic()
+    def purchase(self,account,amount,payment_term,balance_type):
+        purch_exp = Ledger.objects.get(name=balance_type,parent__name ='COGP')
+        cash_ac = Ledger.objects.get(name=balance_type,parent__name = 'Cash In Drawer')
+        acc_payable = Ledger.objects.get(name =balance_type,parent__name = 'Accounts Payables')
+        cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
+        
+        if payment_term == 'Cash':
+            credit_ac = cash_ac
+            txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CPU')
+        else:
+            credit_ac = acc_payable
+            txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRPU')
+        LedgerTransaction.objects.create(
+            journal = self,
+            ledgerno = credit_ac,ledgerno_dr = purch_exp,amount =amount
+        )
+        AccountTransaction.objects.create(
+            journal = self,
+            ledgerno = cash_ac,XactTypeCode = cr,
+            XactTypeCode_ext = txn_ext,Account = account,amount = amount
+        )
+
+    @transaction.atomic()
+    def purchase_return():
+        pass
+
+    @transaction.atomic()
+    def Payment(self,account,amount,balance_type):
+        cash_ac = Ledger.objects.get(name =balance_type,parent__name = 'Cash In Drawer')
+        acc_payable = Ledger.objects.get(name=balance_type,parent__name = 'Accounts Payables')
+        dr = TransactionType_DE.objects.get(XactTypeCode ='Dr')
+
+        LedgerTransaction.objects.create(
+            journal = self,
+            ledgerno = cash_ac,ledgerno_dr = acc_payable,amount =amount
+        )
+        AccountTransaction.objects.create(
+            journal = self,
+            ledgerno = acc_payable,XactTypeCode = dr,
+            Account = account,amount = amount
+        )
 
 # add a way to import ledger and account iniital balance
 # i.e import each bal to corresponding acc by creating that particulat statement with closing balance

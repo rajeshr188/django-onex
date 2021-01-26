@@ -1,8 +1,7 @@
 from django.db.models import signals
 from django.dispatch import receiver
-from purchase.models import Invoice,InvoiceItem,Payment,PaymentLine
-from product.models import Stree,Stock,StockTransaction
-from django.contrib.contenttypes.models import ContentType
+from purchase.models import InvoiceItem,PaymentLine
+
 
 @receiver(signals.pre_delete,sender=PaymentLine)
 def delete_status(sender,instance,*args,**kwargs):

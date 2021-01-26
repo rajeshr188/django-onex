@@ -94,6 +94,9 @@ urlpatterns += (
     path('girvi/release/detail/<int:pk>/', views.ReleaseDetailView.as_view(), name='girvi_release_detail'),
     path('girvi/release/update/<int:pk>/', views.ReleaseUpdateView.as_view(), name='girvi_release_update'),
     path('girvi/release/<int:pk>/delete',views.ReleaseDeleteView.as_view(),name='girvi_release_delete'),
+    path('girvi/release/<int:pk>/post/', views.post_release, name='girvi_release_post'),
+    path('girvi/release/<int:pk>/unpost/',
+         views.unpost_release, name='girvi_release_unpost'),
 )
 urlpatterns += (
     # Example: /2012/week/23/

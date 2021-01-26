@@ -1,34 +1,33 @@
 from django.urls import reverse
-from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth import get_user_model
-from django.contrib.auth import models as auth_models
-from django.db import models
+
+from django.db import models,transaction
 from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
-from django.db.models import Avg,Count,Sum
+from django.db.models import Sum
 
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
-from django.db import transaction
+from dea.models import Journal,PurchaseJournal
+
 class Invoice(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now_add=True)
-    rate = models.PositiveSmallIntegerField(default=3000)
+    rate = models.PositiveSmallIntegerField(default=5100)
     btype_choices=(
             ("Cash","Cash"),
-            ("Metal","Metal")
+            ("Gold","Gold"),
+            ("Silver","Silver"),
         )
     itype_choices=(
         ("Cash","Cash"),
         ("Credit","Credit")
     )
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Metal")
+    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
     paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
     status_choices=(
@@ -45,6 +44,7 @@ class Invoice(models.Model):
         related_name="purchases"
     )
     posted = models.BooleanField(default = False)
+    journals = GenericRelation(Journal)
     # txns = GenericRelation(StockTransaction)
 
     class Meta:
@@ -71,11 +71,25 @@ class Invoice(models.Model):
             return self.balance - self.get_total_payments()
         return self.balance
 
-    def delete(self, *args, **kwargs):
-        if not self.posted :
-            super(Invoice, self).delete(*args, **kwargs)
+    def delete(self):
+        if self.posted:
+            raise Exception("cant delete purchase if used or posted")
         else:
-            raise Exception("Cant delete Purchase if its used or Posted")
+            super(Invoice,self).delete()
+
+    def post(self):
+        jrnl = PurchaseJournal.objects.create(
+            content_object = self,desc = 'purchase'
+        )
+        jrnl.purchase(self.supplier.account,self.balance,
+                        self.paymenttype,self.balancetype)
+        self.posted = True
+        self.save()
+
+    def unpost(self):
+        self.journals.clear()
+        self.posted = False
+        self.save()
 
 class InvoiceItem(models.Model):
     # Fields
@@ -140,7 +154,7 @@ class InvoiceItem(models.Model):
                 purity = Attribute.objects.get(name='Purity')
                 melting = int(attributes[purity].name)
                 stock.cost = self.touch
-                stock.touch = cost+2
+                stock.touch = stock.cost+2
                 stock.wastage = 10
                 # set melting,cost,touch,wastage
                 stock.add(self.weight,self.quantity,
@@ -156,6 +170,7 @@ class InvoiceItem(models.Model):
                                 self.invoice,'PR')
             else:
                 print("merge unique to lot before returning")
+
     @transaction.atomic()
     def unpost(self):
         if self.is_return:
@@ -191,9 +206,9 @@ class InvoiceItem(models.Model):
                 at = 'PR'
                 )
 
-    def delete(self,*args,**kwargs):
+    def delete(self):
         if self.weight == self.Wih and self.quantity == self.Qih:
-            super(InvoiceItem,self,*Args,**kwargs).delete()
+            super(InvoiceItem,self).delete()
         else:
             raise Exception("wt or qty from this invoice item is used!hence cant delete")
 

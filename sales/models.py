@@ -1,17 +1,14 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
-from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth import get_user_model
-from django.contrib.auth import models as auth_models
 from django.db import models
 from contact.models import Customer
-from product.models import ProductVariant,Stree,Stock
+from product.models import Stock
 from django.utils import timezone
-from django.db.models import Avg,Count,Sum,Func,F
-from datetime import date,timedelta
+from django.db.models import Sum,Func
+from datetime import timedelta
+from dea.models import Journal,SalesJournal
 # from django.contrib.postgres.indexes import BrinIndex
-from mptt.models import TreeForeignKey
+
 
 class Month(Func):
     function = 'EXTRACT'
@@ -43,13 +40,14 @@ class Invoice(models.Model):
     rate = models.PositiveSmallIntegerField(default=3000)
     btype_choices=(
             ("Cash","Cash"),
-            ("Metal","Metal")
+            ("Gold","Gold"),
+            ("Silver","Silver"),
         )
     itype_choices=(
         ("Cash","Cash"),
         ("Credit","Credit")
     )
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Metal")
+    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
     paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
     term = models.ForeignKey(Terms,on_delete = models.SET_NULL,blank = True,null = True)
     balance = models.DecimalField(max_digits=10, decimal_places=3)
@@ -57,7 +55,7 @@ class Invoice(models.Model):
                     ("Paid","Paid"),
                     ("Partially Paid","PartiallyPaid"),
                     ("Unpaid","Unpaid")
-    )
+                    )
     status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
     due_date = models.DateField(blank = True,null = True)
     # Relationship Fields
@@ -67,6 +65,7 @@ class Invoice(models.Model):
         related_name="sales"
     )
     posted = models.BooleanField(default = False)
+    journals = GenericRelation(Journal)
 
     class Meta:
         ordering = ('-created',)
@@ -94,6 +93,19 @@ class Invoice(models.Model):
 
     def update_status(self):
         print('updating invoice status')
+
+    def post(self):
+        jrnl = SalesJournal.objects.create(
+            content_type = self
+        )
+        # credit/cash cash/gold
+        jrnl.sale(self,self.customer.account,self.balance,self.paymenttype,self.balancetype)
+        self.posted = True
+        self.save()
+    def unpost(self):
+        self.journals.clear()
+        self.posted = False
+        self.save()
 
     def save(self,*args,**kwargs):
         if self.term.due_days:
@@ -184,7 +196,8 @@ class Receipt(models.Model):
         Customer,
         on_delete=models.CASCADE, related_name="receipts"
     )
-
+    posted = models.BooleanField(default = False)
+    journal = GenericRelation(Journal)
     class Meta:
         ordering = ('-created',)
 
@@ -252,6 +265,11 @@ class Receipt(models.Model):
             self.deallot()
         super(self,Receipt).save(*args,**kwargs)
         self.allot()
+    
+    def post(self):
+        pass
+    def unpost(self):
+        pass
 
 class ReceiptLine(models.Model):
 

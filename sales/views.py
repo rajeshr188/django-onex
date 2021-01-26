@@ -3,22 +3,19 @@ from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month,Year
 from contact.models import Customer
 from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,
                     ReceiptLineForm,ReceiptLineFormSet,RandomSalesForm)
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse,reverse_lazy
 from django_filters.views import FilterView
 from .filters import InvoiceFilter,ReceiptFilter
 from .render import Render
 from num2words import num2words
-from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
-from django.db.models.functions import TruncMonth,Coalesce
+from django.db.models import  Sum,Q,F,OuterRef,Subquery
+from django.db.models.functions import Coalesce
 from django.shortcuts import render,redirect
-from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
 from django.http import JsonResponse
-import json
-from product.models import Stree
 from django.db import transaction
 
 def home(request):
@@ -120,16 +117,11 @@ def sales_count_by_month(request):
             order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Metal')))
     return JsonResponse(list(data), safe=False)
 
-
-from django.conf import settings
-# from django.core.files.storage import FileSystemStorage
 import tablib
 from .admin import InvoiceResource,ReceiptResource
-import openpyxl
 import datetime
-from openpyxl import Workbook,load_workbook
+from openpyxl import load_workbook
 import re
-import time
 import pytz
 def simple_upload(request):
     if request.method == 'POST' and request.FILES['myfile']:
@@ -198,7 +190,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
     template_name = 'sales/invoice_list.html'
     paginate_by = 25
 
-from approval.models import Approval,ApprovalLine
+from approval.models import Approval
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm

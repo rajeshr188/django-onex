@@ -45,6 +45,7 @@ from django.utils import timezone
 # class Supplier(Contacts):
 #     initial = models.CharField(max_length = 10)
 
+# use proxy here
 class Customer(models.Model):
 
     # Fields

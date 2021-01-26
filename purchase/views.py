@@ -1,20 +1,23 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
+from django.db.models import Sum, Q, F, OuterRef, Subquery
+from django.shortcuts import render, redirect
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.urls import reverse, reverse_lazy
+
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
-from contact.models import Customer
-from .forms import InvoiceForm, InvoiceItemForm,InvoiceItemFormSet, PaymentForm,PaymentLineForm,PaymentLineFormSet
-from django.http import HttpResponseRedirect,HttpResponse
-from django.urls import reverse,reverse_lazy
-from django_filters.views import FilterView
-from .filters import InvoiceFilter,PaymentFilter
+from .tables import InvoiceTable,PaymentTable
+from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet, PaymentForm, PaymentLineForm, PaymentLineFormSet
+from .filters import InvoiceFilter, PaymentFilter
 from .render import Render
+
+from contact.models import Customer
 from num2words import num2words
-from django.db.models import  Sum,Q,F,OuterRef,Subquery
-from django.shortcuts import render,redirect
-from django_tables2 import RequestConfig
+
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
-from .tables import InvoiceTable,PaymentTable
-from django.db import transaction
+from django_filters.views import FilterView
+
 
 def print_invoice(request,pk):
     invoice=Invoice.objects.get(id=pk)
@@ -72,15 +75,14 @@ class InvoiceCreateView(CreateView):
         else:
             return self.form_invalid(form, invoiceitem_form)
 
-    @transaction.atomic()
     def form_valid(self, form, invoiceitem_form):
         if invoiceitem_form.is_valid():
             self.object = form.save()
             invoiceitem_form.instance = self.object
             items = invoiceitem_form.save()
-            if self.object.posted:
-                for i in item:
-                    i.post()
+            # if self.object.posted:
+            #     for i in items:
+            #         i.post()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -119,12 +121,12 @@ class InvoiceUpdateView(UpdateView):
             self.object = form.save()
             # invoiceitem_form.instance = self.object
             items=invoiceitem_form.save()
-            if self.object.posted:
-                for i in items:
-                    i.post()
-            else :
-                for i in items:
-                    i.unpost()
+            # if self.object.posted:
+            #     for i in items:
+            #         i.post()
+            # else :
+            #     for i in items:
+            #         i.unpost()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -133,8 +135,12 @@ class InvoiceUpdateView(UpdateView):
                                   invoiceitem_form=invoiceitem_form))
 
 def post_purchase(request,pk):
+    # use get_objector404
     purchase_inv = Invoice.objects.get(id = pk)
     if not purchase_inv.posted:
+        # post to dea
+        purchase_inv.post()
+        # post to stock
         for item in purchase_inv.purchaseitems.all():
             item.post()
         purchase_inv.posted = True
@@ -144,6 +150,8 @@ def post_purchase(request,pk):
 def unpost_purchase(request,pk):
     purchase_inv = Invoice.objects.get(id = pk)
     if purchase_inv.posted:
+        # unpost to dea
+        purchase_inv.unpost()
         for item in purchase_inv.purchaseitems.all():
             item.unpost()
         purchase_inv.posted = False

@@ -1,12 +1,12 @@
-from django.views.generic import FormView,DetailView, ListView, UpdateView, CreateView,DeleteView
+from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from django.urls import reverse,reverse_lazy
-from django.http import Http404, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 import re
 from django.utils import timezone
 from django.shortcuts import render,redirect,get_object_or_404
-from django.db.models import Avg,Count,Sum,Q,Subquery,OuterRef,Prefetch
-from django.db.models.functions import Cast,TruncMonth,Coalesce
+from django.db.models import Count,Sum,Q,Prefetch
+from django.db.models.functions import Cast,Coalesce
 from django.db.models.fields import DateField
 
 from .models import License, Series, Loan, Release, Adjustment, Month, Year
@@ -16,7 +16,6 @@ from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
 from contact.models import Customer
 
-from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from django_filters.views import FilterView

@@ -1,6 +1,6 @@
 from django.db.models import signals
 from django.dispatch import receiver
-from .models import Approval,ApprovalLine,ApprovalLineReturn
+from .models import ApprovalLine,ApprovalLineReturn
 from product.models import Stree
 
 

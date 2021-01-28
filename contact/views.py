@@ -1,5 +1,4 @@
-from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
-from django_tables2 import RequestConfig
+from django.views.generic import DetailView, UpdateView, CreateView,DeleteView
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import CustomerTable
@@ -8,14 +7,11 @@ from .filters import CustomerFilter
 from .models import Customer
 from .forms import CustomerForm
 from django.urls import reverse,reverse_lazy
-from girvi.models import Loan
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseRedirect
 from django.shortcuts import render,redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from sales.models import Invoice,Month
-from django.db.models import  Sum,Q,F,OuterRef,Subquery,Count
-from datetime import datetime, timedelta,date
+from sales.models import Month
+from django.db.models import  Sum,Q,Count
+from datetime import datetime, timedelta
 from sales.tables import InvoiceTable
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required

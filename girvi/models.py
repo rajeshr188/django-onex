@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.db.models import Sum,Func
 from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
 from django.contrib.contenttypes.fields import GenericRelation
-
+from moneyed import Money
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -192,16 +192,16 @@ class Loan(models.Model):
             jrnl = LoanJournal.objects.create(content_object = self,
                                 type = Journal.Types.LT,
                                 desc = 'Loan Taken')
-            jrnl.take_loan(self.customer.account,self.loanamount)
+            jrnl.take_loan(self.customer.account,Money(self.loanamount,"INR"))
             jrnl.pay_interest(self.customer.account,
-                                    (self.loanamount * self.interestrate)/100)
+                                    Money((self.loanamount * self.interestrate)/100,"INR"))
         else:
             jrnl = LoanJournal.objects.create(content_object = self,
                                 type = Journal.Types.LG,
                                 desc = 'Loan Given')
-            jrnl.pledge_loan(self.customer.account,self.loanamount)
+            jrnl.pledge_loan(self.customer.account,Money(self.loanamount,"INR"))
             jrnl.receive_interest(self.customer.account,
-                                  (self.loanamount * self.interestrate)/100)
+                                  Money((self.loanamount * self.interestrate)/100,"INR"))
         self.posted = True
         self.save()
 
@@ -278,12 +278,12 @@ class Release(models.Model):
             jrnl = LoanJournal.objects.create(content_object = self,
                             type = Journal.Types.LP,
                             desc = 'Loan Repaid')
-            jrnl.repay(acc,amount)
+            jrnl.repay(acc,Money(amount,"INR"))
         else:
             jrnl = LoanJournal.objects.create(content_object = self,
                             type = Journal.Types.LR,
                             desc = 'Loan Released')
-            jrnl.release(acc,amount)
+            jrnl.release(acc,Money(amount,"INR"))
         self.posted = True
         self.save()
 

@@ -160,24 +160,41 @@ class Account(models.Model):
 
     def current_balance(self,since = None):
 
-        latest_acc_stmt = 0
-        try:
-            latest_acc_stmt = self.accountstatement_set.latest()
-        except:
-            print("no acc statement available")
-        closing_balance = latest_acc_stmt.ClosingBalance if latest_acc_stmt else 0
-        
         credit = self.accounttransaction_set\
                     .filter(XactTypeCode_ext__in = ['LT','LR','IR'])\
-                    .aggregate(
-                    t = Coalesce(Sum('amount'),0))
-        
+                        .values("amount_currency")\
+                            .annotate(total = Sum('amount'))
         debit = self.accounttransaction_set\
-                    .filter(XactTypeCode_ext__in = ['LG','LP','IP'])\
-                    .aggregate(
-                    t=Coalesce(Sum('amount'),0))
+                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP  '])\
+                        .values("amount_currency")\
+                            .annotate(total=Sum('amount'))
+        credit_bal = Balance(
+                        [Money(r["total"], r["amount_currency"]) for r in credit]) 
+                        
+        debit_bal =  Balance(
+                        [Money(r["total"], r["amount_currency"]) for r in debit])
+        bal = credit_bal - debit_bal
+
+        try:
+            latest_acc_stmt = self.accountstatement_set.latest()
+            closing_balance = Balance(
+                latest_acc_stmt.ClosingBalance) 
+            
+            return sum(bal,closing_balance)
+        except:
+            print("no acc statement available")
+            return bal
+        # credit = self.accounttransaction_set\
+        #             .filter(XactTypeCode_ext__in = ['LT','LR','IR'])\
+        #             .aggregate(
+        #             t = Coalesce(Sum('amount'),0))
         
-        return closing_balance + (credit['t'] - debit['t'])
+        # debit = self.accounttransaction_set\
+        #             .filter(XactTypeCode_ext__in = ['LG','LP','IP'])\
+        #             .aggregate(
+        #             t=Coalesce(Sum('amount'),0))
+        
+        # return closing_balance + (credit['t'] - debit['t'])
 
 # account statement for ext account
 class AccountStatement(models.Model):
@@ -195,7 +212,7 @@ class AccountStatement(models.Model):
         get_latest_by = 'created'
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.id} | {self.AccountNo} = {self.ClosingBalance}({self.TotalCredit} - {self.TotalDebit})"
 
 # sales,purchase,receipt,payment,loan,release
 class TransactionType_Ext(models.Model):
@@ -272,9 +289,9 @@ class Ledger(MPTTModel):
 
         # return LedgerStatement.objects.create(self,credit - debit)
         credit_bal = Balance([Money(r["total"], r["amount_currency"]) 
-                        for r in self.debit_txns.annotate(total = Sum("amount"))])
+                        for r in self.debit_txns.values("amount_currency").annotate(total = Sum("amount"))])
         debit_bal = Balance([Money(r["total"], r["amount_currency"])
-                             for r in self.credit_txns.annotate(total=Sum("amount"))])
+                        for r in self.credit_txns.values("amount_currency").annotate(total=Sum("amount"))])
         return debit_bal - credit_bal
 
     def current_balance(self):
@@ -290,10 +307,10 @@ class Ledger(MPTTModel):
         decendants = self.get_descendants(include_self = True)
 
         bal = [Balance([Money(r["total"], r["amount_currency"]) 
-                        for r in acc.debit_txns.annotate(total = Sum("amount"))])
+                        for r in acc.debit_txns.values("amount_currency").annotate(total = Sum("amount"))])
                 - 
                Balance([Money(r["total"], r["amount_currency"])
-                        for r in acc.credit_txns.annotate(total = Sum("amount"))])
+                        for r in acc.credit_txns.values("amount_currency").annotate(total = Sum("amount"))])
                 for acc in decendants
                 ]
         # bal = [acc.debit_txns.aggregate(t=Coalesce(Sum('amount'), 0))['t']
@@ -320,7 +337,8 @@ class Journal(models.Model):
         LR = "Loan Released","Loan released"
         LP = "Loan Paid","Loan paid"
     base_type = Types.SJ
-    type = models.CharField(max_length = 50,choices = Types.choices,default = base_type)
+    type = models.CharField(max_length = 50,choices = Types.choices,
+                        default = base_type)
     desc = models.TextField(blank = True,null = True)
     # Below the mandatory fields for generic relation
     content_type = models.ForeignKey(ContentType,
@@ -343,9 +361,11 @@ class Journal(models.Model):
 
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE)
-    ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,related_name='credit_txns')
+    ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,
+                    related_name='credit_txns')
     created = models.DateTimeField(unique = True, auto_now_add = True)
-    ledgerno_dr = models.ForeignKey(Ledger ,on_delete =models.CASCADE, related_name= 'debit_txns')
+    ledgerno_dr = models.ForeignKey(Ledger ,on_delete =models.CASCADE, 
+                    related_name= 'debit_txns')
     # amount = models.DecimalField(max_digits=13, decimal_places=3)
     amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
 
@@ -530,7 +550,7 @@ class SalesJournal(Journal):
     class Meta:
         proxy = True
 
-    def sale(self,account,amount,payment_term,balance_type):
+    def sale(self,account,amount,payment_term):
         # payment_term[Cash,Credit]
         # balance_type[Cash,Gold]
         cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
@@ -538,18 +558,18 @@ class SalesJournal(Journal):
         sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slc')
 
         if payment_term == 'Cash':
-            cash_acc = Ledger.objects.get(name=balance_type,parent__name = 'Cash In Drawer')
+            cash_acc = Ledger.objects.get(name = 'Cash In Drawer')
             debit_ac = cash_acc
             txn_ext = sl_cash
         else:
-            acc_receivable = Ledger.objects.get(name=balance_type,parent__name = 'Accounts Receivable')
+            acc_receivable = Ledger.objects.get(name ='Accounts Receivable')
             debit_ac = acc_receivable
             txn_ext = sl_credit
 
         # cash/gold
-        revenue_acc = Ledger.objects.get(name = balance_type,parent__name = 'Revenue')
-        inventory = Ledger.objects.get(name=balance_type,parent__name = 'Inventory')
-        COGS = Ledger.objects.get(name =balance_type,parent__name =  'COGS')   
+        revenue_acc = Ledger.objects.get(name = 'Revenue')
+        inventory = Ledger.objects.get(name = 'Inventory')
+        COGS = Ledger.objects.get(name =  'COGS')   
 
         LedgerTransaction(
                 journal=self,

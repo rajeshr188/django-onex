@@ -1,8 +1,8 @@
-from django.core.management.base import BaseCommand,CommandError
+from django.core.management.base import BaseCommand
 from django.apps import apps
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-from girvi.models import License,Loan,Release
+from girvi.models import Loan,Release
 from datetime import datetime
 from django.utils.timezone import make_aware
 

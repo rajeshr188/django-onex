@@ -10,9 +10,8 @@ from .forms import (ApprovalForm,ApprovalLineForm,
 from .filters import ApprovalLineFilter
 from django.forms import modelformset_factory
 from django.urls import reverse,reverse_lazy
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect
 from product.models import Stree
-from contact.models import Customer
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db import transaction

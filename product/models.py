@@ -1,17 +1,13 @@
-import datetime
 from decimal import Decimal
 from django_extensions.db.fields import AutoSlugField
-from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import F,Q,Sum
+from django.db.models import Q,Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.encoding import smart_text
 from django.utils.text import slugify
-from django.utils.translation import pgettext_lazy
 # from django_measurement.models import MeasurementField
 # from measurement.measures import Weight
 from mptt.managers import TreeManager

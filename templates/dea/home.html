@@ -28,41 +28,54 @@
       
         <ul class="list-group list-group-flush p-3">
             {% recursetree data.ledger %}
-            <li class = "list-group-item">
-                <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a> : {{node.current_balance}}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a>
+                {{node.current_balance}}
                 {% if not node.is_leaf_node %}
                 <ul class="list-group children">
                     {{ children }}
                 </ul>
+                
                 {% endif %}
             </li>
+            
             {% endrecursetree %}
         </ul>
     </div>
     <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="profile-external">
         <a class = "btn btn-primary" href="{% url 'dea_account_create' %}">Add Account</a>
         <a class="btn btn-primary" href="{% url 'dea_account_create' %}">Audit all</a>
-
-        <br>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Account</th>
-                    <th>Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in data.accounts%}
-                <tr>
-                    <td><a href="{% url 'dea_account_detail' i.id%}">{{i.contact.name}}</a></td>
-                    <td>{{i.current_balance}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div>
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Type</th>
+                        <th>Enitity</th>
+                        <th>Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in data.accounts%}
+                    <tr>
+                        <td><a href="{% url 'dea_account_detail' i.id%}">{{i.contact.name}}</a></td>
+                        <td>{{i.AccountType_Ext}}</td>
+                        <td>{{i.entity}}</td>
+                        <td>{{i.current_balance}}</td>
+                        <td>
+                            <a class="btn btn-info" href="">Edit</a>
+                            <a class="btn btn-danger" href="">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
     </div>
     <div class="tab-pane fade" id="journal" role ="tabpanel" aria-labelledby="journal">
-        <table class="table table-sm">
+        <table class="table table-sm table-striped">
             <thead>
                 <tr>
                     <th>id</th>

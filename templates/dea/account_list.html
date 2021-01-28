@@ -8,13 +8,24 @@
 <table class = "table table-sm">
     <thead>
         <tr>
-            <th>Account</th><th>Balance</th>
+            <th>Account</th>
+            <th>Type</th>
+            <th>Entity</th>
+            <th>Balance</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
         {% for i in object_list%}
         <tr>
-            <td>{{i.name}}</td><td>{{i.current_balance}}</td>
+            <td>{{i.name}}</td>
+            <td>{{i.AccountType_Ext}}</td>
+            <td>{{i.entity}}</td>
+            <td>{{i.current_balance}}</td>
+            <td>
+                <a class = "btn btn-info" href="">Edit</a>
+                <a class="btn btn-danger" href="">Delete</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

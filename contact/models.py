@@ -1,17 +1,9 @@
 from django.urls import reverse
-from django.utils.text import slugify
-from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth import get_user_model
-from django.contrib.auth import models as auth_models
-from django_extensions.db import fields as extension_fields
-from django.db.models import Avg,Count,Sum
+from django.db.models import Count,Sum
 from django.db.models.functions import Coalesce
 from itertools import chain
 # from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
-import uuid
 from itertools import tee, islice, chain
 from dateutil import relativedelta
 from django.utils import timezone
@@ -85,6 +77,18 @@ class Customer(models.Model):
     def get_update_url(self):
         return reverse('contact_customer_update', args=(self.pk,))
 
+    # def save(self):
+    #     # why models update doesnt call postsave signals
+    #     if self.id:
+    #         debtor = AccountType_Ext.objects.get(description = 'Debtor')
+    #         creditor = AccountType_Ext.objects.get(description = 'Creditor')
+            
+    #         if self.account:
+    #             if self.type in ['Wh','Re']:
+    #                 self.account.AccountType_Ext = debtor
+    #             else:
+    #                 self.acount.AccountType_Ext = creditor
+    #     super(self).save()
     # loan queries
     @property
     def get_loans(self):

@@ -10,16 +10,16 @@
     <div class="btn-group mr-2">
      <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" role="button">New Loan</a>
      <a class="btn btn-secondary" href="{%url 'manage_loans' %}" role ="button">Bulk Create </a>
-     <a class="btn btn-primary ml-2" href="{% url 'girvi_loan_list' %}" role="button">Loan List</a>
-     <a class="btn btn-primary ml-2" href="{% export_url "ods" %}" role="button">export</a>
+     <a class="btn btn-primary" href="{% url 'girvi_loan_list' %}" role="button">Loan List</a>
+     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
     </div>
   </div>
 </div>
 
 Results :{{page_obj.paginator.count}}
 <div class="row">
-  <div class="col-9">
-    <div class=" table-responsive text-center">
+  <div class="col-sm-9">
+    <div class=" table table-responsive text-center">
 
       <form class="form-inline" action="{% url 'girvi-multirelease'%}" method="POST">
         {% csrf_token %}
@@ -38,7 +38,7 @@ Results :{{page_obj.paginator.count}}
       </form>
     </div>
   </div>
-  <div class="col-3">
+  <div class="col-sm-3">
     <div class="sticky-top">
       {% if filter %}
         <div class="card  bg-light mb-3 text-center">

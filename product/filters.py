@@ -3,7 +3,7 @@ from .models import (Stree,Category,ProductType,Product,
                         Attribute,AttributeValue)
 import django_filters
 from django_select2.forms import Select2Widget,Select2MultipleWidget
-from django.db import models
+
 
 class StreeFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='iexact')

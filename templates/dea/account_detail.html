@@ -3,10 +3,34 @@
 {% block title %}Acount detail{% endblock %}
 
 {% block content %}
-<h1>{{object}} Details</h1>
 
-<a class = "btn btn-danger" href="{% url 'dea_pledge_loan' object.id%}">pledge loan</a>
-<a class = "btn btn-success" href="{% url 'dea_repay_loan' object.id%}">repay loan</a>
+<div class="row">
+    <div class="col">
+        <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+            <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary"></strong>
+                <h3 class="mb-0">{{object}}</h3>
+                <div class="mb-1 text-muted">Nov 12</div>
+                <p class="card-text mb-auto">This is a wider card with supporting text below as a natural lead-in to
+                    additional content.</p>
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    <button type="button" class="btn btn-outline-primary" href="{% url 'dea_pledge_loan' object.id%}">Pledge</button>
+                    <button type="button" class="btn btn-outline-primary" href="{% url 'dea_repay_loan' object.id%}">Repay</button>
+                </div>
+            </div>
+            <div class="col-auto d-none d-lg-block">
+                <svg class="bd-placeholder-img" width="200" height="150" xmlns="http://www.w3.org/2000/svg" role="img"
+                    aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
+                    <title>Placeholder</title>
+                    <rect width="100%" height="100%" fill="#55595c" /><text x="50%" y="50%" fill="#eceeef"
+                        dy=".3em">{{object}}</text>
+                </svg>
+
+            </div>
+        </div>
+    </div>
+   
+</div>
 
 <div class="card">
     <div class="card-body">
@@ -16,7 +40,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-6">
+    <div class="col-sm">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Debit </h5>
@@ -31,7 +55,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6">
+    <div class="col-sm">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Credit </h5>

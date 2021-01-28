@@ -110,25 +110,7 @@
         update_amounts();
       });
 
-      function update_amounts(){
-        var sum = 0;
-        var nwt=0.0;
-        var twt=0.0;
-        $(".total input").each(function () {
-              if (!isNaN(this.value) && this.value.length != 0) {
-                  sum += parseFloat(this.value);
-              }
-          });
-
-        $(".weight input").each(function () {
-              if (!isNaN(this.value) && this.value.length != 0) {
-                  twt += parseFloat(this.value).toFixed(3);
-              }
-          });
-        $("#id_balance").val(sum.toFixed(3));
-        $('#id_weight').val(Number(twt).toFixed(3));
-
-      }
+      
       function update_row() {
 
         var rate=$('#id_rate').val();
@@ -148,14 +130,28 @@
         $(this).find('.total input').val(total.toFixed(3));
         console.log(wt,touch,nettwt,rate,total.toFixed(3))
       });
-
     }
-
-    
-
 })
 })
+function update_amounts(){
+        var sum = 0;
+        var nwt=0.0;
+        var twt=0.0;
+        $(".total input").each(function () {
+              if (!isNaN(this.value) && this.value.length != 0) {
+                  sum += parseFloat(this.value);
+              }
+          });
 
+        $(".weight input").each(function () {
+              if (!isNaN(this.value) && this.value.length != 0) {
+                  twt += parseFloat(this.value).toFixed(3);
+              }
+          });
+        $("#id_balance").val(sum.toFixed(3));
+        $('#id_weight').val(Number(twt).toFixed(3));
+
+      }
 </script>
 <script type = "text/javascript">
   $(".inline.{{ invoiceitem_form.prefix }}").formset({

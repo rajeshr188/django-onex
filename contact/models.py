@@ -77,19 +77,7 @@ class Customer(models.Model):
     def get_update_url(self):
         return reverse('contact_customer_update', args=(self.pk,))
 
-    # def save(self):
-    #     # why models update doesnt call postsave signals
-    #     if self.id:
-    #         debtor = AccountType_Ext.objects.get(description = 'Debtor')
-    #         creditor = AccountType_Ext.objects.get(description = 'Creditor')
-            
-    #         if self.account:
-    #             if self.type in ['Wh','Re']:
-    #                 self.account.AccountType_Ext = debtor
-    #             else:
-    #                 self.acount.AccountType_Ext = creditor
-    #     super(self).save()
-    # loan queries
+    
     @property
     def get_loans(self):
         return self.loan_set.all()

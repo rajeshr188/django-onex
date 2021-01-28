@@ -135,6 +135,7 @@ DATABASES = {
 
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'onex_dea_array',
+        'NAME': 'onex_array_feature',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',

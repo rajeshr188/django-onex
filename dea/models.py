@@ -161,11 +161,11 @@ class Account(models.Model):
     def current_balance(self,since = None):
 
         credit = self.accounttransaction_set\
-                    .filter(XactTypeCode_ext__in = ['LT','LR','IR'])\
+                    .filter(XactTypeCode_ext__in = ['LT','LR','IR','CPU','CRPU','RCT'])\
                         .values("amount_currency")\
                             .annotate(total = Sum('amount'))
         debit = self.accounttransaction_set\
-                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP  '])\
+                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP','PYT'])\
                         .values("amount_currency")\
                             .annotate(total=Sum('amount'))
         credit_bal = Balance(
@@ -176,11 +176,17 @@ class Account(models.Model):
         bal = credit_bal - debit_bal
 
         try:
-            latest_acc_stmt = self.accountstatement_set.latest()
-            closing_balance = Balance(
-                latest_acc_stmt.ClosingBalance) 
-            
-            return sum(bal,closing_balance)
+            latest_acc_stmt = self.accountstatement_set.all()
+            print(latest_acc_stmt)
+            if latest_acc_stmt:
+                closing_balance = Balance(
+                    latest_acc_stmt.latest().ClosingBalance) 
+            else:
+                closing_balance = Balance(0,'INR',0,'USD',0,'AUD')
+            print(closing_balance)
+            print(bal)
+            print(bal +closing_balance)
+            return bal +closing_balance
         except:
             print("no acc statement available")
             return bal
@@ -332,6 +338,8 @@ class Journal(models.Model):
         SJ = "Sales Journal","Sales journal"
         LJ = "Loan Journal","Loan journal"
         PJ = "Purchase Journal","Purchase journal"
+        PY = "Payment Journal","Payment journal"
+        RC = "Receipt Journal","Receipt journal"
         LT = "Loan Taken","Loan taken"
         LG = "Loan Given","Loan given"
         LR = "Loan Released","Loan released"
@@ -532,7 +540,7 @@ class LoanJournal(Journal):
         cr = TransactionType_DE.objects.get(XactTypeCode='Cr')
         cash_ledger_acc = Ledger.objects.get(name="Cash In Drawer")
 
-        if self.AccountType_Ext.description == "Creditor":
+        if account.AccountType_Ext.description == "Creditor":
             liability_loan = Ledger.objects.get(name="LoansTaken")
 
             AccountTransaction.objects.create(
@@ -590,7 +598,7 @@ class SalesJournal(Journal):
         cash_ac = Ledger.objects.get(name = balance_type,parent__name ='Cash In Drawer')
         acc_recv = Ledger.objects.get(name = balance_type,parent__name = 'Accounts Receivable')
         cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')
-        sre = TransactionType_Ext.objects.get(XactTypeCode_ext = 'SRE')
+        sre = TransactionType_Ext.objects.get(XactTypeCode_ext = 'RCT')
         LedgerTransaction.objects.create(
             journal = self,
             ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = amount
@@ -608,25 +616,33 @@ class PurchaseJournal(Journal):
 
     @transaction.atomic()
     def purchase(self,account,amount,payment_term,balance_type):
-        purch_exp = Ledger.objects.get(name=balance_type,parent__name ='COGP')
-        cash_ac = Ledger.objects.get(name=balance_type,parent__name = 'Cash In Drawer')
-        acc_payable = Ledger.objects.get(name =balance_type,parent__name = 'Accounts Payables')
+        purch_exp = Ledger.objects.get(name = 'COGP')
+        cash_ac = Ledger.objects.get(name = 'Cash In Drawer')
+        acc_payable = Ledger.objects.get(name = 'Accounts Payables')
         cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
-        
+
+        if balance_type =='Cash':
+            money = Money(amount,'INR')
+        elif balance_type =='Gold':
+            money = Money(amount,'USD')
+        else:
+            money = Money(amount,'AUD')
+
         if payment_term == 'Cash':
             credit_ac = cash_ac
             txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CPU')
         else:
             credit_ac = acc_payable
             txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRPU')
+
         LedgerTransaction.objects.create(
             journal = self,
-            ledgerno = credit_ac,ledgerno_dr = purch_exp,amount =amount
+            ledgerno = credit_ac,ledgerno_dr = purch_exp,amount =money
         )
         AccountTransaction.objects.create(
             journal = self,
             ledgerno = cash_ac,XactTypeCode = cr,
-            XactTypeCode_ext = txn_ext,Account = account,amount = amount
+            XactTypeCode_ext = txn_ext,Account = account,amount = money
         )
 
     @transaction.atomic()
@@ -638,15 +654,24 @@ class PurchaseJournal(Journal):
         cash_ac = Ledger.objects.get(name =balance_type,parent__name = 'Cash In Drawer')
         acc_payable = Ledger.objects.get(name=balance_type,parent__name = 'Accounts Payables')
         dr = TransactionType_DE.objects.get(XactTypeCode ='Dr')
+        pyt = TransactionType_Ext.objects.get(XactTypeCode_ext = 'PYT')
+
+        if balance_type == 'Cash':
+            money = Money(amount,'INR')
+        elif balance_type == 'Gold':
+            money = Money(amount,'USD')
+        else:
+            money = Money(amount,'AUD')
 
         LedgerTransaction.objects.create(
             journal = self,
-            ledgerno = cash_ac,ledgerno_dr = acc_payable,amount =amount
+            ledgerno = cash_ac,ledgerno_dr = acc_payable,amount =money
         )
         AccountTransaction.objects.create(
             journal = self,
             ledgerno = acc_payable,XactTypeCode = dr,
-            Account = account,amount = amount
+            XactTypeCode_ext = pyt,
+            Account = account,amount = money
         )
 
 # add a way to import ledger and account iniital balance

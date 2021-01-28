@@ -203,7 +203,7 @@ class Loan(models.Model):
             jrnl.receive_interest(self.customer.account,
                                   Money((self.loanamount * self.interestrate)/100,"INR"))
         self.posted = True
-        self.save()
+        self.save(update_fields=['posted'])
 
     @transaction.atomic()
     def unpost(self):
@@ -212,13 +212,13 @@ class Loan(models.Model):
         # prevent edit
         self.journals.clear()
         self.posted = False
-        self.save()
+        self.save(update_fields = ['posted'])
     
     def save(self,*args,**kwargs):
         if not self.pk:
-            self.interest = self.interestdue()
             self.itemvalue = self.loanamount+500
             self.loanid = self.series.name + str(self.lid)
+        self.interest = self.interestdue()
         super().save(*args,**kwargs)
         
 
@@ -285,9 +285,9 @@ class Release(models.Model):
                             desc = 'Loan Released')
             jrnl.release(acc,Money(amount,"INR"))
         self.posted = True
-        self.save()
+        self.save(update_fields=['posted'])
 
     def unpost(self):
         self.journals.clear()
         self.posted = False
-        self.save()
+        self.save(update_fields='posted')

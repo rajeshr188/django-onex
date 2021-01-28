@@ -555,7 +555,7 @@ class StockTransaction(models.Model):
     created=models.DateTimeField(auto_now_add=True)
     updated=models.DateTimeField(auto_now=True)
     type_choices=(("In","In"),("Out","Out"))
-    type=models.CharField(max_length=3,choices=type_choices)
+    type=models.CharField(max_length=3,choices=type_choices,default ="IN")
     quantity=models.IntegerField(default=0)
     weight=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     description=models.TextField()
@@ -579,7 +579,7 @@ class StockTransaction(models.Model):
     )
 
     # user = models.ForeignKey(User)
-    activity_type = models.CharField(max_length=2, choices=ACTIVITY_TYPES)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES,default = "PURCHASE")
     #relational Fields
     stock=models.ForeignKey(Stock,on_delete=models.CASCADE)
     content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,

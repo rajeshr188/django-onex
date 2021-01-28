@@ -11,6 +11,16 @@
 <tr><td>type</td><td>{{ object.type }}</td></tr>
 <tr><td>total</td><td>{{ object.total }}</td></tr>
 <tr><td>description</td><td>{{ object.description }}</td></tr>
+<tr>
+  <td>Posted</td>
+  <td>
+  {%if object.posted%}
+  <a class="btn btn-danger" href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
+  {%else%}
+  <a class ="btn btn-success" href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
+  {%endif%}
+  </td>
+</tr>
 </table>
 {% if object.paymentline_set %}
 <table class="table table-sm table-striped table-bordered">

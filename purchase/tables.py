@@ -34,10 +34,14 @@ class InvoiceTable(tables.Table):
 
 
 class PaymentTable(tables.Table):
-    id = tables.LinkColumn('purchase_payment_detail',args=[A('pk')])
-    supplier = tables.LinkColumn('contact_supplier_detail',args=[A('supplier.id')])
-    edit = tables.LinkColumn('purchase_payment_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-    remove = tables.LinkColumn('purchase_payment_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
+    id = tables.Column(linkify = True)
+    supplier = tables.Column(linkify = True)
+    edit = tables.LinkColumn('purchase_payment_update', 
+                        args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, 
+                        orderable=False, empty_values=())
+    remove = tables.LinkColumn('purchase_payment_delete',
+                         args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}},
+                         orderable=False, empty_values=())
 
     def render_supplier(self,value):
         return value.name
@@ -50,6 +54,6 @@ class PaymentTable(tables.Table):
 
     class Meta:
         model = Payment
-        fields = ('id','created','supplier','type','total','description')
+        fields = ('id','created','supplier','type','total','posted','description')
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "No Receipts Found matching your search..."

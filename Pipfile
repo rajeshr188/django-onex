@@ -34,10 +34,11 @@ redis = "*"
 gevent = "*"
 django-activity-stream = "*"
 django-versatileimagefield = "*"
+django-bootstrap4 = "*"
 
 [dev-packages]
 "autopep8" = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.8.2"
+python_version = "3.9"

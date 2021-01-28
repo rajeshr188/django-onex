@@ -25,9 +25,9 @@
     <td>Posted</td>
     <td>
     {%if object.posted%}
-    <a href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
+    <a class="btn btn-danger" href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
     {%else%}
-    <a href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
+    <a class ="btn btn-success" href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
     {%endif%}
     </td>
   </tr>

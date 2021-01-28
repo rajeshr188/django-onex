@@ -79,17 +79,19 @@ class Invoice(models.Model):
 
     def post(self):
         jrnl = PurchaseJournal.objects.create(
-            content_object = self,desc = 'purchase'
+            content_object = self,
+            type = Journal.Types.PJ,
+            desc = 'purchase'
         )
         jrnl.purchase(self.supplier.account,self.balance,
                         self.paymenttype,self.balancetype)
         self.posted = True
-        self.save()
+        self.save(update_fields = ['posted'])
 
     def unpost(self):
         self.journals.clear()
         self.posted = False
-        self.save()
+        self.save(update_fields=['posted'])
 
 class InvoiceItem(models.Model):
     # Fields
@@ -255,7 +257,8 @@ class Payment(models.Model):
     last_updated = models.DateTimeField(default=timezone.now)
     btype_choices=(
                 ("Cash","Cash"),
-                ("Metal","Metal")
+                ("Gold","Gold"),
+                ("silver","Silver")
             )
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
@@ -270,7 +273,7 @@ class Payment(models.Model):
                         ("Unallotted","Unallotted"),
                         )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
-
+    posted = models.BooleanField(default = True)
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -308,7 +311,7 @@ class Payment(models.Model):
         remaining_amount = self.total - invpaid
         print(f"remaining : {remaining_amount}")
         try:
-            invtopay = Invoice.objects.filter(customer = self.supplier,
+            invtopay = Invoice.objects.filter(supplier = self.supplier,
                                                 balancetype = self.type,
                                                 posted = True).exclude(
                                                 status = "Paid"
@@ -337,11 +340,27 @@ class Payment(models.Model):
         self.paymentline_set.all().delete()
         self.update_status()
 
-    def save(self,*args,**kwargs):
-        if self.pk :
-            self.deallot()
-        super(self,Payment).save(*args,**kwargs)
-        self.allot()
+    # def save(self,*args,**kwargs):
+    #     if self.pk :
+    #         self.deallot()
+    #     super(Payment,self).save(*args,**kwargs)
+    #     self.allot()
+    def post(self):
+        jrnl = PaymentJournal.objects.create(
+            content_object = self,
+            type = Journal.Types.PJ,
+            desc = 'purchase'
+        )
+        jrnl.payment(self.supplier.account,self.total,
+                        self.type)
+        self.posted = True
+        self.save(update_fields = ['posted'])
+
+    def unpost(self):
+        self.journals.clear()
+        self.posted = False
+        self.save(update_fields=['posted'])
+
 
 class PaymentLine(models.Model):
 

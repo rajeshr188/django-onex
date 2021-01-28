@@ -152,6 +152,7 @@ def unpost_purchase(request,pk):
     if purchase_inv.posted:
         # unpost to dea
         purchase_inv.unpost()
+        # unpost to stock
         for item in purchase_inv.purchaseitems.all():
             item.unpost()
         purchase_inv.posted = False
@@ -269,3 +270,18 @@ class PaymentLineCreateView(CreateView):
 class PaymentLineDeleteView(DeleteView):
     model = PaymentLine
     success_url = reverse_lazy('purchase_paymentline_list')
+
+def post_payment(request,pk):
+    # use get_objector404
+    payment = Payment.objects.get(id = pk)
+    if not payment.posted:
+        # post to dea
+        payment.post()
+    return redirect(payment)
+
+def unpost_payment(request,pk):
+    payment = Payment.objects.get(id = pk)
+    if payment.posted:
+        # unpost to dea
+        payment.unpost()
+    return redirect(payment)

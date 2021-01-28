@@ -16,9 +16,10 @@
   </td>
   <td>
     {%if object.posted %}
-    <button class="btn btn-success" href="{% url 'girvi_release_post' object.id%}"></button>
+    <a class="btn btn-danger" href="{% url 'girvi_release_unpost' object.id%}">Unpost</a>
     {%else %}
-    <button class="btn btn-success" href="{% url 'girvi_release_unpost' object.id%}"></button>
+    <a class="btn btn-success" href="{% url 'girvi_release_post' object.id%}">Post</a>
+    {%endif%}
   </td>
 </tr>
 </table>

@@ -13,9 +13,9 @@ post_save.connect(my_handler, sender=Customer)
 
 @receiver(post_save, sender=Customer)
 def add_account(sender, instance, created,**kwargs):
-    if created:
-        acct_c = AccountType_Ext.objects.get(description = 'Creditor')
-        acct_d = AccountType_Ext.objects.get(description = 'Debtor')
+    acct_c = AccountType_Ext.objects.get(description = 'Creditor')
+    acct_d = AccountType_Ext.objects.get(description = 'Debtor')
+    if created: 
         entity_t = EntityType.objects.get(name="Person")
         if instance.type == "Wh" or instance.type =="Re":
             Account.objects.create(contact = instance,
@@ -25,3 +25,10 @@ def add_account(sender, instance, created,**kwargs):
              Account.objects.create(contact = instance,
                 entity = entity_t,
                 AccountType_Ext = acct_c)
+    else:
+        if instance.type == "Wh" or instance.type =="Re":
+            instance.account.AccountType_Ext = acct_d
+        else:
+            instance.account.AccountType_Ext = acct_c
+        instance.account.save(update_fields=['AccountType_Ext'])
+

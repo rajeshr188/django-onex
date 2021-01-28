@@ -45,5 +45,7 @@ urlpatterns += (
     path('purchase/payment/detail/<int:id>/pdf', views.print_payment,name='paymentpdf'),
     path('purchase/payment/update/<int:pk>/', views.PaymentUpdateView.as_view(), name='purchase_payment_update'),
     path('purchase/payment/delete/<int:pk>/', views.PaymentDeleteView.as_view(), name='purchase_payment_delete'),
+    path('purchase/payment/<int:pk>/post/',views.post_payment,name = 'purchase_payment_post'),
+    path('purchase/payment/<int:pk>/unpost/',views.unpost_payment,name='purchase_payment_unpost'),
 
 )

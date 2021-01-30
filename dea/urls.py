@@ -10,8 +10,11 @@ urlpatterns = [
          name='dea_account_create'),
     path('account/<int:pk>/set-ob/', views.set_acc_ob, name='dea_account_setob'),
     path('account/accountstatement/create/',
-         views.AccountStatementCreateView, name='dea_accountstatement_create'),
+         views.AccountStatementCreateView, name = 'dea_accountstatement_create'),
+    path('account/<int:pk>/audit/',views.audit_acc,name = 'dea_account_audit'), 
 
+    path('ledger/<int:pk>/audit/',views.audit_ledger,name = 'dea_ledger_audit'), 
+    path('ledger/',views.LedgerListView.as_view(), name = 'dea_ledger_list'),
     path('ledger/<int:pk>/', views.LedgerDetailView.as_view(),
          name="dea_ledger_detail"),
     path('ledger/add/', views.LedgerCreateView.as_view(),

@@ -1,19 +1,18 @@
 from typing import List
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 # Create your views here.
-from .models import Account, AccountStatement, Journal, Ledger, LedgerStatement
+from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
 
 def home(request):
     context = {}
-    context['accounts'] = Account.objects.all()
-    context['ledger'] = Ledger.objects.all()
-    context['journal'] = Journal.objects.all()
+    context['accounts'] = Account.objects.select_related('AccountType_Ext','contact').all()
+    context['ledger'] = Ledger.objects.select_related('AccountType').all()
+    context['journal'] = Journal.objects.select_related('content_type').all()
     return render(request, 'dea/home.html', {'data': context})
-
 
 def set_ledger_ob(request, pk):
     # if this is a POST request we need to process the form data
@@ -54,6 +53,15 @@ def set_acc_ob(request, pk):
 
     return render(request, 'dea/set_acc_ob.html', {'form': form})
 
+def audit_acc(request,pk):
+    acc = get_object_or_404(Account,pk=pk)
+    acc.audit()
+    return redirect(acc)
+
+def audit_ledger(request,pk):
+    ledger = get_object_or_404(Ledger,pk=pk)
+    ledger.audit()
+    return redirect(ledger)
 
 def mock_pledge_loan(request, pk):
     acc = Account.objects.get(id=pk)

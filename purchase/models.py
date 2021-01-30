@@ -273,7 +273,7 @@ class Payment(models.Model):
                         ("Unallotted","Unallotted"),
                         )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
-    posted = models.BooleanField(default = True)
+    posted = models.BooleanField(default = False)
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -346,10 +346,10 @@ class Payment(models.Model):
     #     super(Payment,self).save(*args,**kwargs)
     #     self.allot()
     def post(self):
-        jrnl = PaymentJournal.objects.create(
+        jrnl = PurchaseJournal.objects.create(
             content_object = self,
             type = Journal.Types.PJ,
-            desc = 'purchase'
+            desc = 'payment'
         )
         jrnl.payment(self.supplier.account,self.total,
                         self.type)

@@ -1,0 +1,55 @@
+{% extends '_base.html' %}
+
+{% block title %}Journals List{% endblock %}
+
+{% block content %}
+<h2>Journals </h2>
+<div class="table-responsive">
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>created</th>
+                <th>txn-type</th>
+                <th>doc</th>
+                <th>Ledger-txns</th>
+                <th>A/c txns</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in object_list %}
+            <tr>
+                <td>{{i.id}}</td>
+                <td>{{i.created|date}}</td>
+                <td>{{i.desc}}</td>
+                <td>
+                    {%if i.content_type %}
+                    <a
+                        href="{% url ''|add:i.get_url_string pk=i.object_id %}">{{i.content_type.app_label}}-{{i.content_type.model}} {{i.content_object}}</a>
+                    {%else%}
+                    None
+                    {%endif%}
+                </td>
+                <td>
+                    <ul>
+                        {%for j in i.ledgertransaction_set.all%}
+                        <li> Dr:{{j.ledgerno_dr}} Cr:{{j.ledgerno}} RS:{{j.amount}}</li>
+                        {%endfor%}
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        {%for j in i.accounttransaction_set.all%}
+                        <li>
+                            Dr:{{j.ledgerno}} Cr:{{j.Account}} RS:{{j.amount}}
+                        </li>
+                        {%endfor%}
+    
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock%}

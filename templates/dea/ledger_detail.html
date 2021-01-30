@@ -22,7 +22,7 @@
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
-                    {% for i in object.debit_txns.all%}
+                    {% for i in object.dtxns%}
                     <li class="list-group-item">{{i.created|date}} From: {{i.ledgerno_dr}} to: {{i.ledgerno}} {{i.amount}}</li>
                     {%endfor%}
                 </ul>
@@ -38,7 +38,7 @@
             </div>
             <div class="card-body">     
                 <ul class="list-group list-group-flush">
-                    {% for i in object.credit_txns.all%}
+                    {% for i in object.ctxns%}
                     <li class ="list-group-item">{{i.created|date}}To: {{i.ledgerno_dr}} From: {{i.ledgerno}}{{i.amount}}</li>
                     {%endfor%}
                 </ul>
@@ -50,6 +50,7 @@
 <div class="card text-right">
     <div class="card-body">
         Closing Bal: {{object.current_balance}}
+        <a class="btn btn-info" href="{% url 'dea_ledger_audit' object.id%}">Audit</a>
     </div>
 </div>
 

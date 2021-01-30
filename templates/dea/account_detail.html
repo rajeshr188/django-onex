@@ -34,7 +34,7 @@
 
 <div class="card">
     <div class="card-body">
-        Opening Bal: {{ object.accountstatement_set.latest.ClosingBalance}} | {{object.accountstatement_set.latest.created}}
+        Opening Bal: {{ object.accountstatement_set.latest.cb}} | {{object.accountstatement_set.latest.created}}
         <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
 
     </div>
@@ -45,7 +45,7 @@
             <div class="card-body">
                 <h5 class="card-title">Debit </h5>
                 <p class="card-text">
-                    {% for i in object.accounttransaction_set.all%}
+                    {% for i in object.txns%}
                     {%if i.XactTypeCode.XactTypeCode == 'Cr'%}
                     <li>{{i.amount}} | {{i.created|date}} From : {{i.ledgerno}} via : {{i.XactTypeCode_ext.description}}</li>
                     {%endif%}
@@ -60,7 +60,7 @@
             <div class="card-body">
                 <h5 class="card-title">Credit </h5>
                 <p class="card-text">
-                    {% for i in object.accounttransaction_set.all%}
+                    {% for i in object.txns%}
                     {%if i.XactTypeCode.XactTypeCode == 'Dr'%}
                     <li>{{i.amount}} | {{i.created|date}} To : {{i.ledgerno}} Via : {{i.XactTypeCode_ext.description }} </li>
                     {%endif%}
@@ -74,7 +74,7 @@
 <div class="card text-right">
     <div class="card-body">
         Closing Bal: {{object.current_balance}}
-        <a class="btn btn-info" href="">Audit</a>
+        <a class="btn btn-info" href="{% url 'dea_account_audit' object.id%}">Audit</a>
     </div>
 </div>
 

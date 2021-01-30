@@ -7,7 +7,7 @@ from .models import (Category, ProductType, Product, ProductVariant, Attribute,
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_text
 from .attributes import get_name_from_attributes,get_product_attributes_data,generate_name_from_values
-
+from django.utils.text import slugify
 
 class ModelChoiceOrCreationField(forms.ModelChoiceField):
     """ModelChoiceField with the ability to create new choices.

@@ -294,8 +294,7 @@ def post_sales(request,pk):
     if not sales_inv.posted:
         for item in sales_inv.saleitems.all():
             item.post()
-        sales_inv.posted = True
-        sales_inv.save()
+        sales_inv.post()
     return redirect(sales_inv)
 
 @transaction.atomic()
@@ -304,8 +303,7 @@ def unpost_sales(request,pk):
     if sales_inv.posted:
         for item in sales_inv.saleitems.all():
             item.unpost()
-        sales_inv.posted = False
-        sales_inv.save()
+        sales_inv.unpost()
     return redirect(sales_inv)
 
 class InvoiceDeleteView(DeleteView):

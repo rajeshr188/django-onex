@@ -96,16 +96,20 @@ class Invoice(models.Model):
 
     def post(self):
         jrnl = SalesJournal.objects.create(
-            content_type = self
+            content_type = self,
+            type = Journal.Types.SJ,
+            desc = 'sale'
         )
         # credit/cash cash/gold
-        jrnl.sale(self,self.customer.account,self.balance,self.paymenttype,self.balancetype)
+        jrnl.sale(self,self.customer.account,self.balance,
+                    self.paymenttype,self.balancetype)
         self.posted = True
-        self.save()
+        self.save(update_fields = ['posted'])
+        
     def unpost(self):
         self.journals.clear()
         self.posted = False
-        self.save()
+        self.save(update_fields = ['posted'])
 
     def save(self,*args,**kwargs):
         if self.term.due_days:

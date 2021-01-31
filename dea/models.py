@@ -560,12 +560,19 @@ class SalesJournal(Journal):
     class Meta:
         proxy = True
 
-    def sale(self,account,amount,payment_term):
+    def sale(self,account,amount,payment_term,balance_type):
         # payment_term[Cash,Credit]
         # balance_type[Cash,Gold]
         cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
         sl_cash = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slh')
         sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slc')
+        
+        if balance_type == 'Cash':
+            money = Money(amount, 'INR')
+        elif balance_type == 'Gold':
+            money = Money(amount, 'USD')
+        else:
+            money = Money(amount, 'AUD')
 
         if payment_term == 'Cash':
             cash_acc = Ledger.objects.get(name = 'Cash In Drawer')
@@ -583,10 +590,10 @@ class SalesJournal(Journal):
 
         LedgerTransaction(
                 journal=self,
-                ledgeno = revenue_acc,ledgeno_dr = debit_ac,amount = amount)
+                ledgeno = revenue_acc,ledgeno_dr = debit_ac,amount = money)
         LedgerTransaction(
                 journal=self,
-                ledgerno = inventory,ledgerno_dr = COGS ,amount = amount
+                ledgerno = inventory,ledgerno_dr = COGS ,amount = money
             )
 
         AccountTransaction.objects.create(

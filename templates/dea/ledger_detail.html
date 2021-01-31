@@ -1,6 +1,6 @@
 {% extends '_base.html' %}
 
-{% block title %}Acount detail{% endblock %}
+{% block title %}Ledger detail{% endblock %}
 
 {% block content %}
 <h1 class="display-6">{{object}} Details</h1>
@@ -9,7 +9,7 @@
         <figure class="text-center">
             Opening Bal: {{ object.ledgerstatement_set.latest.get_cb}} |
             <a href="{% url 'dea_ledger_setob' object.id%}">Set Op Bal</a><br>
-            From : {{object.ledgerstatement_set.latest.created|date}}
+            From : {{object.ledgerstatement_set.latest.created|date:"jS F Y H:i"}}
             To : {% now "jS F Y H:i" %}
         </figure>
     </div>

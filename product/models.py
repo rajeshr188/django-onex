@@ -102,8 +102,8 @@ class Product(models.Model):
     def get_update_url(self):
         return reverse('product_product_update', args=(self.pk,))
 
-    def get_slug(self):
-        return slugify(smart_text(unidecode(self.name)))
+    # def get_slug(self):
+    #     return slugify(smart_text(unidecode(self.name)))
 
     def is_in_stock(self):
         return any(variant.is_in_stock() for variant in self)
@@ -144,12 +144,12 @@ class ProductVariant(models.Model):
     def quantity_available(self):
         return max(self.quantity - self.quantity_allocated, 0)
 
-    def check_quantity(self, quantity):
-        """Check if there is at least the given quantity in stock
-        if stock handling is enabled.
-        """
-        if self.track_inventory and quantity > self.quantity_available:
-             raise InsufficientStock(self)
+    # def check_quantity(self, quantity):
+    #     """Check if there is at least the given quantity in stock
+    #     if stock handling is enabled.
+    #     """
+    #     if self.track_inventory and quantity > self.quantity_available:
+    #          raise InsufficientStock(self)
     # def get_weight(self):
     #     return (
     #         self.weight or self.product.weight or
@@ -463,6 +463,9 @@ class Stock(models.Model):
     def get_update_url(self):
         return reverse('product_stock_update', args=(self.pk,))
 
+    def audit(self):
+        pass
+
     def get_computed_qih(self):
         # return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
         sum= self.stocktransaction_set.aggregate(
@@ -605,3 +608,14 @@ class StockTransaction(models.Model):
                 self.quantity= -self.quantity
             self.weight= -self.weight
         super(StockTransaction, self).save(*args, **kwargs)
+
+class StockStatement(models.Model):
+    stock = models.ForeignKey(Stock,on_delete = models.CASCADE)
+    created = models.DateTimeField(auto_now=True)
+    ClosingBalance = models.DecimalField(max_digits=14,decimal_places=3)
+
+    class Meta:
+        ordering = ('created',)
+
+    def __str__(self):
+        return f"{self.stock} : {self.ClosingBalance}"

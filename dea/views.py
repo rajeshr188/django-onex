@@ -9,7 +9,7 @@ from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatemen
 
 def home(request):
     context = {}
-    context['accounts'] = Account.objects.select_related('AccountType_Ext','contact').all()
+    context['accounts'] = Account.objects.exclude(contact__type='Re').select_related('AccountType_Ext','contact').all()
     context['ledger'] = Ledger.objects.select_related('AccountType').all()
     context['journal'] = Journal.objects.select_related('content_type').all()
     return render(request, 'dea/home.html', {'data': context})

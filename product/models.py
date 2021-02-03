@@ -475,10 +475,20 @@ class Stock(models.Model):
         return reverse('product_stock_update', args=(self.pk,))
 
     def audit(self):
+        # get last audit cb,totalin,total out and then append following
+        last_statement = self.stoctstatement_set.latest()
+        if last_statement:
+            ls_wt = last_statement.Closing_wt
+            ls_qty = last_statement.Closing_qty
+        else:
+            ls_wt = 0
+            ls_qty = 0
+
         stock_in = self.stock_in_txns()
         stock_out = self.stock_out_txns()
-        cb_wt =  stock_in.wt - stock_out.wt
-        cb_qty = stock_in.qty - stock_out.qty
+        cb_wt =  ls_wt + (stock_in.wt - stock_out.wt)
+        cb_qty = ls_qty + (stock_in.qty - stock_out.qty)
+
         return StockStatement.objects.create(stock = self,
                     Closing_wt = cb_wt,
                     Closing_qty = cb_qty,
@@ -488,25 +498,57 @@ class Stock(models.Model):
                     total_qty_out = stock_out.qty)
 
     def stock_in_txns(self):
-        return self.stocktransaction_set.filter(
-                    activity_type__in = ['P','SR','AR']
-                    ).aggregate(
-                        qty = Coalesce(Sum('quantity'),0),
-                        wt = Coalesce(Sum('weight'),0)
-                    )
+        # filter since last audit
+        ls = self.stocktransaction_set.latest()
+        if ls:
+            return self.stocktransaction_set.filter(
+                        created__gte = ls.created,
+                        activity_type__in = ['P','SR','AR']
+                        ).aggregate(
+                            qty = Coalesce(Sum('quantity'),0),
+                            wt = Coalesce(Sum('weight'),0)
+                        )
+        else:
+            return self.stocktransaction_set.filter(
+                activity_type__in=['P', 'SR', 'AR']
+                ).aggregate(
+                    qty=Coalesce(Sum('quantity'), 0),
+                    wt=Coalesce(Sum('weight'), 0)
+                )
     def stock_out_txns(self):
-        return self.stocktransaction_set.filter(
-                    activity_type__in=['PR', 'S', 'A']
-                    ).aggregate(
-                        qty=Coalesce(Sum('quantity'), 0),
-                        wt=Coalesce(Sum('weight'), 0)
-                    )
+        # filter since last audit
+        ls = self.stocktransaction_set.latest()
+        if ls:
+            return self.stocktransaction_set.filter(
+                        created__gte = ls.created,
+                        activity_type__in=['PR', 'S', 'A']
+                        ).aggregate(
+                            qty=Coalesce(Sum('quantity'), 0),
+                            wt=Coalesce(Sum('weight'), 0)
+                        )
+        else:
+            return self.stocktransaction_set.filter(
+                        activity_type__in=['PR', 'S', 'A']
+                        ).aggregate(
+                            qty=Coalesce(Sum('quantity'), 0),
+                            wt=Coalesce(Sum('weight'), 0)
+                        )
+
     def current_balance(self):
+        # compute cb from last audit and append following
         in_txns = self.stock_in_txns()
         out_txns = self.stock_out_txns()
         bal = {}
-        bal['wt'] = in_txns['wt'] - out_txns['wt']
-        bal['qty'] = in_txns['qty'] - out_txns['qty']
+        ls = self.stocktransaction_set.latest()
+        if ls:
+            ls_wt = ls.Closing_wt
+            ls_qty = ls.Closing_qty
+        else:
+            ls_wt = 0
+            ls_qty = 0
+
+        bal['wt'] = ls_wt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = ls_qty + (in_txns['qty'] - out_txns['qty'])
         return bal
 
     def get_age(self):

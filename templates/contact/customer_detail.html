@@ -23,7 +23,7 @@
 </div>
 
 <div class="mb-3 ">
-  <div class="btn-toolbar role="toolbar"">
+  <div class="btn-toolbar" role="toolbar">
     <div class="btn-group mr-2" role="group">
       <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.id%}">Edit Customer</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_delete' object.id%}">Delete Customer</a>
@@ -225,35 +225,12 @@
       <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         <div class="table-responsive-sm">
         {% render_table customer.sales.all 'django_tables2/bootstrap-responsive.html' %}
-
-        <!-- {% render_table invoices 'django_tables2/bootstrap4.html'  %} -->
         </div>
 
       </div>
       <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         <div class="table-responsive-sm">
-        <table class="table table-sm table-bordered table-striped">
-          <thead class="thead-dark text-center">
-            <tr>
-              <th scope="col">Receipt Id</th>
-              <th scope="col">Created</th>
-              <th scope="col">Currency</th>
-              <th scope="col">Balance</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rec in customer.receipts.all   %}
-                <tr class="text-center">
-                      <td><a href="{% url 'sales_receipt_detail' rec.id %}">{{rec.id}} </a></td>
-                      <td>{{rec.created|date}}</td>
-                      <td>{{rec.type}}</td>
-                      <td>{{rec.total}} </td>
-                      <td></td>
-                </tr>
-            {%endfor %}
-          </tbody>
-        </table>
+          {% render_table customer.sales.all 'django_tables2/bootstrap-responsive.html' %}
         </div>
       </div>
     </div>

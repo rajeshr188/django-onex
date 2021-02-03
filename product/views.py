@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
-                    AttributeValue, ProductImage, VariantImage,Stock,Stree,
+                    AttributeValue, ProductImage, StockStatement, VariantImage,Stock,Stree,
                     StockTransaction)
 from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
@@ -320,3 +320,6 @@ class StockTransactionUpdateView(UpdateView):
 class StockTransactionDeleteView(DeleteView):
     model = StockTransaction
     success_url = reverse_lazy('product_stocktransaction_list')
+
+class StockStatementListView(ListView):
+    model = StockStatement

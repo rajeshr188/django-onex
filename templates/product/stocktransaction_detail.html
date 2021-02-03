@@ -5,7 +5,7 @@
 <table class="table">
 <tr><td>Created</td><td>{{ object.created }}</td></tr>
 <tr><td>Updated</td><td>{{ object.updated }}</td></tr>
-<tr><td>Product</td><td>{{ object.stock }}</td></tr>
+<tr><td>Product</td><td><a href = "{% url 'product_stock_detail' object.stock.id%}" >{{ object.stock }}</a></td></tr>
 <tr><td>Quantity</td><td>{{ object.quantity }}</td></tr>
 <tr><td>type</td><td>{{ object.type }}</td></tr>
 <tr><td>Weight</td><td>{{ object.weight }}</td></tr>

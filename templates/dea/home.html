@@ -23,7 +23,7 @@
         <div class="btn-group" role="group" aria-label="Basic outlined example">
             <button type="button" class="btn btn-outline-success" href="{% url 'dea_ledger_create' %}">Add Ledger</button>
             <button type="button" class="btn btn-outline-primary" href="{% url 'dea_account_create' %}">Add txn</button>
-            <button type="button" class="btn btn-outline-info" href="{% url 'dea_account_create' %}">Audit</button>
+            <a  class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
         </div>
       
         <ul class="list-group list-group-flush p-3">
@@ -102,7 +102,9 @@
                     <td>
                         <ul>
                             {%for j in i.ledgertransaction_set.all%}
-                            <li> Dr:{{j.ledgerno_dr}} Cr:{{j.ledgerno}} RS:{{j.amount}}</li>
+                            <li> 
+                                Dr:{{j.ledgerno_dr}} Cr:{{j.ledgerno}} {{j.amount}}
+                            </li>
                             {%endfor%}
                         </ul>
                     </td>
@@ -110,7 +112,7 @@
                         <ul>
                             {%for j in i.accounttransaction_set.all%}
                             <li>
-                                Dr:{{j.ledgerno}} Cr:{{j.Account}} RS:{{j.amount}}
+                                Dr:{{j.ledgerno}} Cr:{{j.Account}} {{j.amount}}
                             </li>  
                             {%endfor%}
 

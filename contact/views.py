@@ -56,9 +56,9 @@ class CustomerDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
 
         data=self.object.sales.all()
-        table = InvoiceTable(data,exclude=('customer','edit','delete',))
-        table.paginate(page=self.request.GET.get('page', 1), per_page=25)
-        context['invoices']=table
+        # table = InvoiceTable(data,exclude=('customer','edit','delete',))
+        # table.paginate(page=self.request.GET.get('page', 1), per_page=25)
+        # context['invoices']=table
 
         inv =data.exclude(status="Paid")
         how_many_days = 30

@@ -35,7 +35,7 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-                        queryset = Stock.objects.filter(status = "Available").order_by('-Qih','-Wih'),
+                        queryset = Stock.objects.filter(status = "Available"),
                         widget = Select2Widget,
                         )
     class Meta:

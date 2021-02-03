@@ -155,23 +155,35 @@ class ProductVariant(models.Model):
     #         self.weight or self.product.weight or
     #         self.product.product_type.weight)
 
+    def get_weight(self):
+        wt =0
+        for i in self.stock_set.all():
+            wt += i.current_balance()['wt']
+        return wt
+    
+    def get_quantity(self):
+        qty = 0
+        for i in self.stock_set.all():
+            qty += i.current_balance()['qty']
+        return qty
+            
     def get_absolute_url(self):
         return reverse('product_productvariant_detail', args=(self.pk,))
 
     def get_update_url(self):
         return reverse('product_productvariant_update', args=(self.pk,))
 
-    def get_weight(self):
-        return Stock.objects.filter(variant = self).aggregate(t = Sum('weight'))
+    # def get_weight(self):
+    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('weight'))
 
-    def get_wih(self):
-        return Stock.objects.filter(variant = self).aggregate(t = Sum('Wih'))
+    # def get_wih(self):
+    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('Wih'))
 
-    def get_qty(self):
-        return Stock.objects.filter(variant = self).aggregate(t = Sum('quantity'))
+    # def get_qty(self):
+    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('quantity'))
 
-    def get_qih(self):
-        return Stock.objects.filter(variant = self).aggregate(t = Sum('Qih'))
+    # def get_qih(self):
+    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('Qih'))
 
     def is_in_stock(self):
         return self.quantity_available > 0
@@ -427,35 +439,34 @@ class Stree(MPTTModel):
 class Stock(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     updated_on = models.DateTimeField(auto_now=True)
+    reorderat = models.IntegerField(default=1)
+    barcode = models.CharField(max_length=100, null=True, unique=True)
+    variant = models.ForeignKey(ProductVariant, 
+                                    on_delete=models.CASCADE,
+                                    # related_name = ''
+                                    )
 
+    # following atrributes are notin database normal  i.e duplkicates of variant
     melting = models.DecimalField(max_digits =10,decimal_places=3, default =100)
     cost = models.DecimalField(max_digits = 10,decimal_places = 3,default = 100)
     touch = models.DecimalField(max_digits =10,decimal_places =3,default = 0)
-    wastage = models.DecimalField(max_digits =10 ,decimal_places =3,default = 0)
-    weight = models.DecimalField(max_digits = 10, decimal_places = 3,
-                                    default =0)
-    quantity = models.IntegerField(default =0)
-    Wih = models.DecimalField(max_digits=10,decimal_places=3,default=0)
-    Qih = models.IntegerField(default=0)
-    reorderat = models.IntegerField(default=1)
+    wastage = models.DecimalField(max_digits =10 ,decimal_places =3,default = 0) 
     tracking_type = models.CharField(choices = (
                                             ('Lot','Lot'),('Unique','Unique')),
                                             null = True,max_length=10,
-                                            default = 'Lot')
-    barcode = models.CharField(max_length=100,null=True,unique = True)
+                                            default = 'Lot') 
+    
     status = models.CharField(max_length=10,choices = (
                                     ('Empty','Empty'),
                                     ('Available','Available'),('Sold','Sold'),
                                     ('Approval','Approval'),('Return','Return')
                                     ),
                                     default = 'Empty')
-    variant=models.ForeignKey(ProductVariant,on_delete=models.CASCADE)
-
     class Meta:
         ordering=('-created',)
 
     def __str__(self):
-        return f"{self.variant} {self.barcode} wt:{self.Wih} qty:{self.Qih}"
+        return f"{self.variant} {self.barcode}"
 
     def get_absolute_url(self):
         return reverse('product_stock_detail', args=(self.pk,))
@@ -464,25 +475,39 @@ class Stock(models.Model):
         return reverse('product_stock_update', args=(self.pk,))
 
     def audit(self):
-        pass
+        stock_in = self.stock_in_txns()
+        stock_out = self.stock_out_txns()
+        cb_wt =  stock_in.wt - stock_out.wt
+        cb_qty = stock_in.qty - stock_out.qty
+        return StockStatement.objects.create(stock = self,
+                    Closing_wt = cb_wt,
+                    Closing_qty = cb_qty,
+                    total_wt_in = stock_in.wt,
+                    total_qty_in = stock_in.wty,
+                    total_wt_out = stock_out.wt,
+                    total_qty_out = stock_out.qty)
 
-    def get_computed_qih(self):
-        # return self.stocktransaction_set.all().aggregate(total=Sum('quantity'))
-        sum= self.stocktransaction_set.aggregate(
-                                inw = Coalesce(Sum('quantity',filter = Q(type='In')),0),
-                                out = Coalesce(Sum('quantity',filter = Q(type ='Out')),0),
-                                )
-        return (sum['inw']+sum['out'])
-
-    def get_computed_wih(self):
-        sum= self.stocktransaction_set.aggregate(
-                                inw = Coalesce(Sum('weight',filter = Q(type='In')),0),
-                                out = Coalesce(Sum('weight',filter = Q(type ='Out')),0),
-                                )
-        return (sum['inw']+sum['out'])
-
-    def check_stock(self):
-        return (self.Wih == self.get_computed_wih()) and (self.Qih == self.get_computed_qih())
+    def stock_in_txns(self):
+        return self.stocktransaction_set.filter(
+                    activity_type__in = ['P','SR','AR']
+                    ).aggregate(
+                        qty = Coalesce(Sum('quantity'),0),
+                        wt = Coalesce(Sum('weight'),0)
+                    )
+    def stock_out_txns(self):
+        return self.stocktransaction_set.filter(
+                    activity_type__in=['PR', 'S', 'A']
+                    ).aggregate(
+                        qty=Coalesce(Sum('quantity'), 0),
+                        wt=Coalesce(Sum('weight'), 0)
+                    )
+    def current_balance(self):
+        in_txns = self.stock_in_txns()
+        out_txns = self.stock_out_txns()
+        bal = {}
+        bal['wt'] = in_txns['wt'] - out_txns['wt']
+        bal['qty'] = in_txns['qty'] - out_txns['qty']
+        return bal
 
     def get_age(self):
         pass
@@ -492,46 +517,30 @@ class Stock(models.Model):
         # else:
             # check if sold then timedelta between created and last sales transaction
             # else timedelta between today and date created
-    def add(self,weight,qty,Wih,Qih,cto,at):
-        if self.check_stock():
-            self.weight += weight
-            self.quantity += qty
-            self.Qih += Qih
-            self.Wih += Wih
 
-            StockTransaction.objects.create(
-                    stock = self,
-                    type = "In",
-                    weight = Wih,
-                    quantity = Qih,
-                    content_object = cto,
-                    activity_type=at
-            )
-            self.update_status()
-        else:
-            raise Exception(f"Stock.check_stock() failed")
-
-    def remove(self,weight,qty,Wih,Qih,cto,at):
-        if self.check_stock():
-            if (self.weight >= weight and self.quantity >= qty) and (self.Wih >= Wih and self.Qih >=Qih):
-                self.weight -= weight
-                self.quantity -= qty
-                self.Qih -= Qih
-                self.Wih -= Wih
-                StockTransaction.objects.create(
+    def add(self,Wih,Qih,cto,at):
+        StockTransaction.objects.create(
                         stock = self,
-                        type = "Out",
                         weight = Wih,
                         quantity = Qih,
                         content_object = cto,
                         activity_type=at
                 )
-                self.update_status()
+        self.update_status()
 
-            else:
-                raise Exception(f" qty/wt mismatch .hence exception")
+    def remove(self,weight,quantity,cto,at):
+        cb = self.current_balance()
+        if (cb['wt'] >= weight and cb['qty'] >= quantity):
+                StockTransaction.objects.create(
+                        stock = self,
+                        weight = weight,
+                        quantity = quantity,
+                        content_object = cto,
+                        activity_type=at
+                )
+                self.update_status()
         else:
-            raise Exception(f" Stock.check_Stock failed")
+            raise Exception(f" qty/wt mismatch .hence exception")
 
     def split(self,weight,qty,cto,at):
         if self.tracking_type == "Lot":
@@ -546,7 +555,8 @@ class Stock(models.Model):
             print('lot cant be merged further')
 
     def update_status(self):
-        if self.Wih <= 0.0 or self.Qih <=0:
+        cb = self.current_balance()
+        if cb['wt'] <= 0.0 or cb['qty'] <=0:
             self.status = "Empty"
         else:
             self.status = "Available"
@@ -557,11 +567,10 @@ class StockTransaction(models.Model):
 
     created=models.DateTimeField(auto_now_add=True)
     updated=models.DateTimeField(auto_now=True)
-    type_choices=(("In","In"),("Out","Out"))
-    type=models.CharField(max_length=3,choices=type_choices,default ="IN")
     quantity=models.IntegerField(default=0)
     weight=models.DecimalField(max_digits=10,decimal_places=3,default=0)
     description=models.TextField()
+
     PURCHASE = 'P'
     PURCHASERETURN = 'PR'
     SALES = 'S'
@@ -584,7 +593,9 @@ class StockTransaction(models.Model):
     # user = models.ForeignKey(User)
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES,default = "PURCHASE")
     #relational Fields
-    stock=models.ForeignKey(Stock,on_delete=models.CASCADE)
+    stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
+
+    # is generic foreignkey required here? 
     content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
                                                         null=True,blank=True)
     object_id=models.PositiveIntegerField(null=True,blank=True)
@@ -602,20 +613,18 @@ class StockTransaction(models.Model):
     def get_update_url(self):
         return reverse('product_stocktransaction_update', args=(self.pk,))
 
-    def save(self,*args,**kwargs):
-        if self.type =="Out":
-            if self.quantity>0:
-                self.quantity= -self.quantity
-            self.weight= -self.weight
-        super(StockTransaction, self).save(*args, **kwargs)
-
 class StockStatement(models.Model):
-    stock = models.ForeignKey(Stock,on_delete = models.CASCADE)
-    created = models.DateTimeField(auto_now=True)
-    ClosingBalance = models.DecimalField(max_digits=14,decimal_places=3)
+    stock = models.ForeignKey(Stock, on_delete = models.CASCADE)
+    created = models.DateTimeField(auto_now = True)
+    Closing_wt = models.DecimalField(max_digits = 14, decimal_places = 3)
+    Closing_qty = models.IntegerField()
+    total_wt_in = models.DecimalField(max_digits = 14, decimal_places = 3)
+    total_wt_out = models.DecimalField(max_digits = 14, decimal_places = 3)
+    total_qty_in = models.IntegerField()
+    total_qty_out = models.IntegerField()
 
     class Meta:
         ordering = ('created',)
 
     def __str__(self):
-        return f"{self.stock} : {self.ClosingBalance}"
+        return f"{self.stock} - qty:{self.Closing_qty} wt:{self.Closing_wt}"

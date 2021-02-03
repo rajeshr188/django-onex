@@ -273,21 +273,19 @@ class Ledger(MPTTModel):
         pass
     
     def ctxns(self):
-        ls = self.ledgerstatement_set
-        if ls:
-            ls = ls.latest()
-            return self.credit_txns.filter(created__gte = ls.created)
-        else:
-            return self.credit_txns
-    
+        try:
+            ls = self.ledgerstatement_set.latest()
+            return self.credit_txns.filter(created__gte=ls.created)
+        except:
+            self.credit_txns
+      
     def dtxns(self):
-        ls = self.ledgerstatement_set
-        if ls:
-            ls = ls.latest()
+        try:
+            ls = self.ledgerstatement_set.latest()
             return self.debit_txns.filter(created__gte=ls.created)
-        else:
-            return self.debit_txns
-
+        except:
+            self.debit_txns
+   
     def audit(self):
         
         # get latest audit
@@ -295,12 +293,20 @@ class Ledger(MPTTModel):
         # then crunch debit and credit and find closing bal
         # then save that closing bal as latest statement 
         # this statement will serve as opening balance for this acc
-
-        # credit = self.credit_txns.aggregate(Sum('amount'))
-        # debit = self.debit_txns.aggregate(Sum('amount'))
-
-        # return LedgerStatement.objects.create(self,credit - debit)
-        return LedgerStatement.objects.create(ledgerno = self,ClosingBalance = self.current_balance().monies())
+        ls = self.latest_balance()
+        if ls:
+            cb = self.current_balance() + ls.ClosingBalance()
+            return LedgerStatement.objects.create(ledgerno = self,
+                            ClosingBalance = cb.monies())
+        else:   
+            return LedgerStatement.objects.create(ledgerno = self,
+                            ClosingBalance = self.current_balance().monies())
+        
+    def latest_statement(self):
+        try:
+            return self.ledgerstatement.objects.latest()
+        except:
+            return None
 
     def current_balance(self):
 
@@ -313,20 +319,19 @@ class Ledger(MPTTModel):
         #                 for r in acc.credit_txns.values("amount_currency").annotate(total = Sum("amount"))])
         #         for acc in decendants
         #         ]
-        # c_bal = Balance( 
-        #     [Money(r['total'],r["amount_currency"]) for r in self.credit_txns.values('amount_currency').annotate(total = Sum('amount'))])
-        # d_bal = Balance( 
-        #     [Money(r['total'],r["amount_currency"]) for r in self.debit_txns.values('amount_currency').annotate(total = Sum('amount'))])
+        
         c_bal = Balance(
-            [Money(r['total'],r["amount_currency"]) for r in self.ctxns().values('amount_currency').annotate(total = Sum('amount'))])
+            [Money(r['total'],r["amount_currency"]) for r in self.ctxns().values('amount_currency').annotate(total = Sum('amount'))])\
+                if self.ctxns() else Balance()
         d_bal = Balance( 
-            [Money(r['total'],r["amount_currency"]) for r in self.dtxns().values('amount_currency').annotate(total = Sum('amount'))])
+            [Money(r['total'],r["amount_currency"]) for r in self.dtxns().values('amount_currency').annotate(total = Sum('amount'))])\
+                if self.dtxns() else Balance()
 
         bal =c_bal - d_bal
         
         try:
             latest_acc_statement = self.ledgerstatement_set.latest()
-            closing_balance = Balance(latest_acc_statement.ClosingBalance) if latest_acc_statement else Balance()
+            closing_balance = Balance(latest_acc_statement.ClosingBalance)
             return bal + closing_balance
         except:
             return bal
@@ -683,19 +688,9 @@ class PurchaseJournal(Journal):
             Account = account,amount = money
         )
 
-# add a way to import ledger and account iniital balance
-# i.e import each bal to corresponding acc by creating that particulat statement with closing balance
+# how to import ledger and account iniital balance?
+    # -- create formset view of corresponding statement sorted by latest
 
-# add a way to initiate audit
-
-# add a view to view current balance since audit
-
-# statements are only created when user select audit report
-
-# otherwise statements are created manually for inputting opening balance
-
-# a common function audit_all() to audit ledger and accounts i.e report daybook or something like that
-# for acc and ledger get txns after statement if any
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created
 
 

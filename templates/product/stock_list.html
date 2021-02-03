@@ -9,9 +9,6 @@
     <td>Product</td>
     <td>Weight</td>
     <td>Quantity</td>
-    <td>Wih</td>
-    <td>Qih</td>
-
     <td>updated_on</td>
     <td>Status</td>
 
@@ -19,13 +16,10 @@
 {% for object in object_list %}
 <tr>
     <td>{{object.created}}</td>
-    <td>{{object.barcode}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{object.weight}}</td>
-    <td>{{object.quantity}}</td>
-    <td>{{object.Wih}}[{{object.get_computed_wih}}]</td>
-    <td>{{object.Qih}}[{{object.get_computed_qih}}]</td>
-
+    <td><a href="{{object.get_absolute_url}}">{{object.barcode}}</a></td>
+    <td><a href="{% url 'product_productvariant_detail' object.variant.id%}">{{object.variant}}</a></td>
+    <td>{{object.current_balance.wt}}</td>
+    <td>{{object.current_balance.qty}}</td>
     <td>{{object.updated_on}}</td>
     <td>{{object.status}}</td>
 

@@ -223,6 +223,7 @@ class UniqueForm(forms.ModelForm):
     class Meta:
         model = Stree
         fields = ['parent','weight']
+        
 class StockTransactionForm(forms.ModelForm):
     class Meta:
         model=StockTransaction

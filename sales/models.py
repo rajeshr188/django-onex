@@ -234,10 +234,8 @@ class Receipt(models.Model):
         print(f"allotting receipt {self.id} amount: {self.total}")
 
         invpaid = 0 if self.get_line_totals() is None else self.get_line_totals()
-        print(f"invpaid{invpaid}")
 
         remaining_amount = self.total - invpaid
-        print(f"amount : {remaining_amount}")
 
         try:
             invtopay = Invoice.objects.filter(customer=self.customer,
@@ -246,7 +244,6 @@ class Receipt(models.Model):
                                         status="Paid").order_by('created')
         except IndexError:
             invtopay = None
-        print(invtopay)
 
         for i in invtopay:
             print(f"i:{i} bal:{i.get_balance()}")

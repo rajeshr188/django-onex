@@ -1,4 +1,5 @@
 from typing import List
+from django.db import transaction
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
@@ -13,6 +14,12 @@ def home(request):
     context['ledger'] = Ledger.objects.select_related('AccountType').all()
     context['journal'] = Journal.objects.select_related('content_type').all()
     return render(request, 'dea/home.html', {'data': context})
+
+def daybook(request):
+    try:
+        latest_stmt = LedgerStatement.objects.latest()
+    except:
+        print("no ledger statements")
 
 def set_ledger_ob(request, pk):
     # if this is a POST request we need to process the form data
@@ -58,21 +65,16 @@ def audit_acc(request,pk):
     acc.audit()
     return redirect(acc)
 
-def audit_ledger(request,pk):
-    ledger = get_object_or_404(Ledger,pk=pk)
-    ledger.audit()
-    return redirect(ledger)
-
-def mock_pledge_loan(request, pk):
-    acc = Account.objects.get(id=pk)
-    acc.pledge_loan(6500)
+@transaction.atomic()
+def audit_ledger(request):
+    # ledger = get_object_or_404(Ledger,pk=pk)
+    # ledger.audit()
+    # return redirect(ledger)
+    ledgers = Ledger.objects.all()
+    for l in ledgers:
+        l.audit()
     return redirect("/dea")
-
-
-def mock_repay_loan(request, pk):
-    acc = Account.objects.get(id=pk)
-    acc.repay_loan(6500)
-    return redirect("/dea")
+    
 
 class JournalListView(ListView):
     model = Journal

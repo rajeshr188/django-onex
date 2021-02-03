@@ -113,3 +113,6 @@ urlpatterns +=(
     path('stocktransaction/detail/<int:pk>/',views.StockTransactionDetailView.as_view(),name='product_stocktransaction_detail'),
     path('stocktransaction/update/<int:pk>/',views.StockTransactionUpdateView.as_view(),name='product_stocktransaction_update'),
 )
+urlpatterns +=(
+    path('stockstatement/',views.StockStatementListView.as_view(),name = 'product_stockstatement_list'),
+)

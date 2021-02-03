@@ -10,8 +10,9 @@ from django.db.models import Sum
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
-from dea.models import Journal,PurchaseJournal
+from dea.models import Journal, LedgerStatement,PurchaseJournal
 
+# purchase can be /unposted only if purchase.created > latest ledgerstatement
 class Invoice(models.Model):
 
     # Fields
@@ -45,7 +46,7 @@ class Invoice(models.Model):
     )
     posted = models.BooleanField(default = False)
     journals = GenericRelation(Journal)
-    # txns = GenericRelation(StockTransaction)
+    stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -71,13 +72,21 @@ class Invoice(models.Model):
             return self.balance - self.get_total_payments()
         return self.balance
 
+    # if not posted : delete
+    # if posted and paid : delete 
+    #  if posted and unpaid : !delete
     def delete(self):
-        if self.posted:
-            raise Exception("cant delete purchase if used or posted")
+        if self.posted and self.get_balance() !=0:
+            raise Exception("cant delete purchase if posted and unpaid")
         else:
             super(Invoice,self).delete()
 
+    # cant post unpost once statement is created
+
+    @transaction.atomic()
     def post(self):
+        for i in self.purchaseitems.all():
+            i.post()
         jrnl = PurchaseJournal.objects.create(
             content_object = self,
             type = Journal.Types.PJ,
@@ -88,10 +97,21 @@ class Invoice(models.Model):
         self.posted = True
         self.save(update_fields = ['posted'])
 
+    @transaction.atomic()
     def unpost(self):
-        self.journals.clear()
-        self.posted = False
-        self.save(update_fields=['posted'])
+        try:
+            ls = LedgerStatement.objects.latest()
+        except:
+            ls = None
+        if ls and ls.created < self.created:
+            for i in self.purchaseitems.all():
+                i.unpost()
+            self.stock_txns.clear()
+            self.journals.clear()
+            self.posted = False
+            self.save(update_fields=['posted'])
+        else:
+            raise ValueError('cant unpost purchase created before latest audit')
 
 class InvoiceItem(models.Model):
     # Fields
@@ -137,15 +157,13 @@ class InvoiceItem(models.Model):
                     stock.barcode='je'+ str(stock.id)
                     attributes = get_product_attributes_data(self.product.product)
                     purity = Attribute.objects.get(name='Purity')
-                    melting = int(attributes[purity].name)
+                    stock.melting = int(attributes[purity].name)
                     stock.cost = self.touch
                     stock.touch = stock.cost+2
                     stock.wastage = 10
                     stock.save()
-                print(type(stock.weight))
-                print(type(self.weight))
+                
                 stock.add(self.weight,self.quantity,
-                            self.weight,self.quantity,
                             self.invoice,'P')
             else:
                 stock = Stock.objects.create(variant = self.product,
@@ -154,13 +172,11 @@ class InvoiceItem(models.Model):
                 stock.barcode='je'+ str(stock.id)
                 attributes = get_product_attributes_data(self.product.product)
                 purity = Attribute.objects.get(name='Purity')
-                melting = int(attributes[purity].name)
+                stock.melting = int(attributes[purity].name)
                 stock.cost = self.touch
                 stock.touch = stock.cost+2
                 stock.wastage = 10
-                # set melting,cost,touch,wastage
                 stock.add(self.weight,self.quantity,
-                            self.weight,self.quantity,
                             self.invoice,'P')
 
         else:
@@ -168,7 +184,6 @@ class InvoiceItem(models.Model):
             if 'Lot' in self.product.name:
                 stock = Stock.get(name = self.product.name)
                 stock.remove(self.weight,self.quantity,
-                                self.weight,self.quantity,
                                 self.invoice,'PR')
             else:
                 print("merge unique to lot before returning")
@@ -184,7 +199,6 @@ class InvoiceItem(models.Model):
             if 'Lot' in self.product.name:
                 stock = Stock.objects.get(variant = self.product)
                 stock.remove(
-                self.weight,self.quantity,
                 self.weight,self.quantity,
                 cto = self.invoice,
                 at = 'PR'
@@ -203,52 +217,9 @@ class InvoiceItem(models.Model):
 
                 txns[0].stock.remove(
                 self.weight,self.quantity,
-                self.weight,self.quantity,
                 cto = self.invoice,
                 at = 'PR'
                 )
-
-    def delete(self):
-        if self.weight == self.Wih and self.quantity == self.Qih:
-            super(InvoiceItem,self).delete()
-        else:
-            raise Exception("wt or qty from this invoice item is used!hence cant delete")
-
-    # def save(self,*args,**kwargs):
-    #     print("In purchase line item model save()")
-        # if not self.is_return:
-        #     if 'Lot' in self.product.name:
-        #         stock,created = Stock.objects.get_or_create(variant = self.product,
-        #                                             tracking_type = 'Lot',
-        #                                             )
-        #         if created:
-        #             stock.barcode='je'+ str(stock.id)
-        #             stock.save()
-        #         print(type(stock.weight))
-        #         print(type(self.weight))
-        #         stock.add(self.weight,self.quantity,
-        #                     self.weight,self.quantity,
-        #                     self.invoice,'P')
-        #     else:
-        #         stock = Stock.objects.create(variant = self.product,
-        #                                     tracking_type = 'Unique')
-        #
-        #         stock.barcode='je'+ str(stock.id)
-        #         stock.add(self.weight,self.quantity,
-        #                     self.weight,self.quantity,
-        #                     self.invoice,'P')
-        #
-        # else:
-        #     # is return true
-        #     if 'Lot' in self.product.name:
-        #         stock = Stock.get(name = self.product.name)
-        #         stock.remove(self.weight,self.quantity,
-        #                         self.weight,self.quantity,
-        #                         self.invoice,'PR')
-        #     else:
-        #         print("merge unique to lot before returning")
-        # super(InvoiceItem,self).save(*args,**kwargs)
-        # print("actually saving purchase line item")
 
 class Payment(models.Model):
 
@@ -345,6 +316,7 @@ class Payment(models.Model):
     #         self.deallot()
     #     super(Payment,self).save(*args,**kwargs)
     #     self.allot()
+
     def post(self):
         jrnl = PurchaseJournal.objects.create(
             content_object = self,

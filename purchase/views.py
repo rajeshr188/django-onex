@@ -37,9 +37,9 @@ def list_balance(request):
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Customer.objects.filter(type="Wh").annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
-
-
+    balance=Customer.objects.filter(type="Wh").annotate(
+                                    gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec')
+                                    ,cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
     context={'balance':balance}
     return render(request,'purchase/balance_list.html',context)
 
@@ -79,10 +79,7 @@ class InvoiceCreateView(CreateView):
         if invoiceitem_form.is_valid():
             self.object = form.save()
             invoiceitem_form.instance = self.object
-            items = invoiceitem_form.save()
-            # if self.object.posted:
-            #     for i in items:
-            #         i.post()
+            invoiceitem_form.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -121,12 +118,7 @@ class InvoiceUpdateView(UpdateView):
             self.object = form.save()
             # invoiceitem_form.instance = self.object
             items=invoiceitem_form.save()
-            # if self.object.posted:
-            #     for i in items:
-            #         i.post()
-            # else :
-            #     for i in items:
-            #         i.unpost()
+           
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -138,25 +130,15 @@ def post_purchase(request,pk):
     # use get_objector404
     purchase_inv = Invoice.objects.get(id = pk)
     if not purchase_inv.posted:
-        # post to dea
+        # post to dea & stock
         purchase_inv.post()
-        # post to stock
-        for item in purchase_inv.purchaseitems.all():
-            item.post()
-        purchase_inv.posted = True
-        purchase_inv.save()
     return redirect(purchase_inv)
 
 def unpost_purchase(request,pk):
     purchase_inv = Invoice.objects.get(id = pk)
     if purchase_inv.posted:
-        # unpost to dea
-        purchase_inv.unpost()
-        # unpost to stock
-        for item in purchase_inv.purchaseitems.all():
-            item.unpost()
-        purchase_inv.posted = False
-        purchase_inv.save()
+        # unpost to dea & stock
+        purchase_inv.unpost() 
     return redirect(purchase_inv)
 
 class InvoiceDeleteView(DeleteView):

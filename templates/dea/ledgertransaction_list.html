@@ -1,0 +1,20 @@
+{% extends '_base.html' %}
+
+{% block title %}Ledger Transaction {% endblock %}
+
+{% block content %}
+<h1>Ledger Transaction</h1>
+<table class="table">
+    <tbody>
+        {% for i in object_list %}
+        <tr>
+            <td>{{i.journal}}</td>
+            <td>{{i.created|date}}</td>
+            <td>{{i.ledgerno}}</td>
+            <td>{{i.ledgerno_dr}}</td>
+            <td>{{i.amount}}</td>
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+{% endblock %}

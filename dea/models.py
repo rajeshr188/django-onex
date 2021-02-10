@@ -1,6 +1,7 @@
 from django.db import models,transaction,connection
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from moneyed.classes import LSL
 from mptt.models import MPTTModel,TreeForeignKey
 from django.db.models import Sum
 from contact.models import Customer
@@ -104,69 +105,62 @@ class Account(models.Model):
     def adjust(self,amount,xacttypecode):
         pass
 
-    def audit(self):  
+    def audit(self): 
+        ls = self.latest_stmt() 
+        if ls is None:
+            since = None
+        else:
+            since = ls.created
+        credit_t = self.total_credit(since = since).monies()
+        debit_t = self.total_debit(since = since).monies()
         return AccountStatement.objects.create(AccountNo =self,
                              ClosingBalance = self.current_balance().monies(),
-                             TotalCredit = self.total_credit().monies(),
-                             TotalDebit = self.total_debit().monies())
-
-    def txns(self):
+                             TotalCredit = credit_t,
+                             TotalDebit = debit_t)
+    def latest_stmt(self):
         try:
-            ls = self.accountstatement_set.latest()
+            return self.accountstatement_set.latest()
+        except AccountStatement.DoesNotExist:
+            return None
+
+    def txns(self,since = None):    
+        if since is not None:
             return self.accounttransaction_set.filter(
-                created__gte = ls.created
+                created__gte = since
             )
-        except:
+        else:
             return self.accounttransaction_set.all()
 
-    def total_credit(self):
-        try:
-            ls = AccountStatement.object.latest()
-            return Balance(
-                [Money(r["total"], r["amount_currency"])
-                 for r in self.accounttransaction_set
-                 .filter(created_ge=ls.created,
-                         XactTypeCode__XactTypeCode='Cr')
-                 .values("amount_currency")
-                 .annotate(total=Sum("amount"))]
-            )
-        except:
-            return Balance(
-                [Money(r["total"], r["amount_currency"])
-                 for r in self.accounttransaction_set.filter(XactTypeCode__XactTypeCode='Cr')
-                 .values("amount_currency")
-                 .annotate(total=Sum("amount"))]
-            )
+    def total_credit(self,since = None):
+        txns = self.txns(since = since)
+        return Balance(
+            [Money(r["total"], r["amount_currency"])
+             for r in txns.filter(XactTypeCode__XactTypeCode='Cr')
+             .values("amount_currency")
+             .annotate(total=Sum("amount"))]
+        )
         
-    def total_debit(self):
-        try:
-            ls = AccountStatement.object.latest()
-            return Balance(
-                [Money(r["total"], r["amount_currency"])
-                 for r in self.accounttransaction_set\
-                 .filter(created_ge = ls.created,
-                     XactTypeCode__XactTypeCode='Dr')
-                 .values("amount_currency")
-                 .annotate(total=Sum("amount"))]
-            )
-        except:
-            return Balance(
-                    [Money(r["total"],r["amount_currency"])
-                    for r in self.accounttransaction_set.filter(XactTypeCode__XactTypeCode='Dr')
-                                            .values("amount_currency")
-                                            .annotate(total=Sum("amount"))]
-                            )
+        
+        
+    def total_debit(self,since = None):
+        txns = self.txns(since = since)
+        return Balance(
+            [Money(r["total"], r["amount_currency"])
+             for r in txns.filter(XactTypeCode__XactTypeCode='Dr')
+             .values("amount_currency")
+             .annotate(total=Sum("amount"))]
+        )
+        
 
     def current_balance(self):
-        ls = self.accountstatement_set
-        if not ls:
-            ls = ls.latest()
-            ac_txn = self.accounttransaction_set.filter(
-                created__gte = ls.created)
-            cb = Balance(ls.ClosingBalance)
-        else:
-            ac_txn = self.accounttransaction_set
+        ls = self.latest_stmt()
+        if ls is None:
             cb = Balance()
+            ac_txn = self.txns()
+        else:
+            cb = ls.get_cb()
+            ac_txn = self.txns(since = ls.created)
+
         credit = ac_txn\
                     .filter(XactTypeCode_ext__in = ['LT','LR','IR','CPU','CRPU','RCT'])\
                         .values("amount_currency")\
@@ -180,17 +174,10 @@ class Account(models.Model):
                         
         debit_bal =  Balance(
                         [Money(r["total"], r["amount_currency"]) for r in debit])
-        bal = credit_bal - debit_bal
+        bal = (cb +(credit_bal - debit_bal))
 
-        if ls:
-            bal = cb +bal
         return bal
-        # try:
-        #     cb = Balance(ls.ClosingBalance )          
-        #     return bal + cb
-        # except:
-        #     print("no acc statement available")   
-        #     return bal
+        
 
 # account statement for ext account
 class AccountStatement(models.Model):
@@ -207,7 +194,7 @@ class AccountStatement(models.Model):
     def __str__(self):
         return f"{self.id} | {self.AccountNo} = {self.ClosingBalance}({self.TotalCredit} - {self.TotalDebit})"
 
-    def cb(self):
+    def get_cb(self):
         return Balance(self.ClosingBalance)
 
 # sales,purchase,receipt,payment,loan,release
@@ -250,64 +237,43 @@ class Ledger(MPTTModel):
     def get_absolute_url(self):
         return reverse("dea_ledger_detail", kwargs={"pk": self.pk})
     
-    
-    def ledger_txn(self,dr_ledger,amount):
-        # check if ledger exists
-        return LedgerTransaction.objects.create(ledgerno = self,
-                                    ledgerno_dr = dr_ledger,
-                                    amount=amount)
+    def get_latest_stmt(self):
+        try:
+            return self.ledgerstatement_set.latest()
+        except LedgerStatement.DoesNotExist:
+            return None
 
-    # def acc_txn(self,ledger,xacttypecode,xacttypecode_ext,amount):
-    #     # check if acc exists
-    #     return AccountTransaction.objects.create(ledgerno = ledger,
-    #                                     XactTypeCode = xacttypecode,
-    #                                     XactTypeCode_ext = xacttypecode_ext,
-    #                                     amount = amount)
+    def get_closing_balance(self):
+        ls = self.get_latest_stmt()
+        if ls is None:
+            return Balance()
+        else:
+            return Balance(self.ClosingBalance)
 
     def set_opening_bal(self,amount):
         # ensure there aint no txns before setting op bal if present then audit and adjust
-
         return LedgerStatement.objects.create(self,amount)
 
     def adjust(self,xacttypcode,amount):
         pass
     
-    def ctxns(self):
-        try:
-            ls = self.ledgerstatement_set.latest()
-            return self.credit_txns.filter(created__gte=ls.created)
-        except:
-            self.credit_txns
+    def ctxns(self,since = None):
+        if since is not None:
+            return self.credit_txns.filter(created__gte=since)
+        else:
+            return self.credit_txns.all()
       
-    def dtxns(self):
-        try:
-            ls = self.ledgerstatement_set.latest()
-            return self.debit_txns.filter(created__gte=ls.created)
-        except:
-            self.debit_txns
+    def dtxns(self,since = None):
+        if since is not None:
+            return self.debit_txns.filter(created__gte=since)
+        else:
+            return self.debit_txns.all()
    
     def audit(self):
-        
-        # get latest audit
-        # then get txns after latest audit
-        # then crunch debit and credit and find closing bal
-        # then save that closing bal as latest statement 
         # this statement will serve as opening balance for this acc
-        ls = self.latest_balance()
-        if ls:
-            cb = self.current_balance() + ls.ClosingBalance()
-            return LedgerStatement.objects.create(ledgerno = self,
-                            ClosingBalance = cb.monies())
-        else:   
-            return LedgerStatement.objects.create(ledgerno = self,
-                            ClosingBalance = self.current_balance().monies())
-        
-    def latest_statement(self):
-        try:
-            return self.ledgerstatement.objects.latest()
-        except:
-            return None
-
+        return LedgerStatement.objects.create(ledgerno=self,
+                                              ClosingBalance=self.current_balance().monies())
+    
     def current_balance(self):
 
         # decendants = self.get_descendants(include_self = True)
@@ -319,22 +285,23 @@ class Ledger(MPTTModel):
         #                 for r in acc.credit_txns.values("amount_currency").annotate(total = Sum("amount"))])
         #         for acc in decendants
         #         ]
-        
+        ls = self.get_latest_stmt()
+        if ls is None:
+            cb = Balance()
+            since = None
+        else:
+            cb = ls.get_cb()
+            since = ls.created
         c_bal = Balance(
-            [Money(r['total'],r["amount_currency"]) for r in self.ctxns().values('amount_currency').annotate(total = Sum('amount'))])\
-                if self.ctxns() else Balance()
+            [Money(r['total'],r["amount_currency"]) for r in self.ctxns(since).values('amount_currency').annotate(total = Sum('amount'))])\
+                if self.ctxns(since = since) else Balance()
         d_bal = Balance( 
-            [Money(r['total'],r["amount_currency"]) for r in self.dtxns().values('amount_currency').annotate(total = Sum('amount'))])\
-                if self.dtxns() else Balance()
+            [Money(r['total'],r["amount_currency"]) for r in self.dtxns(since).values('amount_currency').annotate(total = Sum('amount'))])\
+                if self.dtxns(since = since) else Balance()
 
-        bal =c_bal - d_bal
+        bal = cb + c_bal - d_bal
         
-        try:
-            latest_acc_statement = self.ledgerstatement_set.latest()
-            closing_balance = Balance(latest_acc_statement.ClosingBalance)
-            return bal + closing_balance
-        except:
-            return bal
+        return bal
 
 class Journal(models.Model):
 
@@ -394,6 +361,7 @@ class LedgerStatement(models.Model):
     
     class Meta:
         get_latest_by = 'created'
+        ordering = ['created']
 
     def __str__(self):
         return f"{self.created.date()} - {self.ledgerno} - {self.ClosingBalance}"

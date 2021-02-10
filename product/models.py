@@ -464,7 +464,7 @@ class Stock(models.Model):
                                     default = 'Empty')
     class Meta:
         ordering=('-created',)
-
+        
     def __str__(self):
         return f"{self.variant} {self.barcode}"
 
@@ -499,8 +499,9 @@ class Stock(models.Model):
 
     def stock_in_txns(self):
         # filter since last audit
-        ls = self.stocktransaction_set.latest()
+        ls = self.stocktransaction_set
         if ls:
+            ls = ls.latest()
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
                         activity_type__in = ['P','SR','AR']
@@ -517,8 +518,9 @@ class Stock(models.Model):
                 )
     def stock_out_txns(self):
         # filter since last audit
-        ls = self.stocktransaction_set.latest()
+        ls = self.stocktransaction_set
         if ls:
+            ls = ls.latest()
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
                         activity_type__in=['PR', 'S', 'A']
@@ -539,11 +541,11 @@ class Stock(models.Model):
         in_txns = self.stock_in_txns()
         out_txns = self.stock_out_txns()
         bal = {}
-        ls = self.stocktransaction_set.latest()
-        if ls:
+        try:
+            ls = self.stockstatement_set.latest()
             ls_wt = ls.Closing_wt
             ls_qty = ls.Closing_qty
-        else:
+        except StockStatement.DoesNotExist:
             ls_wt = 0
             ls_qty = 0
 
@@ -645,6 +647,7 @@ class StockTransaction(models.Model):
 
     class Meta:
         ordering=('-created',)
+        get_latest_by = ['created']
 
     def __str__(self):
         return str(self.pk)
@@ -667,6 +670,7 @@ class StockStatement(models.Model):
 
     class Meta:
         ordering = ('created',)
+        get_latest_by = ['created']
 
     def __str__(self):
         return f"{self.stock} - qty:{self.Closing_qty} wt:{self.Closing_wt}"

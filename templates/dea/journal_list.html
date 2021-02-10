@@ -12,8 +12,6 @@
                 <th>created</th>
                 <th>txn-type</th>
                 <th>doc</th>
-                <th>Ledger-txns</th>
-                <th>A/c txns</th>
             </tr>
         </thead>
         <tbody>
@@ -30,23 +28,7 @@
                     None
                     {%endif%}
                 </td>
-                <td>
-                    <ul>
-                        {%for j in i.ledgertransaction_set.all%}
-                        <li> Dr:{{j.ledgerno_dr}} Cr:{{j.ledgerno}} RS:{{j.amount}}</li>
-                        {%endfor%}
-                    </ul>
-                </td>
-                <td>
-                    <ul>
-                        {%for j in i.accounttransaction_set.all%}
-                        <li>
-                            Dr:{{j.ledgerno}} Cr:{{j.Account}} RS:{{j.amount}}
-                        </li>
-                        {%endfor%}
-    
-                    </ul>
-                </td>
+               
             </tr>
             {% endfor %}
         </tbody>

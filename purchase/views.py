@@ -1,3 +1,4 @@
+from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.db.models import Sum, Q, F, OuterRef, Subquery
 from django.shortcuts import render, redirect
@@ -7,7 +8,7 @@ from django.urls import reverse, reverse_lazy
 
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from .tables import InvoiceTable,PaymentTable
-from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet, PaymentForm, PaymentLineForm, PaymentLineFormSet
+from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet, PaymentForm, PaymentItemFormSet, PaymentLineForm, PaymentLineFormSet
 from .filters import InvoiceFilter, PaymentFilter
 from .render import Render
 
@@ -37,7 +38,7 @@ def list_balance(request):
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Customer.objects.filter(type="Wh").annotate(
+    balance=Customer.objects.exclude(type="Re").annotate(
                                     gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec')
                                     ,cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
     context={'balance':balance}
@@ -101,6 +102,8 @@ class InvoiceUpdateView(UpdateView):
 
     def get_context_data(self,*args,**kwargs):
         data = super(InvoiceUpdateView,self).get_context_data(**kwargs)
+        if self.object.posted:
+            raise Http404
         if self.request.POST:
             data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,
                                                     instance = self.object)
@@ -116,8 +119,7 @@ class InvoiceUpdateView(UpdateView):
         print(f"form_valid:{invoiceitem_form.is_valid()}")
         if invoiceitem_form.is_valid():
             self.object = form.save()
-            # invoiceitem_form.instance = self.object
-            items=invoiceitem_form.save()
+            invoiceitem_form.save()
            
         return HttpResponseRedirect(self.get_success_url())
 
@@ -174,26 +176,26 @@ class PaymentCreateView(CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        paymentline_form = PaymentLineFormSet()
+        paymentitem_form = PaymentItemFormSet()
 
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  paymentline_form=paymentline_form))
+                                  paymentitem_form=paymentitem_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        paymentline_form = PaymentLineFormSet(self.request.POST)
-        if (form.is_valid() and paymentline_form.is_valid()):
-            return self.form_valid(form, paymentline_form)
+        paymentitem_form = PaymentItemFormSet(self.request.POST)
+        if (form.is_valid() and paymentitem_form.is_valid()):
+            return self.form_valid(form, paymentitem_form)
         else:
-            return self.form_invalid(form, paymentline_form)
+            return self.form_invalid(form, paymentitem_form)
 
-    def form_valid(self, form, paymentline_form):
+    def form_valid(self, form, paymentitem_form):
         self.object = form.save()
-        paymentline_form.instance = self.object
-        items=paymentline_form.save()
+        paymentitem_form.instance = self.object
+        items=paymentitem_form.save()
         # amount=self.object.total
         # invpaid = 0
         # for item in items:
@@ -225,14 +227,14 @@ class PaymentCreateView(CreateView):
 
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form, paymentline_form):
+    def form_invalid(self, form, paymentitem_form):
         """
         Called if a form is invalid. Re-renders the context data with the
         data-filled forms and errors.
         """
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  paymentline_form=paymentline_form))
+                                  paymentitem_form=paymentitem_form))
 
 class PaymentDetailView(DetailView):
     model = Payment

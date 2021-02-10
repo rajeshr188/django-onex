@@ -30,9 +30,11 @@ urlpatterns = [
     path('ledger/ledgerstatement/create/',
          views.LedgerStatementCreateView, 
          name='dea_ledgerstatement_create'),
-
-         
+     path('ledger/statement/',views.LedgerStatementListView.as_view(),
+          name = 'dea_ledgerstatement_list'), 
      path('journals/',views.JournalListView.as_view(),
      name='dea_journals_list'),
+     path('ledger/transaction/',views.LedgerTransactionListView.as_view(),
+          name = 'dea_ledgerTransaction_list'),
 
 ]

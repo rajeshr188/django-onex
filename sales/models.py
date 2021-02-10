@@ -115,6 +115,10 @@ class Invoice(models.Model):
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
         super(Invoice,self).save(*args,**kwargs)
+    
+    @property
+    def overdue_days(self):
+        return (timezone.now().date() - self.date_due).days
 
     def delete(self, *args, **kwargs):
         if not self.posted:

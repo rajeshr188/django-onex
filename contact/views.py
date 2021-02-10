@@ -48,6 +48,12 @@ def reallot_receipts(request,pk):
     customer = Customer.objects.get(pk = pk)
     customer.reallot_receipts()
     return redirect(customer.get_absolute_url())
+
+
+def reallot_payments(request, pk):
+    customer = Customer.objects.get(pk=pk)
+    customer.reallot_payments()
+    return redirect(customer.get_absolute_url())
     
 class CustomerDetailView(LoginRequiredMixin,DetailView):
     model = Customer

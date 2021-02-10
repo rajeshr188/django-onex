@@ -182,6 +182,13 @@ class Customer(models.Model):
             i.deallot()
         for i in receipts:
             i.allot()
+    
+    def reallot_payments(self):
+        payments = self.payments.all()
+        for i in payments:
+            i.deallot()
+        for i in payments:
+            i.allot()
 
     def previous_and_next(self,some_iterable):
         prevs, items, nexts = tee(some_iterable, 3)

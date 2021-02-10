@@ -12,11 +12,14 @@ from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
 from dea.models import Journal, LedgerStatement,PurchaseJournal
 
-# purchase can be /unposted only if purchase.created > latest ledgerstatement
+# purchase can be deleted only if unposted or posted and paid
+# purchase can be posted/unposted only if purchase.created > latest audit
 class Invoice(models.Model):
 
     # Fields
-    created = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(
+                    default=timezone.now
+                    )
     last_updated = models.DateTimeField(auto_now_add=True)
     rate = models.PositiveSmallIntegerField(default=5100)
     btype_choices=(
@@ -24,13 +27,21 @@ class Invoice(models.Model):
             ("Gold","Gold"),
             ("Silver","Silver"),
         )
-    itype_choices=(
+    ptype_choices=(
         ("Cash","Cash"),
         ("Credit","Credit")
     )
+    itype_choices = (
+        ("GST","GST"),
+        ("NGST","NGST")
+    )
+    invoicetype = models.CharField(max_length = 30, choices = itype_choices, default = "NGST")
     balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
-    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
+    paymenttype = models.CharField(max_length=30,choices=ptype_choices,default="Credit")
     balance = models.DecimalField(max_digits=10, decimal_places=3)
+    # total = models.DecimalField(max_digits = 10, decimal_places = 3)
+    # discount = models.DecimalField()
+    # gst_inv_no = models.IntegerField(default = 0)
     status_choices=(
                     ("Paid","Paid"),
                     ("PartiallyPaid","PartiallyPaid"),
@@ -70,10 +81,11 @@ class Invoice(models.Model):
     def get_balance(self):
         if self.get_total_payments() != None :
             return self.balance - self.get_total_payments()
-        return self.balance
+        return self.balance 
 
-    # if not posted : delete
-    # if posted and paid : delete 
+    # if not posted : delete/edit
+    #  if posted : !edit
+    #  if posted and paid : delete 
     #  if posted and unpaid : !delete
     def delete(self):
         if self.posted and self.get_balance() !=0:
@@ -82,28 +94,39 @@ class Invoice(models.Model):
             super(Invoice,self).delete()
 
     # cant post unpost once statement is created
+    def get_gst(self):
+        if self.invoicetype == 'GST':
+            return (self.balance *3)/100
+        return 0
 
     @transaction.atomic()
     def post(self):
-        for i in self.purchaseitems.all():
-            i.post()
-        jrnl = PurchaseJournal.objects.create(
-            content_object = self,
-            type = Journal.Types.PJ,
-            desc = 'purchase'
-        )
-        jrnl.purchase(self.supplier.account,self.balance,
-                        self.paymenttype,self.balancetype)
-        self.posted = True
-        self.save(update_fields = ['posted'])
+        try:
+            ls = LedgerStatement.objects.latest()[0].created
+        except LedgerStatement.DoesNotExist:
+            ls = None
+        if ls is None or self.created >= ls.created:
+            for i in self.purchaseitems.all():
+                i.post()
+            jrnl = PurchaseJournal.objects.create(
+                content_object = self,
+                type = Journal.Types.PJ,
+                desc = 'purchase'
+            )
+            jrnl.purchase(self.supplier.account,self.balance,
+                            self.paymenttype,self.balancetype)
+            self.posted = True
+            self.save(update_fields = ['posted'])
+        else:
+            raise ValueError("cant post purchase created latest audit")
 
     @transaction.atomic()
     def unpost(self):
         try:
             ls = LedgerStatement.objects.latest()
-        except:
+        except LedgerStatement.DoesNotExist:
             ls = None
-        if ls and ls.created < self.created:
+        if ls is None or ls[0].created < self.created:
             for i in self.purchaseitems.all():
                 i.unpost()
             self.stock_txns.clear()
@@ -233,9 +256,6 @@ class Payment(models.Model):
             )
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
-    weight = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    touch = models.DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
-    nettwt = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
     status_choices = (
@@ -311,12 +331,6 @@ class Payment(models.Model):
         self.paymentline_set.all().delete()
         self.update_status()
 
-    # def save(self,*args,**kwargs):
-    #     if self.pk :
-    #         self.deallot()
-    #     super(Payment,self).save(*args,**kwargs)
-    #     self.allot()
-
     def post(self):
         jrnl = PurchaseJournal.objects.create(
             content_object = self,
@@ -333,7 +347,20 @@ class Payment(models.Model):
         self.posted = False
         self.save(update_fields=['posted'])
 
+class PaymentItem(models.Model):
+    weight = models.DecimalField(
+        max_digits=10, blank=True, decimal_places=3, default=0.0)
+    touch = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=0.0)
+    nettwt = models.DecimalField(
+        max_digits=10, blank=True, decimal_places=3, default=0.0)
+    rate = models.IntegerField(default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=3)
+    payment = models.ForeignKey(Payment,on_delete = models.CASCADE)
 
+    def __str__(self):
+        return self.amount
+        
 class PaymentLine(models.Model):
 
     created = models.DateTimeField(default=timezone.now)

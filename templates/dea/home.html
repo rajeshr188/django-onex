@@ -26,21 +26,19 @@
             <a  class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
         </div>
       
-        <ul class="list-group list-group-flush p-3">
-            {% recursetree data.ledger %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a>
-                {{node.current_balance}}
-                {% if not node.is_leaf_node %}
-                <ul class="list-group children">
-                    {{ children }}
-                </ul>
-                
-                {% endif %}
-            </li>
+        <table class = "table table-sm table-hover">
+            <tbody>
+                {%for i in data.ledger%}
+                <tr>
+                    
+                    <td><a href="{% url 'dea_ledger_detail' i.ledger.id %}">{{ i.ledger.name }}</a></td>
+                    <td>{{i.cb}}</td>
+                    
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
             
-            {% endrecursetree %}
-        </ul>
     </div>
     <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="profile-external">
         <a class = "btn btn-primary" href="{% url 'dea_account_create' %}">Add Account</a>
@@ -75,49 +73,28 @@
         
     </div>
     <div class="tab-pane fade" id="journal" role ="tabpanel" aria-labelledby="journal">
-        <table class="table table-sm table-striped">
+        <table class="table table-sm table-hover">
             <thead>
                 <tr>
                     <th>id</th>
                     <th>created</th>
                     <th>txn-type</th>
                     <th>doc</th>
-                    <th>Ledger-txns</th>
-                    <th>A/c txns</th>
                 </tr>
             </thead>
             <tbody>
                 {% for i in data.journal %}
                 <tr>
                     <td>{{i.id}}</td>
-                    <td>{{i.created}}</td>
-                    <td>{{i.desc}}</td>
+                    <td>{{i.created|date}}</td>
+                    <td>{{i.content_type}}</td>
                     <td>
                         {%if i.content_type %}
-                        <a href="{% url ''|add:i.get_url_string pk=i.object_id %}">{{i.content_type.app_label}}{{i.content_type.model}}{{i.content_object}}</a>
+                        <a href="{% url ''|add:i.url_string pk=i.object_id %}">{{i.content_type.app_label}}{{i.content_type.model}}{{i.content_object}}</a>
                         {%else%}
                         None
                         {%endif%}
-                    </td>
-                    <td>
-                        <ul>
-                            {%for j in i.ledgertransaction_set.all%}
-                            <li> 
-                                Dr:{{j.ledgerno_dr}} Cr:{{j.ledgerno}} {{j.amount}}
-                            </li>
-                            {%endfor%}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul>
-                            {%for j in i.accounttransaction_set.all%}
-                            <li>
-                                Dr:{{j.ledgerno}} Cr:{{j.Account}} {{j.amount}}
-                            </li>  
-                            {%endfor%}
-
-                        </ul>
-                    </td>
+                    </td>  
                 </tr>
                 {% endfor %}
             </tbody>

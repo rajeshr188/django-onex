@@ -1,15 +1,30 @@
 {% load humanize %}
 {%load django_tables2%}
 {%load bootstrap4%}
-{% if filter %}
-    <form action="" method="get" class="form form-inline mb-4">
-        {% bootstrap_form filter.form layout='inline' %}
-        {% bootstrap_button 'filter' %}
-    </form>
-{% endif %}
 
-<div class="table table-responsive ">
+Results :{{page_obj.paginator.count}}
+<div class="row">
+    <div class="col-sm-9">
+        <div class="table-responsive text-center">
+            {% render_table table 'django_tables2/bootstrap4.html' %}
+        </div>
 
-    {% render_table table 'django_tables2/bootstrap4.html'  %}
-
+    </div>
+    <div class="col-sm-3">
+        <div class="sticky-top">
+            {% if filter %}
+            <div class="card  bg-light mb-3 text-center">
+                <div class="card-header">
+                    Filter
+                </div>
+                <div class="card-body">
+                    <form action="" method="get" class="form-horizontal">
+                        {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
+                        {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>

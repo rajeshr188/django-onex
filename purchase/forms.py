@@ -1,11 +1,11 @@
 from django import forms
-from .models import Invoice, InvoiceItem, Payment,PaymentLine
+from .models import Invoice, InvoiceItem, Payment, PaymentItem,PaymentLine
 from django_select2.forms import Select2Widget,ModelSelect2Widget
 from contact.models import Customer
 from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
-from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
+from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
 
 class InvoiceForm(forms.ModelForm):
@@ -26,7 +26,7 @@ class InvoiceForm(forms.ModelForm):
     )
     class Meta:
         model = Invoice
-        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance', 'supplier','status','posted']
+        fields = ['created','rate','invoicetype','balancetype', 'paymenttype', 'balance', 'supplier','status','posted']
 
 
 class InvoiceItemForm(forms.ModelForm):
@@ -74,7 +74,7 @@ class PaymentForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:
         model = Payment
-        fields = ['supplier','created','type', 'weight','touch','nettwt','rate','total', 'description','status']
+        fields = ['supplier','created','type','rate','total', 'description','status']
 
 class PaymentLineForm(forms.ModelForm):
 
@@ -86,5 +86,13 @@ class PaymentLineForm(forms.ModelForm):
         model=PaymentLine
         fields=['invoice','amount']
 
+class PaymentItemForm(forms.ModelForm):
+    class Meta:
+        models = PaymentItem
+        fields = '__all__'
+
+PaymentItemFormSet=inlineformset_factory(Payment,PaymentItem,
+    fields=('weight','touch','nettwt','amount','payment'),extra=1,can_delete=True,form=PaymentItemForm)
+
 PaymentLineFormSet=inlineformset_factory(Payment,PaymentLine,
-    fields=('invoice','amount','payment'),extra=0,can_delete=True,form=PaymentLineForm)
+    fields=('invoice','amount','payment'),extra=1,can_delete=True,form=PaymentLineForm)

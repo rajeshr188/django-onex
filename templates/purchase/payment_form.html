@@ -2,12 +2,13 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+
 {{form.media}}
 <p><a class="btn btn-default" href="{% url 'purchase_payment_list' %}">Payment Listing</a></p>
     <form action="." method="post">
         {% csrf_token %}
         {{ form.non_field_errors }}
-
         <div class="form-row">
             <div class="form-group col-md-4">
               {{ form.supplier.errors }}
@@ -36,24 +37,15 @@
               {% bootstrap_field form.description size="small" %}
             </div>
         </div>
-
-        <div class="form-group row">
-          {{ form.weight.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.weight size="small" %}</div>
-          {{ form.touch.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.touch size="small" %}</div>
-          {{ form.nettwt.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.nettwt size="small" %}</div>
+        <div class="form-group row">   
           {{ form.total.errors }}
           <div class="col-sm-3">{% bootstrap_field form.total size="small" %}</div>
         </div>
-
-        {{ paymentline_form.management_form }}
-        {{ paymentline_form.non_form_errors }}
-        {% for form in paymentline_form %}
+        {{ paymentitem_form.management_form }}
+        {{ paymentitem_form.non_form_errors }}
+        {% for form in paymentitem_form %}
         {%csrf_token%}
             {{form.id}}
-
             <table class="table table-sm table-striped">
               {%if forloop.first%}
               <thead class="thead-dark">
@@ -65,7 +57,7 @@
               </thead>
                   {% endif %}
               <tbody>
-              <tr class="inline {{paymentline_form.prefix}}">
+              <tr class="inline {{paymentitem_form.prefix}}">
                 {% for field in form.visible_fields %}
                 <td class="{{field.name}}" >
                     <!-- {{ field.errors.as_ul }} -->
@@ -76,75 +68,57 @@
           </tbody>
         </table>
           {% endfor %}
-          <div class="form-group row">
-            <div class="col"><label>Remaining balance to allot :</label><p id="balance">''</p></div>
-
-            </div>
-
         <button class="btn btn-primary" type="submit">Save Payment</button>
     </form>
     <script type="text/javascript">
-      $(".inline.{{ paymentline_form.prefix }}").formset({
-          prefix: "{{ paymentline_form.prefix }}",
-          added: function ($row) {
-            $row.find('.invoice select').select2();
+      $(".inline.{{ paymentitem_form.prefix }}").formset({
+          prefix: "{{ paymentitem_form.prefix }}",
+          added: function ($row) {  
             $row.find('.delete-row').addClass('btn-sm btn-danger');
           },
           removed: function($row){
-            updatebal();
+            update_bal();
           }
       })
-
       $('.add-row').addClass('btn-sm btn-success');
       $('.delete-row').addClass('btn-sm btn-danger');
-
-
-
     </script>
 <script>
-
-  $(function(){
-
+    //$('.inline :input').prop('disabled', true);
     $(document).ready(function() {
-
-      $(document).on('change','#id_total',function() { $('#balance').text( $(this).val());})
-      $(document).on('change', '.amount', function() { updatebal();});
-      updatebal();
-    });
-  });
-
-  function updatebal(){
-    var sum = 0;
-
-    $(".amount input").each(function () {
-          if (!isNaN(this.value) && this.value.length != 0) {
-              sum += parseFloat(this.value);
-          }
+     
+      $(document).on('change','.weight,.touch,.amount,.nettwt,#id_rate', function(){
+        update_row();
+        update_bal();
       });
-    var total=$("#id_total").val();
-    $("#balance").text(total-sum);
+    });
 
+    function update_row(){
+      var rate = $('#id_rate').val();
+      $('.inline').each(function () {
+        var wt = $(this).find('.weight input').val();
+        var touch = $(this).find('.touch input').val();
+       
+
+        var nettwt = (wt * touch) / 100
+        $(this).find('.nettwt input').val(nettwt);
+        if($('#id_type').val() !='Cash'){
+          $(this).find('.amount input').val(nettwt*rate);
+        }
+        update_bal();
+        console.log(wt, touch, nettwt, rate);
+    });
   }
+    function update_bal() {
+          var sum = 0;
+          
+          $(".amount input").each(function () {
+            if (!isNaN(this.value) && this.value.length != 0) {
+              sum += parseFloat(this.value);
+            }
+          });  
+          $("#id_total").val(sum.toFixed(3));
 
-$('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-$(document).on('change','#id_type', function() {
-  //alert( this.value );
-  if(this.value=='Metal'){
-    $('#id_weight,#id_touch,#id_nettwt,#id_rate').prop('disabled',false)
-    $(function(){
-                $('#id_weight, #id_touch').keyup(function(){
-                   var value1 = parseFloat($('#id_weight').val()) || 0;
-                   var value2 = parseFloat($('#id_touch').val()) || 0;
-                   $('#id_nettwt,#id_total').val((value1 * value2)/100);
-                   $('#id_total').trigger('change');
-                });
-             });
-  }
-  else {
-    $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-  }
-
-});
-
+        }
 </script>
 {% endblock %}

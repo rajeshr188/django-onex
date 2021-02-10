@@ -31,6 +31,7 @@
       <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_invoice_create'  %}">Add Invoice</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'sales_receipt_create' %}">Add Receipt</a>
       <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_reallot_receipts' object.id%}">Reallot Receipt</a>
+            <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_reallot_payments' object.id%}">Reallot Payments</a>
     </div>
   </div>
 </div>
@@ -224,13 +225,21 @@
 
       <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         <div class="table-responsive-sm">
-        {% render_table customer.sales.all 'django_tables2/bootstrap-responsive.html' %}
+          {% if customer.type == 'Su'%}
+            {% render_table customer.purchases.all 'django_tables2/bootstrap-responsive.html' %}
+          {%else%}
+            {% render_table customer.sales.all 'django_tables2/bootstrap-responsive.html' %}
+          {%endif%}
         </div>
 
       </div>
       <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         <div class="table-responsive-sm">
-          {% render_table customer.sales.all 'django_tables2/bootstrap-responsive.html' %}
+          {% if customer.type == 'Su'%}
+            {% render_table customer.payments.all 'django_tables2/bootstrap-responsive.html' %}
+          {%else%}
+            {% render_table customer.receipts.all 'django_tables2/bootstrap-responsive.html' %}
+          {%endif%}
         </div>
       </div>
     </div>

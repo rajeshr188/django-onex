@@ -7,12 +7,53 @@ from django.shortcuts import render
 from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
-
+from django.db.models import Sum
+from dea.utils.currency import Balance
+from moneyed import Money
 def home(request):
+    
+    ledger_txns = LedgerTransaction.objects.select_related('ledgerno','ledgerno_dr','journal').all()
     context = {}
+    l=[]
+    ledger_qs = Ledger.objects.all()
+    for i in ledger_qs:
+        latest_ls = i.get_latest_stmt()
+        if latest_ls is None:
+            since = None
+            cb = Balance()
+        else:
+            since = latest_ls.created
+            cb = latest_ls.get_cb()
+        latest_ctxns = i.ctxns(since = since).filter(ledgerno = i)\
+                                .values('amount_currency')\
+                                .annotate(total = Sum('amount'))
+        lct = Balance(
+            [Money(r['total'],r['amount_currency']) for r in latest_ctxns]
+        )
+        latest_dtxns = i.dtxns(since = since).filter(ledgerno_dr = i)\
+                                .values('amount_currency')\
+                                .annotate(total=Sum('amount'))
+        ldt = Balance(
+            [Money(r['total'], r['amount_currency']) for r in latest_dtxns]
+        )
+        current_bal = cb + lct - ldt
+        l.append({'ledger':i,'cb':current_bal})
+
+    context['ledger']= l
+    
     context['accounts'] = Account.objects.exclude(contact__type='Re').select_related('AccountType_Ext','contact').all()
-    context['ledger'] = Ledger.objects.select_related('AccountType').all()
-    context['journal'] = Journal.objects.select_related('content_type').all()
+    journal = Journal.objects.all()
+    jrnls = []
+    for i in journal:
+        txns = ledger_txns.filter(journal = i,)
+        jrnls.append({
+                        'object_id':i.object_id,
+                        'id':i.id,'created':i.created,'desc':i.desc,
+                        'app_label':i.content_type.app_label,'model':i.content_type.model,
+                        'content_object':i.content_object,'url_string':i.get_url_string(),
+                        'content_type':i.content_type,'txns':txns})
+    context['journal'] = jrnls
+    
     return render(request, 'dea/home.html', {'data': context})
 
 def daybook(request):
@@ -67,9 +108,6 @@ def audit_acc(request,pk):
 
 @transaction.atomic()
 def audit_ledger(request):
-    # ledger = get_object_or_404(Ledger,pk=pk)
-    # ledger.audit()
-    # return redirect(ledger)
     ledgers = Ledger.objects.all()
     for l in ledgers:
         l.audit()
@@ -113,7 +151,6 @@ class LedgerListView(ListView):
 class LedgerDetailView(DetailView):
     model = Ledger
 
-
 class LedgerStatementCreateView(CreateView):
     model = LedgerStatement
     form_class = LedgerStatementForm
@@ -121,3 +158,6 @@ class LedgerStatementCreateView(CreateView):
 
 class LedgerStatementListView(ListView):
     model = LedgerStatement
+
+class LedgerTransactionListView(ListView):
+    model=LedgerTransaction

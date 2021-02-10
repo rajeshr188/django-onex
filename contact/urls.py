@@ -22,7 +22,9 @@ urlpatterns += (
     path('customer/detail/<int:pk>/', views.CustomerDetailView.as_view(), name='contact_customer_detail'),
     path('customer/update/<int:pk>/', views.CustomerUpdateView.as_view(), name='contact_customer_update'),
     path('customer/<int:pk>/delete/',views.CustomerDelete.as_view(),name='contact_customer_delete'),
-    path('customer/<int:pk>/reallot/',views.reallot_receipts, name='contact_reallot_receipts')
+    path('customer/<int:pk>/reallot_receipts/',views.reallot_receipts, name='contact_reallot_receipts'),
+    path('customer/<int:pk>/reallot_payments/', views.reallot_payments,
+         name='contact_reallot_payments'),
 )
 
 # urlpatterns += (

@@ -23,7 +23,11 @@
               {{ form.created.errors }}
               {% bootstrap_field form.created size="small" %}
             </div>
-          </div>
+            <div class="form-group col-md-3">
+              {{ form.invoicetype.errors }}
+              {% bootstrap_field form.invoicetype size="small" %}
+            </div>
+        </div>
         <div class="form-row">
             <div class="form-group col-md-3">
               {{ form.balancetype.errors }}

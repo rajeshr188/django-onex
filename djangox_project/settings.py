@@ -57,9 +57,9 @@ INSTALLED_APPS = [
     'contact',
     'product',
     'girvi',
-    'sales','purchase','approval',
+    'invoice','sales','purchase','approval',
     'Chitfund',
-    'daybook','dea',
+    'daybook','dea','sea'
 ]
 # CONTROLCENTER_DASHBOARDS = (
 #         ('mydash','djangox_project.dashboard.MyDash'),
@@ -134,7 +134,7 @@ DATABASES = {
         'default': {
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'onex_dea_array',
+        'NAME': 'onex',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',

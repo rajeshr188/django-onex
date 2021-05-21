@@ -1,4 +1,7 @@
-from dea.models import Journal,LoanJournal
+from dea.models import (InterestPaidJournal,LoanGivenJournal,
+                        LoanTakenJournal,LoanReleaseJournal,
+                        LoanPaidJournal,Journal,
+                        InterestReceivedJournal)
 from django.urls import reverse
 from decimal import Decimal
 from django.db import models,transaction
@@ -8,7 +11,7 @@ from django.utils import timezone
 from django.db.models import Sum,Func
 from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
 from django.contrib.contenttypes.fields import GenericRelation
-from moneyed import Money
+
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -113,7 +116,7 @@ class Loan(models.Model):
         on_delete=models.CASCADE,
     )
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal)
+    journals = GenericRelation(Journal,related_query_name='loan_doc')
 
     # Managers
     # objects = models.Manager()
@@ -148,7 +151,7 @@ class Loan(models.Model):
         if self.is_released :
             return Decimal(0)
         else:
-            return Decimal(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100)
+            return round(Decimal(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100),3)
 
     def total(self):
         return self.interestdue() + float(self.loanamount)
@@ -189,27 +192,27 @@ class Loan(models.Model):
             )
         # create journal LG or LT based on user Type
         if self.customer.type == 'Su':
-            jrnl = LoanJournal.objects.create(content_object = self,
-                                type = Journal.Types.LT,
+            l_jrnl = LoanTakenJournal.objects.create(content_object = self,                
                                 desc = 'Loan Taken')
-            jrnl.take_loan(self.customer.account,Money(self.loanamount,"INR"))
-            jrnl.pay_interest(self.customer.account,
-                                    Money((self.loanamount * self.interestrate)/100,"INR"))
+            l_jrnl.transact()
+            pi_jrnl = InterestPaidJournal.objects.create(content_object = self,
+                                desc ='Pay Interest')
+            pi_jrnl.transact()
+            
         else:
-            jrnl = LoanJournal.objects.create(content_object = self,
-                                type = Journal.Types.LG,
-                                desc = 'Loan Given')
-            jrnl.pledge_loan(self.customer.account,Money(self.loanamount,"INR"))
-            jrnl.receive_interest(self.customer.account,
-                                  Money((self.loanamount * self.interestrate)/100,"INR"))
+            l_jrnl = LoanGivenJournal.objects.create(content_object=self,
+                                                     desc='Loan Given')
+            l_jrnl.transact()
+            pi_jrnl = InterestReceivedJournal.objects.create(content_object=self,
+                                                         desc='Interest Received')
+            pi_jrnl.transact()
+            
         self.posted = True
         self.save(update_fields=['posted'])
 
     @transaction.atomic()
     def unpost(self):
         # delete journals if accounts and ledger not closed
-        # otherwise intimate / hint to do adjustment
-        # prevent edit
         self.journals.clear()
         self.posted = False
         self.save(update_fields = ['posted'])
@@ -217,11 +220,10 @@ class Loan(models.Model):
     def save(self,*args,**kwargs):
         if not self.pk:
             self.itemvalue = self.loanamount+500
-            self.loanid = self.series.name + str(self.lid)
+        self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
         super().save(*args,**kwargs)
         
-
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     amount_received = models.IntegerField(default =0)
@@ -252,7 +254,7 @@ class Release(models.Model):
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
-    journals = GenericRelation(Journal)
+    journals = GenericRelation(Journal,related_query_name='release_doc')
     # manager
     objects = ReleaseManager
 
@@ -275,15 +277,13 @@ class Release(models.Model):
         acc = self.loan.customer.account
         amount = self.loan.loanamount
         if self.loan.customer.type == 'Su':
-            jrnl = LoanJournal.objects.create(content_object = self,
-                            type = Journal.Types.LP,
+            jrnl = LoanPaidJournal.objects.create(content_object = self,
                             desc = 'Loan Repaid')
-            jrnl.repay(acc,Money(amount,"INR"))
+            jrnl.transact()
         else:
-            jrnl = LoanJournal.objects.create(content_object = self,
-                            type = Journal.Types.LR,
+            jrnl = LoanReleaseJournal.objects.create(content_object = self,
                             desc = 'Loan Released')
-            jrnl.release(acc,Money(amount,"INR"))
+            jrnl.transact()
         self.posted = True
         self.save(update_fields=['posted'])
 

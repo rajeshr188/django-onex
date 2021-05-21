@@ -22,6 +22,10 @@
               {{ form.created.errors }}
               {% bootstrap_field form.created size="small"%}
             </div>
+            <div class="form-group col-md-3">
+              {{ form.is_gst.errors }}
+              {% bootstrap_field form.is_gst %}
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-3">
@@ -66,7 +70,16 @@
           </tbody>
         </table>
           {% endfor %}
-
+        <div class = "form-group row">
+          <div class = "form-group col-md-3">
+            {{form.gross_wt.errors}}
+            {% bootstrap_field form.gross_wt %}
+          </div>
+          <div class="form-group col-md-3">
+            {{form.net_wt.errors}}
+            {% bootstrap_field form.net_wt %}
+          </div>
+        </div>
         <div class="form-group row">
           {{ form.term.errors }}
           <div class="col-sm-3">{% bootstrap_field form.term size="small"%}</div>
@@ -78,67 +91,77 @@
         <button class="btn btn-primary" type="submit">Save Invoice</button>
     </form>
 <script type="text/javascript">
-    $(document).ready(function() {
-      $(document).on('change', '.weight,.touch,#id_balancetype,#id_rate,.makingcharge,.is_return', function() {
-        console.log('wt here')
-        update_row();
-        update_amounts();
-      });
-      function update_amounts(){
-        var sum = 0;
-        var nwt=0;
-        var twt=0;
-        $(".total input").each(function () {
-              if (!isNaN(this.value) && this.value.length != 0) {
-                  sum += parseFloat(this.value);
-              }
-          });
-        $(".weight input").each(function () {
-              if (!isNaN(this.value) && this.value.length != 0) {
-                  twt += parseFloat(this.value);
-              }
-          });
-        $("#id_balance").val(sum.toFixed(3));
-        $('#id_weight').val(Number(twt).toFixed(3));
-      }
-      function update_row() {
-        var rate=$('#id_rate').val();
-        $('.inline').each(function() {
-        $(this).find('.touch input').val();
-        var wt = $(this).find('.weight input').val();
-        var touch = $(this).find('.touch input').val();
-        var ret =$(this).find('.is_return input').is(':checked');
-        var mc = $(this).find('.makingcharge input').val();
-
-        var nettwt = (wt * touch)/100
-        if($('#id_balancetype').val()=='Cash')
-          var total=Number(nettwt)*Number(rate)+Number(mc);
-        else {
-          var total=Number(nettwt)+Number(mc);
-        }
-        if(ret)total=-total
-        $(this).find('.total input').val(total.toFixed(3));
-        console.log(wt,touch,nettwt,rate,total.toFixed(3))
-      });
-    }
-})
-
-</script>
-<script type="text/javascript">
+  
   $(".inline.{{ invoiceitem_form.prefix }}").formset({
-    prefix: "{{ invoiceitem_form.prefix }}",
-    //formTemplate: $("#formset-template").clone(),
-    // initialize newly created heavy fields on the added callback
-    added: function ($row) {
-      $row.find('.product select').select2();
-      $row.find('.delete-row').addClass('btn-sm btn-danger');
-    },
-    removed: function ($row) {
+      prefix: "{{ invoiceitem_form.prefix }}",
+      //formTemplate: $("#formset-template").clone(),
+      // initialize newly created heavy fields on the added callback
+      added: function ($row) {
+        $row.find('.product select').select2();
+        $row.find('.delete-row').addClass('btn-sm btn-danger');
+      },
+      removed: function ($row) {
       update_amounts();
-    }
-  })
+    },
+    });
   $('.product select').select2();
   $('.add-row').addClass('btn-sm btn-success');
   $('.delete-row').addClass('btn-sm btn-danger');
+
+  $(document).on('change', '.weight,.touch,#id_balancetype,#id_rate,.makingcharge,.is_return', function () {
+      console.log('wt here')
+      update_row();
+      update_amounts();
+    });
+    
+  $(document).on('click', '.delete-row', function () {
+      update_amounts();
+    });
+  function update_amounts() {
+      var sum = 0;
+      var nwt = 0;
+      var twt = 0;
+      $(".weight input").each(function () {
+      if (!isNaN(this.value) && this.value.length != 0) {
+        twt = twt + parseFloat(this.value);
+      }
+      });
+      $(".total input").each(function () {
+        if (!isNaN(this.value) && this.value.length != 0) {
+          sum = sum + parseFloat(this.value);
+        }
+      });
+      $(".net_wt input").each(function () {
+        if (!isNaN(this.value) && this.value.length != 0) {
+          nwt += parseFloat(this.value);
+        }
+      });
+      $("#id_balance").val(sum.toFixed(3));
+      $('#id_net_wt').val(Number(twt).toFixed(3));
+      $('#id_gross_wt').val(twt.toFixed(3));
+    }
+  function update_row() {
+      var rate = $('#id_rate').val();
+      $('.inline').each(function () {
+        $(this).find('.touch input').val();
+        var wt = $(this).find('.weight input').val();
+        var touch = $(this).find('.touch input').val();
+        var ret = $(this).find('.is_return input').is(':checked');
+        var mc = $(this).find('.makingcharge input').val();
+      
+        var nettwt = (wt * touch) / 100
+        $(this).find('.net_wt input').val(nettwt.toFixed(3));
+        var total = 0
+        if ($('#id_balancetype').val() == 'Cash')
+          total = Number(nettwt) * Number(rate) + Number(mc);
+        else
+          total = Number(nettwt) + Number(mc);
+        if (ret) total = -total
+        $(this).find('.total input').val(total.toFixed(3));
+        console.log(wt, touch, nettwt, rate, total.toFixed(3))
+      });
+    }
+  
 </script>
+
 {% endblock %}

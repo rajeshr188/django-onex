@@ -144,13 +144,20 @@
   <div class="col">
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item">
-        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Loans</a>
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home"
+         aria-selected="true">Loans</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Invoices</a>
+        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile"
+         aria-selected="false">Invoices</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Receipts</a>
+        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact"
+         aria-selected="false">Receipts</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="payment-tab" data-toggle="tab" href="#payment" role="tab" aria-controls="payment"
+          aria-selected="false">Inv-Payment</a>
       </li>
     </ul>
 
@@ -241,6 +248,35 @@
             {% render_table customer.receipts.all 'django_tables2/bootstrap-responsive.html' %}
           {%endif%}
         </div>
+      </div>
+      <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+        <table class = "table table-sm table-hover">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Inv-created</th>
+              <th>Inv-balance</th>
+              <th>Payments</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%for i in customer.purchases.all%}
+            <tr>
+              <td>{{i.id}}</td>
+              <td>{{i.created|date}}</td>
+              <td>{{i.balance}}</td>
+              <td>
+                {%for j in i.paymentline_set.all%}
+                <ul>
+                  <li>{{j.id}}|{{j.created|date}}|{{j.amount}}</li>
+                </ul>
+                {%endfor%}
+              </td>
+              
+            </tr>
+            {%endfor%}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

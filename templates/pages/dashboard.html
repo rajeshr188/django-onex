@@ -1,0 +1,47 @@
+{% extends '_base.html' %}
+
+{% block title %}Dashboard page{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+<table class = "table table-sm table-bordered">
+    <thead>
+        <th>Metrics</th>
+        <th>Purchase</th>
+        <th>Sales</th>
+        <th>remaining</th>
+    </thead>
+    <tbody> 
+        <tr>
+            <td>Total Metal Balance</td>
+            <td>Bal:{{total_pbal.bal}} </td>
+            <td>Bal:{{total_sbal.bal}} </td>  
+            <td>{{pbal}}</td> 
+        </tr>
+       
+        <tr>
+            <td>Total Cash Balance</td>
+            <td>Bal:{{total_pbal_ratecut.bal}} | net_wt:{{total_pbal_ratecut.net_wt}} </td>
+            <td>Bal:{{total_sbal_ratecut.bal}} | net_wt:{{total_sbal_ratecut.net_wt}} </td>
+            <td>{{sbal}}|{{remaining_net_wt}}</td>
+        </tr>
+        <tr>
+            <td>Moving Average for ratecut</td>
+            <td>{{p_map}}</td>
+            <td>{{p_map}}</td>
+            
+        </tr>
+        
+    </tbody>
+</table>
+<div class="card">
+    <div class="card-body">
+        Buy []@[]
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        sell []@[]
+    </div>
+</div>
+{% endblock content %}

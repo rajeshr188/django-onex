@@ -131,7 +131,7 @@ class Customer(models.Model):
                 aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_total_invoice_metal(self):
-        return self.sales.filter(balancetype="Metal").\
+        return self.sales.filter(balancetype="Gold").\
                 aggregate(total=Coalesce(Sum('balance'),0))['total']
 
     def get_unpaid(self):

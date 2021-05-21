@@ -15,7 +15,11 @@ post_save.connect(my_handler, sender=Customer)
 def add_account(sender, instance, created,**kwargs):
     acct_c = AccountType_Ext.objects.get(description = 'Creditor')
     acct_d = AccountType_Ext.objects.get(description = 'Debtor')
-    if created: 
+    try:
+        acc = instance.account
+    except Account.DoesNotExist:
+        acc = None
+    if created or acc is None: 
         entity_t = EntityType.objects.get(name="Person")
         if instance.type == "Wh" or instance.type =="Re":
             Account.objects.create(contact = instance,

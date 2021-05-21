@@ -12,6 +12,7 @@ from moneyed import Money
 from .utils.currency import Balance
 from psycopg2.extras import register_composite
 from psycopg2.extensions import register_adapter, adapt, AsIs
+from . import managers
 
 MoneyValue = register_composite(
     'money_value',
@@ -84,23 +85,29 @@ class EntityType(models.Model):
 class Account(models.Model):
     entity = models.ForeignKey(EntityType,
                         null = True,
-                        on_delete = models.SET_NULL)
+                        on_delete = models.SET_NULL,
+                        )
     AccountType_Ext = models.ForeignKey(AccountType_Ext,
-                        on_delete = models.CASCADE)
-
-    contact = models.OneToOneField(Customer,
                         on_delete = models.CASCADE,
                         )
 
+    contact = models.OneToOneField(Customer,
+                        on_delete = models.CASCADE,
+                        related_name='accounts'
+                        )
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
-        return self.contact.name
+        return f"{self.id}"
         
     def get_absolute_url(self):
         return reverse("dea_account_detail", kwargs={"pk": self.pk})
     
     def set_opening_bal(self,amount):
+        # amount is a MoneyField
         # ensure there aint no txns before setting op bal if present then audit and adjust
-        return AccountStatement.objects.create(self,amount)
+        return AccountStatement.objects.create(self,ClosingBalance = Balance(amount))
 
     def adjust(self,amount,xacttypecode):
         pass
@@ -119,17 +126,17 @@ class Account(models.Model):
                              TotalDebit = debit_t)
     def latest_stmt(self):
         try:
-            return self.accountstatement_set.latest()
+            return self.accountstatements.latest()
         except AccountStatement.DoesNotExist:
             return None
 
     def txns(self,since = None):    
         if since is not None:
-            return self.accounttransaction_set.filter(
+            return self.accounttransactions.filter(
                 created__gte = since
             )
         else:
-            return self.accounttransaction_set.all()
+            return self.accounttransactions.all()
 
     def total_credit(self,since = None):
         txns = self.txns(since = since)
@@ -139,9 +146,7 @@ class Account(models.Model):
              .values("amount_currency")
              .annotate(total=Sum("amount"))]
         )
-        
-        
-        
+             
     def total_debit(self,since = None):
         txns = self.txns(since = since)
         return Balance(
@@ -151,7 +156,6 @@ class Account(models.Model):
              .annotate(total=Sum("amount"))]
         )
         
-
     def current_balance(self):
         ls = self.latest_stmt()
         if ls is None:
@@ -166,7 +170,7 @@ class Account(models.Model):
                         .values("amount_currency")\
                             .annotate(total = Sum('amount'))
         debit = ac_txn\
-                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP','PYT'])\
+                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP','PYT','CRSL'])\
                         .values("amount_currency")\
                             .annotate(total=Sum('amount'))
         credit_bal = Balance(
@@ -178,12 +182,14 @@ class Account(models.Model):
 
         return bal
         
-
 # account statement for ext account
 class AccountStatement(models.Model):
     AccountNo = models.ForeignKey(Account,
-                        on_delete = models.CASCADE)
-    created = models.DateTimeField(unique = True, auto_now_add = True)
+                        on_delete = models.CASCADE,
+                        related_name='accountstatements')
+    created = models.DateTimeField(
+        # unique = True, 
+        auto_now_add = True)
     ClosingBalance = ArrayField(MoneyValueField(null = True,blank = True))
     TotalCredit = ArrayField(MoneyValueField(null = True,blank = True))
     TotalDebit = ArrayField(MoneyValueField(null=True, blank=True))
@@ -192,7 +198,7 @@ class AccountStatement(models.Model):
         get_latest_by = 'created'
 
     def __str__(self):
-        return f"{self.id} | {self.AccountNo} = {self.ClosingBalance}({self.TotalCredit} - {self.TotalDebit})"
+        return f"{self.id} | {self.AccountNo} = {self.ClosingBalance}({self.TotalDebit} - {self.TotalCredit})"
 
     def get_cb(self):
         return Balance(self.ClosingBalance)
@@ -239,7 +245,7 @@ class Ledger(MPTTModel):
     
     def get_latest_stmt(self):
         try:
-            return self.ledgerstatement_set.latest()
+            return self.ledgerstatements.latest()
         except LedgerStatement.DoesNotExist:
             return None
 
@@ -248,7 +254,7 @@ class Ledger(MPTTModel):
         if ls is None:
             return Balance()
         else:
-            return Balance(self.ClosingBalance)
+            return Balance(ls.ClosingBalance)
 
     def set_opening_bal(self,amount):
         # ensure there aint no txns before setting op bal if present then audit and adjust
@@ -299,26 +305,16 @@ class Ledger(MPTTModel):
             [Money(r['total'],r["amount_currency"]) for r in self.dtxns(since).values('amount_currency').annotate(total = Sum('amount'))])\
                 if self.dtxns(since = since) else Balance()
 
-        bal = cb + c_bal - d_bal
+        bal = cb + d_bal - c_bal
         
         return bal
 
 class Journal(models.Model):
 
     created = models.DateTimeField(auto_now_add =True)
-    class Types(models.TextChoices):
-        BJ = "Base Journal","base journal"
-        SJ = "Sales Journal","Sales journal"
-        LJ = "Loan Journal","Loan journal"
-        PJ = "Purchase Journal","Purchase journal"
-        PY = "Payment Journal","Payment journal"
-        RC = "Receipt Journal","Receipt journal"
-        LT = "Loan Taken","Loan taken"
-        LG = "Loan Given","Loan given"
-        LR = "Loan Released","Loan released"
-        LP = "Loan Paid","Loan paid"
-    base_type = Types.SJ
-    type = models.CharField(max_length = 50,choices = Types.choices,
+    
+    base_type = managers.JournalTypes.BJ
+    type = models.CharField(max_length = 50,choices = managers.JournalTypes.choices,
                         default = base_type)
     desc = models.TextField(blank = True,null = True)
     # Below the mandatory fields for generic relation
@@ -340,11 +336,16 @@ class Journal(models.Model):
             self.type = self.base_type
         return super().save(*args,**kwargs)
 
+    def transact(self):
+        raise NotImplementedError
+
 class LedgerTransaction(models.Model):
-    journal = models.ForeignKey(Journal,on_delete = models.CASCADE)
+    journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='ltxns')
     ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,
                     related_name='credit_txns')
-    created = models.DateTimeField(unique = True, auto_now_add = True)
+    created = models.DateTimeField(auto_now_add = True,
+                    # unique = True
+                    )
     ledgerno_dr = models.ForeignKey(Ledger ,on_delete =models.CASCADE, 
                     related_name= 'debit_txns')
     # amount = models.DecimalField(max_digits=13, decimal_places=3)
@@ -354,9 +355,12 @@ class LedgerTransaction(models.Model):
         return self.ledgerno.name
 
 class LedgerStatement(models.Model):
-    ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE)
-    created = models.DateTimeField(unique = True,auto_now_add=True)
-    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
+    ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE,
+                        related_name='ledgerstatements')
+    created = models.DateTimeField(
+        # unique = True,
+        auto_now_add=True)
+    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)for i i
     ClosingBalance = ArrayField(MoneyValueField(null=True, blank=True))
     
     class Meta:
@@ -370,39 +374,36 @@ class LedgerStatement(models.Model):
         return Balance(self.ClosingBalance)
 
 class AccountTransaction(models.Model):
-    journal = models.ForeignKey(Journal,on_delete = models.CASCADE)
+    journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='atxns')
     ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE)
-    created = models.DateTimeField(auto_now_add= True,unique = True)
+    created = models.DateTimeField(auto_now_add= True,
+                        # unique = True
+                        )
     XactTypeCode = models.ForeignKey(TransactionType_DE,
                     on_delete = models.CASCADE)
     XactTypeCode_ext = models.ForeignKey(TransactionType_Ext,
                         on_delete=models.CASCADE)
-    Account = models.ForeignKey(Account,on_delete=models.CASCADE)
-    # amount = models.DecimalField(max_digits=13,decimal_places=3)
+    Account = models.ForeignKey(Account,on_delete=models.CASCADE,
+                            related_name='accounttransactions')
     amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
-
-
 
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
 
 # proxy models for all types of journals
 # all journals to be seperated into another file figure out how
-from .managers import (LoanGivenJournalManager,LoanTakenJournalManager,
-                        LoanReleaseJournalmanager,LoanRepayJournalmanager)
 
-class LoanJournal(Journal):
-    base_type = Journal.Types.LJ
-    loanstaken = LoanTakenJournalManager()
-    loansgiven = LoanGivenJournalManager()
-    loanreleased = LoanReleaseJournalmanager()
-    loanrepaid = LoanRepayJournalmanager()
-
+class LoanGivenJournal(Journal):
+    base_type = managers.JournalTypes.LG
+    objects = managers.LoanGivenJournalManager()
     class Meta:
         proxy = True
     
     @transaction.atomic()
-    def pledge_loan(self, account, amount):
+    def transact(self):
+
+        account = self.content_object.customer.account
+        amount = Money(self.content_object.loanamount,"INR")
         asset_loan = Ledger.objects.get(name="LoansGiven")
         cash_ledger_Acc = Ledger.objects.get(name="Cash In Drawer")
         cr = TransactionType_DE.objects.get(XactTypeCode='Cr')
@@ -420,9 +421,17 @@ class LoanJournal(Journal):
             XactTypeCode_ext=lg, Account=account, amount=amount
         )
 
+class LoanTakenJournal(Journal):
+    base_type = managers.JournalTypes.LT
+    objects = managers.LoanTakenJournalManager()
+
+    class Meta:
+        proxy = True
+
     @transaction.atomic()
-    def take_loan(self,account,amount):
-    
+    def transact(self):
+        account = self.content_object.customer.account
+        amount = Money(self.content_object.loanamount,"INR")
         liability_loan = Ledger.objects.get(name = 'LoansTaken')
         cash_ledger_Acc = Ledger.objects.get(name = 'Cash In Drawer')
         lt = TransactionType_Ext.objects.get(XactTypeCode_ext = 'LT')
@@ -442,8 +451,17 @@ class LoanJournal(Journal):
             ledgerno_dr=cash_ledger_Acc,
             amount=amount)
 
+class InterestPaidJournal(Journal):
+    base_type = managers.JournalTypes.IP
+    objects = managers.InterestPaidJournalManager()
+    
+    class Meta:
+        proxy = True
+
     @transaction.atomic()
-    def pay_interest(self,account,amount):
+    def transact(self):
+        account = self.content_object.customer.account
+        amount = self.content_object.interest
         ip = TransactionType_Ext.objects.get(XactTypeCode_ext='IP')
         int_paid = Ledger.objects.get(name='Interest Paid')
         int_payable = Ledger.objects.get(name='Interest Payable')
@@ -466,8 +484,16 @@ class LoanJournal(Journal):
             XactTypeCode_ext = ip,Account = account,amount = amount
         )
 
-    @transaction.atomic()
-    def receive_interest(self, account, interest):
+class InterestReceivedJournal(Journal):
+    base_type = managers.JournalTypes.IR
+    objects = managers.InterestReceivedJournalManager()
+
+    class Meta:
+        proxy = True
+
+    def transact(self):
+        account= self.content_object.customer.account
+        interest = self.content_object.interest_due()
         int_received = Ledger.objects.get(name="Interest Received")
         cash_ledger_Acc = Ledger.objects.get(name="Cash In Drawer")
         int_receivable = Ledger.objects.get(name='Interest Receivable')
@@ -492,8 +518,17 @@ class LoanJournal(Journal):
             Account=account, amount=interest
         )
 
+class LoanReleaseJournal(Journal):
+    base_type = managers.JournalTypes.LR
+    objects = managers.LoanReleaseJournalManager()
+
+    class Meta:
+        proxy = True
+
     @transaction.atomic()
-    def release(self, account, amount):
+    def transact(self):
+        account = self.content_object.customer.account
+        amount = Money(self.content_object.get_total(),"INR")
         cash_ledger_Acc = Ledger.objects.get(name="Cash In Drawer")
         lr = TransactionType_Ext.objects.get(XactTypeCode_ext='LR')
         dr = TransactionType_DE.objects.get(XactTypeCode='Dr')
@@ -509,8 +544,18 @@ class LoanJournal(Journal):
             XactTypeCode_ext=lr, Account=account, amount=amount
         )
 
+class LoanPaidJournal(Journal):
+    
+    base_type = managers.JournalTypes.LP
+    objects = managers.LoanRepayJournalManager()
+
+    class Meta:
+        proxy = True
+
     @transaction.atomic()
-    def repay(self, account, amount):
+    def transact(self):
+        account = self.content_object.customer.account
+        amount = self.content_object.get_total()
         lp = TransactionType_Ext.objects.get(XactTypeCode_ext='LP')
         cr = TransactionType_DE.objects.get(XactTypeCode='Cr')
         cash_ledger_acc = Ledger.objects.get(name="Cash In Drawer")
@@ -529,16 +574,22 @@ class LoanJournal(Journal):
                 ledgerno_dr=liability_loan, amount=amount)
 
 class SalesJournal(Journal):
-    base_type = Journal.Types.SJ
+    base_type = managers.JournalTypes.SJ
+    objects = managers.SalesJournalManager()
+
     class Meta:
         proxy = True
 
-    def sale(self,account,amount,payment_term,balance_type):
+    def transact(self):
         # payment_term[Cash,Credit]
         # balance_type[Cash,Gold]
+        account = self.content_object.customer.account
+        amount = self.content_object.balance
+        payment_term = self.content_object.paymenttype
+        balance_type = self.content_object.balancetype
         cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
-        sl_cash = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slh')
-        sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'slc')
+        sl_cash = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CSL')
+        sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRSL')
         
         if balance_type == 'Cash':
             money = Money(amount, 'INR')
@@ -552,54 +603,83 @@ class SalesJournal(Journal):
             debit_ac = cash_acc
             txn_ext = sl_cash
         else:
-            acc_receivable = Ledger.objects.get(name ='Accounts Receivable')
+            acc_receivable = Ledger.objects.get(name ='Accounts Receivables')
             debit_ac = acc_receivable
             txn_ext = sl_credit
 
         # cash/gold
         revenue_acc = Ledger.objects.get(name = 'Revenue')
         inventory = Ledger.objects.get(name = 'Inventory')
-        COGS = Ledger.objects.get(name =  'COGS')   
+        COGS = Ledger.objects.get(name = 'COGS')   
 
-        LedgerTransaction(
+        LedgerTransaction.objects.create(
                 journal=self,
-                ledgeno = revenue_acc,ledgeno_dr = debit_ac,amount = money)
-        LedgerTransaction(
+                ledgerno = revenue_acc,ledgerno_dr = debit_ac,amount = money)
+        LedgerTransaction.objects.create(
                 journal=self,
                 ledgerno = inventory,ledgerno_dr = COGS ,amount = money
             )
-
+       
         AccountTransaction.objects.create(
             journal = self,
             ledgerno = revenue_acc,XactTypeCode = cr,
             XactTypeCode_ext = txn_ext,Account = account,amount = amount
         )
-    def sale_return():
-        pass
-    def Receipt(self,account,amount,balance_type):
-        cash_ac = Ledger.objects.get(name = balance_type,parent__name ='Cash In Drawer')
-        acc_recv = Ledger.objects.get(name = balance_type,parent__name = 'Accounts Receivable')
+
+class SaleReturnJournal(Journal):
+    base_type = managers.JournalTypes.SR
+    class Meta:
+        proxy = True
+
+class ReceiptJournal(Journal):
+    base_type = managers.JournalTypes.RC
+    objects = managers.ReceiptJournalManager()
+
+    class Meta:
+        proxy = True
+
+    def transact(self):
+        account = self.content_object.customer.account
+        amount = self.content_object.total
+        balance_type = self.content_object.type
+        cash_ac = Ledger.objects.get(name ='Cash In Drawer')
+        acc_recv = Ledger.objects.get(name = 'Accounts Receivables')
         cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')
         sre = TransactionType_Ext.objects.get(XactTypeCode_ext = 'RCT')
+        
+        if balance_type =='Cash':
+            money = Money(amount,'INR')
+        elif balance_type =='Gold':
+            money = Money(amount,'USD')
+        else:
+            money = Money(amount,'AUD')
         LedgerTransaction.objects.create(
             journal = self,
-            ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = amount
+            ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = money
         )
         AccountTransaction.objects.create(
             journal = self,
             ledgerno = acc_recv,XactTypeCode =cr,
-            XactTypeCode_ext =sre, Account = account,amount = amount
+            XactTypeCode_ext =sre, Account = account,amount = money
         )
 
 class PurchaseJournal(Journal):
-    base_type = Journal.Types.PJ
+    base_type = managers.JournalTypes.PJ
+    purchase = managers.PurchaseJournalManager()
+
     class Meta:
         proxy =True
 
     @transaction.atomic()
-    def purchase(self,account,amount,payment_term,balance_type):
-        purch_exp = Ledger.objects.get(name = 'COGP')
+    def transact(self):
+        account = self.content_object.supplier.account
+        amount = self.content_object.balance
+        payment_term = self.content_object.paymenttype
+        balance_type = self.content_object.balancetype
+        # purch_exp = Ledger.objects.get(name = 'COGP')
         cash_ac = Ledger.objects.get(name = 'Cash In Drawer')
+        # revenue = Ledger.objects.get(name = 'Revenue')
+        inventory = Ledger.objects.get(name = 'Inventory')
         acc_payable = Ledger.objects.get(name = 'Accounts Payables')
         dr = TransactionType_DE.objects.get(XactTypeCode = 'Dr')
 
@@ -619,20 +699,35 @@ class PurchaseJournal(Journal):
 
         LedgerTransaction.objects.create(
             journal = self,
-            ledgerno = credit_ac,ledgerno_dr = purch_exp,amount =money
+            ledgerno = credit_ac,ledgerno_dr = inventory,amount =money
         )
+        # LedgerTransaction.objects.create(
+        #         journal=self,
+        #         ledgerno = revenue,ledgerno_dr = purch_exp ,amount = money
+        #     )
         AccountTransaction.objects.create(
             journal = self,
             ledgerno = credit_ac,XactTypeCode = dr,
             XactTypeCode_ext = txn_ext,Account = account,amount = money
         )
 
-    @transaction.atomic()
-    def purchase_return():
-        pass
+class PurchaseReturnJournal(Journal):
+    base_type = managers.JournalTypes.PR
+    objects = managers.PurchaseReturnJournalManager()
+    class Meta:
+        proxy = True
+
+class PaymentJournal(Journal):
+    base_type = managers.JournalTypes.PY
+    objects = managers.PaymentJournalManager()
+    class Meta:
+        proxy = True
 
     @transaction.atomic()
-    def payment(self,account,amount,balance_type):
+    def transact(self):
+        account = self.content_object.supplier.account
+        amount = self.content_object.total
+        balance_type = self.content_object.type
         cash_ac = Ledger.objects.get(name = 'Cash In Drawer')
         acc_payable = Ledger.objects.get(name = 'Accounts Payables')
         cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')

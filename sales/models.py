@@ -1,12 +1,13 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
-from django.db import models
+from django.db import models,transaction
 from contact.models import Customer
-from product.models import Stock
+from product.models import Stock,StockTransaction
 from django.utils import timezone
 from django.db.models import Sum,Func
 from datetime import timedelta
-from dea.models import Journal,SalesJournal
+from dea.models import Journal,SalesJournal,ReceiptJournal,LedgerStatement
+from invoice.models import PaymentTerm
 # from django.contrib.postgres.indexes import BrinIndex
 
 
@@ -20,52 +21,53 @@ class Year(Func):
     template = '%(function)s(YEAR from %(expressions)s)'
     output_field = models.IntegerField()
 
-class Terms(models.Model):
-    name = models.CharField(max_length = 30)
-    description = models.TextField()
-    due_days = models.PositiveSmallIntegerField()
-    discount_days = models.PositiveSmallIntegerField()
-    discount = models.DecimalField(max_digits = 10,decimal_places = 2)
-
-    class Meta:
-        ordering = ('due_days',)
-
-    def __str__(self):
-        return f"{self.name} ({self.due_days})"
-
 class Invoice(models.Model):
     # Fields
-    created = models.DateTimeField(default=timezone.now,db_index=True)
-    last_updated = models.DateTimeField(default=timezone.now)
-    rate = models.PositiveSmallIntegerField(default=3000)
-    btype_choices=(
-            ("Cash","Cash"),
-            ("Gold","Gold"),
-            ("Silver","Silver"),
-        )
-    itype_choices=(
-        ("Cash","Cash"),
-        ("Credit","Credit")
+    created = models.DateTimeField(default=timezone.now, db_index=True)
+    last_updated = models.DateTimeField(auto_now_add=True)
+    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    is_gst = models.BooleanField(default=False)
+    posted = models.BooleanField(default=False)
+    gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    net_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    btype_choices = (
+        ("Cash", "Cash"),
+        ("Gold", "Gold"),
+        ("Silver", "Silver"),
     )
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
-    paymenttype = models.CharField(max_length=30,choices=itype_choices,default="Credit")
-    term = models.ForeignKey(Terms,on_delete = models.SET_NULL,blank = True,null = True)
-    balance = models.DecimalField(max_digits=10, decimal_places=3)
-    status_choices=(
-                    ("Paid","Paid"),
-                    ("Partially Paid","PartiallyPaid"),
-                    ("Unpaid","Unpaid")
-                    )
-    status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
-    due_date = models.DateField(blank = True,null = True)
+    ptype_choices = (
+        ("Cash", "Cash"),
+        ("Credit", "Credit")
+    )
+    status_choices = (
+        ("Paid", "Paid"),
+        ("PartiallyPaid", "PartiallyPaid"),
+        ("Unpaid", "Unpaid")
+    )
+    status = models.CharField(
+        max_length=15, choices=status_choices, default="Unpaid")
+    balancetype = models.CharField(
+        max_length=30, choices=btype_choices, default="Cash")
+    paymenttype = models.CharField(
+        max_length=30, choices=ptype_choices, default="Credit")
+
+    due_date = models.DateField(null=True, blank=True)
+
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,
         related_name="sales"
     )
-    posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal)
+    term = models.ForeignKey(
+        PaymentTerm, on_delete=models.SET_NULL,
+        related_name='sale_term',
+        blank=True, null=True)
+    journals = GenericRelation(Journal,related_query_name='sales_doc')
+    stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -81,66 +83,106 @@ class Invoice(models.Model):
 
     def get_weight(self):
         return self.invoiceitem_set.aggregate(t=Sum('weight'));
+    
+    def get_gross_wt(self):
+        return self.saleitems.aggregate(t=Sum('weight'))['t']
+
+    def get_net_wt(self):
+        return self.saleitems.aggregate(t=Sum('net_wt'))['t']
+    
+    def get_total_balance(self):
+        return self.saleitems.aggregate(t= Sum('total'))['t']
 
     def get_total_receipts(self):
         paid=self.receiptline_set.aggregate(t=Sum('amount'))
         return paid['t']
+
+    @property
+    def overdue_days(self):
+        return (timezone.now().date() - self.date_due).days
 
     def get_balance(self):
         if self.get_total_receipts() != None :
             return self.balance - self.get_total_receipts()
         return self.balance
 
-    def update_status(self):
-        print('updating invoice status')
-
-    def post(self):
-        jrnl = SalesJournal.objects.create(
-            content_type = self,
-            type = Journal.Types.SJ,
-            desc = 'sale'
-        )
-        # credit/cash cash/gold
-        jrnl.sale(self,self.customer.account,self.balance,
-                    self.paymenttype,self.balancetype)
-        self.posted = True
-        self.save(update_fields = ['posted'])
-        
-    def unpost(self):
-        self.journals.clear()
-        self.posted = False
-        self.save(update_fields = ['posted'])
-
-    def save(self,*args,**kwargs):
+    def save(self, *args, **kwargs):
+        # if self.id and self.posted:
+        #     raise Http404
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
-        super(Invoice,self).save(*args,**kwargs)
-    
-    @property
-    def overdue_days(self):
-        return (timezone.now().date() - self.date_due).days
+        if self.is_gst:
+            self.total = self.balance
+            self.total += self.get_gst()
+        super(Invoice, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if not self.posted:
-            super(Invoice, self).delete(*args, **kwargs)
-        else:
+        if self.posted and self.get_balance() != 0:
             raise Exception("Cant delete sale if posted")
+        else:
+            super(Invoice, self).delete(*args, **kwargs)
 
+    def get_gst(self):
+        if self.invoicetype == 'GST':
+            return (self.balance * 3)/100
+        return 0
+
+    @transaction.atomic()
+    def post(self):
+        try:
+            ls = LedgerStatement.objects.latest().first().created
+        except LedgerStatement.DoesNotExist:
+            ls = None
+        if ls is None or self.created >= ls.created:
+            saleitems = self.saleitems.all()
+            
+            for i in saleitems:
+                i.post()
+            jrnl = SalesJournal.objects.create(
+                content_object = self,
+                desc = 'sale'
+            )
+            # credit/cash cash/gold
+            
+            jrnl.transact()
+            self.posted = True
+            self.save(update_fields = ['posted'])
+        else:
+            raise ValueError("cant post sale created before latest audit")
+
+    @transaction.atomic()   
+    def unpost(self):
+        try:
+            ls = LedgerStatement.objects.latest()
+        except LedgerStatement.DoesNotExist:
+            ls = None
+        if ls is None or ls.created < self.created:
+            for i in self.saleitems.all():
+                i.unpost()
+            self.journals.clear()
+            self.posted = False
+            self.save(update_fields = ['posted'])
+        else:
+            raise ValueError("cant unpost sale created before latest audit")
+
+    
 class InvoiceItem(models.Model):
     # Fields
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     # remove less stone
-    less_stone = models.DecimalField(max_digits=10,decimal_places=3)
+    less_stone = models.DecimalField(max_digits=10,decimal_places=3,default =0)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
-    wastage = models.DecimalField(max_digits=10,decimal_places=3)
+    wastage = models.DecimalField(max_digits=10,decimal_places=3,default =0)
+    net_wt = models.DecimalField(max_digits=10,decimal_places=3,default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,default =0)
     # Relationship Fields
     product = models.ForeignKey(
         Stock,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="products"
     )
     invoice = models.ForeignKey(
         'sales.Invoice',
@@ -163,19 +205,19 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch)/100
 
-    def get_charged_wt(self):
-        pass
-
+    
     def post(self):
         if not self.is_return:#if sold
-            self.product.remove(0,0,self.weight,self.quantity,self.invoice,'S')
+            self.product.remove(self.weight,self.quantity,self.invoice,'S')
         else:#if returned
-            self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
+            self.product.add(self.weight,self.quantity,self.invoice,'SR')
+    
+    @transaction.atomic()
     def unpost(self):
         if self.is_return:
-            self.product.remove(0,0,self.weight,self.quantity,self.invoice,'SR')
+            self.product.remove(self.weight,self.quantity,self.invoice,'SR')
         else:
-            self.product.add(0,0,self.weight,self.quantity,self.invoice,'SR')
+            self.product.add(self.weight,self.quantity,self.invoice,'SR')
 
 class Receipt(models.Model):
 
@@ -184,7 +226,8 @@ class Receipt(models.Model):
     last_updated = models.DateTimeField(default=timezone.now)
     btype_choices=(
                 ("Cash","Cash"),
-                ("Metal","Metal")
+                ("Gold", "Gold"),
+                ("silver", "Silver")
             )
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
@@ -199,13 +242,14 @@ class Receipt(models.Model):
                     ("Unallotted","Unallotted")
     )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
+    posted = models.BooleanField(default = False)
+    journals = GenericRelation(Journal,related_query_name='receipt_doc')
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE, related_name="receipts"
     )
-    posted = models.BooleanField(default = False)
-    journal = GenericRelation(Journal)
+    
     class Meta:
         ordering = ('-created',)
 
@@ -264,17 +308,33 @@ class Receipt(models.Model):
             i.save()
         print('allotted receipt')
         self.update_status()
-
-    def save(self,*args,**kwargs):
-        if self.id:
-            self.deallot()
-        super(self,Receipt).save(*args,**kwargs)
-        self.allot()
     
     def post(self):
-        pass
+        jrnl = ReceiptJournal.objects.create(
+            content_object = self,
+            desc = 'Receipt'
+            )
+        jrnl.transact()
+        self.posted = True
+        self.save(update_fields = ['posted'])
     def unpost(self):
-        pass
+        self.journals.clear()
+        self.posted = False
+        self.save(update_fields = ['posted'])
+
+class ReceiptItem(models.Model):
+    weight = models.DecimalField(
+        max_digits=10, blank=True, decimal_places=3, default=0.0)
+    touch = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=0.0)
+    nettwt = models.DecimalField(
+        max_digits=10, blank=True, decimal_places=3, default=0.0)
+    rate = models.IntegerField(default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=3)
+    payment = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.amount
 
 class ReceiptLine(models.Model):
 

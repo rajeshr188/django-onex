@@ -1,3 +1,4 @@
+from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month,Year
 from contact.models import Customer
@@ -36,6 +37,13 @@ def home(request):
 
     data['saleslist']=sales_by_month
     data['receipts_by_month']=receipts_by_month
+    ratecut_inv = Invoice.objects.filter(balancetype = 'Cash')
+    total = ratecut_inv.aggregate(b=Sum('balance'),
+                    nwt = Sum('net_wt'),gwt = Sum('gross_wt'))
+    print(total)
+    map = total['b']/total['nwt']
+    data['total'] = total
+    data['map'] = map
     return render(request,'sales/home.html',context={'data':data},)
 
 def randomsales(request):
@@ -50,12 +58,6 @@ def randomsales(request):
 
     data = dict()
     data['cust']=c
-
-    now = datetime.datetime.now()
-    # daterange = calendar.monthrange(now.year,now.month)
-    row = dict()
-
-
 
     return render(request, 'sales/randomsales.html', context={'data':data,'form':form},)
 
@@ -72,13 +74,13 @@ def print_receipt(request,pk):
 def list_balance(request):
 
     receipts=Receipt.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
-    grec=receipts.annotate(grec=Sum('total',filter=Q(type='Metal'))).values('grec')
+    grec=receipts.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
     crec=receipts.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
 
     invoices=Invoice.objects.filter(customer=OuterRef('pk')).\
                 order_by().values('customer')
     gbal=invoices.annotate(gbal=Sum('balance',
-            filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
+            filter=Q(paymenttype='Credit')&Q(balancetype='Gold'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',
             filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
 
@@ -123,6 +125,7 @@ import datetime
 from openpyxl import load_workbook
 import re
 import pytz
+
 def simple_upload(request):
     if request.method == 'POST' and request.FILES['myfile']:
         myfile = request.FILES['myfile']
@@ -234,9 +237,11 @@ class InvoiceCreateView(CreateView):
                 self.object = form.save()
                 invoiceitem_form.instance = self.object
                 invoiceitem_form.save()
+                self.object.gross_wt = self.object.get_gross_wt()
+                self.object.net_wt = self.object.get_net_wt()
+                self.object.balance = self.object.get_total_balance()
+                self.object.save()
             except Exception:
-                # raise Exception("Failed Form Save")
-                # self.object.delete()
                 form.add_error(None,'error in transfer')
                 return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
 
@@ -261,6 +266,9 @@ class InvoiceUpdateView(UpdateView):
 
     def get_context_data(self,*args,**kwargs):
         data = super(InvoiceUpdateView,self).get_context_data(**kwargs)
+        # prevent update if posted
+        if self.object.posted:
+            raise Http404
         if self.request.POST:
             data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
         else:
@@ -277,6 +285,10 @@ class InvoiceUpdateView(UpdateView):
                 self.object = form.save()
                 invoiceitem_form.instance = self.object
                 invoiceitem_form.save()
+                self.object.gross_wt = self.object.get_gross_wt()
+                self.object.net_wt = self.object.get_net_wt()
+                self.object.balance = self.object.get_total_balance()
+                self.object.save()
             except Exception:
                 # raise Exception("Failed Form Save")
                 form.add_error(None,'error in transfer qty or wt mismatch')
@@ -292,17 +304,14 @@ class InvoiceUpdateView(UpdateView):
 def post_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
     if not sales_inv.posted:
-        for item in sales_inv.saleitems.all():
-            item.post()
         sales_inv.post()
+    
     return redirect(sales_inv)
 
 @transaction.atomic()
 def unpost_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
     if sales_inv.posted:
-        for item in sales_inv.saleitems.all():
-            item.unpost()
         sales_inv.unpost()
     return redirect(sales_inv)
 

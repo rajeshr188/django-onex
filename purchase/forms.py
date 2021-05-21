@@ -26,14 +26,18 @@ class InvoiceForm(forms.ModelForm):
     )
     class Meta:
         model = Invoice
-        fields = ['created','rate','invoicetype','balancetype', 'paymenttype', 'balance', 'supplier','status','posted']
+        fields = ['created','rate','is_gst','balancetype','paymenttype',
+                    # 'gross_wt','net_wt',
+                     'balance', 'supplier','term','status','posted']
 
 
 class InvoiceItemForm(forms.ModelForm):
-    product=forms.ModelChoiceField(queryset=ProductVariant.objects.all(),widget=Select2Widget)
+    product=forms.ModelChoiceField(
+                queryset=ProductVariant.objects.all(),
+                widget=Select2Widget)
     class Meta:
         model = InvoiceItem
-        fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge']
+        fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge','net_wt']
 
     # def save(self,commit = True):
     #     print("in form.save()")
@@ -53,7 +57,7 @@ class InvoiceItemForm(forms.ModelForm):
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity','weight', 'touch',
-    'makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=1,can_delete=True)
+    'net_wt','makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(

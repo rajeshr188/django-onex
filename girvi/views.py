@@ -29,8 +29,8 @@ from django.views.decorators.csrf import csrf_exempt
 from utils.render import Render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-import openpyxl
-from openpyxl import Workbook,load_workbook
+from openpyxl import load_workbook
+
 @login_required
 def print_loanpledge(request,pk):
     loan=Loan.objects.get(id=pk)
@@ -114,6 +114,7 @@ def manage_loans(request):
 
 
     return render(request, 'girvi/manage_loans.html', {'formset': formset})
+
 from dateutil import relativedelta
 @login_required
 def home(request):
@@ -151,7 +152,7 @@ def home(request):
     loan['count']=l.count()
     loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
     loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])
-    loan['amount']=l.aggregate(t=Sum('loanamount'))
+    loan['amount']=l.aggregate(t=Coalesce(Sum('loanamount'),0))
     loan['amount_words']=num2words(loan['amount']['t'],lang='en_IN')
     loan['gold_amount']=l.filter(itemtype='Gold').aggregate(t=Sum('loanamount'))
     loan['gold_weight']=l.filter(itemtype='Gold').aggregate(t=Sum('itemweight'))
@@ -159,8 +160,6 @@ def home(request):
     loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
     loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
     loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
-    total_interest_due =0
-
     loan['interestdue']= l.aggregate(t=Sum('interest'))
 
 
@@ -234,6 +233,7 @@ def check_girvi(request):
         return render(request, 'girvi/girvi_upload.html',context={'data':data})
 
     return render(request, 'girvi/girvi_upload.html')
+
 from django.db import IntegrityError
 def bulk_release(request):
     # if this is a POST request we need to process the form data
@@ -359,7 +359,6 @@ def increlid():
     # billno=splitl[0] + str(int(splitl[1])+1)
     return str(int(last.releaseid)+1)
 
-
 def ld():
     last=Loan.objects.all().order_by('id').last()
     if not last:
@@ -398,7 +397,6 @@ def post_loan(request,pk):
         loan.post()
     return redirect(loan)
 
-
 def unpost_loan(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
     if loan.posted:
@@ -414,7 +412,6 @@ class LoanDetailView(LoginRequiredMixin,DetailView):
         context['previous'] = self.object.get_previous()
         context['next'] = self.object.get_next()
         return context
-
 
 class LoanUpdateView(LoginRequiredMixin,UpdateView):
     model = Loan
@@ -484,7 +481,6 @@ class ReleaseCreateView(LoginRequiredMixin,CreateView):
             loan=Loan.objects.get(id=self.kwargs['pk'])
             return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
 
-
 class ReleaseDetailView(LoginRequiredMixin,DetailView):
     model = Release
 
@@ -501,7 +497,6 @@ def post_release(request, pk):
     if not release.posted:
         release.post()
     return redirect(release)
-
 
 def unpost_release(request, pk):
     release = get_object_or_404(Release, pk=pk)

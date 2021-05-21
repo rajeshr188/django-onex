@@ -17,20 +17,20 @@ class CustomerTable(tables.Table):
     # interestdue = tables.Column(accessor='get_interestdue',verbose_name='Interest')
     addloan = tables.LinkColumn('girvi_loan_create',args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     # edit = tables.LinkColumn('contact_customer_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-    delete = tables.LinkColumn('contact_customer_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
+    remove = tables.LinkColumn('contact_customer_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 
 
     def render_addloan(self):
         return '+ Loan'
     # def render_edit(self):
     #     return 'Edit'
-    def render_delete(self):
+    def render_remove(self):
         return 'Delete'
 
     class Meta:
         model = Customer
         fields = (
-                    'id','pic','name','gender',
+                    'id','pic','name',
                     'relatedas','relatedto', 'Address', 'phonenumber')
         attrs = {"class": "table table-sm text-center  table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."

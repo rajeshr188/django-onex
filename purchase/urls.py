@@ -17,6 +17,7 @@ urlpatterns = (
 
 urlpatterns += (
     # urls for Invoice
+    path('purchase/home/',views.home,name = 'purchase_home'),
     path('purchase/invoice/', views.InvoiceListView.as_view(), name='purchase_invoice_list'),
     path('purchase/invoice/create/', views.InvoiceCreateView.as_view(), name='purchase_invoice_create'),
     path('purchase/invoice/detail/<int:pk>/', views.InvoiceDetailView.as_view(), name='purchase_invoice_detail'),

@@ -4,12 +4,6 @@
 
 Results :{{page_obj.paginator.count}}
 <div class="row">
-    <div class="col-sm-9">
-        <div class="table-responsive text-center">
-            {% render_table table 'django_tables2/bootstrap4.html' %}
-        </div>
-
-    </div>
     <div class="col-sm-3">
         <div class="sticky-top">
             {% if filter %}
@@ -20,11 +14,17 @@ Results :{{page_obj.paginator.count}}
                 <div class="card-body">
                     <form action="" method="get" class="form-horizontal">
                         {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
-                        {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+                        {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary"%}
                     </form>
                 </div>
             </div>
             {% endif %}
         </div>
     </div>
+    <div class="col-sm-9">
+        <div class="table table-sm table-responsive text-center">
+            {% render_table table 'django_tables2/bootstrap4.html' %}
+        </div>
+    </div>
+
 </div>

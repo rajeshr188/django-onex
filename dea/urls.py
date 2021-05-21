@@ -14,6 +14,8 @@ urlpatterns = [
     path('account/accountstatement/create/',
          views.AccountStatementCreateView, 
          name = 'dea_accountstatement_create'),
+    path('account/accountstatement/',views.AccountStatementListView.as_view(),
+          name = 'dea_accountstatement_list'),
     path('account/<int:pk>/audit/',views.audit_acc, 
           name = 'dea_account_audit'), 
 

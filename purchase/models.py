@@ -5,49 +5,51 @@ from django.db import models,transaction
 from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
+from datetime import timedelta
 from django.db.models import Sum
 
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
-from dea.models import Journal, LedgerStatement,PurchaseJournal
-
-# purchase can be deleted only if unposted or posted and paid
+from dea.models import Journal, LedgerStatement,PurchaseJournal,PaymentJournal
+from invoice.models import PaymentTerm
+# purchase can be deleted only if unposted or posted and paid 
 # purchase can be posted/unposted only if purchase.created > latest audit
 class Invoice(models.Model):
 
     # Fields
-    created = models.DateTimeField(
-                    default=timezone.now
-                    )
+    created = models.DateTimeField(default=timezone.now, db_index=True)
     last_updated = models.DateTimeField(auto_now_add=True)
-    rate = models.PositiveSmallIntegerField(default=5100)
-    btype_choices=(
-            ("Cash","Cash"),
-            ("Gold","Gold"),
-            ("Silver","Silver"),
-        )
-    ptype_choices=(
-        ("Cash","Cash"),
-        ("Credit","Credit")
+    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    is_gst = models.BooleanField(default=False)
+    posted = models.BooleanField(default=False)
+    gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    net_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    btype_choices = (
+        ("Cash", "Cash"),
+        ("Gold", "Gold"),
+        ("Silver", "Silver"),
     )
-    itype_choices = (
-        ("GST","GST"),
-        ("NGST","NGST")
+    ptype_choices = (
+        ("Cash", "Cash"),
+        ("Credit", "Credit")
     )
-    invoicetype = models.CharField(max_length = 30, choices = itype_choices, default = "NGST")
-    balancetype = models.CharField(max_length=30,choices=btype_choices,default="Cash")
-    paymenttype = models.CharField(max_length=30,choices=ptype_choices,default="Credit")
-    balance = models.DecimalField(max_digits=10, decimal_places=3)
-    # total = models.DecimalField(max_digits = 10, decimal_places = 3)
-    # discount = models.DecimalField()
-    # gst_inv_no = models.IntegerField(default = 0)
-    status_choices=(
-                    ("Paid","Paid"),
-                    ("PartiallyPaid","PartiallyPaid"),
-                    ("Unpaid","Unpaid")
+    status_choices = (
+        ("Paid", "Paid"),
+        ("PartiallyPaid", "PartiallyPaid"),
+        ("Unpaid", "Unpaid")
     )
-    status=models.CharField(max_length=15,choices=status_choices,default="Unpaid")
+    status = models.CharField(
+        max_length=15, choices=status_choices, default="Unpaid")
+    balancetype = models.CharField(
+        max_length=30, choices=btype_choices, default="Cash")
+    paymenttype = models.CharField(
+        max_length=30, choices=ptype_choices, default="Credit")
+
+    due_date = models.DateField(null=True, blank=True)
 
     # Relationship Fields
     supplier = models.ForeignKey(
@@ -55,8 +57,11 @@ class Invoice(models.Model):
         on_delete=models.CASCADE,
         related_name="purchases"
     )
-    posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal)
+    term = models.ForeignKey(
+        PaymentTerm, on_delete=models.SET_NULL,
+        related_name = 'purchase_term',
+        blank=True, null=True)
+    journals = GenericRelation(Journal,related_query_name ='purchase_doc')
     stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
@@ -71,12 +76,22 @@ class Invoice(models.Model):
     def get_update_url(self):
         return reverse('purchase_invoice_update', args=(self.pk,))
 
-    def get_weight(self):
-        return self.purchaseinvoices.aggregate(t=Sum('weight'));
+    def get_gross_wt(self):
+        return self.purchaseitems.aggregate(t=Sum('weight'))['t']
+
+    def get_net_wt(self):
+        return self.purchaseitems.aggregate(t=Sum('net_wt'))['t']
+    
+    def get_total_balance(self):
+        return self.purchaseitems.aggregate(t= Sum('total'))['t']
 
     def get_total_payments(self):
         paid=self.paymentline_set.aggregate(t=Sum('amount'))
         return paid['t']
+    
+    @property
+    def overdue_days(self):
+        return (timezone.now().date() - self.date_due).days
 
     def get_balance(self):
         if self.get_total_payments() != None :
@@ -92,6 +107,15 @@ class Invoice(models.Model):
             raise Exception("cant delete purchase if posted and unpaid")
         else:
             super(Invoice,self).delete()
+
+    def save(self, *args, **kwargs):
+        if self.term.due_days:
+            self.due_date = self.created + timedelta(days=self.term.due_days)
+        self.total = self.balance
+        if self.is_gst:    
+            self.total += self.get_gst()
+
+        super(Invoice, self).save(*args, **kwargs)
 
     # cant post unpost once statement is created
     def get_gst(self):
@@ -110,15 +134,17 @@ class Invoice(models.Model):
                 i.post()
             jrnl = PurchaseJournal.objects.create(
                 content_object = self,
-                type = Journal.Types.PJ,
                 desc = 'purchase'
             )
-            jrnl.purchase(self.supplier.account,self.balance,
-                            self.paymenttype,self.balancetype)
+            try:
+                self.supplier.account
+            except:
+                self.supplier.save()
+            jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
         else:
-            raise ValueError("cant post purchase created latest audit")
+            raise ValueError("cant post purchase created before latest audit")
 
     @transaction.atomic()
     def unpost(self):
@@ -126,7 +152,7 @@ class Invoice(models.Model):
             ls = LedgerStatement.objects.latest()
         except LedgerStatement.DoesNotExist:
             ls = None
-        if ls is None or ls[0].created < self.created:
+        if ls is None or ls.created < self.created:
             for i in self.purchaseitems.all():
                 i.unpost()
             self.stock_txns.clear()
@@ -138,16 +164,19 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     # Fields
+    quantity = models.IntegerField()
+    # add melting here
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
+    net_wt = models.DecimalField( max_digits=5, decimal_places=3,default = 0)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-    quantity = models.IntegerField()
     makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant,
-        on_delete=models.CASCADE, related_name="products"
+        on_delete=models.CASCADE,
+        related_name="products"
     )
     invoice = models.ForeignKey(
         'purchase.Invoice',
@@ -172,77 +201,120 @@ class InvoiceItem(models.Model):
     @transaction.atomic()
     def post(self):
         if not self.is_return:
-            if 'Lot' in self.product.name:
-                stock,created = Stock.objects.get_or_create(variant = self.product,
-                                                    tracking_type = 'Lot',
-                                                    )
-                if created:
-                    stock.barcode='je'+ str(stock.id)
-                    attributes = get_product_attributes_data(self.product.product)
-                    purity = Attribute.objects.get(name='Purity')
-                    stock.melting = int(attributes[purity].name)
-                    stock.cost = self.touch
-                    stock.touch = stock.cost+2
-                    stock.wastage = 10
-                    stock.save()
-                
-                stock.add(self.weight,self.quantity,
-                            self.invoice,'P')
-            else:
-                stock = Stock.objects.create(variant = self.product,
-                                            tracking_type = 'Unique')
-
-                stock.barcode='je'+ str(stock.id)
+            stock,created = Stock.objects.get_or_create(variant = self.product)
+            if created:
+                stock.barcode = 'je' + str(stock.id)
                 attributes = get_product_attributes_data(self.product.product)
                 purity = Attribute.objects.get(name='Purity')
                 stock.melting = int(attributes[purity].name)
                 stock.cost = self.touch
                 stock.touch = stock.cost+2
                 stock.wastage = 10
-                stock.add(self.weight,self.quantity,
-                            self.invoice,'P')
-
+                stock.save()
+            stock.add(self.weight,self.quantity,self.invoice,'P')
         else:
-            # is return true
-            if 'Lot' in self.product.name:
-                stock = Stock.get(name = self.product.name)
-                stock.remove(self.weight,self.quantity,
-                                self.invoice,'PR')
-            else:
-                print("merge unique to lot before returning")
+            stock = Stock.get(name=self.product.name)
+            stock.remove(self.weight, self.quantity,
+                         self.invoice, 'PR')
+            # create payment journal matching return items
+
+        # if not self.is_return:
+        #     if 'Lot' in self.product.name:
+        #         stock,created = Stock.objects.get_or_create(variant = self.product,
+        #                                             tracking_type = 'Lot',
+        #                                             )
+        #         if created:
+        #             stock.barcode='je'+ str(stock.id)
+        #             attributes = get_product_attributes_data(self.product.product)
+        #             purity = Attribute.objects.get(name='Purity')
+        #             stock.melting = int(attributes[purity].name)
+        #             stock.cost = self.touch
+        #             stock.touch = stock.cost+2
+        #             stock.wastage = 10
+        #             stock.save()
+                
+        #         stock.add(self.weight,self.quantity,
+        #                     self.invoice,'P')
+        #     else:
+        #         stock = Stock.objects.create(variant = self.product,
+        #                                     tracking_type = 'Unique')
+
+        #         stock.barcode='je'+ str(stock.id)
+        #         attributes = get_product_attributes_data(self.product.product)
+        #         purity = Attribute.objects.get(name='Purity')
+        #         stock.melting = int(attributes[purity].name)
+        #         stock.cost = self.touch
+        #         stock.touch = stock.cost+2
+        #         stock.wastage = 10
+        #         stock.add(self.weight,self.quantity,
+        #                     self.invoice,'P')
+
+        # else:
+        #     # is return true
+        #     if 'Lot' in self.product.name:
+        #         stock = Stock.get(name = self.product.name)
+        #         stock.remove(self.weight,self.quantity,
+        #                         self.invoice,'PR')
+        #     else:
+        #         raise ValueError("merge unique to lot before returning")
 
     @transaction.atomic()
     def unpost(self):
         if self.is_return:
-            if 'Lot' in self.product.name:
-                pass
-            else :
-                pass
+            # add lot back to stock
+            stock = Stock.objects.get(variant=self.product)
+            stock.add(self.weight, self.quantity, self.invoice, 'P')
         else:
-            if 'Lot' in self.product.name:
-                stock = Stock.objects.get(variant = self.product)
-                stock.remove(
-                self.weight,self.quantity,
-                cto = self.invoice,
-                at = 'PR'
-                )
-            else:
-                # Pass the self we created in the snippet above
-                ct = ContentType.objects.get_for_model(self.invoice)
+            stock = Stock.objects.get(variant=self.product)
+            stock.remove(
+                self.weight, self.quantity,
+                cto=self.invoice,
+                at='PR'
+            )
+        # if self.is_return:
+        #     if 'Lot' in self.product.name:
+        #         # add lot back to stock
+        #         stock = Stock.objects.get(variant = self.product)
+        #         stock.add(self.weight,self.quantity,self.invoice,'P')
+        #     else :
+        #         # add unique back to stock
+        #         stock = Stock.objects.create(variant=self.product,
+        #                                      tracking_type='Unique')
 
-                # Get the list of likes
-                txns = StockTransaction.objects.filter(content_type=ct,
-                                                    object_id=self.invoice.id,
-                                                    # activity_type=StockTransaction.PURCHASE,
-                                                    stock__weight = self.weight,
-                                                    stock__quantity= self.quantity,
-                                                    )
+        #         stock.barcode = 'je' + str(stock.id)
+        #         attributes = get_product_attributes_data(self.product.product)
+        #         purity = Attribute.objects.get(name='Purity')
+        #         stock.melting = int(attributes[purity].name)
+        #         stock.cost = self.touch
+        #         stock.touch = stock.cost+2
+        #         stock.wastage = 10
+        #         stock.add(self.weight, self.quantity,
+        #                   self.invoice, 'P')
+        # else:
+        #     if 'Lot' in self.product.name:
+        #         stock = Stock.objects.get(variant = self.product)
+        #         stock.remove(
+        #         self.weight,self.quantity,
+        #         cto = self.invoice,
+        #         at = 'PR'
+        #         )
+        #     else:
+        #         # Pass the self we created in the snippet above
+        #         ct = ContentType.objects.get_for_model(self.invoice)
 
-                txns[0].stock.remove(
-                self.weight,self.quantity,
-                cto = self.invoice,
-                at = 'PR'
-                )
+        #         # Get the list of likes
+        #         txns = StockTransaction.objects.filter(content_type=ct,
+        #                                             object_id=self.invoice.id,
+        #                                             # activity_type=StockTransaction.PURCHASE,
+        #                                             stock__weight = self.weight,
+        #                                             stock__quantity= self.quantity,
+        #                                             )
+
+        #         txns[0].stock.remove(
+        #         self.weight,self.quantity,
+        #         cto = self.invoice,
+        #         at = 'PR'
+        #         )
 
 class Payment(models.Model):
 
@@ -265,6 +337,7 @@ class Payment(models.Model):
                         )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
+    journals = GenericRelation(Journal,related_query_name='Pymt_doc')
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -304,7 +377,7 @@ class Payment(models.Model):
         try:
             invtopay = Invoice.objects.filter(supplier = self.supplier,
                                                 balancetype = self.type,
-                                                posted = True).exclude(
+                                                posted = True,balance__gte = 0).exclude(
                                                 status = "Paid"
                                                 ).order_by("created")
         except IndexError:
@@ -332,13 +405,11 @@ class Payment(models.Model):
         self.update_status()
 
     def post(self):
-        jrnl = PurchaseJournal.objects.create(
+        jrnl = PaymentJournal.objects.create(
             content_object = self,
-            type = Journal.Types.PJ,
             desc = 'payment'
         )
-        jrnl.payment(self.supplier.account,self.total,
-                        self.type)
+        jrnl.transact()
         self.posted = True
         self.save(update_fields = ['posted'])
 

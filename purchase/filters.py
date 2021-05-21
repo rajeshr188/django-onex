@@ -9,7 +9,7 @@ class InvoiceFilter(django_filters.FilterSet):
     created=django_filters.DateTimeFromToRangeFilter()
     class Meta:
         model=Invoice
-        fields=['id','created','invoicetype','paymenttype','balancetype','status']
+        fields=['id','created','is_gst','paymenttype','balancetype','status']
 
 class PaymentFilter(django_filters.FilterSet):
     supplier=django_filters.ModelChoiceFilter(

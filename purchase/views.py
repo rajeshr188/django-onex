@@ -19,7 +19,16 @@ from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from django_filters.views import FilterView
 
-
+def home(request):
+    context = {}
+    ratecut_inv = Invoice.objects.filter(balancetype = 'Cash')
+    total = ratecut_inv.aggregate(b=Sum('balance'),
+                    nwt = Sum('net_wt'),gwt = Sum('gross_wt'))
+    print(total)
+    map = total['b']/total['nwt']
+    context['total'] = total
+    context['map'] = map
+    return render(request,'purchase/home.html',context)
 def print_invoice(request,pk):
     invoice=Invoice.objects.get(id=pk)
     params={'invoice':invoice}
@@ -33,12 +42,12 @@ def print_payment(request,pk):
 def list_balance(request):
 
     payments=Payment.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
-    grec=payments.annotate(grec=Sum('total',filter=Q(type='Metal'))).values('grec')
+    grec=payments.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
     crec=payments.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
     invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
-    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Metal'))).values('gbal')
+    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Gold'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
-    balance=Customer.objects.exclude(type="Re").annotate(
+    balance=Customer.objects.filter(type="Su").annotate(
                                     gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec')
                                     ,cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
     context={'balance':balance}
@@ -81,6 +90,10 @@ class InvoiceCreateView(CreateView):
             self.object = form.save()
             invoiceitem_form.instance = self.object
             invoiceitem_form.save()
+            self.object.gross_wt = self.object.get_gross_wt()
+            self.object.net_wt = self.object.get_net_wt()
+            self.object.balance = self.object.get_total_balance()
+            self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, invoiceitem_form):
@@ -91,7 +104,6 @@ class InvoiceCreateView(CreateView):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
-
 
 class InvoiceDetailView(DetailView):
     model = Invoice
@@ -120,6 +132,10 @@ class InvoiceUpdateView(UpdateView):
         if invoiceitem_form.is_valid():
             self.object = form.save()
             invoiceitem_form.save()
+            self.object.gross_wt = self.object.get_gross_wt()
+            self.object.net_wt = self.object.get_net_wt()
+            self.object.balance = self.object.get_total_balance()
+            self.object.save()
            
         return HttpResponseRedirect(self.get_success_url())
 
@@ -195,36 +211,7 @@ class PaymentCreateView(CreateView):
     def form_valid(self, form, paymentitem_form):
         self.object = form.save()
         paymentitem_form.instance = self.object
-        items=paymentitem_form.save()
-        # amount=self.object.total
-        # invpaid = 0
-        # for item in items:
-        #     if item.invoice.balance == item.amount :
-        #         invpaid += item.amount
-        #         item.invoice.status="Paid"
-        #         item.invoice.save()
-        #     elif item.invoice.balance > item.amount:
-        #         invpaid += item.amount
-        #         item.invoice.status="PartiallyPaid"
-        #         item.invoice.save()
-        #
-        # remaining=amount-invpaid
-        # while remaining>0 :
-        #     try:
-        #         invtopay = Invoice.objects.filter(supplier=self.object.supplier,balancetype=self.object.type).exclude(status="Paid").order_by('created')[0]
-        #     except IndexError:
-        #         invtopay = None
-        #     if invtopay !=None :
-        #         if remaining >= invtopay.get_balance() :
-        #             remaining -= invtopay.get_balance()
-        #             PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=invtopay.get_balance())
-        #             invtopay.status="Paid"
-        #         else :
-        #             PaymentLine.objects.create(payment=self.object,invoice=invtopay,amount=remaining)
-        #             invtopay.status="PartiallyPaid"
-        #             remaining=0
-        #         invtopay.save()
-
+        paymentitem_form.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, paymentitem_form):

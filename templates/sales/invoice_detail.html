@@ -17,9 +17,19 @@
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
 <tr><td>rate</td><td>{{ object.rate }}</td></tr>
+<tr>
+  <td>Gross Wt</td><td>{{object.gross_wt}}</td>
+</tr>
+<tr>
+  <td>Net Wt</td><td>{{object.net_wt}}</td>
+</tr>
+<tr>
+  <td>balance</td>
+  <td>{{ object.balance|intcomma }}</td>
+</tr>
 <tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
 <tr><td>paymenttype</td><td>{{ object.paymenttype }}</td></tr>
-<tr><td>balance</td><td>{{ object.balance|intcomma }}</td></tr>
+
 <tr><td>status</td><td>{{ object.status }}</td></tr>
 <tr>
   <td>Due Date</td><td>{{object.due_date}}</td>
@@ -28,9 +38,9 @@
   <td>Posted</td>
   <td>
   {%if object.posted%}
-  <a href="{% url 'sales_invoice_unpost' object.pk%}">Unpost</a>
+  <a class = "btn btn-primary" href="{% url 'sales_invoice_unpost' object.pk%}">Unpost</a>
   {%else%}
-  <a href="{% url 'sales_invoice_post' object.pk%}">Post</a>
+  <a class = "btn btn-primary" href="{% url 'sales_invoice_post' object.pk%}">Post</a>
   {%endif%}
   </td>
 </tr>
@@ -40,7 +50,8 @@
 <table class="table table-sm table-striped">
   <thead>
     <tr>
-      <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th><th>Total</th>
+      <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th>
+      <th>Net Wt</th><th>Total</th>
     </tr>
   </thead>
   {% for i in object.saleitems.all %}
@@ -50,6 +61,7 @@
     <td>{{i.quantity}}</td>
     <td>{{i.weight}}</td>
     <td>{{i.touch}}</td>
+    <td>{{i.net_wt}}</td>
     <td>{{i.total}}</td>
   </tr>
   {%endfor%}

@@ -37,7 +37,6 @@ class Category(MPTTModel):
     def get_absolute_url(self):
         return reverse('product_category_detail', args=(self.slug,))
 
-
     def get_update_url(self):
         return reverse('product_category_update', args=(self.slug,))
 
@@ -51,7 +50,7 @@ class ProductType(models.Model):
         'Attribute', related_name='product_variant_types', blank=True)
 
     class Meta:
-        # app_label = 'product'
+        app_label = 'product'
         ordering=('name',)
 
     def __str__(self):
@@ -68,12 +67,11 @@ class ProductType(models.Model):
         return '<%s.%s(pk=%r, name=%r)>' % (
             class_.__module__, class_.__name__, self.pk, self.name)
 
-
 class Product(models.Model):
     # tv ring,plate ring,dc chain,gc chain
     product_type = models.ForeignKey(
         ProductType, related_name='products', on_delete=models.CASCADE)
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128,unique = True)
     description = models.TextField()
     category = models.ForeignKey(
         Category, related_name='products', on_delete=models.CASCADE)
@@ -114,25 +112,20 @@ class Product(models.Model):
 
 class ProductVariant(models.Model):
     sku = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255,unique = True)
     product = models.ForeignKey(
         Product, related_name='variants', on_delete=models.CASCADE)
 
-    product_code = models.CharField(max_length=32,default='kas')
+    product_code = models.CharField(max_length=32,unique = True)
     attributes = HStoreField(default=dict, blank=True)
     images = models.ManyToManyField('ProductImage', through='VariantImage')
+    # below fields not required?
     track_inventory = models.BooleanField('Tracked',default=True)
     quantity = models.IntegerField(
         validators=[MinValueValidator(0)], default=Decimal(1))
     quantity_allocated = models.IntegerField(
         validators=[MinValueValidator(0)], default=Decimal(0))
-    # add melting,wh_va,ret_va
-    # weight = models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
-    # melting = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
-    # cost = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    # touch = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    # wastage = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
-    # selling_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    
 
     class Meta:
         app_label = 'product'
@@ -210,6 +203,19 @@ class ProductVariant(models.Model):
         return '%s, %s' % (
             self.sku, self.display_product())
 
+# class ProductPrice(models.Model):
+#     product = models.ForeignKey('ProductVariant',on_delete = models.CASCADE)
+#     price = models.IntegerField()
+#     def __str__(self):
+#         return f"{self.price}"
+
+# class CostPrice(models.Model):
+#     productprice = models.ForeignKey('ProductPrice',on_delete = models.CASCADE)
+#     contact = models.ForeignKey('contact.Customer',on_delete = models.CASCADE)
+
+#     def __str__(self):
+#         return f"{self.price}"
+
 class Attribute(models.Model):
 
     name = models.CharField(max_length=50)
@@ -255,7 +261,6 @@ class AttributeValue(models.Model):
 
     def get_ordering_queryset(self):
         return self.attribute.values.all()
-
 
 class ProductImage(models.Model):
     product = models.ForeignKey(
@@ -446,7 +451,7 @@ class Stock(models.Model):
                                     # related_name = ''
                                     )
 
-    # following atrributes are notin database normal  i.e duplkicates of variant
+    # following atrributes are notin dnf  i.e duplkicates of variant
     melting = models.DecimalField(max_digits =10,decimal_places=3, default =100)
     cost = models.DecimalField(max_digits = 10,decimal_places = 3,default = 100)
     touch = models.DecimalField(max_digits =10,decimal_places =3,default = 0)
@@ -459,25 +464,38 @@ class Stock(models.Model):
     status = models.CharField(max_length=10,choices = (
                                     ('Empty','Empty'),
                                     ('Available','Available'),('Sold','Sold'),
-                                    ('Approval','Approval'),('Return','Return')
+                                    ('Approval','Approval'),('Return','Return'),
+                                    ('Merged','Merged'),
                                     ),
                                     default = 'Empty')
     class Meta:
         ordering=('-created',)
         
     def __str__(self):
-        return f"{self.variant} {self.barcode}"
+        cb = self.current_balance()
+        return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
 
     def get_absolute_url(self):
         return reverse('product_stock_detail', args=(self.pk,))
 
     def get_update_url(self):
         return reverse('product_stock_update', args=(self.pk,))
+    
+    def get_pure_by_melting(self):
+        bal = self.current_balance()
+        return bal['wt']*self.melting
+
+    def get_pure_by_cost(self):
+        bal = self.current_balance()
+        return bal['wt']*self.cost
 
     def audit(self):
         # get last audit cb,totalin,total out and then append following
-        last_statement = self.stoctstatement_set.latest()
-        if last_statement:
+        try:
+            last_statement = self.stoctstatement_set.latest()
+        except StockStatement.DoesNotExist:
+            last_statement = None
+        if last_statement is not None:
             ls_wt = last_statement.Closing_wt
             ls_qty = last_statement.Closing_qty
         else:
@@ -499,9 +517,11 @@ class Stock(models.Model):
 
     def stock_in_txns(self):
         # filter since last audit
-        ls = self.stocktransaction_set
-        if ls:
-            ls = ls.latest()
+        try:
+            ls = self.stockstatement_set.latest()
+        except StockStatement.DoesNotExist:
+            ls = None
+        if ls is not None:
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
                         activity_type__in = ['P','SR','AR']
@@ -518,9 +538,11 @@ class Stock(models.Model):
                 )
     def stock_out_txns(self):
         # filter since last audit
-        ls = self.stocktransaction_set
-        if ls:
-            ls = ls.latest()
+        try:
+            ls = self.stockstatement_set.latest()
+        except StockStatement.DoesNotExist:
+            ls = None
+        if ls is not None:
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
                         activity_type__in=['PR', 'S', 'A']
@@ -575,24 +597,29 @@ class Stock(models.Model):
     def remove(self,weight,quantity,cto,at):
         cb = self.current_balance()
         if (cb['wt'] >= weight and cb['qty'] >= quantity):
-                StockTransaction.objects.create(
+            s=StockTransaction.objects.create(
                         stock = self,
                         weight = weight,
                         quantity = quantity,
                         content_object = cto,
                         activity_type=at
                 )
-                self.update_status()
+            print(type(s))
+            self.update_status()
+            
         else:
+            print("error here")
             raise Exception(f" qty/wt mismatch .hence exception")
 
     def split(self,weight,qty,cto,at):
+        # split from stock:tracking_type::lot to unique
         if self.tracking_type == "Lot":
             print('splitting')
         else:
             print('unique nodes cant be split')
 
     def merge(self,weight,qty,cto,at):
+        # merge stock:tracking_type:unique to lot
         if self.tracking_type == "Unique":
             print('merging')
         else:
@@ -605,7 +632,6 @@ class Stock(models.Model):
         else:
             self.status = "Available"
         self.save()
-
 
 class StockTransaction(models.Model):
 

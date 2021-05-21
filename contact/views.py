@@ -12,7 +12,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from sales.models import Month
 from django.db.models import  Sum,Q,Count
 from datetime import datetime, timedelta
-from sales.tables import InvoiceTable
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
@@ -48,7 +47,6 @@ def reallot_receipts(request,pk):
     customer = Customer.objects.get(pk = pk)
     customer.reallot_receipts()
     return redirect(customer.get_absolute_url())
-
 
 def reallot_payments(request, pk):
     customer = Customer.objects.get(pk=pk)

@@ -2,7 +2,6 @@ import django_tables2 as tables
 from django_tables2.utils import A
 from .models import Invoice,Payment
 
-
 class InvoiceTable(tables.Table):
     id = tables.Column(linkify = True)
     supplier = tables.Column(linkify = True)
@@ -27,7 +26,7 @@ class InvoiceTable(tables.Table):
     class Meta:
         model = Invoice
         fields = ('id','created','supplier','balancetype','paymenttype',
-                    'rate','balance','status','posted')
+                    'rate','net_wt','balance','status','posted','term','due_date')
 
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "No Invoices Found matching your search..."

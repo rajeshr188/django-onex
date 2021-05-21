@@ -1,0 +1,43 @@
+{% extends '_base.html' %}
+
+{% block title %}Accounting Summary{% endblock title %}
+
+{% block content %}
+<h1>Accounts</h1>
+<div>
+    <p>From {{data.opbal.date}} To {{data.clbal_date.date}}</p>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>
+                    Credit
+                </th>
+                <th>
+                    Account
+                </th>
+                <th>
+                    Debit
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{data.opbal.amount}}</td>
+                <td>Opening Balance </td>
+            </tr>
+            {%for i in data.bal_by_acc %}
+            <tr>
+                <td>cr: {{i.cr}}</td>
+                <td>{{i.account__name}}</td>
+                <td>dr:{{i.dr}}</td>
+            </tr>
+            {%endfor%}
+            <tr>
+                <td>{{data.clbal}}</td>
+                <td>Closing Balance </td>
+            </tr>
+        </tbody>
+        
+    </table>
+</div>
+{% endblock content %}

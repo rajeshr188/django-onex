@@ -4,6 +4,11 @@
 
 {% block content %}
 <h1>Chart Of Accounts</h1>
+<!-- <p>
+    {% for i in data.ledger_bal%}
+    <li>{{i.name}} {{i.cr_usd}} {{i.cr_inr}} {{i.dr_usd}} {{i.dr_inr}} {{i.bal_usd}} {{i.bal_inr}}</li>
+    {%endfor%}
+</p> -->
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link active" id="internal-tab" data-toggle="tab" href="#internal" role="tab" aria-controls="Internal"
@@ -28,11 +33,11 @@
       
         <table class = "table table-sm table-hover">
             <tbody>
-                {%for i in data.ledger%}
+                {%for i,k in data.ledger%}
                 <tr>
                     
-                    <td><a href="{% url 'dea_ledger_detail' i.ledger.id %}">{{ i.ledger.name }}</a></td>
-                    <td>{{i.cb}}</td>
+                    <td><a href="{% url 'dea_ledger_detail' i.id %}">{{ i }}</a></td>
+                    <td>{{k}}</td>
                     
                 </tr>
                 {%endfor%}
@@ -48,8 +53,7 @@
                 <thead>
                     <tr>
                         <th>Account</th>
-                        <th>Type</th>
-                        <th>Enitity</th>
+                  
                         <th>Balance</th>
                         <th>Actions</th>
                     </tr>
@@ -58,8 +62,7 @@
                     {% for i in data.accounts%}
                     <tr>
                         <td><a href="{% url 'dea_account_detail' i.id%}">{{i.contact.name}}</a></td>
-                        <td>{{i.AccountType_Ext}}</td>
-                        <td>{{i.entity}}</td>
+                      
                         <td>{{i.current_balance}}</td>
                         <td>
                             <a class="btn btn-info" href="">Edit</a>
@@ -88,13 +91,7 @@
                     <td>{{i.id}}</td>
                     <td>{{i.created|date}}</td>
                     <td>{{i.content_type}}</td>
-                    <td>
-                        {%if i.content_type %}
-                        <a href="{% url ''|add:i.url_string pk=i.object_id %}">{{i.content_type.app_label}}{{i.content_type.model}}{{i.content_object}}</a>
-                        {%else%}
-                        None
-                        {%endif%}
-                    </td>  
+                    <td>{{i.type}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

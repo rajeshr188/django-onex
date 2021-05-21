@@ -15,7 +15,20 @@
     </div>
   </div>
 </div>
-
+<div>
+  <form class="form-inline" action="{% url 'girvi-multirelease'%}" method="POST">
+    {% csrf_token %}
+    <div class="input-group mb-2 mr-sm-2">
+      <label class="form-check-label" for="inlineFormCheck">Action : </label>
+      <select class="form-control ml-2" name="action">
+        <option value="edit">Edit</option>
+        <option value="delete">Delete</option>
+        <option value="release">Release</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary mb-2">Go</button>
+  </form>
+</div>
 {% include 'table.html'%}
 
 {% endblock %}

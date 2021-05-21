@@ -1,13 +1,12 @@
 from django import forms
 import datetime
-from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
+from tempus_dominus.widgets import DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
-from django_select2.forms import Select2Widget,ModelSelect2Widget,ModelSelect2MultipleWidget
+from django_select2.forms import Select2Widget
 from contact.models import Customer
-from product.models import ProductVariant,Stree,Stock
+from product.models import Stock
 from django.forms.models import inlineformset_factory
-from django.db.models import Q
-from mptt.forms import TreeNodeChoiceField
+
 
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
@@ -31,7 +30,9 @@ class InvoiceForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     class Meta:
         model = Invoice
-        fields = ['created','rate', 'balancetype', 'paymenttype', 'balance','term', 'customer','status']
+        fields = ['created','rate','is_gst', 'balancetype', 'paymenttype',
+                'gross_wt','net_wt',
+                 'balance','term', 'customer','status','posted']
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
@@ -40,7 +41,7 @@ class InvoiceItemForm(forms.ModelForm):
                         )
     class Meta:
         model = InvoiceItem
-        fields = ['invoice','is_return','product','quantity','weight', 'less_stone','touch','wastage','makingcharge','total',]
+        fields = ['invoice','is_return','product','quantity','weight', 'less_stone','net_wt','touch','wastage','makingcharge','total',]
 
     # def save(self,commit = True):
     #     invoiceitem = super(InvoiceItemForm,self).save(commit = False)
@@ -56,7 +57,7 @@ class InvoiceItemForm(forms.ModelForm):
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity',
-    'weight','less_stone', 'touch', 'wastage','makingcharge','total', 'invoice'),
+    'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),
     form = InvoiceItemForm,extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):

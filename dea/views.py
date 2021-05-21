@@ -1,58 +1,91 @@
 from typing import List
 from django.db import transaction
+from django.db.models.expressions import OuterRef, Subquery
+from django.db.models.fields import DecimalField
+from django.db.models.query_utils import subclasses
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
+from djmoney.models.fields import MoneyField
 # Create your views here.
 from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
-from django.db.models import Sum
+from django.db.models import Sum,Q,Max,F
+from django.db.models.functions import Coalesce
 from dea.utils.currency import Balance
 from moneyed import Money
-def home(request):
-    
-    ledger_txns = LedgerTransaction.objects.select_related('ledgerno','ledgerno_dr','journal').all()
-    context = {}
-    l=[]
-    ledger_qs = Ledger.objects.all()
-    for i in ledger_qs:
-        latest_ls = i.get_latest_stmt()
-        if latest_ls is None:
-            since = None
-            cb = Balance()
-        else:
-            since = latest_ls.created
-            cb = latest_ls.get_cb()
-        latest_ctxns = i.ctxns(since = since).filter(ledgerno = i)\
-                                .values('amount_currency')\
-                                .annotate(total = Sum('amount'))
-        lct = Balance(
-            [Money(r['total'],r['amount_currency']) for r in latest_ctxns]
-        )
-        latest_dtxns = i.dtxns(since = since).filter(ledgerno_dr = i)\
-                                .values('amount_currency')\
-                                .annotate(total=Sum('amount'))
-        ldt = Balance(
-            [Money(r['total'], r['amount_currency']) for r in latest_dtxns]
-        )
-        current_bal = cb + lct - ldt
-        l.append({'ledger':i,'cb':current_bal})
 
-    context['ledger']= l
-    
-    context['accounts'] = Account.objects.exclude(contact__type='Re').select_related('AccountType_Ext','contact').all()
-    journal = Journal.objects.all()
-    jrnls = []
-    for i in journal:
-        txns = ledger_txns.filter(journal = i,)
-        jrnls.append({
-                        'object_id':i.object_id,
-                        'id':i.id,'created':i.created,'desc':i.desc,
-                        'app_label':i.content_type.app_label,'model':i.content_type.model,
-                        'content_object':i.content_object,'url_string':i.get_url_string(),
-                        'content_type':i.content_type,'txns':txns})
-    context['journal'] = jrnls
+def home(request):
+    l = Ledger.objects.all().prefetch_related('ledgerstatements','credit_txns','debit_txns')
+    ledger =[]
+    for i in l:
+        try:
+            ls = l.ledgerstatements.latest()
+            cb = ls.get_cb()
+            since = ls.created
+        except:
+            ls = None
+            cb = Balance()
+            since = None
+        
+        c_bal = Balance(
+            [Money(r['total'], r["amount_currency"]) for r in i.ctxns(since).values('amount_currency').annotate(total=Sum('amount'))])\
+            if i.ctxns(since=since) else Balance()
+        d_bal = Balance(
+            [Money(r['total'], r["amount_currency"]) for r in i.dtxns(since).values('amount_currency').annotate(total=Sum('amount'))])\
+            if i.dtxns(since=since) else Balance()
+
+        bal = cb + d_bal - c_bal
+
+        ledger.append([i,bal])
+
+    # ls = LedgerStatement.objects.filter(pk__in = LedgerStatement.objects.order_by().values(
+    #         'ledgerno').annotate(max_id = Max('id')).values('max_id')).select_related('ledgerno')
+
+   
+    # cr_lt = LedgerTransaction.objects.filter(ledgerno = OuterRef('pk')).order_by().values('ledgerno')
+    # cr_usd = cr_lt.annotate(
+    #     cr_usd=Coalesce(Sum('amount',filter=Q(amount_currency = 'USD')),0)).values('cr_usd')
+    # cr_inr = cr_lt.annotate(cr_inr=Coalesce(Sum(
+    #     'amount', filter=Q(amount_currency='INR')),0)).values('cr_inr')
+
+    # dr_lt = LedgerTransaction.objects.filter(ledgerno_dr=OuterRef(
+    #     'pk')).order_by().values('ledgerno_dr')
+    # dr_usd = dr_lt.annotate(dr_usd=Coalesce(Sum(
+    #     'amount', filter=Q(amount_currency='USD')),0)).values('dr_usd')
+    # dr_inr = dr_lt.annotate(dr_inr=Coalesce(Sum(
+    #     'amount', filter=Q(amount_currency='INR')),0)).values('dr_inr')
+
+    # ledger_bal = Ledger.objects.values('name').annotate(
+    #     cr_usd = Subquery(cr_usd),
+    #     cr_inr=Subquery(cr_inr),dr_usd=Subquery(dr_usd),dr_inr=Subquery(dr_inr),
+    #     bal_usd = Coalesce(F('cr_usd'),0) - Coalesce(F('dr_usd'),0),bal_inr = Coalesce(F('cr_inr'),0)-Coalesce(F('dr_inr'),0)
+    # )
+    context={}
+    context['ledger']=ledger   
+    # context['ledger_bal'] = ledger_bal
+    a = Account.objects.filter(contact__type='Su')\
+                                .select_related('AccountType_Ext','contact','entity')\
+                                    .prefetch_related('accounttransactions','accountstatements')
+                  
+    context['accounts'] = AccountStatement.objects.filter(
+                    pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
+    context['accounts'] = a
+    journal = Journal.objects.all().select_related('content_type')
+    # jrnls = []
+    # for i in journal:
+    #     # txns = lt.filter(journal = i,)
+    #     jrnls.append({
+    #                     'object_id':i.object_id,
+    #                     'id':i.id,'created':i.created,'desc':i.desc,
+    #                     'app_label':i.content_type.app_label,'model':i.content_type.model,
+    #                     'content_object':i.content_object,'url_string':i.get_url_string(),
+    #                     'content_type':i.content_type,
+    #                     # 'txns':txns
+    #                     })
+    context['journal'] = journal
+
     
     return render(request, 'dea/home.html', {'data': context})
 
@@ -115,38 +148,31 @@ def audit_ledger(request):
     
 
 class JournalListView(ListView):
-    model = Journal
+    queryset = Journal.objects.all().select_related('content_type')
 
 class AccountCreateView(CreateView):
     model = Account
     form_class = AccountForm
 
-
 class AccountListView(ListView):
-    model = Account
-
-
+    queryset = Account.objects.all().select_related('entity','AccountType_Ext','contact')
+    paginate_by = 10
 class AccountDetailView(DetailView):
     model = Account
-
 
 class AccountStatementCreateView(CreateView):
     model = Account
     form_class = AccountStatementForm
 
-
 class AccountStatementListView(ListView):
     model = AccountStatement
-
 
 class LedgerCreateView(CreateView):
     model = Ledger
     form_class = LedgerForm
 
-
 class LedgerListView(ListView):
     model = Ledger
-
 
 class LedgerDetailView(DetailView):
     model = Ledger
@@ -155,9 +181,10 @@ class LedgerStatementCreateView(CreateView):
     model = LedgerStatement
     form_class = LedgerStatementForm
 
-
 class LedgerStatementListView(ListView):
     model = LedgerStatement
 
 class LedgerTransactionListView(ListView):
     model=LedgerTransaction
+class AccountStatementListView(ListView):
+    model = AccountStatement

@@ -142,7 +142,7 @@ class ProductForm(forms.ModelForm, AttributesMixin):
         attributes = self.get_saved_attributes()
         self.instance.attributes = attributes
         attrs = get_product_attributes_data(self.instance)
-        self.instance.name = self.instance.product_type.name + ' /'+generate_name_from_values(attrs)
+        self.instance.name = self.instance.product_type.name + ' '+generate_name_from_values(attrs)
         instance = super().save()
         return instance
 

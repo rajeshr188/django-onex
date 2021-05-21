@@ -19,36 +19,73 @@
   </div>
 </div>
 
-<table class="table table-sm table-striped">
-<tr><td>loanid</td><td>{{ object.loanid }}</td></tr>
-<tr><td>Series</td><td>{{object.series}}</td></tr>
-<tr>
-  <td>Customer</td>
-  <td>
-    <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
-    {%if not object.posted %}
-    <a class = "btn btn-info" href="{% url 'contact_customer_update' object.customer.id %}">Edit</a></td>
-    {%endif%}
-</tr>
-<tr>
-  <td>Posted</td>
-  <td>
-    {%if object.posted%}
+<table class="table table-sm table-bordered table-striped">
+  <tbody>
+    <tr>
+      <td>loanid</td>
+      <td>{{ object.loanid }}</td>
+    </tr>
+    <tr>
+      <td>Series</td>
+      <td>{{object.series}}</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>
+        <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
+        {%if not object.posted %}
+        <a class="btn btn-info" href="{% url 'contact_customer_update' object.customer.id %}">Edit</a>
+      </td>
+      {%endif%}
+    </tr>
+    <tr>
+      <td>Posted</td>
+      <td>
+        {%if object.posted%}
         <a class="btn btn-info" href="{% url 'girvi_loan_unpost' object.id %}">Unpost</a>
-    {%else%}
+        {%else%}
         <a class="btn btn-info" href="{% url 'girvi_loan_post' object.id %}">Post</a>
-    {%endif%}
-  </td>
-</tr>
-<tr><td>created</td><td>{{ object.created }}</td></tr>
-<tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
-<tr><td>itemtype</td><td>{{ object.itemtype }}</td></tr>
-<tr><td>itemdesc</td><td>{{ object.itemdesc }}</td></tr>
-<tr><td>itemweight</td><td>{{ object.itemweight }}</td></tr>
-<tr><td>itemvalue</td><td>{{ object.itemvalue }}</td></tr>
-<tr><td>loanamount</td><td>{{ object.loanamount }}</td></tr>
-<tr><td>interestrate</td><td>{{ object.interestrate }}</td></tr>
-<tr><td>interest</td><td>{{ object.interest }}</td></tr>
+        {%endif%}
+      </td>
+    </tr>
+    <tr>
+      <td>created</td>
+      <td>{{ object.created }}</td>
+    </tr>
+    <tr>
+      <td>last_updated</td>
+      <td>{{ object.last_updated }}</td>
+    </tr>
+    <tr>
+      <td>itemtype</td>
+      <td>{{ object.itemtype }}</td>
+    </tr>
+    <tr>
+      <td>itemdesc</td>
+      <td>{{ object.itemdesc }}</td>
+    </tr>
+    <tr>
+      <td>itemweight</td>
+      <td>{{ object.itemweight }}</td>
+    </tr>
+    <tr>
+      <td>itemvalue</td>
+      <td>{{ object.itemvalue }}</td>
+    </tr>
+    <tr>
+      <td>loanamount</td>
+      <td>{{ object.loanamount }}</td>
+    </tr>
+    <tr>
+      <td>interestrate</td>
+      <td>{{ object.interestrate }}</td>
+    </tr>
+    <tr>
+      <td>interest</td>
+      <td>{{ object.interest }}</td>
+    </tr>
+  </tbody>
+
 </table>
 
 {% if loan.release %}

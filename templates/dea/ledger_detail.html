@@ -9,7 +9,7 @@
         <figure class="text-center">
             Opening Bal: {{ object.ledgerstatement_set.latest.get_cb}} |
             <a href="{% url 'dea_ledger_setob' object.id%}">Set Op Bal</a><br>
-            From : {{object.ledgerstatement_set.latest.created|date:"jS F Y H:i"}}
+            From : {{ledger.ledgerstatement_set.latest.created|date:"jS F Y H:i"}}
             To : {% now "jS F Y H:i" %}
         </figure>
     </div>
@@ -22,8 +22,8 @@
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
-                    {% for i in object.dtxns%}
-                    <li class="list-group-item">{{i.created|date}} From: {{i.ledgerno_dr}} to: {{i.ledgerno}} {{i.amount}}</li>
+                    {% for i in ledger.dtxns%}
+                    <li class="list-group-item">{{i.created|date}} {{i.amount}}</li>
                     {%endfor%}
                 </ul>
                 
@@ -38,8 +38,8 @@
             </div>
             <div class="card-body">     
                 <ul class="list-group list-group-flush">
-                    {% for i in object.ctxns%}
-                    <li class ="list-group-item">{{i.created|date}}To: {{i.ledgerno_dr}} From: {{i.ledgerno}}{{i.amount}}</li>
+                    {% for i in ledger.ctxns%}
+                    <li class ="list-group-item">{{i.created|date}} {{i.amount}}</li>
                     {%endfor%}
                 </ul>
                 <a href="#" class="btn btn-primary">Add</a>

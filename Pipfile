@@ -35,6 +35,7 @@ gevent = "*"
 django-activity-stream = "*"
 django-versatileimagefield = "*"
 django-bootstrap4 = "*"
+pygraphviz = "*"
 
 [dev-packages]
 "autopep8" = "*"

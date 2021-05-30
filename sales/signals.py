@@ -79,7 +79,7 @@ def delete_status(sender,instance,*args,**kwargs):
 #     finally:
 #         del instance._dirty
 
-@receiver(signals.pre_delete,sender = InvoiceItem)
-def submit_stock(sender,instance,*args,**kwargs):
-    if instance.invoice.posted:
-        instance.unpost()
+# @receiver(signals.pre_delete,sender = InvoiceItem)
+# def submit_stock(sender,instance,*args,**kwargs):
+#     if instance.invoice.posted:
+#         instance.unpost()

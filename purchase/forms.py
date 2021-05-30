@@ -26,8 +26,8 @@ class InvoiceForm(forms.ModelForm):
     )
     class Meta:
         model = Invoice
-        fields = ['created','rate','is_gst','balancetype','paymenttype',
-                    # 'gross_wt','net_wt',
+        fields = ['created','rate','is_gst','balancetype',
+                    # 'paymenttype','gross_wt','net_wt',
                      'balance', 'supplier','term','status','posted']
 
 

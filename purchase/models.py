@@ -33,10 +33,11 @@ class Invoice(models.Model):
         ("Gold", "Gold"),
         ("Silver", "Silver"),
     )
-    ptype_choices = (
-        ("Cash", "Cash"),
-        ("Credit", "Credit")
-    )
+    # remove ptype and payment type obsolete
+    # ptype_choices = (
+    #     ("Cash", "Cash"),
+    #     ("Credit", "Credit")
+    # )
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
@@ -46,8 +47,9 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
-    paymenttype = models.CharField(
-        max_length=30, choices=ptype_choices, default="Credit")
+    # remove paymenttype
+    # paymenttype = models.CharField(
+    #     max_length=30, choices=ptype_choices, default="Credit")
 
     due_date = models.DateField(null=True, blank=True)
 
@@ -155,7 +157,7 @@ class Invoice(models.Model):
         if ls is None or ls.created < self.created:
             for i in self.purchaseitems.all():
                 i.unpost()
-            self.stock_txns.clear()
+            # self.stock_txns.clear()
             self.journals.clear()
             self.posted = False
             self.save(update_fields=['posted'])
@@ -216,7 +218,7 @@ class InvoiceItem(models.Model):
             stock = Stock.get(name=self.product.name)
             stock.remove(self.weight, self.quantity,
                          self.invoice, 'PR')
-            # create payment journal matching return items
+            # create payment journal matching return items?
 
         # if not self.is_return:
         #     if 'Lot' in self.product.name:
@@ -337,7 +339,7 @@ class Payment(models.Model):
                         )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal,related_query_name='Pymt_doc')
+    journals = GenericRelation(Journal,related_query_name='payment_doc')
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -355,6 +357,16 @@ class Payment(models.Model):
 
     def get_update_url(self):
         return reverse('purchase_payment_update', args=(self.pk,))
+
+    # if not posted : delete/edit
+    #  if posted : !edit
+    #  if posted and allotted : delete
+    #  if posted and unallotted : !delete
+    def delete(self):
+        if self.posted and self.status != 'Allotted':
+            raise Exception("cant delete purchase if posted and unallotted")
+        else:
+            super(Payment, self).delete()
 
     def get_line_totals(self):
         return self.paymentline_set.aggregate(t=Sum('amount'))['t']

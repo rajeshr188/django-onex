@@ -38,10 +38,10 @@ class Invoice(models.Model):
         ("Gold", "Gold"),
         ("Silver", "Silver"),
     )
-    ptype_choices = (
-        ("Cash", "Cash"),
-        ("Credit", "Credit")
-    )
+    # ptype_choices = (
+    #     ("Cash", "Cash"),
+    #     ("Credit", "Credit")
+    # )
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
@@ -51,8 +51,8 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
-    paymenttype = models.CharField(
-        max_length=30, choices=ptype_choices, default="Credit")
+    # paymenttype = models.CharField(
+    #     max_length=30, choices=ptype_choices, default="Credit")
 
     due_date = models.DateField(null=True, blank=True)
 
@@ -118,7 +118,7 @@ class Invoice(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.posted and self.get_balance() != 0:
-            raise Exception("Cant delete sale if posted")
+            raise Exception("Cant delete sale if posted and unpaid")
         else:
             super(Invoice, self).delete(*args, **kwargs)
 
@@ -261,6 +261,16 @@ class Receipt(models.Model):
 
     def get_update_url(self):
         return reverse('sales_receipt_update', args=(self.pk,))
+
+    # if not posted : delete/edit
+    #  if posted : !edit
+    #  if posted and paid : delete
+    #  if posted and unpaid : !delete
+    def delete(self):
+        if self.posted and self.status != 'Allotted':
+            raise Exception("cant delete receipt if posted and unallotted")
+        else:
+            super(Receipt, self).delete()
 
     def get_line_totals(self):
         return self.receiptline_set.aggregate(t=Sum('amount'))['t']

@@ -5,6 +5,7 @@
 <thead class="thead-dark">
 <tr>
     <th>Customer</th>
+    <th>cb</th>
     <th>Gold Credit</th>
     <th>Paid Debit</th>
     <th>Gold Balance</th>
@@ -16,6 +17,7 @@
 {% for object in balance %}
 <tr>
     <td><a href ="{%url 'contact_customer_detail' object.id%}">{{object.name}}</a></td>
+    <td>{{object.cb}}</td>
     <td>{{object.gbal}}</td>
     <td>{{object.grec}}</td>
     <td>{{object.gold}}</td>

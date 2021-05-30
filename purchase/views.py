@@ -1,3 +1,4 @@
+from dea.models import AccountStatement
 from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.db.models import Sum, Q, F, OuterRef, Subquery
@@ -40,14 +41,26 @@ def print_payment(request,pk):
     return Render.render('purchase/payment.html',params)
 
 def list_balance(request):
-
-    payments=Payment.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
+    acs = AccountStatement.objects.filter(AccountNo__contact = OuterRef('supplier')).order_by('-created')[:1]
+    acs_cb = AccountStatement.objects.filter(
+        AccountNo__contact=OuterRef('pk')).order_by('-created')[:1]
+    payments=Payment.objects.filter(
+        posted = True,
+        supplier=OuterRef('pk'),
+        created__gte = Subquery(acs.values('created'))
+        ).order_by().values('supplier')
     grec=payments.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
     crec=payments.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
-    invoices=Invoice.objects.filter(supplier=OuterRef('pk')).order_by().values('supplier')
+    invoices = Invoice.objects.filter(
+        posted=True,
+        supplier=OuterRef('pk'),
+        created__gte=Subquery(acs.values('created'))
+        ).order_by().values('supplier')
     gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Gold'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+
     balance=Customer.objects.filter(type="Su").annotate(
+                                    cb = Subquery(acs_cb.values('ClosingBalance')),
                                     gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec')
                                     ,cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec'))
     context={'balance':balance}

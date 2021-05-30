@@ -1,6 +1,7 @@
 from django.db import models,transaction,connection
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from django.utils import timezone
 from moneyed.classes import LSL
 from mptt.models import MPTTModel,TreeForeignKey
 from django.db.models import Sum
@@ -93,7 +94,7 @@ class Account(models.Model):
 
     contact = models.OneToOneField(Customer,
                         on_delete = models.CASCADE,
-                        related_name='accounts'
+                        related_name='account'
                         )
     class Meta:
         ordering = ('id',)
@@ -142,7 +143,7 @@ class Account(models.Model):
         txns = self.txns(since = since)
         return Balance(
             [Money(r["total"], r["amount_currency"])
-             for r in txns.filter(XactTypeCode__XactTypeCode='Cr')
+             for r in txns.filter(XactTypeCode__XactTypeCode='Dr')
              .values("amount_currency")
              .annotate(total=Sum("amount"))]
         )
@@ -151,7 +152,7 @@ class Account(models.Model):
         txns = self.txns(since = since)
         return Balance(
             [Money(r["total"], r["amount_currency"])
-             for r in txns.filter(XactTypeCode__XactTypeCode='Dr')
+             for r in txns.filter(XactTypeCode__XactTypeCode='Cr')
              .values("amount_currency")
              .annotate(total=Sum("amount"))]
         )
@@ -166,11 +167,11 @@ class Account(models.Model):
             ac_txn = self.txns(since = ls.created)
 
         credit = ac_txn\
-                    .filter(XactTypeCode_ext__in = ['LT','LR','IR','CPU','CRPU','RCT'])\
+                    .filter(XactTypeCode_ext__in = ['LT','LR','IR','CPU','CRPU','RCT','AC'])\
                         .values("amount_currency")\
                             .annotate(total = Sum('amount'))
         debit = ac_txn\
-                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP','PYT','CRSL'])\
+                    .filter(XactTypeCode_ext__in=['LG', 'LP', 'IP','PYT','CRSL','AD'])\
                         .values("amount_currency")\
                             .annotate(total=Sum('amount'))
         credit_bal = Balance(
@@ -353,7 +354,7 @@ class LedgerTransaction(models.Model):
 
     def __str__(self):
         return self.ledgerno.name
-
+ 
 class LedgerStatement(models.Model):
     ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE,
                         related_name='ledgerstatements')
@@ -674,10 +675,8 @@ class PurchaseJournal(Journal):
     def transact(self):
         account = self.content_object.supplier.account
         amount = self.content_object.balance
-        payment_term = self.content_object.paymenttype
         balance_type = self.content_object.balancetype
         # purch_exp = Ledger.objects.get(name = 'COGP')
-        cash_ac = Ledger.objects.get(name = 'Cash In Drawer')
         # revenue = Ledger.objects.get(name = 'Revenue')
         inventory = Ledger.objects.get(name = 'Inventory')
         acc_payable = Ledger.objects.get(name = 'Accounts Payables')
@@ -690,16 +689,11 @@ class PurchaseJournal(Journal):
         else:
             money = Money(amount,'AUD')
 
-        if payment_term == 'Cash':
-            credit_ac = cash_ac
-            txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CPU')
-        else:
-            credit_ac = acc_payable
-            txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRPU')
+        txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRPU')
 
         LedgerTransaction.objects.create(
             journal = self,
-            ledgerno = credit_ac,ledgerno_dr = inventory,amount =money
+            ledgerno = acc_payable,ledgerno_dr = inventory,amount =money
         )
         # LedgerTransaction.objects.create(
         #         journal=self,
@@ -707,7 +701,7 @@ class PurchaseJournal(Journal):
         #     )
         AccountTransaction.objects.create(
             journal = self,
-            ledgerno = credit_ac,XactTypeCode = dr,
+            ledgerno = acc_payable,XactTypeCode = dr,
             XactTypeCode_ext = txn_ext,Account = account,amount = money
         )
 

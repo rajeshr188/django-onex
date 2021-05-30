@@ -34,14 +34,14 @@ class InvoiceResource(resources.ModelResource):
                             widget=customerWidget(Customer,'name'))
     class Meta:
         model = Invoice
-        fields = ('id','customer','created','rate','balancetype','paymenttype','balance','status',)
+        fields = ('id','customer','created','rate','balancetype','balance','status',)
         skip_unchanged = True
         report_skipped = False
 
 class InvoiceAdmin(ImportExportActionModelAdmin):
     form = InvoiceAdminForm
     resource_class = InvoiceResource
-    list_display = ['id', 'created', 'last_updated', 'rate', 'balancetype', 'paymenttype', 'balance', 'status']
+    list_display = ['id', 'created', 'last_updated', 'rate', 'balancetype', 'balance', 'status']
 
 admin.site.register(Invoice, InvoiceAdmin)
 

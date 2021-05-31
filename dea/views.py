@@ -65,12 +65,10 @@ def home(request):
     context={}
     context['ledger']=ledger   
     # context['ledger_bal'] = ledger_bal
-    a = Account.objects.filter(contact__type='Su')\
-                                .select_related('AccountType_Ext','contact','entity')\
-                                    .prefetch_related('accounttransactions','accountstatements')
+    a = Account.objects.filter(contact__type='Su')
                   
-    context['accounts'] = AccountStatement.objects.filter(
-                    pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
+    # context['accounts'] = AccountStatement.objects.filter(
+    #                 pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
     context['accounts'] = a
     journal = Journal.objects.all().select_related('content_type')
     # jrnls = []

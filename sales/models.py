@@ -38,10 +38,6 @@ class Invoice(models.Model):
         ("Gold", "Gold"),
         ("Silver", "Silver"),
     )
-    # ptype_choices = (
-    #     ("Cash", "Cash"),
-    #     ("Credit", "Credit")
-    # )
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
@@ -51,9 +47,6 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
-    # paymenttype = models.CharField(
-    #     max_length=30, choices=ptype_choices, default="Credit")
-
     due_date = models.DateField(null=True, blank=True)
 
     # Relationship Fields
@@ -66,7 +59,7 @@ class Invoice(models.Model):
         PaymentTerm, on_delete=models.SET_NULL,
         related_name='sale_term',
         blank=True, null=True)
-    journals = GenericRelation(Journal,related_query_name='sales_doc')
+    # journals = GenericRelation(Journal,related_query_name='sales_doc')
     stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
@@ -159,7 +152,14 @@ class Invoice(models.Model):
         if ls is None or ls.created < self.created:
             for i in self.saleitems.all():
                 i.unpost()
-            self.journals.clear()
+            # self.journals.clear()
+            jrnl = SalesJournal.objects.create(
+                content_object=self,
+                desc='sale revert'
+            )
+            # credit/cash cash/gold
+
+            jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields = ['posted'])
         else:
@@ -243,7 +243,7 @@ class Receipt(models.Model):
     )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal,related_query_name='receipt_doc')
+    # journals = GenericRelation(Journal,related_query_name='receipt_doc')
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -328,7 +328,12 @@ class Receipt(models.Model):
         self.posted = True
         self.save(update_fields = ['posted'])
     def unpost(self):
-        self.journals.clear()
+        # self.journals.clear()
+        jrnl = ReceiptJournal.objects.create(
+            content_object=self,
+            desc='Receipt-Revert'
+        )
+        jrnl.transact(revert = True)
         self.posted = False
         self.save(update_fields = ['posted'])
 

@@ -383,6 +383,20 @@ class ReceiptCreateView(CreateView):
             self.get_context_data(form=form,
                                   receiptline_form=receiptline_form))
 
+@transaction.atomic()
+def post_receipt(request, pk):
+    rcpt = Receipt.objects.get(id=pk)
+    if not rcpt.posted:
+        rcpt.post()
+    return redirect(rcpt)
+
+@transaction.atomic()
+def unpost_receipt(request, pk):
+    rcpt = Receipt.objects.get(id=pk)
+    if rcpt.posted:
+        rcpt.unpost()
+    return redirect(rcpt)
+    
 class ReceiptDetailView(DetailView):
     model = Receipt
 

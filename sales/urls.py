@@ -50,4 +50,8 @@ urlpatterns += (
     path('sales/receipt/detail/<int:pk>/pdf', views.print_receipt,name='receiptpdf'),
     path('sales/receipt/update/<int:pk>/', views.ReceiptUpdateView.as_view(), name='sales_receipt_update'),
     path('sales/receipt/delete/<int:pk>/', views.ReceiptDeleteView.as_view(), name='sales_receipt_delete'),
+    path('sales/receipt/<int:pk>/post/',
+         views.post_receipt, name='sales_receipt_post'),
+    path('sales/receipt/<int:pk>/unpost/',
+         views.unpost_receipt, name='sales_receipt_unpost'),
 )

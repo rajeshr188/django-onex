@@ -96,6 +96,7 @@ class Account(models.Model):
                         on_delete = models.CASCADE,
                         related_name='account'
                         )
+    objects = managers.AccountManager()
     class Meta:
         ordering = ('id',)
 
@@ -231,7 +232,7 @@ class Ledger(MPTTModel):
                             blank = True,
                             on_delete = models.CASCADE,
                             related_name = 'children')
-
+    objects = managers.LedgerManager()
     class MPTTMeta:
         order_insertion_by = ['name']
         constraints = [
@@ -339,6 +340,7 @@ class Journal(models.Model):
 
     def transact(self):
         raise NotImplementedError
+
 
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='ltxns')
@@ -581,16 +583,15 @@ class SalesJournal(Journal):
     class Meta:
         proxy = True
 
-    def transact(self):
-        # payment_term[Cash,Credit]
-        # balance_type[Cash,Gold]
+    def transact(self,revert = False):
+       
         account = self.content_object.customer.account
         amount = self.content_object.balance
-        payment_term = self.content_object.paymenttype
         balance_type = self.content_object.balancetype
         cr = TransactionType_DE.objects.get(XactTypeCode = 'Cr')
-        sl_cash = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CSL')
+        dr = TransactionType_DE.objects.get(XactTypeCode = 'Dr')
         sl_credit = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRSL')
+        ac = TransactionType_Ext.objects.get(XactTypeCode_ext='AC')
         
         if balance_type == 'Cash':
             money = Money(amount, 'INR')
@@ -599,33 +600,37 @@ class SalesJournal(Journal):
         else:
             money = Money(amount, 'AUD')
 
-        if payment_term == 'Cash':
-            cash_acc = Ledger.objects.get(name = 'Cash In Drawer')
-            debit_ac = cash_acc
-            txn_ext = sl_cash
-        else:
-            acc_receivable = Ledger.objects.get(name ='Accounts Receivables')
-            debit_ac = acc_receivable
-            txn_ext = sl_credit
-
+        acc_receivable = Ledger.objects.get(name ='Accounts Receivables')
         # cash/gold
         revenue_acc = Ledger.objects.get(name = 'Revenue')
         inventory = Ledger.objects.get(name = 'Inventory')
         COGS = Ledger.objects.get(name = 'COGS')   
-
-        LedgerTransaction.objects.create(
+        if not revert:
+            LedgerTransaction.objects.create(
                 journal=self,
-                ledgerno = revenue_acc,ledgerno_dr = debit_ac,amount = money)
-        LedgerTransaction.objects.create(
-                journal=self,
-                ledgerno = inventory,ledgerno_dr = COGS ,amount = money
+                ledgerno = revenue_acc,ledgerno_dr = acc_receivable,amount = money)
+            LedgerTransaction.objects.create(
+                    journal=self,
+                    ledgerno = inventory,ledgerno_dr = COGS ,amount = money
+                )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = revenue_acc,XactTypeCode = cr,
+                XactTypeCode_ext = sl_credit,Account = account,amount = amount
             )
-       
-        AccountTransaction.objects.create(
-            journal = self,
-            ledgerno = revenue_acc,XactTypeCode = cr,
-            XactTypeCode_ext = txn_ext,Account = account,amount = amount
-        )
+        else:
+            LedgerTransaction.objects.create(
+                journal=self,
+                ledgerno=acc_receivable, ledgerno_dr=revenue_acc, amount=money)
+            LedgerTransaction.objects.create(
+                journal=self,
+                ledgerno=COGS, ledgerno_dr=inventory, amount=money
+            )
+            AccountTransaction.objects.create(
+                journal=self,
+                ledgerno=revenue_acc, XactTypeCode=dr,
+                XactTypeCode_ext=ac, Account=account, amount=amount
+            )
 
 class SaleReturnJournal(Journal):
     base_type = managers.JournalTypes.SR
@@ -639,30 +644,43 @@ class ReceiptJournal(Journal):
     class Meta:
         proxy = True
 
-    def transact(self):
+    def transact(self,revert = False):
         account = self.content_object.customer.account
         amount = self.content_object.total
         balance_type = self.content_object.type
         cash_ac = Ledger.objects.get(name ='Cash In Drawer')
         acc_recv = Ledger.objects.get(name = 'Accounts Receivables')
         cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')
+        dr = TransactionType_DE.objects.get(XactTypeCode='Dr')
         sre = TransactionType_Ext.objects.get(XactTypeCode_ext = 'RCT')
-        
+        ca = TransactionType_Ext.objects.get(XactTypeCode_ext='AC')
         if balance_type =='Cash':
             money = Money(amount,'INR')
         elif balance_type =='Gold':
             money = Money(amount,'USD')
         else:
             money = Money(amount,'AUD')
-        LedgerTransaction.objects.create(
-            journal = self,
-            ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = money
-        )
-        AccountTransaction.objects.create(
-            journal = self,
-            ledgerno = acc_recv,XactTypeCode =cr,
-            XactTypeCode_ext =sre, Account = account,amount = money
-        )
+        
+        if not revert:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_recv,ledgerno_dr = cash_ac,amount = money
+            )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_recv,XactTypeCode =cr,
+                XactTypeCode_ext =sre, Account = account,amount = money
+            )
+        else:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno=cash_ac, ledgerno_dr=acc_recv, amount=money
+            )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_recv,XactTypeCode =dr,
+                XactTypeCode_ext =ca, Account = account,amount = money
+            )
 
 class PurchaseJournal(Journal):
     base_type = managers.JournalTypes.PJ
@@ -672,7 +690,7 @@ class PurchaseJournal(Journal):
         proxy =True
 
     @transaction.atomic()
-    def transact(self):
+    def transact(self,revert = False):
         account = self.content_object.supplier.account
         amount = self.content_object.balance
         balance_type = self.content_object.balancetype
@@ -681,7 +699,7 @@ class PurchaseJournal(Journal):
         inventory = Ledger.objects.get(name = 'Inventory')
         acc_payable = Ledger.objects.get(name = 'Accounts Payables')
         dr = TransactionType_DE.objects.get(XactTypeCode = 'Dr')
-
+        cr = TransactionType_DE.objects.get(XactTypeCode='Cr')
         if balance_type =='Cash':
             money = Money(amount,'INR')
         elif balance_type =='Gold':
@@ -690,20 +708,31 @@ class PurchaseJournal(Journal):
             money = Money(amount,'AUD')
 
         txn_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = 'CRPU')
-
-        LedgerTransaction.objects.create(
-            journal = self,
-            ledgerno = acc_payable,ledgerno_dr = inventory,amount =money
-        )
-        # LedgerTransaction.objects.create(
-        #         journal=self,
-        #         ledgerno = revenue,ledgerno_dr = purch_exp ,amount = money
-        #     )
-        AccountTransaction.objects.create(
-            journal = self,
-            ledgerno = acc_payable,XactTypeCode = dr,
-            XactTypeCode_ext = txn_ext,Account = account,amount = money
-        )
+        da = TransactionType_Ext.objects.get(XactTypeCode_ext='AD')
+        if not revert:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_payable,ledgerno_dr = inventory,amount =money
+            )
+            # LedgerTransaction.objects.create(
+            #         journal=self,
+            #         ledgerno = revenue,ledgerno_dr = purch_exp ,amount = money
+            #     )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_payable,XactTypeCode = dr,
+                XactTypeCode_ext = txn_ext,Account = account,amount = money
+            )
+        else:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno=inventory, ledgerno_dr=acc_payable, amount=money
+            )
+            AccountTransaction.objects.create(
+                journal=self,
+                ledgerno=acc_payable, XactTypeCode=cr,
+                XactTypeCode_ext=da, Account=account, amount=money
+            )
 
 class PurchaseReturnJournal(Journal):
     base_type = managers.JournalTypes.PR
@@ -718,32 +747,44 @@ class PaymentJournal(Journal):
         proxy = True
 
     @transaction.atomic()
-    def transact(self):
+    def transact(self,revert = False):
         account = self.content_object.supplier.account
         amount = self.content_object.total
         balance_type = self.content_object.type
         cash_ac = Ledger.objects.get(name = 'Cash In Drawer')
         acc_payable = Ledger.objects.get(name = 'Accounts Payables')
         cr = TransactionType_DE.objects.get(XactTypeCode ='Cr')
+        dr = TransactionType_DE.objects.get(XactTypeCode='Dr')
         pyt = TransactionType_Ext.objects.get(XactTypeCode_ext = 'PYT')
-
+        ca = TransactionType_Ext.objects.get(XactTypeCode_ext='AC')
         if balance_type == 'Cash':
             money = Money(amount,'INR')
         elif balance_type == 'Gold':
             money = Money(amount,'USD')
         else:
             money = Money(amount,'AUD')
-
-        LedgerTransaction.objects.create(
-            journal = self,
-            ledgerno = cash_ac,ledgerno_dr = acc_payable,amount =money
-        )
-        AccountTransaction.objects.create(
-            journal = self,
-            ledgerno = acc_payable,XactTypeCode = cr,
-            XactTypeCode_ext = pyt,
-            Account = account,amount = money
-        )
+        if not revert:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno = cash_ac,ledgerno_dr = acc_payable,amount =money
+            )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_payable,XactTypeCode = cr,
+                XactTypeCode_ext = pyt,
+                Account = account,amount = money
+            )
+        else:
+            LedgerTransaction.objects.create(
+                journal = self,
+                ledgerno=acc_payable, ledgerno_dr=cash_ac, amount=money
+            )
+            AccountTransaction.objects.create(
+                journal = self,
+                ledgerno = acc_payable,XactTypeCode = dr,
+                XactTypeCode_ext = ca,
+                Account = account,amount = money
+            )
 
 # how to import ledger and account iniital balance?
     # -- create formset view of corresponding statement sorted by latest

@@ -20,6 +20,16 @@
   <tr><td>Total Received</td><td>{{ object.total }}</td></tr>
   <tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
   <tr><td>description</td><td>{{ object.description }}</td></tr>
+  <tr>
+    <td>Posted</td>
+    <td>
+      {%if object.posted%}
+      <a class="btn btn-danger" href="{% url 'sales_receipt_unpost' object.pk%}">Unpost</a>
+      {%else%}
+      <a class="btn btn-success" href="{% url 'sales_receipt_post' object.pk%}">Post</a>
+      {%endif%}
+    </td>
+  </tr>
 </table>
 
 <table class="table table-sm table-striped table-bordered">

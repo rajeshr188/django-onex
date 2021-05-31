@@ -1,7 +1,7 @@
-from dea.models import (InterestPaidJournal,LoanGivenJournal,
-                        LoanTakenJournal,LoanReleaseJournal,
-                        LoanPaidJournal,Journal,
-                        InterestReceivedJournal)
+# from dea.models import (InterestPaidJournal,LoanGivenJournal,
+#                         LoanTakenJournal,LoanReleaseJournal,
+#                         LoanPaidJournal,Journal,
+#                         InterestReceivedJournal)
 from django.urls import reverse
 from decimal import Decimal
 from django.db import models,transaction
@@ -89,7 +89,7 @@ class Series(models.Model):
     def total_silver_weight(self):
         return self.loan_set.filter(release__isnull=True,itemtype='Silver').aggregate(t=Sum('itemweight'))
 
-
+# to-do seperate loanitems from loan normalize
 class Loan(models.Model):
 
     # Fields
@@ -116,7 +116,7 @@ class Loan(models.Model):
         on_delete=models.CASCADE,
     )
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal,related_query_name='loan_doc')
+    # journals = GenericRelation(Journal,related_query_name='loan_doc')
 
     # Managers
     # objects = models.Manager()
@@ -183,37 +183,43 @@ class Loan(models.Model):
     @transaction.atomic()
     def post(self):
         # get contact.Account
-        if not hasattr(self.customer, 'account'):
-            from dea.models import Account, AccountType_Ext
-            Account.objects.create(
-                contact=self.customer,
-                AccountType_Ext=AccountType_Ext.objects.get(
-                    description='Debtor')
-            )
+        # if not hasattr(self.customer, 'account'):
+        #     from dea.models import Account, AccountType_Ext
+        #     Account.objects.create(
+        #         contact=self.customer,
+        #         AccountType_Ext=AccountType_Ext.objects.get(
+        #             description='Debtor')
+        #     )
         # create journal LG or LT based on user Type
-        if self.customer.type == 'Su':
-            l_jrnl = LoanTakenJournal.objects.create(content_object = self,                
-                                desc = 'Loan Taken')
-            l_jrnl.transact()
-            pi_jrnl = InterestPaidJournal.objects.create(content_object = self,
-                                desc ='Pay Interest')
-            pi_jrnl.transact()
+        # if self.customer.type == 'Su':
+        #     l_jrnl = LoanTakenJournal.objects.create(content_object = self,                
+        #                         desc = 'Loan Taken')
+        #     l_jrnl.transact()
+        #     pi_jrnl = InterestPaidJournal.objects.create(content_object = self,
+        #                         desc ='Pay Interest')
+        #     pi_jrnl.transact()
             
-        else:
-            l_jrnl = LoanGivenJournal.objects.create(content_object=self,
-                                                     desc='Loan Given')
-            l_jrnl.transact()
-            pi_jrnl = InterestReceivedJournal.objects.create(content_object=self,
-                                                         desc='Interest Received')
-            pi_jrnl.transact()
-            
+        # else:
+        #     l_jrnl = LoanGivenJournal.objects.create(content_object=self,
+        #                                              desc='Loan Given')
+        #     l_jrnl.transact()
+        #     pi_jrnl = InterestReceivedJournal.objects.create(content_object=self,
+        #                                                  desc='Interest Received')
+        #     pi_jrnl.transact()
+        try:
+            self.customer.account
+        except:
+            self.customer.save()
+
+        # create ledgerTrasaction
+        # create AccTransaction   
         self.posted = True
         self.save(update_fields=['posted'])
 
     @transaction.atomic()
     def unpost(self):
         # delete journals if accounts and ledger not closed
-        self.journals.clear()
+        # self.journals.clear()
         self.posted = False
         self.save(update_fields = ['posted'])
     
@@ -254,9 +260,9 @@ class Release(models.Model):
         'girvi.Loan',
         on_delete=models.CASCADE, related_name="release"
     )
-    journals = GenericRelation(Journal,related_query_name='release_doc')
+    # journals = GenericRelation(Journal,related_query_name='release_doc')
     # manager
-    objects = ReleaseManager
+    objects = ReleaseManager()
 
     class Meta:
         ordering = ('-id',)
@@ -274,20 +280,18 @@ class Release(models.Model):
         return self.loan.loanamount + self.interestpaid
     
     def post(self):
-        acc = self.loan.customer.account
-        amount = self.loan.loanamount
-        if self.loan.customer.type == 'Su':
-            jrnl = LoanPaidJournal.objects.create(content_object = self,
-                            desc = 'Loan Repaid')
-            jrnl.transact()
-        else:
-            jrnl = LoanReleaseJournal.objects.create(content_object = self,
-                            desc = 'Loan Released')
-            jrnl.transact()
+        # if self.loan.customer.type == 'Su':
+        #     jrnl = LoanPaidJournal.objects.create(content_object = self,
+        #                     desc = 'Loan Repaid')
+        #     jrnl.transact()
+        # else:
+        #     jrnl = LoanReleaseJournal.objects.create(content_object = self,
+        #                     desc = 'Loan Released')
+        #     jrnl.transact()
         self.posted = True
         self.save(update_fields=['posted'])
 
     def unpost(self):
-        self.journals.clear()
+        # self.journals.clear()
         self.posted = False
         self.save(update_fields='posted')

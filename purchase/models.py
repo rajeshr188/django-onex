@@ -33,11 +33,7 @@ class Invoice(models.Model):
         ("Gold", "Gold"),
         ("Silver", "Silver"),
     )
-    # remove ptype and payment type obsolete
-    # ptype_choices = (
-    #     ("Cash", "Cash"),
-    #     ("Credit", "Credit")
-    # )
+
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
@@ -47,10 +43,7 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
-    # remove paymenttype
-    # paymenttype = models.CharField(
-    #     max_length=30, choices=ptype_choices, default="Credit")
-
+ 
     due_date = models.DateField(null=True, blank=True)
 
     # Relationship Fields
@@ -158,7 +151,12 @@ class Invoice(models.Model):
             for i in self.purchaseitems.all():
                 i.unpost()
             # self.stock_txns.clear()
-            self.journals.clear()
+            # self.journals.clear()
+            jrnl = PurchaseJournal.objects.create(
+                content_object=self,
+                desc='purchase revert'
+            )
+            jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields=['posted'])
         else:
@@ -426,7 +424,12 @@ class Payment(models.Model):
         self.save(update_fields = ['posted'])
 
     def unpost(self):
-        self.journals.clear()
+        # self.journals.clear()
+        jrnl = PaymentJournal.objects.create(
+            content_object=self,
+            desc='payment'
+        )
+        jrnl.transact(revert = True)
         self.posted = False
         self.save(update_fields=['posted'])
 

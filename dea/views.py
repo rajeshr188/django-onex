@@ -87,6 +87,11 @@ def home(request):
     
     return render(request, 'dea/home.html', {'data': context})
 
+def generalledger(request):
+    context = {}
+    context['lt'] = LedgerTransaction.objects.all().order_by('-created')
+    return render(request,'dea/gl.html',{'data':context})
+
 def daybook(request):
     try:
         latest_stmt = LedgerStatement.objects.latest()
@@ -146,7 +151,10 @@ def audit_ledger(request):
     
 
 class JournalListView(ListView):
-    queryset = Journal.objects.all().select_related('content_type')
+    queryset = Journal.objects.all().select_related('content_object')
+
+class JournalDetailView(DetailView):
+    model = Journal
 
 class AccountCreateView(CreateView):
     model = Account
@@ -155,6 +163,7 @@ class AccountCreateView(CreateView):
 class AccountListView(ListView):
     queryset = Account.objects.all().select_related('entity','AccountType_Ext','contact')
     paginate_by = 10
+
 class AccountDetailView(DetailView):
     model = Account
 
@@ -184,5 +193,9 @@ class LedgerStatementListView(ListView):
 
 class LedgerTransactionListView(ListView):
     model=LedgerTransaction
-class AccountStatementListView(ListView):
-    model = AccountStatement
+
+
+
+
+    
+

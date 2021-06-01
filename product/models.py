@@ -616,7 +616,7 @@ class Stock(models.Model):
         if self.tracking_type == "Lot":
             print('splitting')
         else:
-            print('unique nodes cant be split')
+            print('unique nodes cant be split.hint:merge to lot and then split')
 
     def merge(self,weight,qty,cto,at):
         # merge stock:tracking_type:unique to lot
@@ -624,6 +624,9 @@ class Stock(models.Model):
             print('merging')
         else:
             print('lot cant be merged further')
+    
+    def transfer():
+        pass
 
     def update_status(self):
         cb = self.current_balance()

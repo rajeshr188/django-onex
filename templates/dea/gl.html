@@ -1,0 +1,30 @@
+{% extends '_base.html' %}
+{% block title %}General Ledger{% endblock %}
+
+{% block content %}
+<h1>General Ledger</h1>
+<div>
+    <table class ="table table-sm table-bordered table-hover table-striped">
+        <thead>
+            <th>Id</th>
+            <th>Created</th>
+            <th>Debit Ledger</th>
+            <th>Credit Ledger</th>
+            <th>Amount</th>
+            <th>Journal</th>
+        </thead>
+        <tbody>
+            {%for i in data.lt%}
+            <tr>
+                <td>{{i.id}}</td>
+                <td>{{i.created}}</td>
+                <td><a href="{% url 'dea_ledger_detail' i.ledgerno_dr.id%}">{{i.ledgerno_dr.name}}</a></td>
+                <td><a href="{% url 'dea_ledger_detail' i.ledgerno.id%}">{{i.ledgerno.name}}</a></td>
+                <td>{{i.amount}}</td>
+                <td><a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a></td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+</div>
+{% endblock%}

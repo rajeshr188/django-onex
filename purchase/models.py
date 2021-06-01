@@ -120,47 +120,47 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def post(self):
-        try:
-            ls = LedgerStatement.objects.latest()[0].created
-        except LedgerStatement.DoesNotExist:
-            ls = None
-        if ls is None or self.created >= ls.created:
-            for i in self.purchaseitems.all():
+        for i in self.purchaseitems.all():
                 i.post()
-            jrnl = PurchaseJournal.objects.create(
+        jrnl = PurchaseJournal.objects.create(
                 content_object = self,
                 desc = 'purchase'
             )
-            try:
-                self.supplier.account
-            except:
-                self.supplier.save()
+        try:
+            self.supplier.account
+        except:
+            self.supplier.save()
             jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
-        else:
-            raise ValueError("cant post purchase created before latest audit")
+        # try:
+        #     ls = LedgerStatement.objects.latest()[0].created
+        # except LedgerStatement.DoesNotExist:
+        #     ls = None
+        # if ls is None or self.created >= ls.created:
+        #     # post code here with ls check
+        # else:
+        #     raise ValueError("cant post purchase created before latest audit")
 
     @transaction.atomic()
     def unpost(self):
-        try:
-            ls = LedgerStatement.objects.latest()
-        except LedgerStatement.DoesNotExist:
-            ls = None
-        if ls is None or ls.created < self.created:
-            for i in self.purchaseitems.all():
+        for i in self.purchaseitems.all():
                 i.unpost()
-            # self.stock_txns.clear()
-            # self.journals.clear()
-            jrnl = PurchaseJournal.objects.create(
+        jrnl = PurchaseJournal.objects.create(
                 content_object=self,
                 desc='purchase revert'
             )
-            jrnl.transact(revert = True)
-            self.posted = False
-            self.save(update_fields=['posted'])
-        else:
-            raise ValueError('cant unpost purchase created before latest audit')
+        jrnl.transact(revert = True)
+        self.posted = False
+        self.save(update_fields=['posted'])
+        # try:
+        #     ls = LedgerStatement.objects.latest()
+        # except LedgerStatement.DoesNotExist:
+        #     ls = None
+        # if ls is None or ls.created < self.created:
+        #     # unpost code here with ls check
+        # else:
+        #     raise ValueError('cant unpost purchase created before latest audit')
 
 class InvoiceItem(models.Model):
     # Fields
@@ -424,7 +424,6 @@ class Payment(models.Model):
         self.save(update_fields = ['posted'])
 
     def unpost(self):
-        # self.journals.clear()
         jrnl = PaymentJournal.objects.create(
             content_object=self,
             desc='payment'

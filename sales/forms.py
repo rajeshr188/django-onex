@@ -1,7 +1,7 @@
 from django import forms
 import datetime
 from tempus_dominus.widgets import DateTimePicker
-from .models import Invoice, InvoiceItem, Receipt,ReceiptLine
+from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,ReceiptItem
 from django_select2.forms import Select2Widget
 from contact.models import Customer
 from product.models import Stock
@@ -79,7 +79,9 @@ class ReceiptForm(forms.ModelForm):
     )
     class Meta:
         model = Receipt
-        fields = ['created','customer','type', 'weight','touch','nettwt','rate','total', 'description','status']
+        fields = ['created','customer','type', 
+                    # 'weight','touch','nettwt',
+                    'rate','total', 'description','status']
 
 class ReceiptLineForm(forms.ModelForm):
     invoice=forms.ModelChoiceField(
@@ -92,3 +94,13 @@ class ReceiptLineForm(forms.ModelForm):
 
 ReceiptLineFormSet=inlineformset_factory(Receipt,ReceiptLine,
     fields=('invoice','amount','receipt'),extra=0,can_delete=True,form=ReceiptLineForm)
+
+
+class ReceiptItemForm(forms.ModelForm):
+    class Meta:
+        models = ReceiptItem
+        fields = '__all__'
+
+
+ReceiptItemFormSet = inlineformset_factory(Receipt, ReceiptItem,
+    fields=('weight','touch','nettwt', 'amount','receipt'), extra=1, can_delete=True, form=ReceiptItemForm)

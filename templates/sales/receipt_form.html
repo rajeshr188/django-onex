@@ -7,7 +7,6 @@
     <form action="." method="post">
         {% csrf_token %}
         {{ form.non_field_errors }}
-
         <div class="form-row">
             <div class="form-group col-md-3">
               {{ form.customer.errors }}
@@ -36,24 +35,15 @@
               {% bootstrap_field form.description size="small"%}
             </div>
         </div>
-
         <div class="form-group row">
-          {{ form.weight.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.weight size="small"%}</div>
-          {{ form.touch.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.touch size="small"%}</div>
-          {{ form.nettwt.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.nettwt size="small"%}</div>
           {{ form.total.errors }}
           <div class="col-sm-3">{% bootstrap_field form.total size="small"%}</div>
         </div>
-
-        {{ receiptline_form.management_form }}
-        {{ receiptline_form.non_form_errors }}
-        {% for form in receiptline_form %}
+        {{ receiptitem_form.management_form }}
+        {{ receiptitem_form.non_form_errors }}
+        {% for form in receiptitem_form %}
         {%csrf_token%}
             {{form.id}}
-
             <table class="table table-sm table-striped">
               {%if forloop.first%}
               <thead class="thead-dark">
@@ -65,76 +55,74 @@
               </thead>
                   {% endif %}
               <tbody>
-              <tr class="inline {{receiptline_form.prefix}}">
-                {% for field in form.visible_fields %}
-                <td class="{{field.name}}" >
-                    <!-- {{ field.errors.as_ul }} -->
-                    {% bootstrap_field field show_label=False size="small"%}
-                  </td>
-                  {% endfor %}
+                <tr class="inline {{receiptitem_form.prefix}}">
+                  {% for field in form.visible_fields %}
+                  <td class="{{field.name}}" >
+                      <!-- {{ field.errors.as_ul }} -->
+                      {% bootstrap_field field show_label=False size="small"%}
+                    </td>
+                    {% endfor %}
                 </tr>
-          </tbody>
-        </table>
+              </tbody>
+            </table>
           {% endfor %}
-          <div class="form-group row">
-            <div class="col"><label>Remaining balance to allot :</label><p id="balance">''</p></div>
-          </div>
         <button class="btn btn-primary" type="submit">Save Receipt</button>
     </form>
 
-<script>
-  $(".inline.{{ receiptline_form.prefix }}").formset({
-      prefix: "{{ receiptline_form.prefix }}",
+  <script type="text/javascript">
+    $(".inline.{{ receiptitem_form.prefix }}").formset({
+      prefix: "{{ receiptitem_form.prefix }}",
       added: function ($row) {
-         $row.find('.invoice select').select2();
-         $row.find('.delete-row').addClass('btn-sm btn-danger');
+        $row.find('.delete-row').addClass('btn-sm btn-danger');
       },
-      removed: function($row){
-        updatebal();
+      removed: function ($row) {
+        update_bal();
       }
-  })
-  updatebal();
-  $('.add-row').addClass('btn-sm btn-success');
-  $('.delete-row').addClass('btn-sm btn-danger');
-  function updatebal(){
-    var sum = 0;
-
-    $(".amount input").each(function () {
-          if (!isNaN(this.value) && this.value.length != 0) {
-              sum += parseFloat(this.value);
-          }
-      });
-      console.log("amountsum" + sum);
-    var total=$("#id_total").val();
-    $("#balance").text(total-sum);
-
-  }
-  $(function(){
-    $(document).ready(function() {
-
-      $(document).on('change','#id_total',function() { $('#balance').text( $(this).val());})
-      $(document).on('change', '.amount', function() { updatebal();});
-      $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-      $(document).on('change','#id_type', function() {
-      //alert( this.value );
-        if(this.value=='Metal'){
-          $('#id_weight,#id_touch,#id_nettwt,#id_rate').prop('disabled',false)
-          $(function(){
-                    $('#id_weight, #id_touch').keyup(function(){
-                       var value1 = parseFloat($('#id_weight').val()) || 0;
-                       var value2 = parseFloat($('#id_touch').val()) || 0;
-                       $('#id_nettwt,#id_total').val((value1 * value2)/100);
-                       $('#id_total').trigger('change');
-                    });
-                 });
-               }
+    })
+    $('.add-row').addClass('btn-sm btn-success');
+    $('.delete-row').addClass('btn-sm btn-danger');
+  </script>
+  <script>
+    //$('.inline :input').prop('disabled', true);
+    $(document).ready(function () {
+      $('#id_type').on('change', function () {
+        value = $('#id_type :selected').val();
+        console.log(value)
+        if (value != 'Cash') {
+          $('.inline :input').prop('disabled', false);
+        }
         else {
-              $('#id_weight,#id_touch,#id_nettwt').prop('disabled',true)
-              }
-
-            });
+          $('.inline :input').prop('disabled', true);
+        }
+      });
+      $(document).on('change', '.weight,.touch,.amount,.nettwt,#id_rate', function () {
+        update_row();
+        update_bal();
+      });
     });
-  });
 
-</script>
+    function update_row() {
+      var rate = $('#id_rate').val();
+      $('.inline').each(function () {
+        var wt = $(this).find('.weight input').val();
+        var touch = $(this).find('.touch input').val();
+        var nettwt = (wt * touch) / 100
+        $(this).find('.nettwt input').val(nettwt);
+        if ($('#id_type').val() != 'Cash') {
+          $(this).find('.amount input').val(nettwt * rate);
+        }
+        update_bal();
+        console.log(wt, touch, nettwt, rate);
+      });
+    }
+    function update_bal() {
+      var sum = 0;
+      $(".amount input").each(function () {
+        if (!isNaN(this.value) && this.value.length != 0) {
+          sum += parseFloat(this.value);
+        }
+      });
+      $("#id_total").val(sum.toFixed(3));
+    }
+  </script>
 {% endblock %}

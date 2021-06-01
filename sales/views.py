@@ -3,7 +3,7 @@ from django.views.generic import DetailView, ListView, UpdateView, CreateView,De
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month,Year
 from contact.models import Customer
 from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,
-                    ReceiptLineForm,ReceiptLineFormSet,RandomSalesForm)
+                    ReceiptLineForm,ReceiptItemFormSet,RandomSalesForm)
 from django.http import HttpResponseRedirect
 from django.urls import reverse,reverse_lazy
 from django_filters.views import FilterView
@@ -352,36 +352,36 @@ class ReceiptCreateView(CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        receiptline_form = ReceiptLineFormSet()
+        receiptitem_form = ReceiptItemFormSet()
 
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  receiptline_form=receiptline_form))
+                                  receiptitem_form=receiptitem_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        receiptline_form = ReceiptLineFormSet(self.request.POST)
-        if (form.is_valid() and receiptline_form.is_valid()):
-            return self.form_valid(form, receiptline_form)
+        receiptitem_form = ReceiptItemFormSet(self.request.POST)
+        if (form.is_valid() and receiptitem_form.is_valid()):
+            return self.form_valid(form, receiptitem_form)
         else:
-            return self.form_invalid(form, receiptline_form)
+            return self.form_invalid(form, receiptitem_form)
 
-    def form_valid(self, form, receiptline_form):
+    def form_valid(self, form, receiptitem_form):
         self.object = form.save()
-        receiptline_form.instance = self.object
-        receiptline_form.save()
+        receiptitem_form.instance = self.object
+        receiptitem_form.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form, receiptline_form):
+    def form_invalid(self, form, receiptitem_form):
         """
         Called if a form is invalid. Re-renders the context data with the
         data-filled forms and errors.
         """
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  receiptline_form=receiptline_form))
+                                  receiptline_form=receiptitem_form))
 
 @transaction.atomic()
 def post_receipt(request, pk):
@@ -408,37 +408,37 @@ class ReceiptUpdateView(UpdateView):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        receiptline_form = ReceiptLineFormSet(instance=self.object)
+        receiptitem_form = ReceiptItemFormSet(instance=self.object)
 
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  receiptline_form=receiptline_form))
+                                  receiptitem_form=receiptitem_form))
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        receiptline_form = ReceiptLineFormSet(self.request.POST,instance=self.object)
-        if (form.is_valid() and receiptline_form.is_valid()):
-            return self.form_valid(form, receiptline_form)
+        receiptitem_form = ReceiptItemFormSet(self.request.POST,instance=self.object)
+        if (form.is_valid() and receiptitem_form.is_valid()):
+            return self.form_valid(form, receiptitem_form)
         else:
-            return self.form_invalid(form, receiptline_form)
+            return self.form_invalid(form, receiptitem_form)
 
-    def form_valid(self, form, receiptline_form):
+    def form_valid(self, form, receiptitem_form):
         self.object = form.save()
 
-        receiptline_form.instance = self.object
-        items=receiptline_form.save()
+        receiptitem_form.instance = self.object
+        items=receiptitem_form.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form, receiptline_form):
+    def form_invalid(self, form, receiptitem_form):
         """
         Called if a form is invalid. Re-renders the context data with the
         data-filled forms and errors.
         """
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  receiptline_form=receiptline_form))
+                                  receiptitem_form=receiptitem_form))
 
 # create a function view on receipt list page  to reallot all receipts
 

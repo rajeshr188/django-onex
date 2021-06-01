@@ -122,48 +122,49 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def post(self):
-        try:
-            ls = LedgerStatement.objects.latest().first().created
-        except LedgerStatement.DoesNotExist:
-            ls = None
-        if ls is None or self.created >= ls.created:
-            saleitems = self.saleitems.all()
-            
-            for i in saleitems:
+        saleitems = self.saleitems.all()
+        for i in saleitems:
                 i.post()
-            jrnl = SalesJournal.objects.create(
+        jrnl = SalesJournal.objects.create(
                 content_object = self,
                 desc = 'sale'
             )
             # credit/cash cash/gold
             
-            jrnl.transact()
-            self.posted = True
-            self.save(update_fields = ['posted'])
-        else:
-            raise ValueError("cant post sale created before latest audit")
+        jrnl.transact()
+        self.posted = True
+        self.save(update_fields = ['posted'])
+        # try:
+        #     ls = LedgerStatement.objects.latest().first().created
+        # except LedgerStatement.DoesNotExist:
+        #     ls = None
+        # if ls is None or self.created >= ls.created:
+
+        # else:
+        #     raise ValueError("cant post sale created before latest audit")
 
     @transaction.atomic()   
     def unpost(self):
-        try:
-            ls = LedgerStatement.objects.latest()
-        except LedgerStatement.DoesNotExist:
-            ls = None
-        if ls is None or ls.created < self.created:
-            for i in self.saleitems.all():
-                i.unpost()
-            # self.journals.clear()
-            jrnl = SalesJournal.objects.create(
+        for i in self.saleitems.all():
+            i.unpost()
+            
+        jrnl = SalesJournal.objects.create(
                 content_object=self,
-                desc='sale revert'
+                desc='sale-revert'
             )
             # credit/cash cash/gold
 
-            jrnl.transact(revert = True)
-            self.posted = False
-            self.save(update_fields = ['posted'])
-        else:
-            raise ValueError("cant unpost sale created before latest audit")
+        jrnl.transact(revert = True)
+        self.posted = False
+        self.save(update_fields = ['posted'])
+        # try:
+        #     ls = LedgerStatement.objects.latest()
+        # except LedgerStatement.DoesNotExist:
+        #     ls = None
+        # if ls is None or ls.created < self.created:
+            
+        # else:
+        #     raise ValueError("cant unpost sale created before latest audit")
 
     
 class InvoiceItem(models.Model):
@@ -231,10 +232,7 @@ class Receipt(models.Model):
             )
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
-    weight = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    touch = models.DecimalField(max_digits=10, decimal_places=2,blank=True,default=0.0)
-    nettwt = models.DecimalField(max_digits=10,blank=True,decimal_places=3,default=0.0)
-    total = models.DecimalField(max_digits=10, decimal_places=3)
+    total = models.DecimalField(max_digits=10, decimal_places=3,default = 0)
     description = models.TextField(max_length=50,default="describe here")
     status_choices=(
                     ("Allotted","Allotted"),
@@ -243,7 +241,7 @@ class Receipt(models.Model):
     )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
-    # journals = GenericRelation(Journal,related_query_name='receipt_doc')
+    journals = GenericRelation(Journal,related_query_name='receipt_doc')
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -328,7 +326,6 @@ class Receipt(models.Model):
         self.posted = True
         self.save(update_fields = ['posted'])
     def unpost(self):
-        # self.journals.clear()
         jrnl = ReceiptJournal.objects.create(
             content_object=self,
             desc='Receipt-Revert'
@@ -346,7 +343,7 @@ class ReceiptItem(models.Model):
         max_digits=10, blank=True, decimal_places=3, default=0.0)
     rate = models.IntegerField(default=0)
     amount = models.DecimalField(max_digits=10, decimal_places=3)
-    payment = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.amount

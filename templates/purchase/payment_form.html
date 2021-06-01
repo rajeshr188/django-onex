@@ -70,55 +70,61 @@
           {% endfor %}
         <button class="btn btn-primary" type="submit">Save Payment</button>
     </form>
-    <script type="text/javascript">
-      $(".inline.{{ paymentitem_form.prefix }}").formset({
-          prefix: "{{ paymentitem_form.prefix }}",
-          added: function ($row) {  
-            $row.find('.delete-row').addClass('btn-sm btn-danger');
-          },
-          removed: function($row){
-            update_bal();
-          }
-      })
-      $('.add-row').addClass('btn-sm btn-success');
-      $('.delete-row').addClass('btn-sm btn-danger');
-    </script>
+<script type="text/javascript">
+  $(".inline.{{ paymentitem_form.prefix }}").formset({
+      prefix: "{{ paymentitem_form.prefix }}",
+      added: function ($row) {
+        $row.find('.delete-row').addClass('btn-sm btn-danger');
+      },
+      removed: function ($row) {
+        update_bal();
+      }
+    })
+  $('.add-row').addClass('btn-sm btn-success');
+  $('.delete-row').addClass('btn-sm btn-danger');
+</script>
 <script>
-    //$('.inline :input').prop('disabled', true);
-    $(document).ready(function() {
-     
-      $(document).on('change','.weight,.touch,.amount,.nettwt,#id_rate', function(){
+  //$('.inline :input').prop('disabled', true);
+    $(document).ready(function () {
+      $('#id_type').on('change', function () {
+        value = $('#id_type :selected').val();
+        console.log(value)
+        if(value != 'Cash'){
+          $('.inline :input').prop('disabled', false);
+        }
+        else{
+          $('.inline :input').prop('disabled', true);
+        }
+      });
+      $(document).on('change', '.weight,.touch,.amount,.nettwt,#id_rate', function () {
         update_row();
         update_bal();
       });
     });
 
-    function update_row(){
+    function update_row() {
       var rate = $('#id_rate').val();
       $('.inline').each(function () {
         var wt = $(this).find('.weight input').val();
         var touch = $(this).find('.touch input').val();
-       
-
         var nettwt = (wt * touch) / 100
         $(this).find('.nettwt input').val(nettwt);
-        if($('#id_type').val() !='Cash'){
-          $(this).find('.amount input').val(nettwt*rate);
+        if ($('#id_type').val() != 'Cash') {
+          $(this).find('.amount input').val(nettwt * rate);
         }
         update_bal();
         console.log(wt, touch, nettwt, rate);
-    });
-  }
+      });
+    }
     function update_bal() {
-          var sum = 0;
-          
-          $(".amount input").each(function () {
-            if (!isNaN(this.value) && this.value.length != 0) {
-              sum += parseFloat(this.value);
-            }
-          });  
-          $("#id_total").val(sum.toFixed(3));
-
+      var sum = 0;
+      $(".amount input").each(function () {
+        if (!isNaN(this.value) && this.value.length != 0) {
+          sum += parseFloat(this.value);
         }
+      });
+      $("#id_total").val(sum.toFixed(3));
+
+    }
 </script>
 {% endblock %}

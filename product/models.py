@@ -494,7 +494,7 @@ class Stock(models.Model):
     def audit(self):
         # get last audit cb,totalin,total out and then append following
         try:
-            last_statement = self.stoctstatement_set.latest()
+            last_statement = self.stockstatement_set.latest()
         except StockStatement.DoesNotExist:
             last_statement = None
         if last_statement is not None:
@@ -506,16 +506,16 @@ class Stock(models.Model):
 
         stock_in = self.stock_in_txns()
         stock_out = self.stock_out_txns()
-        cb_wt =  ls_wt + (stock_in.wt - stock_out.wt)
-        cb_qty = ls_qty + (stock_in.qty - stock_out.qty)
+        cb_wt =  ls_wt + (stock_in['wt'] - stock_out['wt'])
+        cb_qty = ls_qty + (stock_in['qty'] - stock_out['qty'])
 
         return StockStatement.objects.create(stock = self,
                     Closing_wt = cb_wt,
                     Closing_qty = cb_qty,
-                    total_wt_in = stock_in.wt,
-                    total_qty_in = stock_in.wty,
-                    total_wt_out = stock_out.wt,
-                    total_qty_out = stock_out.qty)
+                    total_wt_in = stock_in['wt'],
+                    total_qty_in = stock_in['qty'],
+                    total_wt_out = stock_out['wt'],
+                    total_qty_out = stock_out['qty'])
 
     def stock_in_txns(self):
         # filter since last audit
@@ -529,8 +529,9 @@ class Stock(models.Model):
                         activity_type__in = ['P','SR','AR','AD']
                         ).aggregate(
                             qty=Coalesce(
-                                Sum('quantity', output_field=models.IntegerField()), 0),
-                            wt = Coalesce(Sum('weight',output_field = models.FloatField()),Decimal(0.0))
+                                Sum('quantity', output_field = models.IntegerField()), 0),
+                            wt=Coalesce(
+                                Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
                         )
         else:
             return self.stocktransaction_set.filter(

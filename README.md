@@ -4,7 +4,7 @@ A framework for Business Apps
 
 ## Features
 
-- For Django 2.1.7 and Python 3.7
+- For Django 3.2 and Python 3.9
 - Modern virtual environments with [pipenv](https://github.com/pypa/pipenv)
 - Styling with [Bootstrap](https://github.com/twbs/bootstrap) v4.1.3
 - Custom user model

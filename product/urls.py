@@ -107,8 +107,9 @@ urlpatterns += (
     path('stock/update/<int:pk>/',views.StockUpdateView.as_view(),name='product_stock_update'),
     path('stock/split/<int:pk>', views.split_lot,
          name='product_stock_split'),
-    path('stree/merge/<int:pk>', views.merge_lot,
+    path('stock/merge/<int:pk>', views.merge_lot,
          name='product_stock_merge'),
+    path('stock/audit/',views.audit_stock,name = "product_stock_audit"),
 )
 urlpatterns +=(
     #urls for Stocktransaction

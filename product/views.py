@@ -237,7 +237,7 @@ class StreeCreateView(LoginRequiredMixin,CreateView):
 #     label_writer.write_labels(records,target='qrcode_and_date.pdf')
 
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from decimal import *
 def split_lot(request,pk):
     # If this is a POST request then process the Form data
@@ -329,3 +329,9 @@ class StockTransactionDeleteView(DeleteView):
 
 class StockStatementListView(ListView):
     model = StockStatement
+
+def audit_stock(request):
+    stocks = Stock.objects.all()
+    for i in stocks:
+        i.audit()
+    return HttpResponseRedirect(reverse('product_stock_list'))

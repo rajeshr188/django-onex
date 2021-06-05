@@ -1,4 +1,5 @@
 from django.db import models,transaction,connection
+from django.core.validators import MinValueValidator
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils import timezone
@@ -352,7 +353,8 @@ class LedgerTransaction(models.Model):
     ledgerno_dr = models.ForeignKey(Ledger ,on_delete =models.CASCADE, 
                     related_name= 'debit_txns')
     # amount = models.DecimalField(max_digits=13, decimal_places=3)
-    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
+    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR',
+                    validators =[ MinValueValidator(limit_value= 0.0)])
 
     def __str__(self):
         return self.ledgerno.name
@@ -388,7 +390,8 @@ class AccountTransaction(models.Model):
                         on_delete=models.CASCADE)
     Account = models.ForeignKey(Account,on_delete=models.CASCADE,
                             related_name='accounttransactions')
-    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR')
+    amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR',
+                        validators=[MinValueValidator(limit_value=0.0)])
 
     def __str__(self):
         return f"{self.XactTypeCode_ext}"

@@ -29,17 +29,17 @@ python-dateutil = "*"
 xhtml2pdf = "*"
 werkzeug = "*"
 gunicorn = "*"
-celery = "*"
 redis = "*"
 gevent = "*"
 django-activity-stream = "*"
 django-versatileimagefield = "*"
 django-bootstrap4 = "*"
-pygraphviz = "*"
+celery = "==5.0.5"
+django-money = "*"
 
 [dev-packages]
 "autopep8" = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.8.2"
+python_version = "3.9.5"

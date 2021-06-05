@@ -104,6 +104,8 @@ class Invoice(models.Model):
             super(Invoice,self).delete()
 
     def save(self, *args, **kwargs):
+        if self.balance <0 :
+            self.status = "Paid"
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
         self.total = self.balance
@@ -120,19 +122,25 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def post(self):
-        for i in self.purchaseitems.all():
-                i.post()
-        jrnl = PurchaseJournal.objects.create(
-                content_object = self,
-                desc = 'purchase'
-            )
         try:
             self.supplier.account
         except:
             self.supplier.save()
-            jrnl.transact()
-            self.posted = True
-            self.save(update_fields = ['posted'])
+        for i in self.purchaseitems.all():
+                i.post()
+        if self.balance >0 :
+            jrnl = PurchaseJournal.objects.create(
+                content_object=self,
+                desc='purchase'
+            )
+        else:
+            jrnl = PaymentJournal.objects.create(
+                content_object=self,
+                desc='purchase'
+            )
+        jrnl.transact()
+        self.posted = True
+        self.save(update_fields=['posted'])
         # try:
         #     ls = LedgerStatement.objects.latest()[0].created
         # except LedgerStatement.DoesNotExist:
@@ -146,7 +154,13 @@ class Invoice(models.Model):
     def unpost(self):
         for i in self.purchaseitems.all():
                 i.unpost()
-        jrnl = PurchaseJournal.objects.create(
+        if self.balance>0:
+            jrnl = PurchaseJournal.objects.create(
+                content_object=self,
+                desc='purchase revert'
+            )
+        else:
+            jrnl = PaymentJournal.objects.create(
                 content_object=self,
                 desc='purchase revert'
             )
@@ -386,10 +400,10 @@ class Payment(models.Model):
         print(f"remaining : {remaining_amount}")
         try:
             invtopay = Invoice.objects.filter(supplier = self.supplier,
-                                                balancetype = self.type,
-                                                posted = True,balance__gte = 0).exclude(
-                                                status = "Paid"
-                                                ).order_by("created")
+                                            balancetype = self.type,
+                                            posted = True,balance__gte = 0)\
+                                            .exclude(status = "Paid")\
+                                            .order_by("created")
         except IndexError:
             invtopay = None
         print(f" invtopay :{invtopay}")

@@ -1,3 +1,4 @@
+import decimal
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, StockStatement, VariantImage,Stock,Stree,
@@ -237,10 +238,11 @@ class StreeCreateView(LoginRequiredMixin,CreateView):
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-
+from decimal import *
 def split_lot(request,pk):
     # If this is a POST request then process the Form data
-    parent= get_object_or_404(Stree,pk=pk)
+    # parent= get_object_or_404(Stree,pk=pk)
+    stock = get_object_or_404(Stock,pk = pk)
     if request.method == 'POST':
 
         # Create a form instance and populate it with data from the request (binding):
@@ -249,17 +251,21 @@ def split_lot(request,pk):
         # Check if the form is valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
-
-            node_to_deduct_from = form.cleaned_data['parent']
+            print(form)
+            print(form.cleaned_data)
             weight = form.cleaned_data['weight']
-            node_to_deduct_from.split_node(weight)
+            stock.split(weight)
+            # node_to_deduct_from = form.cleaned_data['parent']
+            # weight = form.cleaned_data['weight']
+            # node_to_deduct_from.split_node(weight)
 
             # redirect to a new URL:
-            return HttpResponseRedirect(reverse('product_stree_list') )
+            return HttpResponseRedirect(reverse('product_stock_list') )
 
     # If this is a GET (or any other method) create the default form.
     else:
-        form = UniqueForm(initial = {"parent":parent})
+        # form = UniqueForm(initial = {"parent":parent})
+        form = UniqueForm(initial = {"stock":stock})
 
     context = {
         'form': form,
@@ -268,11 +274,11 @@ def split_lot(request,pk):
     return render(request, 'product/split_lot.html', context)
 
 def merge_lot(request,pk):
-    node = Stree.objects.get(id=pk)
+    node = Stock.objects.get(id=pk)
     print(f"to merge node{node}")
-    node.merge_node()
+    node.merge()
 
-    return HttpResponseRedirect(reverse('product_stree_list') )
+    return HttpResponseRedirect(reverse('product_stock_list') )
 
 class StreeUpdateView(UpdateView):
     model = Stree

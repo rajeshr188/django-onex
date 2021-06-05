@@ -219,10 +219,8 @@ class StreeForm(forms.ModelForm):
         model = Stree
         fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity','productvariant']
 
-class UniqueForm(forms.ModelForm):
-    class Meta:
-        model = Stree
-        fields = ['parent','weight']
+class UniqueForm(forms.Form):
+    weight = forms.DecimalField(max_digits=10, decimal_places=3)
         
 class StockTransactionForm(forms.ModelForm):
     class Meta:

@@ -26,7 +26,7 @@ SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
 DEBUG = True
 
 ALLOWED_HOSTS = ["*","192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
-
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Application definition
 
 INSTALLED_APPS = [
@@ -216,7 +216,7 @@ ACCOUNT_UNIQUE_EMAIL = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
-# CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap4.html'
 # CACHES = {
 #     'default': {

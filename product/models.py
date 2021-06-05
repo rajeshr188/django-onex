@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.forms.fields import DecimalField
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.postgres.fields import HStoreField
 from django.core.validators import MinValueValidator
@@ -402,6 +403,7 @@ class Stree(MPTTModel):
         pass
 
     def split_node(self,weight):
+
         if self.weight < weight:
             return
 
@@ -524,17 +526,19 @@ class Stock(models.Model):
         if ls is not None:
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
-                        activity_type__in = ['P','SR','AR']
+                        activity_type__in = ['P','SR','AR','AD']
                         ).aggregate(
-                            qty = Coalesce(Sum('quantity'),0),
-                            wt = Coalesce(Sum('weight'),0)
+                            qty=Coalesce(
+                                Sum('quantity', output_field=models.IntegerField()), 0),
+                            wt = Coalesce(Sum('weight',output_field = models.FloatField()),Decimal(0.0))
                         )
         else:
             return self.stocktransaction_set.filter(
-                activity_type__in=['P', 'SR', 'AR']
+                activity_type__in=['P', 'SR', 'AR','AD']
                 ).aggregate(
-                    qty=Coalesce(Sum('quantity'), 0),
-                    wt=Coalesce(Sum('weight'), 0)
+                    qty=Coalesce(
+                        Sum('quantity',output_field = models.IntegerField()), 0),
+                    wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
                 )
     def stock_out_txns(self):
         # filter since last audit
@@ -545,17 +549,20 @@ class Stock(models.Model):
         if ls is not None:
             return self.stocktransaction_set.filter(
                         created__gte = ls.created,
-                        activity_type__in=['PR', 'S', 'A']
+                        activity_type__in=['PR', 'S', 'A','RM']
                         ).aggregate(
-                            qty=Coalesce(Sum('quantity'), 0),
-                            wt=Coalesce(Sum('weight'), 0)
+                            qty=Coalesce(
+                                Sum('quantity', output_field=models.IntegerField()), 0),
+                            wt=Coalesce(
+                                Sum('weight', output_field=models.DecimalField()), Decimal(0.0))
                         )
         else:
             return self.stocktransaction_set.filter(
-                        activity_type__in=['PR', 'S', 'A']
+                        activity_type__in=['PR', 'S', 'A','RM']
                         ).aggregate(
-                            qty=Coalesce(Sum('quantity'), 0),
-                            wt=Coalesce(Sum('weight'), 0)
+                            qty=Coalesce(
+                                Sum('quantity', output_field=models.IntegerField()), 0),
+                            wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
                         )
 
     def current_balance(self):
@@ -611,17 +618,34 @@ class Stock(models.Model):
             print("error here")
             raise Exception(f" qty/wt mismatch .hence exception")
 
-    def split(self,weight,qty,cto,at):
+    def split(self,weight):
         # split from stock:tracking_type::lot to unique
-        if self.tracking_type == "Lot":
+        cb = self.current_balance()
+        if self.tracking_type == "Lot" and cb['wt'] >= weight and cb['qty'] >1:
             print('splitting')
+            
+            uniq_stock = Stock.objects.create(variant = self.variant,
+                    tracking_type = 'Unique')
+            uniq_stock.barcode='je'+ str(uniq_stock.id)
+            
+            uniq_stock.melting = self.melting
+            uniq_stock.cost = self.cost
+            uniq_stock.touch = self.touch
+            uniq_stock.wastage = self.wastage
+            uniq_stock.add(weight,1,
+                            None,'AD')
+            self.remove(weight,1,None,at = 'RM')
         else:
             print('unique nodes cant be split.hint:merge to lot and then split')
 
-    def merge(self,weight,qty,cto,at):
+    def merge(self):
         # merge stock:tracking_type:unique to lot
         if self.tracking_type == "Unique":
             print('merging')
+            lot = Stock.objects.get(variant = self.variant,tracking_type = "Lot")
+            cb=self.current_balance()
+            lot.add(cb['wt'],cb['qty'],None,'AD')
+            self.remove(cb['wt'],cb['qty'],None,at = "RM")      
         else:
             print('lot cant be merged further')
     
@@ -650,8 +674,8 @@ class StockTransaction(models.Model):
     SALESRETURN = 'SR'
     APPROVAL = 'A'
     APPROVALRETURN = 'AR'
-    SPLIT = 'SP'
-    MERGE = 'M'
+    REMOVE = 'RM'
+    ADD = 'AD'
     ACTIVITY_TYPES = (
         (PURCHASE, 'Purchase'),
         (PURCHASERETURN, 'Purchase Return'),
@@ -659,8 +683,8 @@ class StockTransaction(models.Model):
         (SALESRETURN, 'Sales Return'),
         (APPROVAL, 'Approval'),
         (APPROVALRETURN, 'Approval Return'),
-        (SPLIT,'Split'),
-        (MERGE,'Merge'),
+        (REMOVE,'Remove'),
+        (ADD,'Add'),
     )
 
     # user = models.ForeignKey(User)

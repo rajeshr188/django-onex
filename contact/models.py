@@ -1,3 +1,4 @@
+import decimal
 from django.urls import reverse
 from django.db.models import Count,Sum
 from django.db.models.functions import Coalesce
@@ -128,11 +129,12 @@ class Customer(models.Model):
 
     def get_total_invoice_cash(self):
         return self.sales.filter(balancetype="Cash").\
-                aggregate(total=Coalesce(Sum('balance'),0))['total']
+                aggregate(total=Coalesce(Sum('balance',output_field = models.DecimalField()),decimal.Decimal(0.0)))['total']
 
     def get_total_invoice_metal(self):
         return self.sales.filter(balancetype="Gold").\
-                aggregate(total=Coalesce(Sum('balance'),0))['total']
+            aggregate(total=Coalesce(
+                Sum('balance', output_field=models.DecimalField()), decimal.Decimal(0.0)))
 
     def get_unpaid(self):
         return self.sales.exclude(status="Paid")
@@ -143,7 +145,7 @@ class Customer(models.Model):
 
     def get_unpaid_cash_total(self):
         return self.get_unpaid_cash()\
-                .aggregate(total=Coalesce(Sum('balance'),0))['total']
+                .aggregate(total=Coalesce(Sum('balance'),decimal.Decimal(0)))['total']
 
     def get_unpaid_metal(self):
         return self.get_unpaid().filter(balancetype="Metal")\
@@ -151,7 +153,7 @@ class Customer(models.Model):
 
     def get_unpaid_metal_total(self):
         return self.get_unpaid_metal()\
-                .aggregate(total=Coalesce(Sum('balance'),0))['total']
+                .aggregate(total=Coalesce(Sum('balance'),decimal.Decimal(0)))['total']
 
     def get_total_invoice_paid_cash(self):
         pass
@@ -165,7 +167,7 @@ class Customer(models.Model):
 
     def get_metal_receipts_total(self):
         return self.receipts.filter(type='Metal').\
-                    aggregate(total = Coalesce(Sum('total'),0))['total']
+                    aggregate(total = Coalesce(Sum('total'),decimal.Decimal(0)))['total']
 
     def get_metal_balance(self):
         return self.get_total_invoice_metal() - self.get_metal_receipts_total()

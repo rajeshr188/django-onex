@@ -342,7 +342,6 @@ class Journal(models.Model):
     def transact(self):
         raise NotImplementedError
 
-
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='ltxns')
     ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,

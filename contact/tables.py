@@ -36,19 +36,3 @@ class CustomerTable(tables.Table):
         empty_text = "There are no customers matching the search criteria..."
         template_name='django_tables2/bootstrap4.html'
 
-# class SupplierTable(tables.Table):
-#     name = tables.LinkColumn('contact_supplier_detail', args=[A('pk')])
-#     pic = ImageColumn()
-#     edit = tables.LinkColumn('contact_supplier_update', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-#     delete = tables.LinkColumn('contact_supplier_delete', args=[A('pk')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
-#
-#     def render_edit(self):
-#         return 'Edit'
-#     def render_delete(self):
-#         return 'Delete'
-#     class Meta:
-#         model = Supplier
-#         fields = ('pic','id','name','phonenumber','organisation','initial')
-#         attrs = {"class": "table table-striped table-bordered"}
-#         empty_text = "There are no suppliers matching the search criteria..."
-#         # template_name='django_tables2/bootstrap4.html'

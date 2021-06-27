@@ -8,6 +8,7 @@ from django.db import models
 from itertools import tee, islice, chain
 from dateutil import relativedelta
 from django.utils import timezone
+
 # class Contacts(models.Model):
 #     created = models.DateTimeField(default = timezone.now)
 #     updated = models.DateTimeField(auto_now = True)
@@ -244,26 +245,3 @@ class Customer(models.Model):
 
         return txn_list
 
-# class Supplier(models.Model):
-#
-#     # Fields
-#     name = models.CharField(max_length=255,unique=True)
-#     pic=models.ImageField(upload_to='contacts/supplier/pic/',null=True,blank=True)
-#     created = models.DateTimeField(auto_now_add=True, editable=False)
-#     last_updated = models.DateTimeField(auto_now=True, editable=False)
-#     organisation = models.CharField(max_length=30)
-#     phonenumber = models.CharField(max_length=15)
-#     initial = models.CharField(max_length=30)
-#
-#
-#     class Meta:
-#         ordering = ('-created',)
-#
-#     def __str__(self):
-#         return u'%s' % self.id
-#
-#     def get_absolute_url(self):
-#         return reverse('contact_supplier_detail', args=(self.pk,))
-#
-#     def get_update_url(self):
-#         return reverse('contact_supplier_update', args=(self.pk,))

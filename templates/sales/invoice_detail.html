@@ -23,6 +23,7 @@
 <tr>
   <td>Net Wt</td><td>{{object.net_wt}}</td>
 </tr>
+<tr><td>Approval</td> <td><a href="{% url 'approval_approval_detail' object.approval %}">{{object.approval}}</a></td></tr>
 <tr>
   <td>balance</td>
   <td>{{ object.balance|intcomma }}</td>

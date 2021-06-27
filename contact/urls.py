@@ -27,11 +27,3 @@ urlpatterns += (
          name='contact_reallot_payments'),
 )
 
-# urlpatterns += (
-#     # urls for Supplier
-#     path('supplier/', views.SupplierListView.as_view(), name='contact_supplier_list'),
-#     path('supplier/create/', views.SupplierCreateView.as_view(), name='contact_supplier_create'),
-#     path('supplier/detail/<int:pk>/', views.SupplierDetailView.as_view(), name='contact_supplier_detail'),
-#     path('supplier/update/<int:pk>/', views.SupplierUpdateView.as_view(), name='contact_supplier_update'),
-#     path('supplier/<int:pk>/delete',views.SupplierDelete.as_view(),name='contact_supplier_delete'),
-# )

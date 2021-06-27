@@ -1,3 +1,4 @@
+from approval.models import ApprovalLineReturn
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 from django.db import models,transaction
@@ -25,7 +26,7 @@ class Invoice(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now, db_index=True)
     last_updated = models.DateTimeField(auto_now_add=True)
-    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    rate = models.DecimalField(max_digits=10, decimal_places=3,default=0)
     is_gst = models.BooleanField(default=False)
     posted = models.BooleanField(default=False)
     gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
@@ -59,6 +60,12 @@ class Invoice(models.Model):
         PaymentTerm, on_delete=models.SET_NULL,
         related_name='sale_term',
         blank=True, null=True)
+    approval = models.OneToOneField(
+        'approval.Approval',
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        related_name='bill'
+    )
     # journals = GenericRelation(Journal,related_query_name='sales_doc')
     stock_txns = GenericRelation(StockTransaction)
 
@@ -123,14 +130,19 @@ class Invoice(models.Model):
     @transaction.atomic()
     def post(self):
         saleitems = self.saleitems.all()
+        if self.approval:
+            for i in self.approval.items.filter(status = 'Pending'):
+                apr = ApprovalLineReturn.objects.create(
+                    line=i, quantity=i.quantity, weight=i.weight)
+                apr.post()
+                i.update_status()
         for i in saleitems:
-                i.post()
+            i.post()
         jrnl = SalesJournal.objects.create(
                 content_object = self,
                 desc = 'sale'
             )
-            # credit/cash cash/gold
-            
+            # credit/cash cash/gold   
         jrnl.transact()
         self.posted = True
         self.save(update_fields = ['posted'])
@@ -147,6 +159,11 @@ class Invoice(models.Model):
     def unpost(self):
         for i in self.saleitems.all():
             i.unpost()
+        if self.approval:
+            for i in self.approval.items.all():
+                i.product.add(i.weight, i.quantity,
+                                 i, 'A')
+                i.update_status()
             
         jrnl = SalesJournal.objects.create(
                 content_object=self,
@@ -206,19 +223,32 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch)/100
 
-    
     def post(self):
+        
         if not self.is_return:#if sold
+            # if approvalline then return approval and remove from stock
+            # if self.approvalline:
+            #     apr = ApprovalLineReturn.objects.create(line = self.approvalline,quantity = self.quantity,weight=self.weight)
+            #     apr.post()
+            #     self.approvalline.approval.is_billed = True
+            #     self.approvalline.approval.save(update_fields = ['is_billed'])
+            #     self.approvalline.update_status()
             self.product.remove(self.weight,self.quantity,self.invoice,'S')
         else:#if returned
             self.product.add(self.weight,self.quantity,self.invoice,'SR')
     
     @transaction.atomic()
     def unpost(self):
+       
         if self.is_return:
             self.product.remove(self.weight,self.quantity,self.invoice,'SR')
-        else:
+        else:   
             self.product.add(self.weight,self.quantity,self.invoice,'SR')
+            # if approvalline then return to stock and then return to approval
+            # if self.approvalline:
+            #     self.product.add(self.weight,self.quantity,self.approvalline.approval,'A')
+            #     self.approvalline.update_status()
+
 
 class Receipt(models.Model):
 

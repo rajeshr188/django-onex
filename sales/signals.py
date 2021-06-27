@@ -1,7 +1,6 @@
 from django.db.models import signals
 from django.dispatch import receiver
-from sales.models import Invoice,InvoiceItem,Receipt,ReceiptLine
-from product.models import Stree
+from sales.models import ReceiptLine
 
 # @receiver(signals.pre_delete,sender=ReceiptLine)
 # def delete_status(sender,instance,*args,**kwargs):

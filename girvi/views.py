@@ -163,12 +163,12 @@ def home(request):
     loan['interestdue']= l.aggregate(t=Sum('interest'))
 
 
-    chart=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
+    sumbyitem=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
     fixed = []
-    fixed.append(chart['gold'])
-    fixed.append(chart['silver'])
-    fixed.append(chart['bronze'])
-    loan['chart']=fixed
+    fixed.append(sumbyitem['gold'])
+    fixed.append(sumbyitem['silver'])
+    fixed.append(sumbyitem['bronze'])
+    loan['sumbyitem']=fixed
     datetimel = loans.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
     datetime2 = unreleased.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
 
@@ -178,7 +178,7 @@ def home(request):
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
 
-    lastmonth =  loans.filter(created__year = today.year,created__month = (today.replace(day=1) - datetime.timedelta(days=1)).month)\
+    lastmonth =  loans.filter(created__year = today.year,created__month = today.month -1)\
                     .annotate(date_only=Cast('created', DateField()))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
@@ -186,13 +186,11 @@ def home(request):
     thisyear = loans.filter(created__year = today.year).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
 
-    lastyear = loans.filter(created__year = (today.replace(month=1,day=1)-datetime.timedelta(days=1)).year).annotate(month=Month('created'))\
+    lastyear = loans.filter(created__year =today.year -1).annotate(month=Month('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
-
-    loan['status'] = [released.count(),unreleased.count()]
-    # fixed = []
-    # for row in datetime:
-    #     fixed.append([row[0],row[1]])
+    # lry = Loan.released.dates('created','year').values('created__year').annotate(c = Count('id'))
+    loan['status'] = [loans.count(),released.count()]
+    
     loan['datechart']=datetimel
     loan['datechart1']=datetime2
     loan['thismonth']=thismonth

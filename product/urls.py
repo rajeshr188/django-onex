@@ -88,18 +88,6 @@ urlpatterns += (
 )
 
 urlpatterns += (
-    # urls for Stree
-    path('stree/',views.StreeListView.as_view(),name = 'product_stree_list'),
-    path('stree/create/',views.StreeCreateView.as_view(),name = 'product_stree_create'),
-    path('stree/split_lot/<int:pk>',views.split_lot,name = 'product_stree_splitlot'),
-    path('stree/merge_lot/<int:pk>',views.merge_lot,name = 'product_stree_mergelot'),
-    path('stree/detail/<int:pk>/',views.StreeDetailView.as_view(), name = 'product_stree_detail'),
-    path('stree/update/<int:pk>/',views.StreeUpdateView.as_view(), name = 'product_stree_update'),
-    path('stree/delete/<int:pk>/',views.StreeDeleteView.as_view(), name = 'product_stree_delete'),
-
-)
-
-urlpatterns += (
     #urls for Stock
     path('stock/',views.StockListView.as_view(),name='product_stock_list'),
     path('stock/create/',views.StockCreateView.as_view(),name='product_stock_create'),

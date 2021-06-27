@@ -9,7 +9,10 @@ from django.urls import reverse, reverse_lazy
 
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from .tables import InvoiceTable,PaymentTable
-from .forms import InvoiceForm, InvoiceItemForm, InvoiceItemFormSet, PaymentForm, PaymentItemFormSet, PaymentLineForm, PaymentLineFormSet
+from .forms import (InvoiceForm, InvoiceItemForm, 
+                    InvoiceItemFormSet, PaymentForm,
+                    PaymentItemFormSet, PaymentLineForm,
+                    )
 from .filters import InvoiceFilter, PaymentFilter
 from .render import Render
 
@@ -30,12 +33,13 @@ def home(request):
     context['total'] = total
     context['map'] = map
     return render(request,'purchase/home.html',context)
-def print_invoice(request,pk):
+
+def print_invoice(pk):
     invoice=Invoice.objects.get(id=pk)
     params={'invoice':invoice}
     return Render.render('purchase/invoice_pdf.html',params)
 
-def print_payment(request,pk):
+def print_payment(pk):
     payment=Payment.objects.get(id=pk)
     params={'payment':payment,'inwords':num2words(payment.total,lang='en_IN')}
     return Render.render('purchase/payment.html',params)
@@ -56,8 +60,8 @@ def list_balance(request):
         supplier=OuterRef('pk'),
         created__gte=Subquery(acs.values('created'))
         ).order_by().values('supplier')
-    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Gold'))).values('gbal')
-    cbal=invoices.annotate(cbal=Sum('balance',filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(balancetype='Gold'))).values('gbal')
+    cbal=invoices.annotate(cbal=Sum('balance',filter=Q(balancetype='Cash'))).values('cbal')
 
     balance=Customer.objects.filter(type="Su").annotate(
                                     cb = Subquery(acs_cb.values('ClosingBalance')),

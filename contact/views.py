@@ -6,7 +6,7 @@ from django_filters.views import FilterView
 from .filters import CustomerFilter
 from .models import Customer
 from .forms import CustomerForm
-from django.urls import reverse,reverse_lazy
+from django.urls import reverse_lazy
 from django.shortcuts import render,redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from sales.models import Month
@@ -60,10 +60,6 @@ class CustomerDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
 
         data=self.object.sales.all()
-        # table = InvoiceTable(data,exclude=('customer','edit','delete',))
-        # table.paginate(page=self.request.GET.get('page', 1), per_page=25)
-        # context['invoices']=table
-
         inv =data.exclude(status="Paid")
         how_many_days = 30
         context['current'] = inv.filter(created__gte = datetime.now()-timedelta(days=how_many_days)).aggregate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))

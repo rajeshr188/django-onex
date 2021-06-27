@@ -167,18 +167,7 @@ class ProductVariant(models.Model):
     def get_update_url(self):
         return reverse('product_productvariant_update', args=(self.pk,))
 
-    # def get_weight(self):
-    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('weight'))
-
-    # def get_wih(self):
-    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('Wih'))
-
-    # def get_qty(self):
-    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('quantity'))
-
-    # def get_qih(self):
-    #     return Stock.objects.filter(variant = self).aggregate(t = Sum('Qih'))
-
+    
     def is_in_stock(self):
         return self.quantity_available > 0
 
@@ -297,152 +286,6 @@ class VariantImage(models.Model):
     def get_update_url(self):
         return reverse('product_variantimage_update', args=(self.pk,))
 
-class Stree(MPTTModel):
-    # each stree is a node or shadow of product variant in lot or unique
-    created = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(max_length=100)
-    full_name = models.CharField(max_length=100,blank = True,null = True,default = '')
-    parent = TreeForeignKey('self',null = True,blank = True,
-                            related_name = 'children',
-                            on_delete = models.CASCADE)
-    # duplicates of weight cost touch wastage from product variant
-    weight = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
-    cost = models.DecimalField(decimal_places=3,max_digits=10,null = True,default=0)
-    touch = models.DecimalField(decimal_places=3,max_digits=10,default=0)
-    wastage = models.DecimalField(decimal_places=2,max_digits=10,null=True,default=0)
-
-    tracking_type = models.CharField(choices = (
-                                            ('Lot','Lot'),('Unique','Unique')),
-                                            null = True,max_length=10,
-                                            default = 'Lot')
-    barcode = models.CharField(max_length=100,null=True,default = '')
-    quantity = models.IntegerField(default=0,)
-    status = models.CharField(max_length=10,choices = (
-                                    ('Empty','Empty'),
-                                    ('Available','Available'),('Sold','Sold'),
-                                    ('Approval','Approval'),('Return','Return')
-                                    ),
-                                    default = 'Empty')
-    productvariant = models.ForeignKey('ProductVariant',on_delete = models.CASCADE,null = True)
-
-    class Meta:
-        ordering = ('id',)
-
-    def __str__(self):
-        return f"{self.get_root().name}:{self.productvariant} {self.barcode} wt:{self.weight} qty:{self.quantity}"
-
-    def get_absolute_url(self):
-        return reverse('product_stree_list')
-
-    def get_update_url(self):
-        return reverse('product_stree_update', args=(self.pk,))
-
-    def balance(self):
-        balances = [node.weight for node in self.get_descendants(include_self=True)]
-        return sum(balances)
-
-    def qty(self):
-        qt = [node.quantity for node in self.get_descendants(include_self = True)]
-        return sum(qt)
-
-    def subtract(self,qty,wt):
-        # assert(self.quantity >= qty),"quantity is higher than avaialble"
-        # assert(self.weight >= wt),"weight more than available"
-        if self.quantity >= qty and self.weight >= wt :
-            self.quantity -=qty
-            self.weight -= wt
-            self.save()
-            self.update_status()
-        else:
-            raise Exception(f" {self.quantity} > {qty} and {self.weight} > {wt} .hence exception")
-
-    def add(self,qty,wt):
-        self.quantity +=qty
-        self.weight += wt
-        self.save()
-        self.update_status()
-
-    def transfer(self,node,qty,wt):
-        try:
-            self.subtract(qty,wt)
-        except Exception:
-            print("transfer failed")
-            raise Exception("transfer failed")
-        else:
-            node.add(qty,wt)
-            node.save()
-
-    def traverse_to(self,product,category='Gold'):
-        print(f"self:{self} product:{product}")
-        path_to_take = ['product_type','Purity','Weight','Gender','Design','Length','Initial','tracking_type']
-        product_variant = product
-        product_type = product_variant.product.product_type
-        attr = {**product_variant.product.attributes,**product_variant.attributes}
-        attr = {Attribute.objects.get(id = item[0]).name : AttributeValue.objects.get(id = item[1]).name for item in attr.items()}
-        attr['product_type']= product_type.name
-        attr = {i:attr[i]for i in path_to_take if i in attr}
-        path = list(attr.values())
-        path = [category]+path
-
-        for p in path:
-            self,status = Stree.objects.get_or_create(name=p,parent=self)
-            # print(f"-->{self}")
-        self.tracking_type = attr['tracking_type']
-        self.save()
-        return self
-
-    def traverse_parellel_to(self,node,include_self = True):
-        ancestors = [i.name for i in node.get_ancestors(include_self = include_self)]
-        ancestors.pop(0)
-        # print(f"ancestors : {ancestors}")
-        for p in ancestors:
-            self,status = Stree.objects.get_or_create(name=p,parent = self)
-        return self
-
-    def empty_stock(self):
-        pass
-
-    def split_node(self,weight):
-
-        if self.weight < weight:
-            return
-
-        if self.get_siblings().count() == 0:
-            sibling = Stree.objects.create(full_name=self.get_family()[1].name ,name = 'Unique',parent = self.parent,tracking_type='Unique')
-            print(f"created sibling{sibling} of family{sibling.get_family()}")
-            # sibling.insert_at(target = self,position='right')
-        sibling = self.get_siblings()[0]
-
-        newnode = Stree.objects.create(parent = sibling,weight=weight,tracking_type='Unique',quantity=1,status = 'Available')
-        newnode.barcode = 'je'+str(newnode.id)
-        family = newnode.get_family()
-        newnode.full_name=family[2].name+family[3].name
-        newnode.save()
-        self.weight -= weight
-        self.quantity -=1
-        self.save()
-
-    def merge_node(self):
-        if self.tracking_type == 'Lot':
-            return
-        n = self.get_family()
-        lot,status = Stree.objects.get_or_create(full_name=n[2].name+'Lot',name='Lot',parent = self.parent.parent,tracking_type='Lot')
-        lot.weight += self.weight
-        lot.quantity +=1
-        lot.save()
-        self.delete()
-
-    def update_status(self):
-        root = self.get_root()
-        if root.name =='Stock':
-            if self.weight == 0:
-                self.status = 'Empty'
-            else:
-                self.status = 'Available'
-        else :
-            self.status = root.name
-        self.save()
-
 class Stock(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -453,7 +296,7 @@ class Stock(models.Model):
                                     # related_name = ''
                                     )
 
-    # following atrributes are notin dnf  i.e duplkicates of variant
+    # following atrributes are not in dnf  i.e duplkicates of variant
     melting = models.DecimalField(max_digits =10,decimal_places=3, default =100)
     cost = models.DecimalField(max_digits = 10,decimal_places = 3,default = 100)
     touch = models.DecimalField(max_digits =10,decimal_places =3,default = 0)
@@ -523,44 +366,32 @@ class Stock(models.Model):
             ls = self.stockstatement_set.latest()
         except StockStatement.DoesNotExist:
             ls = None
-        if ls is not None:
-            return self.stocktransaction_set.filter(
-                        created__gte = ls.created,
-                        activity_type__in = ['P','SR','AR','AD']
-                        ).aggregate(
-                            qty=Coalesce(
-                                Sum('quantity', output_field = models.IntegerField()), 0),
-                            wt=Coalesce(
-                                Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
-                        )
-        else:
-            return self.stocktransaction_set.filter(
-                activity_type__in=['P', 'SR', 'AR','AD']
-                ).aggregate(
-                    qty=Coalesce(
-                        Sum('quantity',output_field = models.IntegerField()), 0),
-                    wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
-                )
+        st = self.stocktransaction_set.filter(
+            activity_type__in=['P', 'SR', 'AR', 'AD'])
+        if ls :
+            st.filter(created__gte = ls.created)
+
+        return st.aggregate(
+            qty=Coalesce(
+                Sum('quantity', output_field=models.IntegerField()), 0),
+            wt=Coalesce(
+                Sum('weight', output_field=models.DecimalField()), Decimal(0.0))
+        )
+        
     def stock_out_txns(self):
         # filter since last audit
         try:
             ls = self.stockstatement_set.latest()
         except StockStatement.DoesNotExist:
             ls = None
-        if ls is not None:
-            return self.stocktransaction_set.filter(
-                        created__gte = ls.created,
-                        activity_type__in=['PR', 'S', 'A','RM']
-                        ).aggregate(
-                            qty=Coalesce(
-                                Sum('quantity', output_field=models.IntegerField()), 0),
-                            wt=Coalesce(
-                                Sum('weight', output_field=models.DecimalField()), Decimal(0.0))
-                        )
-        else:
-            return self.stocktransaction_set.filter(
-                        activity_type__in=['PR', 'S', 'A','RM']
-                        ).aggregate(
+        
+        st = self.stocktransaction_set.all()
+        if ls:
+            st = st.filter(created__gte = ls.created)
+        st = st.filter(
+            activity_type__in=['PR', 'S', 'A', 'RM'])
+        
+        return st.aggregate(
                             qty=Coalesce(
                                 Sum('quantity', output_field=models.IntegerField()), 0),
                             wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
@@ -605,14 +436,13 @@ class Stock(models.Model):
     def remove(self,weight,quantity,cto,at):
         cb = self.current_balance()
         if (cb['wt'] >= weight and cb['qty'] >= quantity):
-            s=StockTransaction.objects.create(
+            StockTransaction.objects.create(
                         stock = self,
                         weight = weight,
                         quantity = quantity,
                         content_object = cto,
                         activity_type=at
                 )
-            print(type(s))
             self.update_status()
             
         else:

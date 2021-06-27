@@ -80,9 +80,9 @@ def list_balance(request):
     invoices=Invoice.objects.filter(customer=OuterRef('pk')).\
                 order_by().values('customer')
     gbal=invoices.annotate(gbal=Sum('balance',
-            filter=Q(paymenttype='Credit')&Q(balancetype='Gold'))).values('gbal')
+            filter=Q(balancetype='Gold'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',
-            filter=Q(paymenttype='Credit')&Q(balancetype='Cash'))).values('cbal')
+            filter=Q(balancetype='Cash'))).values('cbal')
 
     balance=Customer.objects.filter(type='Wh').values('id','name').\
                 annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),
@@ -135,7 +135,7 @@ def simple_upload(request):
         wb=load_workbook(myfile,read_only=True)
         sheet = wb.active
 
-        inv = tablib.Dataset(headers = ['id','customer','created','description','balancetype','paymenttype','balance'])
+        inv = tablib.Dataset(headers = ['id','customer','created','description','balancetype','balance'])
         rec = tablib.Dataset(headers = ['id','customer','created','description','type','total',])
         bal = tablib.Dataset(headers = ['customer','cash_balance','metal_balance'])
         pname = None
@@ -148,7 +148,7 @@ def simple_upload(request):
                     # id = re.search(r'\:\s([^)]+)', row[3].value).group(1).strip()
                     if row[4].value is not None:
                         inv_list = ['', pname,date,
-                           row[2].value,'Cash','Credit',  row[4].value]
+                           row[2].value,'Cash',  row[4].value]
                         inv.append(inv_list)
                     if row[9].value is not None:
                         rec_list = ['',pname, date,
@@ -156,11 +156,11 @@ def simple_upload(request):
                         rec.append(rec_list)
                     if row[22].value is not None:
                         inv_list = ['',pname, date,
-                            row[2].value,'Metal','Credit', row[22].value]
+                            row[2].value,'Gold', row[22].value]
                         inv.append(inv_list)
                     if row[24].value is not None:
                         rec_list = ['',pname, date,
-                            row[2].value,'Metal', row[24].value]
+                            row[2].value,'Gold', row[24].value]
                         rec.append(rec_list)
                 elif row[1].value is None and (row[4].value and row[16].value and row[26].value is not None):
                     bal_list = [pname,row[16].value,row[26].value]
@@ -205,26 +205,27 @@ class InvoiceCreateView(CreateView):
         invoiceitem_form = InvoiceItemFormSet()
 
         if 'approvalid' in request.GET:
-            aid = request.GET['approvalid']
-            print(aid)
-            approval = Approval.objects.get(id = aid)
-            approvallines = approval.approvalline_set.values()
-            print(approvallines)
-            form.fields['customer'].queryset = Customer.objects.filter(id=approval.contact.id)
+            approval = Approval.objects.get(id = request.GET['approvalid'])
+            approvallines = approval.items.filter(status = 'Pending').values()
+            
+            form.fields["customer"].queryset = Customer.objects.filter(id=approval.contact.id)
+            form.fields["approval"].initial = approval
+            
             for subform, data in zip(invoiceitem_form.forms, approvallines):
+                data.pop('id')
                 subform.initial = data
-                print(data)
+                
         return self.render_to_response(
             self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
-
+                                  invoiceitem_form=invoiceitem_form)
+                                  )
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         invoiceitem_form = InvoiceItemFormSet(self.request.POST)
-
+    
         if (form.is_valid() and invoiceitem_form.is_valid()):
             return self.form_valid(form, invoiceitem_form)
         else:
@@ -237,13 +238,16 @@ class InvoiceCreateView(CreateView):
                 self.object = form.save()
                 invoiceitem_form.instance = self.object
                 invoiceitem_form.save()
-                self.object.gross_wt = self.object.get_gross_wt()
-                self.object.net_wt = self.object.get_net_wt()
-                self.object.balance = self.object.get_total_balance()
-                self.object.save()
             except Exception:
                 form.add_error(None,'error in transfer')
                 return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
+            
+            self.object.approval.is_billed = True
+            self.object.approval.save()
+            self.object.gross_wt = self.object.get_gross_wt()
+            self.object.net_wt = self.object.get_net_wt()
+            self.object.balance = self.object.get_total_balance()
+            self.object.save()
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -255,7 +259,6 @@ class InvoiceCreateView(CreateView):
         return self.render_to_response(
             self.get_context_data(form=form,
                                   invoiceitem_form=invoiceitem_form))
-
 
 class InvoiceDetailView(DetailView):
     model = Invoice
@@ -305,7 +308,6 @@ def post_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
     if not sales_inv.posted:
         sales_inv.post()
-    
     return redirect(sales_inv)
 
 @transaction.atomic()

@@ -1,21 +1,78 @@
-from django.shortcuts import render
+from django.http.response import Http404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import ListView,CreateView,DetailView,UpdateView,DeleteView
 from .models import (Approval,ApprovalLine,ApprovalLineReturn)
-                    # ApprovalReturn,ApprovalReturnLine
-from .forms import (ApprovalForm,ApprovalLineForm,
-                                # ApprovalReturnForm,ApprovalReturnLineForm,
-                                Approval_formset,
-                                # ApprovalReturn_formset
-                                )
+                   
+from .forms import ApprovalForm,ApprovalLineForm
 from .filters import ApprovalLineFilter
 from django.forms import modelformset_factory
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect
-from product.models import Stree
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from datetime import datetime
+
 # Create your views here.
+@transaction.atomic
+def post_approval(request,pk):
+    approval = get_object_or_404(Approval,pk=pk)
+    approval.post()
+    return redirect(approval)
+
+
+@transaction.atomic
+def unpost_approval(request,pk):
+    approval = get_object_or_404(Approval, pk=pk)
+    approval.unpost()
+    return redirect(approval)
+
+
+@transaction.atomic
+def post_approvallinereturn(request, pk):
+    approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
+    approval_lr.post()
+    return redirect(approval_lr.line.approval)
+
+
+@transaction.atomic
+def unpost_approvallinereturn(request, pk):
+    approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
+    approval_lr.unpost()
+    return redirect(approval_lr.line.approval)
+
+from sales.models import Invoice as sinv,InvoiceItem as sinvitem
+from invoice.models import PaymentTerm
+@transaction.atomic()
+def convert_sales(request,pk):
+    # create sales invoice and invoice items from approval
+    approval = get_object_or_404(Approval,pk=pk)
+    term = PaymentTerm.objects.first()
+    print(term)
+    sale = sinv.objects.create(
+        created = datetime.now(),
+        customer = approval.contact,
+        approval =approval,
+        term=term
+
+    )
+    for item in approval.items.all():
+        i = sinvitem.objects.create(invoice =sale,
+                product = item.product,
+                weight = item.weight,
+                quantity = item.quantity,
+                touch = item.touch,
+                total=(item.weight*item.touch)/100)
+        i.save()
+
+    sale.gross_wt = sale.get_gross_wt()
+    sale.net_wt = sale.get_net_wt()
+    sale.balance = sale.get_balance()
+    sale.save()
+    approval.is_billed = True
+    approval.save()
+    return redirect(sale)
 
 class ApprovalListView(LoginRequiredMixin,ListView):
     model = Approval
@@ -48,21 +105,28 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
     def form_valid(self,form,approvalline_form):
         self.object = form.save()
         approvalline_form.instance = self.object
-        try:
-            items = approvalline_form.save()
-        except Exception:
-            print("failed")
-            self.object.delete()
-            form.add_error(None,'error i n transfer')
-            return self.form_invalid(form = form,approvalline_form = approvalline_form)
-            # raise Exception("aha failure")
-
+        items = approvalline_form.save()
+        qty =0
+        wt =0
+        for i in items:
+            qty +=i.quantity
+            wt +=i.weight
+        self.object.total_wt = wt
+        self.object.total_qty =qty
+        self.object.save(update_fields = ['total_wt','total_qty'])
+        # try:
+        #     items = approvalline_form.save()
+        # except Exception:
+        #     print("failed")
+        #     self.object.delete()
+        #     form.add_error(None,'error i n transfer')
+        #     return self.form_invalid(form = form,approvalline_form = approvalline_form)
+            
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):
         return self.render_to_response(self.get_context_data(
             form=form,approvalline_form=approvalline_form))
-
 
 class ApprovalDetailView(LoginRequiredMixin,DetailView):
     model = Approval
@@ -73,6 +137,8 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
 
     def get_context_data(self,**kwargs):
         data = super(ApprovalUpdateView,self).get_context_data(**kwargs)
+        if self.object.posted:
+                raise Http404
         if self.request.POST:
             data['approvalline_form'] = Approval_formset(self.request.POST,
                                             instance = self.object)
@@ -86,21 +152,28 @@ class ApprovalUpdateView(LoginRequiredMixin,UpdateView):
         context = self.get_context_data()
         approvalline_form = context['approvalline_form']
         self.object = form.save()
-        print(approvalline_form.is_valid())
-        if approvalline_form.is_valid():
-            try:
-                instances = approvalline_form.save(commit = True)
-            except Exception:
-                print("failed")
-                form.add_error(None,'error i n transfer')
-                return self.form_invalid(form = form,approvalline_form = approvalline_form)
+        items = approvalline_form.save()
+        qty = 0
+        wt = 0
+        for i in items:
+            qty += i.quantity
+            wt += i.weight
+        self.object.total_wt = wt
+        self.object.total_qty = qty
+        self.object.save(update_fields=['total_wt', 'total_qty'])
+        # if approvalline_form.is_valid():
+        #     try:
+        #         instances = approvalline_form.save(commit = True)
+        #     except Exception:
+        #         print("failed")
+        #         form.add_error(None,'error i n transfer')
+        #         return self.form_invalid(form = form,approvalline_form = approvalline_form)
 
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):
         return self.render_to_response(self.get_context_data(
             form=form,approvalline_form=approvalline_form))
-
 
 class ApprovalDeleteView(LoginRequiredMixin,DeleteView):
     model = Approval
@@ -118,28 +191,14 @@ def ApprovalLineReturnView(request):
                                         )
     if request.method == 'POST':
         formset = approvallinereturn_formset(request.POST)
-        if formset.is_valid():
-            # do something with the formset.cleaned_data
-            # submit lines approval node to stock
-            # update lines return_qty & return weight & status
-            for form in formset:
-                if form.cleaned_data['line'].product.tracking_type == 'Lot':
-                    approval_node,created = Stree.objects.get_or_create(name='Approval')
-                    approval_node = approval_node.traverse_parellel_to(form.cleaned_data['line'].product)
-                    approval_node.transfer(form.cleaned_data['line'].product,form.cleaned_data['quantity'],form.cleaned_data['weight'])
-                else:
-                    stock = Stree.objects.get(name='Stock')
-                    stock = stock.traverse_parellel_to(form.cleaned_data['line'].product,include_self=False)
-                    form.cleaned_data['line'].product.move_to(stock,position='first-child')
-
-
-                if form.cleaned_data['line'].quantity == form.cleaned_data['quantity'] and form.cleaned_data['line'].weight == form.cleaned_data['weight']:
-                    form.cleaned_data['line'].returned_qty = form.cleaned_data['quantity']
-                    form.cleaned_data['line'].returned_wt = form.cleaned_data['weight']
-                    form.cleaned_data['line'].status = 'Returned'
-                    # form.cleaned_data['line'].save()
-                result = form.save()
-                result.line.save()
+        # stocktranx from approval to available
+        for form in formset:
+            result = form.save()
+            if not result.posted:
+                result.post()
+                result.posted = True
+                result.save(update_fields=['posted'])
+               
     elif request.method == 'GET':
         contact = request.GET.get('approval__contact',False)
         if contact:
@@ -148,12 +207,13 @@ def ApprovalLineReturnView(request):
             )
 
             for form in formset:
-                form.fields['line'].queryset = ApprovalLine.objects.filter(status = 'Pending',approval__contact_id = contact)
+                form.fields['line'].queryset = ApprovalLine.objects.filter(
+                    status = 'Pending',
+                    approval__contact_id = contact)
         else:
             formset = approvallinereturn_formset(
                                 queryset = ApprovalLineReturn.objects.none()
                                 )
-
 
     return render(request,'approval/approvallinereturn.html',{
                                     'filter':approvalline_filter,

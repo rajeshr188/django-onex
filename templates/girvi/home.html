@@ -13,7 +13,7 @@
     <div class="row row-cols-1 row-cols-md-2">
   <div class="col mb-4">
     <div class="card">
-      <canvas id="licChart" width="500" height="300"></canvas>
+      <canvas id="licChart" width="300" height="200"></canvas>
       <div class="card-body">
         <h5 class="card-title">Loans by License(Series)</h5>
       </div>
@@ -21,7 +21,7 @@
   </div>
   <div class="col mb-4">
     <div class="card">
-      <canvas id="myChart" width="500" height="300"></canvas>
+      <canvas id="loansbyyear" width="300" height="200"></canvas>
       <div class="card-body">
         <h5 class="card-title">Loans By Year</h5>
       </div>
@@ -29,7 +29,7 @@
   </div>
   <div class="col mb-4">
     <div class="card">
-      <canvas id="loanChart" width="400" height="200"></canvas>
+      <canvas id="loanbyitems" width="300" height="200"></canvas>
       <div class="card-body">
         <h5 class="card-title">By Items</h5>
       </div>
@@ -37,23 +37,23 @@
   </div>
   <div class="col mb-4">
     <div class="card">
-      <canvas id="thismonthChart" width="500" height="300"></canvas>
+      <canvas id="thismonthChart" width="300" height="200"></canvas>
       <div class="card-body">
-        <h5 class="card-title">Loans By Month</h5>
+        <h5 class="card-title">Loans This Month</h5>
       </div>
     </div>
   </div>
   <div class="col mb-4">
     <div class="card">
-      <canvas id="thisyearChart" width="500" height="200"></canvas>
+      <canvas id="thisyearChart" width="300" height="200"></canvas>
       <div class="card-body">
-        <h5 class="card-title">Loans By Year</h5>
+        <h5 class="card-title">Loans this Year</h5>
       </div>
     </div>
   </div>
   <div class="col mb-4">
     <div class="card">
-      <canvas id="loanstatuschart" width="500" height="200"></canvas>
+      <canvas id="loanstatuschart" width="300" height="200"></canvas>
       <div class="card-body">
         <h5 class="card-title">Loans Status</h5>
       </div>
@@ -137,7 +137,7 @@
 </div>
 </div>
 
-<script src = "{% static 'js/Chart.bundle.js' %}"></script>
+<script src = "{% static 'js/chart.js' %}"></script>
 <script>
 
   var loanstatus_data = {
@@ -161,15 +161,15 @@
   var s1 = {
   label: 'loan by year',
   borderColor: 'red',
-  data: [{% for i in data.loan.datechart %} {x:'{{i.year}}',y:{{i.l}}},{% endfor %}]
+  data: [{% for i in data.loan.datechart %} {{i.l}},{% endfor %}]
   };
   var ds2 = {
   label: 'unreleased loan by year',
   borderColor: 'green',
-  data: [0,0,{% for i in data.loan.datechart1 %} {x:'{{i.year}}',y:{{i.l}}},{% endfor %}]
+  data: [0,0,{% for i in data.loan.datechart1 %} {{i.l}},{% endfor %}]
   };
 
-  var ctx1 = document.getElementById('myChart').getContext('2d');
+  var ctx1 = document.getElementById('loansbyyear').getContext('2d');
   var chart = new Chart(ctx1, {
     type: 'line',
     data: {
@@ -219,14 +219,14 @@
         datasets: [syear,lastyear] },
       });
 
-  var ctx3 = document.getElementById("loanChart");
+  var ctx3 = document.getElementById("loanbyitems");
   var myChart = new Chart(ctx3, {
       type: 'pie',
       data: {
       labels: ["Gold", "Silver", "Bronze"],
       datasets: [{
 
-          data:{{data.loan.chart}},
+          data:{{data.loan.sumbyitem}},
           backgroundColor: [
             "#F7464A",
             "#46BFBD",

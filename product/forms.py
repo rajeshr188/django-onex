@@ -3,7 +3,7 @@ from mptt.forms import TreeNodeChoiceField
 from django.utils.translation import pgettext_lazy
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, VariantImage,Stock,
-                    Stree,StockTransaction)
+                    StockTransaction)
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_text
 from .attributes import get_name_from_attributes,get_product_attributes_data,generate_name_from_values
@@ -210,14 +210,6 @@ class StockForm(forms.ModelForm):
     class Meta:
         model=Stock
         fields='__all__'
-
-
-class StreeForm(forms.ModelForm):
-    # make parent as level 1 or root nodes such as stock approval sold return damaged old kacha ft
-    #
-    class Meta:
-        model = Stree
-        fields = ['parent','name','weight','quantity','tracking_type','status','cost','quantity','productvariant']
 
 class UniqueForm(forms.Form):
     weight = forms.DecimalField(max_digits=10, decimal_places=3)

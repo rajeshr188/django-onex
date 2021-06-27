@@ -1,7 +1,7 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-{% load mptt_tags %}
+
 
 <p>
   <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
@@ -16,6 +16,8 @@
       <td>quantity</td>
       <td>weight</td>
       <td>Status</td>
+      <td>Is billed</td>
+      <td>Posted</td>
       <td>Action</td>
   </tr>
 {% for object in object_list %}
@@ -26,6 +28,8 @@
     <td>{{ object.total_qty }}</td>
     <td>{{ object.total_wt }}</td>
     <td>{{object.status}}</td>
+    <td>{{object.is_billed}}</td>
+    <td>{{object.posted}}</td>
     <td><a href ="{% url 'approval_approval_delete' object.pk%}">Delete</a></td>
 </tr>
 {% endfor %}

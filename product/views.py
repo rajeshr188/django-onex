@@ -1,13 +1,13 @@
 import decimal
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
-                    AttributeValue, ProductImage, StockStatement, VariantImage,Stock,Stree,
+                    AttributeValue, ProductImage, StockStatement, VariantImage,Stock,
                     StockTransaction)
 from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
-                     ProductImageForm, VariantImageForm,StockForm,StreeForm,UniqueForm,
+                     ProductImageForm, VariantImageForm,StockForm,UniqueForm,
                      StockTransactionForm)
-from .filters import StreeFilter,ProductFilter,ProductVariantFilter
+from .filters import ProductFilter,ProductVariantFilter
 from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
@@ -217,15 +217,6 @@ class VariantImageUpdateView(LoginRequiredMixin,UpdateView):
     model = VariantImage
     form_class = VariantImageForm
 
-class StreeListView(LoginRequiredMixin,FilterView):
-    model = Stree
-    filterset_class = StreeFilter
-    template_name = 'product/stree_list.html'
-
-class StreeCreateView(LoginRequiredMixin,CreateView):
-    model =Stree
-    form_class = StreeForm
-
 # def print_qr(self,request):
 #     node = get_object_or_404(Stree,pk = pk)
 #
@@ -241,7 +232,6 @@ from django.http import HttpResponseRedirect
 from decimal import *
 def split_lot(request,pk):
     # If this is a POST request then process the Form data
-    # parent= get_object_or_404(Stree,pk=pk)
     stock = get_object_or_404(Stock,pk = pk)
     if request.method == 'POST':
 
@@ -255,9 +245,6 @@ def split_lot(request,pk):
             print(form.cleaned_data)
             weight = form.cleaned_data['weight']
             stock.split(weight)
-            # node_to_deduct_from = form.cleaned_data['parent']
-            # weight = form.cleaned_data['weight']
-            # node_to_deduct_from.split_node(weight)
 
             # redirect to a new URL:
             return HttpResponseRedirect(reverse('product_stock_list') )
@@ -279,17 +266,6 @@ def merge_lot(request,pk):
     node.merge()
 
     return HttpResponseRedirect(reverse('product_stock_list') )
-
-class StreeUpdateView(UpdateView):
-    model = Stree
-    form_class = StreeForm
-
-class StreeDetailView(DetailView):
-    model = Stree
-
-class StreeDeleteView(DeleteView):
-    model = Stree
-    success_url = reverse_lazy('product_stree_list')
 
 class StockListView(ListView):
     model=Stock

@@ -44,18 +44,6 @@ class InvoiceItemForm(forms.ModelForm):
         model = InvoiceItem
         fields = ['invoice','is_return','product','quantity','weight', 'less_stone','net_wt','touch','wastage','makingcharge','total',]
 
-    # def save(self,commit = True):
-    #     invoiceitem = super(InvoiceItemForm,self).save(commit = False)
-    #     if invoiceitem.id:
-    #         if any( x in self.changed_data for x in ['product','quantity','weight']):
-    #             InvoiceItem.objects.get(id = invoiceitem.id).delete()
-    #     if commit:
-    #         try:
-    #             invoiceitem.save()
-    #         except Exception:
-    #             raise Exception("failed From Model Save")
-    #     return invoiceitem
-
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
     fields=('is_return','product','quantity',
     'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),

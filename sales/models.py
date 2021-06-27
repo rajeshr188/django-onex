@@ -111,10 +111,18 @@ class Invoice(models.Model):
         #     raise Http404
         if self.term.due_days:
             self.due_date = self.created + timedelta(days=self.term.due_days)
-        if self.is_gst:
-            self.total = self.balance
-            self.total += self.get_gst()
+        
         super(Invoice, self).save(*args, **kwargs)
+    
+    def update_bal(self):
+        self.gross_wt = self.get_gross_wt()
+        self.net_wt = self.get_net_wt()
+        self.balance = self.get_total_balance()
+        self.total = self.balance
+        if self.is_gst:
+            self.total += self.get_gst()
+        self.save()
+        
 
     def delete(self, *args, **kwargs):
         if self.posted and self.get_balance() != 0:
@@ -221,18 +229,24 @@ class InvoiceItem(models.Model):
         return reverse('sales_invoiceitem_update', args=(self.pk,))
 
     def get_nettwt(self):
-        return (self.weight * self.touch)/100
+        if self.invoice.customer.type == 'Re':
+            return self.weight + self.wastage/100 
+        else:
+            return (self.weight * self.touch)/100
+
+    def get_total(self):
+        if self.invoice.balancetype == 'Cash':
+            return self.get_nettwt() * self.invoice.rate
+        else:
+            return self.get_nettwt()
+
+    def save(self,*args,**kwargs):
+        super(InvoiceItem, self).save(*args, **kwargs)
+        
 
     def post(self):
         
         if not self.is_return:#if sold
-            # if approvalline then return approval and remove from stock
-            # if self.approvalline:
-            #     apr = ApprovalLineReturn.objects.create(line = self.approvalline,quantity = self.quantity,weight=self.weight)
-            #     apr.post()
-            #     self.approvalline.approval.is_billed = True
-            #     self.approvalline.approval.save(update_fields = ['is_billed'])
-            #     self.approvalline.update_status()
             self.product.remove(self.weight,self.quantity,self.invoice,'S')
         else:#if returned
             self.product.add(self.weight,self.quantity,self.invoice,'SR')
@@ -244,10 +258,6 @@ class InvoiceItem(models.Model):
             self.product.remove(self.weight,self.quantity,self.invoice,'SR')
         else:   
             self.product.add(self.weight,self.quantity,self.invoice,'SR')
-            # if approvalline then return to stock and then return to approval
-            # if self.approvalline:
-            #     self.product.add(self.weight,self.quantity,self.approvalline.approval,'A')
-            #     self.approvalline.update_status()
 
 
 class Receipt(models.Model):

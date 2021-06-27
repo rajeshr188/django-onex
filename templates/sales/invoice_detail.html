@@ -23,12 +23,16 @@
 <tr>
   <td>Net Wt</td><td>{{object.net_wt}}</td>
 </tr>
+{% if object.approval %}
 <tr><td>Approval</td> <td><a href="{% url 'approval_approval_detail' object.approval %}">{{object.approval}}</a></td></tr>
+{% endif %}
 <tr>
   <td>balance</td>
   <td>{{ object.balance|intcomma }}</td>
 </tr>
 <tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
+<tr><td>is_gst</td><td>{{object.is_gst}}</td></tr>
+<tr><td>Total</td><td>{{object.total}}</td></tr>
 <tr><td>status</td><td>{{ object.status }}</td></tr>
 <tr>
   <td>Due Date</td><td>{{object.due_date}}</td>

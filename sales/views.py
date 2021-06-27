@@ -234,20 +234,30 @@ class InvoiceCreateView(CreateView):
     @transaction.atomic()
     def form_valid(self, form, invoiceitem_form):
         if invoiceitem_form.is_valid():
-            try:
-                self.object = form.save()
-                invoiceitem_form.instance = self.object
-                invoiceitem_form.save()
-            except Exception:
-                form.add_error(None,'error in transfer')
-                return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
-            
-            self.object.approval.is_billed = True
-            self.object.approval.save()
-            self.object.gross_wt = self.object.get_gross_wt()
-            self.object.net_wt = self.object.get_net_wt()
-            self.object.balance = self.object.get_total_balance()
-            self.object.save()
+            self.object = form.save()
+            invoiceitem_form.instance = self.object
+            items = invoiceitem_form.save()
+            for i in items:
+                i.net_wt = i.get_nettwt()
+                i.total = i.get_total()
+                i.save()
+            self.object.update_bal()
+            # try:
+                # self.object = form.save()
+                # invoiceitem_form.instance = self.object
+                # items = invoiceitem_form.save()
+                # for i in items:
+                #     i.net_wt = i.get_nettwt()
+                #     i.total = i.get_total()
+                #     i.save()
+                # self.object.update_bal()
+            # except Exception:
+            #     form.add_error(None,'error in transfer')
+            #     return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
+            if self.object.approval:
+                self.object.approval.is_billed = True
+                self.object.approval.save()
+        
 
         return HttpResponseRedirect(self.get_success_url())
 

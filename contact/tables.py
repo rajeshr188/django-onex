@@ -30,7 +30,7 @@ class CustomerTable(tables.Table):
     class Meta:
         model = Customer
         fields = (
-                    'id','pic','name',
+                    'rank','id','pic','name',
                     'relatedas','relatedto', 'Address', 'phonenumber')
         attrs = {"class": "table table-sm text-center  table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."

@@ -17,7 +17,7 @@ from dea.utils.currency import Balance
 from moneyed import Money
 
 def home(request):
-    l = Ledger.objects.all().prefetch_related('ledgerstatements','credit_txns','debit_txns')
+    l = Ledger.objects.all()
     ledger =[]
     for i in l:
         try:
@@ -65,12 +65,14 @@ def home(request):
     context={}
     context['ledger']=ledger   
     # context['ledger_bal'] = ledger_bal
-    a = Account.objects.filter(contact__type='Su')
+    
                   
     # context['accounts'] = AccountStatement.objects.filter(
     #                 pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
-    context['accounts'] = a
-    journal = Journal.objects.all().select_related('content_type')
+    # a = Account.objects.filter(contact__type='Su')
+    context['accounts'] = []
+    # journal = Journal.objects.all().select_related('content_type')
+    context['journal'] = []
     # jrnls = []
     # for i in journal:
     #     # txns = lt.filter(journal = i,)
@@ -82,7 +84,7 @@ def home(request):
     #                     'content_type':i.content_type,
     #                     # 'txns':txns
     #                     })
-    context['journal'] = journal
+    
 
     
     return render(request, 'dea/home.html', {'data': context})
@@ -151,7 +153,7 @@ def audit_ledger(request):
     
 
 class JournalListView(ListView):
-    queryset = Journal.objects.all().select_related('content_object')
+    queryset = Journal.objects.all().select_related('content_type')
 
 class JournalDetailView(DetailView):
     model = Journal

@@ -19,15 +19,15 @@
     <td>Status</td>
 
 </tr>
-{% for object in object_list %}
+{% for object,bal in data.stock %}
 <tr>
     <td>{{object.created|date}}</td>
     <td><a href="{{object.get_absolute_url}}">{{object.barcode}}</a></td>
     <td>{{object.variant.product_code}}</td>
     <td><a href="{% url 'product_productvariant_detail' object.variant.id%}">{{object.variant.name}}</a></td>
     <td>{{object.tracking_type}}</td>
-    <td>{{object.current_balance.wt}}</td>
-    <td>{{object.current_balance.qty}}</td>
+    <td>{{object.bal.wt}}</td>
+    <td>{{object.bal.qty}}</td>
     <td>{{object.updated_on}}</td>
     <td>{{object.status}}</td>
 

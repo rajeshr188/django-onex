@@ -17,7 +17,7 @@ from versatileimagefield.fields import PPOIField, VersatileImageField
 from .weight import WeightUnits, zero_weight
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
 from django.contrib.contenttypes.models import ContentType
-
+from .managers import StockManager
 class Category(MPTTModel):
     # gold ,silver ,other
     name = models.CharField(max_length=128,unique=True)
@@ -313,6 +313,7 @@ class Stock(models.Model):
                                     ('Merged','Merged'),
                                     ),
                                     default = 'Empty')
+    objects = StockManager()
     class Meta:
         ordering=('-created',)
         
@@ -347,8 +348,8 @@ class Stock(models.Model):
             ls_wt = 0
             ls_qty = 0
 
-        stock_in = self.stock_in_txns()
-        stock_out = self.stock_out_txns()
+        stock_in = self.stock_in_txns(last_statement)
+        stock_out = self.stock_out_txns(last_statement)
         cb_wt =  ls_wt + (stock_in['wt'] - stock_out['wt'])
         cb_qty = ls_qty + (stock_in['qty'] - stock_out['qty'])
 
@@ -360,16 +361,13 @@ class Stock(models.Model):
                     total_wt_out = stock_out['wt'],
                     total_qty_out = stock_out['qty'])
 
-    def stock_in_txns(self):
+    def stock_in_txns(self,ls):
         # filter since last audit
-        try:
-            ls = self.stockstatement_set.latest()
-        except StockStatement.DoesNotExist:
-            ls = None
-        st = self.stocktransaction_set.filter(
-            activity_type__in=['P', 'SR', 'AR', 'AD'])
+        st = self.stocktransaction_set.all()
         if ls :
             st.filter(created__gte = ls.created)
+        st = self.stocktransaction_set.filter(
+            activity_type__in=['P', 'SR', 'AR', 'AD'])
 
         return st.aggregate(
             qty=Coalesce(
@@ -378,12 +376,8 @@ class Stock(models.Model):
                 Sum('weight', output_field=models.DecimalField()), Decimal(0.0))
         )
         
-    def stock_out_txns(self):
+    def stock_out_txns(self,ls):
         # filter since last audit
-        try:
-            ls = self.stockstatement_set.latest()
-        except StockStatement.DoesNotExist:
-            ls = None
         
         st = self.stocktransaction_set.all()
         if ls:
@@ -399,19 +393,16 @@ class Stock(models.Model):
 
     def current_balance(self):
         # compute cb from last audit and append following
-        in_txns = self.stock_in_txns()
-        out_txns = self.stock_out_txns()
+        
         bal = {}
         try:
-            ls = self.stockstatement_set.latest()
-            ls_wt = ls.Closing_wt
-            ls_qty = ls.Closing_qty
+            ls = self.stockstatement_set.latest()   
         except StockStatement.DoesNotExist:
-            ls_wt = 0
-            ls_qty = 0
-
-        bal['wt'] = ls_wt + (in_txns['wt'] - out_txns['wt'])
-        bal['qty'] = ls_qty + (in_txns['qty'] - out_txns['qty'])
+            ls = None
+        in_txns = self.stock_in_txns(ls)
+        out_txns = self.stock_out_txns(ls)
+        bal['wt'] = ls.Closing_wt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = ls.Closing_qty + (in_txns['qty'] - out_txns['qty'])
         return bal
 
     def get_age(self):

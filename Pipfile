@@ -35,6 +35,7 @@ django-versatileimagefield = "*"
 django-bootstrap4 = "*"
 celery = "==5.0.5"
 django-money = "*"
+graphene-django = "*"
 
 [dev-packages]
 "autopep8" = "*"

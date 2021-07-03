@@ -234,6 +234,7 @@ class Ledger(MPTTModel):
                             on_delete = models.CASCADE,
                             related_name = 'children')
     objects = managers.LedgerManager()
+    
     class MPTTMeta:
         order_insertion_by = ['name']
         constraints = [

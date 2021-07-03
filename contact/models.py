@@ -1,4 +1,5 @@
 import decimal
+from django.db.models.expressions import OrderBy
 from django.urls import reverse
 from django.db.models import Count,Sum
 from django.db.models.functions import Coalesce
@@ -65,6 +66,7 @@ class Customer(models.Model):
     relatedto = models.CharField(max_length=30,blank=True)
     area = models.CharField(max_length=50,blank=True)
     active = models.BooleanField(blank = True,default = True)
+    rank =models.IntegerField(verbose_name='Rank')
 
     class Meta:
         ordering = ('-created','name','relatedto')
@@ -79,7 +81,9 @@ class Customer(models.Model):
     def get_update_url(self):
         return reverse('contact_customer_update', args=(self.pk,))
 
-    
+    def get_score(self):
+        return self.contactscore_set.aggregate(t = Sum('score'))['t']
+
     @property
     def get_loans(self):
         return self.loan_set.all()
@@ -245,3 +249,10 @@ class Customer(models.Model):
 
         return txn_list
 
+class ContactScore(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    score = models.FloatField(default=0)
+    contact = models.ForeignKey(Customer,on_delete=models.CASCADE)
+    desc = models.TextField(verbose_name='description')
+
+    

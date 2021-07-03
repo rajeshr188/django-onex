@@ -1,4 +1,5 @@
 import decimal
+from django.db.models.expressions import Subquery
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, StockStatement, VariantImage,Stock,
@@ -267,8 +268,23 @@ def merge_lot(request,pk):
 
     return HttpResponseRedirect(reverse('product_stock_list') )
 
-class StockListView(ListView):
-    model=Stock
+def stock_list(request):
+    context = {}
+    st = Stock.objects.all()
+    stock = []
+    for i in st:
+        bal ={}
+        try:
+            ls = i.stockstatement_set.latest()
+        except StockStatement.DoesNotExist:
+            ls = None
+        in_txns = i.stock_in_txns(ls)
+        out_txns = i.stock_out_txns(ls)
+        bal['wt'] = ls.Closing_wt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = ls.Closing_qty + (in_txns['qty'] - out_txns['qty'])
+        stock.append([i,bal])
+    context['stock']=stock
+    return render(request,'product/stock_list.html',{'data':context})
 
 class StockCreateView(CreateView):
     model=Stock

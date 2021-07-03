@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     # Third-party
+    'graphene_django',
     'allauth','allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
@@ -226,3 +227,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # }
 CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+GRAPHENE = {
+    'SCHEMA': 'djangox_project.schema.schema',
+}

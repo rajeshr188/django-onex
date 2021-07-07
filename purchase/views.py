@@ -164,16 +164,14 @@ class InvoiceUpdateView(UpdateView):
 def post_purchase(request,pk):
     # use get_objector404
     purchase_inv = Invoice.objects.get(id = pk)
-    if not purchase_inv.posted:
-        # post to dea & stock
-        purchase_inv.post()
+    # post to dea & stock
+    purchase_inv.post()
     return redirect(purchase_inv)
 
 def unpost_purchase(request,pk):
     purchase_inv = Invoice.objects.get(id = pk)
-    if purchase_inv.posted:
-        # unpost to dea & stock
-        purchase_inv.unpost() 
+    # unpost to dea & stock
+    purchase_inv.unpost() 
     return redirect(purchase_inv)
 
 class InvoiceDeleteView(DeleteView):
@@ -262,14 +260,12 @@ class PaymentLineDeleteView(DeleteView):
 def post_payment(request,pk):
     # use get_objector404
     payment = Payment.objects.get(id = pk)
-    if not payment.posted:
-        # post to dea
-        payment.post()
+    # post to dea
+    payment.post()
     return redirect(payment)
 
 def unpost_payment(request,pk):
     payment = Payment.objects.get(id = pk)
-    if payment.posted:
-        # unpost to dea
-        payment.unpost()
+    # unpost to dea
+    payment.unpost()
     return redirect(payment)

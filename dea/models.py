@@ -365,12 +365,12 @@ class LedgerStatement(models.Model):
     created = models.DateTimeField(
         # unique = True,
         auto_now_add=True)
-    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)for i i
+    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
     ClosingBalance = ArrayField(MoneyValueField(null=True, blank=True))
     
     class Meta:
         get_latest_by = 'created'
-        ordering = ['created']
+        ordering = ['-created']
 
     def __str__(self):
         return f"{self.created.date()} - {self.ledgerno} - {self.ClosingBalance}"
@@ -789,6 +789,27 @@ class PaymentJournal(Journal):
                 Account = account,amount = money
             )
 
+class Ledgerbalance(models.Model):
+    name = models.CharField(max_length = 20)
+    created = models.DateTimeField()
+    ClosingBalance = ArrayField(MoneyValueField(null = True,blank = True))
+    cr =ArrayField(MoneyValueField(null = True,blank = True))
+    dr = ArrayField(MoneyValueField(null=True, blank=True))
+    class Meta:
+        managed = False
+        db_table = 'ledger_balance'
+
+    def get_currbal(self):
+        return self.get_dr() -self.get_cr()
+
+    def get_cb(self):
+        return Balance(self.ClosingBalance)
+    
+    def get_dr(self):
+        return Balance(self.dr)
+
+    def get_cr(self):
+        return Balance(self.cr)
 # how to import ledger and account iniital balance?
     # -- create formset view of corresponding statement sorted by latest
 

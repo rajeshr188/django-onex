@@ -32,13 +32,24 @@
         </div>
       
         <table class = "table table-sm table-hover">
+            <thead>
+                <th>Ledger</th>
+                <th> statement Date</th>
+                <th> Prev Balance</th>
+                <th> Debit </th>
+                <th> Credit </th>
+                <th> Curr Bal </th>
+            </thead>
             <tbody>
-                {%for i,k in data.ledger%}
+                {%for i in data.ledger%}
                 <tr>
                     
-                    <td><a href="{% url 'dea_ledger_detail' i.id %}">{{ i }}</a></td>
-                    <td>{{k}}</td>
-                    
+                    <td><a href="{% url 'dea_ledger_detail' i.id %}">{{ i.name }}</a></td>
+                    <td>{{i.created}}</td>
+                    <td>{{i.get_cb}}</td>
+                    <td>{{i.get_cr}}</td>
+                    <td>{{i.get_dr}}</td>
+                    <td>{{i.get_currbal}}</td>
                 </tr>
                 {%endfor%}
             </tbody>

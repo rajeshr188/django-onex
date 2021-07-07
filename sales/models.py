@@ -137,23 +137,24 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def post(self):
-        saleitems = self.saleitems.all()
-        if self.approval:
-            for i in self.approval.items.filter(status = 'Pending'):
-                apr = ApprovalLineReturn.objects.create(
-                    line=i, quantity=i.quantity, weight=i.weight)
-                apr.post()
-                i.update_status()
-        for i in saleitems:
-            i.post()
-        jrnl = SalesJournal.objects.create(
-                content_object = self,
-                desc = 'sale'
-            )
-            # credit/cash cash/gold   
-        jrnl.transact()
-        self.posted = True
-        self.save(update_fields = ['posted'])
+        if not self.posted:
+            saleitems = self.saleitems.all()
+            if self.approval:
+                for i in self.approval.items.filter(status = 'Pending'):
+                    apr = ApprovalLineReturn.objects.create(
+                        line=i, quantity=i.quantity, weight=i.weight)
+                    apr.post()
+                    i.update_status()
+            for i in saleitems:
+                i.post()
+            jrnl = SalesJournal.objects.create(
+                    content_object = self,
+                    desc = 'sale'
+                )
+                # credit/cash cash/gold   
+            jrnl.transact()
+            self.posted = True
+            self.save(update_fields = ['posted'])
         # try:
         #     ls = LedgerStatement.objects.latest().first().created
         # except LedgerStatement.DoesNotExist:
@@ -165,23 +166,24 @@ class Invoice(models.Model):
 
     @transaction.atomic()   
     def unpost(self):
-        for i in self.saleitems.all():
-            i.unpost()
-        if self.approval:
-            for i in self.approval.items.all():
-                i.product.add(i.weight, i.quantity,
-                                 i, 'A')
-                i.update_status()
-            
-        jrnl = SalesJournal.objects.create(
-                content_object=self,
-                desc='sale-revert'
-            )
-            # credit/cash cash/gold
+        if self.posted:
+            for i in self.saleitems.all():
+                i.unpost()
+            if self.approval:
+                for i in self.approval.items.all():
+                    i.product.add(i.weight, i.quantity,
+                                    i, 'A')
+                    i.update_status()
+                
+            jrnl = SalesJournal.objects.create(
+                    content_object=self,
+                    desc='sale-revert'
+                )
+                # credit/cash cash/gold
 
-        jrnl.transact(revert = True)
-        self.posted = False
-        self.save(update_fields = ['posted'])
+            jrnl.transact(revert = True)
+            self.posted = False
+            self.save(update_fields = ['posted'])
         # try:
         #     ls = LedgerStatement.objects.latest()
         # except LedgerStatement.DoesNotExist:
@@ -358,21 +360,23 @@ class Receipt(models.Model):
         self.update_status()
     
     def post(self):
-        jrnl = ReceiptJournal.objects.create(
-            content_object = self,
-            desc = 'Receipt'
-            )
-        jrnl.transact()
-        self.posted = True
-        self.save(update_fields = ['posted'])
+        if not self.posted:
+            jrnl = ReceiptJournal.objects.create(
+                content_object = self,
+                desc = 'Receipt'
+                )
+            jrnl.transact()
+            self.posted = True
+            self.save(update_fields = ['posted'])
     def unpost(self):
-        jrnl = ReceiptJournal.objects.create(
-            content_object=self,
-            desc='Receipt-Revert'
-        )
-        jrnl.transact(revert = True)
-        self.posted = False
-        self.save(update_fields = ['posted'])
+        if self.posted:
+            jrnl = ReceiptJournal.objects.create(
+                content_object=self,
+                desc='Receipt-Revert'
+            )
+            jrnl.transact(revert = True)
+            self.posted = False
+            self.save(update_fields = ['posted'])
 
 class ReceiptItem(models.Model):
     weight = models.DecimalField(

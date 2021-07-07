@@ -320,15 +320,13 @@ class InvoiceUpdateView(UpdateView):
 @transaction.atomic()
 def post_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
-    if not sales_inv.posted:
-        sales_inv.post()
+    sales_inv.post()
     return redirect(sales_inv)
 
 @transaction.atomic()
 def unpost_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
-    if sales_inv.posted:
-        sales_inv.unpost()
+    sales_inv.unpost()
     return redirect(sales_inv)
 
 class InvoiceDeleteView(DeleteView):
@@ -402,15 +400,13 @@ class ReceiptCreateView(CreateView):
 @transaction.atomic()
 def post_receipt(request, pk):
     rcpt = Receipt.objects.get(id=pk)
-    if not rcpt.posted:
-        rcpt.post()
+    rcpt.post()
     return redirect(rcpt)
 
 @transaction.atomic()
 def unpost_receipt(request, pk):
     rcpt = Receipt.objects.get(id=pk)
-    if rcpt.posted:
-        rcpt.unpost()
+    rcpt.unpost()
     return redirect(rcpt)
     
 class ReceiptDetailView(DetailView):

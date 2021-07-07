@@ -2,13 +2,14 @@ from typing import List
 from django.db import transaction
 from django.db.models.expressions import OuterRef, Subquery
 from django.db.models.fields import DecimalField
+from django.db.models.query import Prefetch
 from django.db.models.query_utils import subclasses
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 from djmoney.models.fields import MoneyField
 # Create your views here.
-from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction
+from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
 from django.db.models import Sum,Q,Max,F
@@ -17,56 +18,11 @@ from dea.utils.currency import Balance
 from moneyed import Money
 
 def home(request):
-    l = Ledger.objects.all()
-    ledger =[]
-    for i in l:
-        try:
-            ls = l.ledgerstatements.latest()
-            cb = ls.get_cb()
-            since = ls.created
-        except:
-            ls = None
-            cb = Balance()
-            since = None
-        
-        c_bal = Balance(
-            [Money(r['total'], r["amount_currency"]) for r in i.ctxns(since).values('amount_currency').annotate(total=Sum('amount'))])\
-            if i.ctxns(since=since) else Balance()
-        d_bal = Balance(
-            [Money(r['total'], r["amount_currency"]) for r in i.dtxns(since).values('amount_currency').annotate(total=Sum('amount'))])\
-            if i.dtxns(since=since) else Balance()
-
-        bal = cb + d_bal - c_bal
-
-        ledger.append([i,bal])
-
-    # ls = LedgerStatement.objects.filter(pk__in = LedgerStatement.objects.order_by().values(
-    #         'ledgerno').annotate(max_id = Max('id')).values('max_id')).select_related('ledgerno')
-
-   
-    # cr_lt = LedgerTransaction.objects.filter(ledgerno = OuterRef('pk')).order_by().values('ledgerno')
-    # cr_usd = cr_lt.annotate(
-    #     cr_usd=Coalesce(Sum('amount',filter=Q(amount_currency = 'USD')),0)).values('cr_usd')
-    # cr_inr = cr_lt.annotate(cr_inr=Coalesce(Sum(
-    #     'amount', filter=Q(amount_currency='INR')),0)).values('cr_inr')
-
-    # dr_lt = LedgerTransaction.objects.filter(ledgerno_dr=OuterRef(
-    #     'pk')).order_by().values('ledgerno_dr')
-    # dr_usd = dr_lt.annotate(dr_usd=Coalesce(Sum(
-    #     'amount', filter=Q(amount_currency='USD')),0)).values('dr_usd')
-    # dr_inr = dr_lt.annotate(dr_inr=Coalesce(Sum(
-    #     'amount', filter=Q(amount_currency='INR')),0)).values('dr_inr')
-
-    # ledger_bal = Ledger.objects.values('name').annotate(
-    #     cr_usd = Subquery(cr_usd),
-    #     cr_inr=Subquery(cr_inr),dr_usd=Subquery(dr_usd),dr_inr=Subquery(dr_inr),
-    #     bal_usd = Coalesce(F('cr_usd'),0) - Coalesce(F('dr_usd'),0),bal_inr = Coalesce(F('cr_inr'),0)-Coalesce(F('dr_inr'),0)
-    # )
+    lb = Ledgerbalance.objects.all()
+      
     context={}
-    context['ledger']=ledger   
-    # context['ledger_bal'] = ledger_bal
-    
-                  
+    context['ledger']=lb   
+                      
     # context['accounts'] = AccountStatement.objects.filter(
     #                 pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
     # a = Account.objects.filter(contact__type='Su')

@@ -215,21 +215,24 @@ class InvoiceItem(models.Model):
     @transaction.atomic()
     def post(self):
         if not self.is_return:
-            stock,created = Stock.objects.get_or_create(variant = self.product)
-            if created:
-                stock.barcode = 'je' + str(stock.id)
-                attributes = get_product_attributes_data(self.product.product)
-                purity = Attribute.objects.get(name='Purity')
-                stock.melting = int(attributes[purity].name)
-                stock.cost = self.touch
-                stock.touch = stock.cost+2
-                stock.wastage = 10
-                stock.save()
-            stock.add(self.weight,self.quantity,self.invoice,'P')
+                stock, created = Stock.objects.get_or_create(
+                    variant=self.product, tracking_type='Lot')
+                if created:
+                    stock.barcode = 'je' + str(stock.id)
+                    attributes = get_product_attributes_data(
+                        self.product.product)
+                    purity = Attribute.objects.get(name='Purity')
+                    stock.melting = int(attributes[purity].name)
+                    stock.cost = self.touch
+                    stock.touch = stock.cost+2
+                    stock.wastage = 10
+                    stock.save()
+                stock.add(self.weight, self.quantity, self.invoice, 'P')
         else:
             stock = Stock.get(name=self.product.name)
             stock.remove(self.weight, self.quantity,
                          self.invoice, 'PR')
+
             # create payment journal matching return items?
 
         # if not self.is_return:
@@ -276,15 +279,18 @@ class InvoiceItem(models.Model):
     def unpost(self):
         if self.is_return:
             # add lot back to stock
-            stock = Stock.objects.get(variant=self.product)
+            stock = Stock.objects.get(
+                variant=self.product, tracking_type='Lot')
             stock.add(self.weight, self.quantity, self.invoice, 'P')
         else:
-            stock = Stock.objects.get(variant=self.product)
+            stock = Stock.objects.get(
+                variant=self.product, tracking_type='Lot')
             stock.remove(
                 self.weight, self.quantity,
                 cto=self.invoice,
                 at='PR'
             )
+            
         # if self.is_return:
         #     if 'Lot' in self.product.name:
         #         # add lot back to stock
@@ -429,20 +435,22 @@ class Payment(models.Model):
         self.update_status()
 
     def post(self):
-        jrnl = PaymentJournal.objects.create(
-            content_object = self,
-            desc = 'payment'
-        )
-        jrnl.transact()
+        if not self.posted:
+            jrnl = PaymentJournal.objects.create(
+                content_object = self,
+                desc = 'payment'
+            )
+            jrnl.transact()
         self.posted = True
         self.save(update_fields = ['posted'])
 
     def unpost(self):
-        jrnl = PaymentJournal.objects.create(
-            content_object=self,
-            desc='payment'
-        )
-        jrnl.transact(revert = True)
+        if self.posted:
+            jrnl = PaymentJournal.objects.create(
+                content_object=self,
+                desc='payment'
+            )
+            jrnl.transact(revert = True)
         self.posted = False
         self.save(update_fields=['posted'])
 

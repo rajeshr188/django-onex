@@ -218,7 +218,7 @@ class InvoiceItem(models.Model):
                 stock, created = Stock.objects.get_or_create(
                     variant=self.product, tracking_type='Lot')
                 if created:
-                    stock.barcode = 'je' + str(stock.id)
+                    # stock.barcode = 'je' + str(stock.id)
                     attributes = get_product_attributes_data(
                         self.product.product)
                     purity = Attribute.objects.get(name='Purity')

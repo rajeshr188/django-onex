@@ -36,6 +36,9 @@ django-bootstrap4 = "*"
 celery = "==5.0.5"
 django-money = "*"
 graphene-django = "*"
+qrcode = "*"
+pymaging = {editable = true, git = "git://github.com/ojii/pymaging.git"}
+pymaging-png = {editable = true, git = "git://github.com/ojii/pymaging-png.git"}
 
 [dev-packages]
 "autopep8" = "*"

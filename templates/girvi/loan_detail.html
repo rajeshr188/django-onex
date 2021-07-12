@@ -22,8 +22,14 @@
 <table class="table table-sm table-bordered table-striped">
   <tbody>
     <tr>
+      <td>
+        loan id:
+      </td><td>
+      {{object.lid}}
+    </td></tr>
+    <tr>
       <td>loanid</td>
-      <td>{{ object.loanid }}</td>
+      <td>{{ object.get_qr|safe }}</td>
     </tr>
     <tr>
       <td>Series</td>

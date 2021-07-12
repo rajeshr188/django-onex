@@ -4,6 +4,7 @@
 <p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
 <table class="table">
   <tr><td>Created</td><td>{{ object.created }}</td></tr>
+  <tr><td>Barcode</td><td>{{object.barcode}}</td></tr>
   <tr><td>Updated</td><td>{{ object.updated_on }}</td></tr>
   <tr><td>Product</td><td>{{ object.variant }}</td></tr>
   <tr><td>Cost</td><td>{{object.cost}}</td></tr>

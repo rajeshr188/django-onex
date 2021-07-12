@@ -407,6 +407,7 @@ class LoanDetailView(LoginRequiredMixin,DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(LoanDetailView, self).get_context_data(**kwargs)
+        context['svg']=self.object.get_qr
         context['previous'] = self.object.get_previous()
         context['next'] = self.object.get_next()
         return context

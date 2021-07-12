@@ -11,7 +11,10 @@ from django.utils import timezone
 from django.db.models import Sum,Func
 from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
 from django.contrib.contenttypes.fields import GenericRelation
-
+import qrcode
+import qrcode.image.svg
+from qrcode.image.pure import PymagingImage
+from io import BytesIO
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -143,6 +146,15 @@ class Loan(models.Model):
             return 0
         else:
             return nom
+    @property
+    def get_qr(self):
+        factory = qrcode.image.svg.SvgImage
+        img = qrcode.make(data=self.lid,
+                          image_factory=factory, box_size=20)
+        stream = BytesIO()
+        img.save(stream)
+        svg = stream.getvalue().decode()
+        return svg 
     @property
     def is_released(self):
         return hasattr(self,'release')

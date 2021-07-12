@@ -18,6 +18,7 @@ from .weight import WeightUnits, zero_weight
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from .managers import StockManager
+from utils.friendlyid import encode
 class Category(MPTTModel):
     # gold ,silver ,other
     name = models.CharField(max_length=128,unique=True)
@@ -290,7 +291,8 @@ class Stock(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     updated_on = models.DateTimeField(auto_now=True)
     reorderat = models.IntegerField(default=1)
-    barcode = models.CharField(max_length=100, null=True, unique=True)
+    barcode = models.CharField(max_length=6, null = True,
+                        blank=True, unique=True,editable = False)
     variant = models.ForeignKey(ProductVariant, 
                                     on_delete=models.CASCADE,
                                     # related_name = ''
@@ -396,13 +398,17 @@ class Stock(models.Model):
         
         bal = {}
         try:
-            ls = self.stockstatement_set.latest()   
+            ls = self.stockstatement_set.latest()  
+            Closing_wt = ls.Closing_wt
+            Closing_qty = ls.Closing_qty 
         except StockStatement.DoesNotExist:
             ls = None
+            Closing_wt =0
+            Closing_qty =0
         in_txns = self.stock_in_txns(ls)
         out_txns = self.stock_out_txns(ls)
-        bal['wt'] = ls.Closing_wt + (in_txns['wt'] - out_txns['wt'])
-        bal['qty'] = ls.Closing_qty + (in_txns['qty'] - out_txns['qty'])
+        bal['wt'] = Closing_wt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = Closing_qty + (in_txns['qty'] - out_txns['qty'])
         return bal
 
     def get_age(self):
@@ -481,6 +487,13 @@ class Stock(models.Model):
         else:
             self.status = "Available"
         self.save()
+
+    def save(self,*args,**kwargs):
+        super(Stock, self).save(*args, **kwargs)
+        if not self.barcode:
+            self.barcode = encode(self.pk)
+            super(Stock, self).save(*args, **kwargs)
+
 
 class StockTransaction(models.Model):
 

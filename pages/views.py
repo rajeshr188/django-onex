@@ -16,8 +16,8 @@ def Dashboard(request):
     pinv = Pinv.objects 
     sinv = Sinv.objects
 
-    total_pbal = pinv.filter(balancetype='Gold').aggregate(net_wt = Coalesce(Sum('net_wt'),0),
-        gwt = Coalesce(Sum('gross_wt'),0),bal = Coalesce(Sum('balance'),0))
+    total_pbal = pinv.filter(balancetype='Gold').aggregate(net_wt = Coalesce(Sum('net_wt'),0.0),
+        gwt = Coalesce(Sum('gross_wt'),0.0),bal = Coalesce(Sum('balance'),0.0))
     total_sbal = sinv.filter(balancetype='Gold').aggregate(net_wt=Coalesce(Sum(
         'net_wt'),0), gwt=Coalesce(Sum('gross_wt'),0), bal=Coalesce(Sum('balance'),0))
 

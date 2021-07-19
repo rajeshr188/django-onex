@@ -141,15 +141,7 @@ class Invoice(models.Model):
         jrnl.transact()
         self.posted = True
         self.save(update_fields=['posted'])
-        # try:
-        #     ls = LedgerStatement.objects.latest()[0].created
-        # except LedgerStatement.DoesNotExist:
-        #     ls = None
-        # if ls is None or self.created >= ls.created:
-        #     # post code here with ls check
-        # else:
-        #     raise ValueError("cant post purchase created before latest audit")
-
+       
     @transaction.atomic()
     def unpost(self):
         for i in self.purchaseitems.all():
@@ -167,14 +159,7 @@ class Invoice(models.Model):
         jrnl.transact(revert = True)
         self.posted = False
         self.save(update_fields=['posted'])
-        # try:
-        #     ls = LedgerStatement.objects.latest()
-        # except LedgerStatement.DoesNotExist:
-        #     ls = None
-        # if ls is None or ls.created < self.created:
-        #     # unpost code here with ls check
-        # else:
-        #     raise ValueError('cant unpost purchase created before latest audit')
+        
 
 class InvoiceItem(models.Model):
     # Fields
@@ -233,48 +218,6 @@ class InvoiceItem(models.Model):
             stock.remove(self.weight, self.quantity,
                          self.invoice, 'PR')
 
-            # create payment journal matching return items?
-
-        # if not self.is_return:
-        #     if 'Lot' in self.product.name:
-        #         stock,created = Stock.objects.get_or_create(variant = self.product,
-        #                                             tracking_type = 'Lot',
-        #                                             )
-        #         if created:
-        #             stock.barcode='je'+ str(stock.id)
-        #             attributes = get_product_attributes_data(self.product.product)
-        #             purity = Attribute.objects.get(name='Purity')
-        #             stock.melting = int(attributes[purity].name)
-        #             stock.cost = self.touch
-        #             stock.touch = stock.cost+2
-        #             stock.wastage = 10
-        #             stock.save()
-                
-        #         stock.add(self.weight,self.quantity,
-        #                     self.invoice,'P')
-        #     else:
-        #         stock = Stock.objects.create(variant = self.product,
-        #                                     tracking_type = 'Unique')
-
-        #         stock.barcode='je'+ str(stock.id)
-        #         attributes = get_product_attributes_data(self.product.product)
-        #         purity = Attribute.objects.get(name='Purity')
-        #         stock.melting = int(attributes[purity].name)
-        #         stock.cost = self.touch
-        #         stock.touch = stock.cost+2
-        #         stock.wastage = 10
-        #         stock.add(self.weight,self.quantity,
-        #                     self.invoice,'P')
-
-        # else:
-        #     # is return true
-        #     if 'Lot' in self.product.name:
-        #         stock = Stock.get(name = self.product.name)
-        #         stock.remove(self.weight,self.quantity,
-        #                         self.invoice,'PR')
-        #     else:
-        #         raise ValueError("merge unique to lot before returning")
-
     @transaction.atomic()
     def unpost(self):
         if self.is_return:
@@ -291,50 +234,6 @@ class InvoiceItem(models.Model):
                 at='PR'
             )
             
-        # if self.is_return:
-        #     if 'Lot' in self.product.name:
-        #         # add lot back to stock
-        #         stock = Stock.objects.get(variant = self.product)
-        #         stock.add(self.weight,self.quantity,self.invoice,'P')
-        #     else :
-        #         # add unique back to stock
-        #         stock = Stock.objects.create(variant=self.product,
-        #                                      tracking_type='Unique')
-
-        #         stock.barcode = 'je' + str(stock.id)
-        #         attributes = get_product_attributes_data(self.product.product)
-        #         purity = Attribute.objects.get(name='Purity')
-        #         stock.melting = int(attributes[purity].name)
-        #         stock.cost = self.touch
-        #         stock.touch = stock.cost+2
-        #         stock.wastage = 10
-        #         stock.add(self.weight, self.quantity,
-        #                   self.invoice, 'P')
-        # else:
-        #     if 'Lot' in self.product.name:
-        #         stock = Stock.objects.get(variant = self.product)
-        #         stock.remove(
-        #         self.weight,self.quantity,
-        #         cto = self.invoice,
-        #         at = 'PR'
-        #         )
-        #     else:
-        #         # Pass the self we created in the snippet above
-        #         ct = ContentType.objects.get_for_model(self.invoice)
-
-        #         # Get the list of likes
-        #         txns = StockTransaction.objects.filter(content_type=ct,
-        #                                             object_id=self.invoice.id,
-        #                                             # activity_type=StockTransaction.PURCHASE,
-        #                                             stock__weight = self.weight,
-        #                                             stock__quantity= self.quantity,
-        #                                             )
-
-        #         txns[0].stock.remove(
-        #         self.weight,self.quantity,
-        #         cto = self.invoice,
-        #         at = 'PR'
-        #         )
 
 class Payment(models.Model):
 

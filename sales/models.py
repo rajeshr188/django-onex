@@ -7,10 +7,8 @@ from product.models import Stock,StockTransaction
 from django.utils import timezone
 from django.db.models import Sum,Func
 from datetime import timedelta
-from dea.models import Journal,SalesJournal,ReceiptJournal,LedgerStatement
+from dea.models import Journal,SalesJournal,ReceiptJournal
 from invoice.models import PaymentTerm
-# from django.contrib.postgres.indexes import BrinIndex
-
 
 class Month(Func):
     function = 'EXTRACT'
@@ -155,14 +153,7 @@ class Invoice(models.Model):
             jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
-        # try:
-        #     ls = LedgerStatement.objects.latest().first().created
-        # except LedgerStatement.DoesNotExist:
-        #     ls = None
-        # if ls is None or self.created >= ls.created:
-
-        # else:
-        #     raise ValueError("cant post sale created before latest audit")
+        
 
     @transaction.atomic()   
     def unpost(self):
@@ -184,14 +175,6 @@ class Invoice(models.Model):
             jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields = ['posted'])
-        # try:
-        #     ls = LedgerStatement.objects.latest()
-        # except LedgerStatement.DoesNotExist:
-        #     ls = None
-        # if ls is None or ls.created < self.created:
-            
-        # else:
-        #     raise ValueError("cant unpost sale created before latest audit")
 
     
 class InvoiceItem(models.Model):

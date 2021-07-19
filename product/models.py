@@ -150,18 +150,16 @@ class ProductVariant(models.Model):
     #         self.weight or self.product.weight or
     #         self.product.product_type.weight)
 
-    def get_weight(self):
-        wt =0
-        for i in self.stock_set.all():
-            wt += i.current_balance()['wt']
-        return wt
-    
-    def get_quantity(self):
-        qty = 0
-        for i in self.stock_set.all():
-            qty += i.current_balance()['qty']
-        return qty
-            
+    def get_bal(self):
+        
+        st = StockTransaction.objects.filter(stock__variant_id = self.id)
+        ins = st.filter(activity_type__in=['P','SR','AR']).aggregate(
+            wt = Sum('weight'),qty=Sum('quantity'))
+        out = st.filter(activity_type__in=['S', 'PR', 'A']).aggregate(
+            wt=Sum('weight'), qty=Sum('quantity'))
+        total = {'wt':ins['wt']-out['wt'],'qty':ins['qty']-out['qty']}
+        return total
+                
     def get_absolute_url(self):
         return reverse('product_productvariant_detail', args=(self.pk,))
 
@@ -293,9 +291,10 @@ class Stock(models.Model):
     reorderat = models.IntegerField(default=1)
     barcode = models.CharField(max_length=6, null = True,
                         blank=True, unique=True,editable = False)
+    huid = models.CharField(max_length=6,null=True,blank=True,unique = True)
     variant = models.ForeignKey(ProductVariant, 
                                     on_delete=models.CASCADE,
-                                    # related_name = ''
+                                    # related_name = 'stocks'
                                     )
 
     # following atrributes are not in dnf  i.e duplkicates of variant

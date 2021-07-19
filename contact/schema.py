@@ -1,16 +1,20 @@
 import graphene
+from graphene import relay
 from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from .models import Customer
 
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
+        filter_fields = ['name','relatedas','phonenumber','area']
+        interfaces = (relay.Node,)
 
 class Query(graphene.ObjectType):
-    customers = graphene.List(CustomerType)
+    customers = DjangoFilterConnectionField(CustomerType)
 
-    def resolve_customers(self,info,**kwargs):
-        return Customer.objects.all()
+    # def resolve_customers(self,info,**kwargs):
+    #     return Customer.objects.all()
 
 class CreateCustomer(graphene.Mutation):
     id = graphene.Int()

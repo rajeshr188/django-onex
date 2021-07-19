@@ -276,12 +276,16 @@ def stock_list(request):
         bal ={}
         try:
             ls = i.stockstatement_set.latest()
+            cwt = ls.Closing_wt
+            cqty = ls.Closing_qty
         except StockStatement.DoesNotExist:
             ls = None
+            cwt = 0
+            cqty=0
         in_txns = i.stock_in_txns(ls)
         out_txns = i.stock_out_txns(ls)
-        bal['wt'] = ls.Closing_wt + (in_txns['wt'] - out_txns['wt'])
-        bal['qty'] = ls.Closing_qty + (in_txns['qty'] - out_txns['qty'])
+        bal['wt'] = cwt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = cqty + (in_txns['qty'] - out_txns['qty'])
         stock.append([i,bal])
     context['stock']=stock
     return render(request,'product/stock_list.html',{'data':context})

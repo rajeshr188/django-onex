@@ -84,7 +84,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ORIGIN_WHITELIST = (
-    'https://localhost:4200',
+    'http://localhost:4200',
 )
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -194,6 +194,7 @@ LOGIN_REDIRECT_URL = 'home'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
 
 AUTHENTICATION_BACKENDS = (
+    'graphql_jwt.backends.JSONWebTokenBackend',
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
@@ -230,4 +231,8 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 GRAPHENE = {
     'SCHEMA': 'djangox_project.schema.schema',
+    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": True,
+    # 'MIDDLEWARE': [
+    #     'graphql_jwt.middleware.JSONWebTokenMiddleware',
+    # ],
 }

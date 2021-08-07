@@ -66,7 +66,7 @@ class Customer(models.Model):
     relatedto = models.CharField(max_length=30,blank=True)
     area = models.CharField(max_length=50,blank=True)
     active = models.BooleanField(blank = True,default = True)
-    rank =models.IntegerField(verbose_name='Rank')
+    # rank =models.IntegerField(verbose_name='Rank')
 
     class Meta:
         ordering = ('-created','name','relatedto')
@@ -106,7 +106,7 @@ class Customer(models.Model):
         return self.values('religion').annotate(Count('religion')).order_by('religion')
 
     def get_interestdue(self):
-        return self.loan_set.aggregate(total=Sum('interest'))
+        return self.loan_set.aggregate(total=Sum('interest'))['total']
 
     def get_gold_weight(self):
         gold=self.loan_set.filter(itemtype='Gold').aggregate(total=Sum('itemweight'))

@@ -99,7 +99,7 @@
       <div class="card-body">
         <h5 class="card-title">Customers with max loans</h5>
           <ul class="list-group list-group-flush">
-            {%for c in data.customer.maxloans%}<li class="list-group-item"> {{c.name}}  {{c.num_loans}}  {{c.sum_loans}} </li>{%endfor%}
+            {%for c in data.customer.maxloans%}<li class="list-group-item"> {{c.name}}  {{c.num_loans}}  {{c.sum_loans}} {{c.tint}}</li>{%endfor%}
           </ul>
       </div>
     </div>

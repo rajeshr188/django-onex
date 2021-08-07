@@ -51,7 +51,7 @@ def print_notice(request,pk):
 def notice(request):
     qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
-    a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
+    a_yr_ago = timezone.now() - relativedelta.relativedelta(years=int(qyr))
 
     cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
                                         loan__release__isnull=True).\
@@ -132,8 +132,9 @@ def home(request):
     customer['withoutloans']=c.filter(loan__isnull=True).count()
     customer['withloans']=customer['count']-customer['withoutloans']
     customer['latest']=','.join(lat.name for lat in c.order_by('-created')[:5])
-    customer['maxloans']=c.filter(loan__release__isnull=True).annotate(num_loans=Count('loan'),sum_loans=Sum('loan__loanamount')).values('name','num_loans','sum_loans').order_by('-num_loans')[:10]
-
+    customer['maxloans']=c.filter(loan__release__isnull=True).annotate(
+        num_loans=Count('loan'),sum_loans=Sum('loan__loanamount'),tint = Sum('loan__interest')).values(
+            'name','num_loans','sum_loans','tint').order_by('-num_loans','sum_loans','tint')[:10]
     license =dict()
     l=License.objects.all()
     license['count']=l.count()

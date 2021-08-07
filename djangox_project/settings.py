@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     # Third-party
-    'graphene_django',
     'allauth','allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
@@ -62,9 +61,6 @@ INSTALLED_APPS = [
     'Chitfund',
     'daybook','dea','sea'
 ]
-# CONTROLCENTER_DASHBOARDS = (
-#         ('mydash','djangox_project.dashboard.MyDash'),
-# )
 
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
@@ -121,10 +117,7 @@ TEMPLATES = [
         },
     },
 ]
-GRAPH_MODELS = {
-  'all_applications': True,
-  'group_models': True,
-}
+
 WSGI_APPLICATION = 'djangox_project.wsgi.application'
 
 
@@ -194,7 +187,7 @@ LOGIN_REDIRECT_URL = 'home'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
 
 AUTHENTICATION_BACKENDS = (
-    'graphql_jwt.backends.JSONWebTokenBackend',
+    # 'graphql_jwt.backends.JSONWebTokenBackend',
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
@@ -229,10 +222,3 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
-GRAPHENE = {
-    'SCHEMA': 'djangox_project.schema.schema',
-    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": True,
-    # 'MIDDLEWARE': [
-    #     'graphql_jwt.middleware.JSONWebTokenMiddleware',
-    # ],
-}

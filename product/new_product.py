@@ -64,9 +64,7 @@ class ProductType(ModelWithMetadata):
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
     has_variants = models.BooleanField(default=True)
-    weight = MeasurementField(
-        measurement=Weight, unit_choices=WeightUnits.CHOICES, default=zero_weight
-    )
+   
 
     class Meta:
         ordering = ("slug",)
@@ -74,15 +72,6 @@ class ProductType(ModelWithMetadata):
 
     def __str__(self) -> str:
         return self.name
-
-    def __repr__(self) -> str:
-        class_ = type(self)
-        return "<%s.%s(pk=%r, name=%r)>" % (
-            class_.__module__,
-            class_.__name__,
-            self.pk,
-            self.name,
-        )
 
 
 class ProductsQueryset(PublishedQuerySet):
@@ -244,30 +233,9 @@ class Product(SeoModel, ModelWithMetadata, PublishableModel):
             (ProductPermissions.MANAGE_PRODUCTS.codename, "Manage products."),
         )
 
-    def __iter__(self):
-        if not hasattr(self, "__variants"):
-            setattr(self, "__variants", self.variants.all())
-        return iter(getattr(self, "__variants"))
-
-    def __repr__(self) -> str:
-        class_ = type(self)
-        return "<%s.%s(pk=%r, name=%r)>" % (
-            class_.__module__,
-            class_.__name__,
-            self.pk,
-            self.name,
-        )
 
     def __str__(self) -> str:
         return self.name
-
-    @property
-    def plain_text_description(self) -> str:
-        return json_content_to_raw_text(self.description_json)
-
-    def get_first_image(self):
-        images = list(self.images.all())
-        return images[0] if images else None
 
     @staticmethod
     def sort_by_attribute_fields() -> list:

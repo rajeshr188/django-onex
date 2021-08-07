@@ -491,7 +491,7 @@ class Stock(models.Model):
         super(Stock, self).save(*args, **kwargs)
         if not self.barcode:
             self.barcode = encode(self.pk)
-            super(Stock, self).save(*args, **kwargs)
+            self.save()
 
 
 class StockTransaction(models.Model):

@@ -113,7 +113,6 @@ class ApprovalLine(models.Model):
                     ).aggregate(
                         qty = Sum('quantity'),
                         wt = Sum('weight'))
-        print(ret)
         if self.quantity == ret['qty'] and self.weight == ret['wt']:
             self.status = 'Returned'
         else:
@@ -141,15 +140,15 @@ class ApprovalLineReturn(models.Model):
     def post(self):
         if not self.posted:
             self.line.product.add(self.weight, self.quantity, self, 'AR')
-        self.posted = True
-        self.save(update_fields=['posted'])
-        self.line.update_status()
+            self.posted = True
+            self.save(update_fields=['posted'])
+            self.line.update_status()
     def unpost(self):
         if self.posted:
             self.line.product.remove(self.weight, self.quantity, self, 'A')
-        self.posted = False
-        self.save(update_fields=['posted'])
-        self.line.update_status()
+            self.posted = False
+            self.save(update_fields=['posted'])
+            self.line.update_status()
 
 # class ApprovalReturn(models.Model):
 #

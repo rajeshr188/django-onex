@@ -116,9 +116,8 @@ class Invoice(models.Model):
 
     # cant post unpost once statement is created
     def get_gst(self):
-        if self.invoicetype == 'GST':
-            return (self.balance *3)/100
-        return 0
+        return (self.balance *3)/100
+        
 
     @transaction.atomic()
     def post(self):
@@ -167,7 +166,7 @@ class InvoiceItem(models.Model):
     # add melting here
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
-    net_wt = models.DecimalField( max_digits=5, decimal_places=3,default = 0)
+    net_wt = models.DecimalField( max_digits=10, decimal_places=3,default = 0)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
     makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
@@ -200,13 +199,14 @@ class InvoiceItem(models.Model):
     @transaction.atomic()
     def post(self):
         if not self.is_return:
-                stock, created = Stock.objects.get_or_create(
+                stock,created = Stock.objects.get_or_create(
                     variant=self.product, tracking_type='Lot')
                 if created:
-                    # stock.barcode = 'je' + str(stock.id)
+                    
                     attributes = get_product_attributes_data(
                         self.product.product)
                     purity = Attribute.objects.get(name='Purity')
+                    print(attributes)
                     stock.melting = int(attributes[purity].name)
                     stock.cost = self.touch
                     stock.touch = stock.cost+2
@@ -214,7 +214,8 @@ class InvoiceItem(models.Model):
                     stock.save()
                 stock.add(self.weight, self.quantity, self.invoice, 'P')
         else:
-            stock = Stock.get(name=self.product.name)
+            stock = Stock.objects.get(name=self.product.name,
+                        tracking_type="Lot")
             stock.remove(self.weight, self.quantity,
                          self.invoice, 'PR')
 

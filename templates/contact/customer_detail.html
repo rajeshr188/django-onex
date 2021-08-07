@@ -4,7 +4,7 @@
 {% block content %}
 <div class="alert alert-secondary text-center" role="alert">
   <p class="font-weight-bold">
-    {{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}}
+    {{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}} rank:{{customer.rank}}
     {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
     <ul class="nav justify-content-end">
       <li class="nav-item">

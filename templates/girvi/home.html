@@ -271,7 +271,7 @@ var myChart = new Chart(ctx, {
     data: {
         labels: [{%for i in data.license.licchart%}'{{i.name|slugify}}',{%endfor%}],
         datasets: [{
-                    data:[{% for i in data.license.licunrchart%}{{i.t}},{%endfor%}],
+                    data:[{% for i in data.license.licchart%}{{i.t}},{%endfor%}],
                     backgroundColor: [
                                        "#F7464A",
                                        "#46BFBD",

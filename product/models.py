@@ -1,4 +1,5 @@
 from decimal import Decimal
+from product.attributes import get_attributes_display_map, get_product_attributes_data
 from django.forms.fields import DecimalField
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.postgres.fields import HStoreField
@@ -111,6 +112,10 @@ class Product(models.Model):
     def get_first_image(self):
         images = list(self.images.all())
         return images[0].image if images else None
+    from .attributes import get_product_attributes_data
+    def get_attributes(self):
+        return get_product_attributes_data(self)
+
 
 class ProductVariant(models.Model):
     sku = models.CharField(max_length=32, unique=True)
@@ -139,6 +144,9 @@ class ProductVariant(models.Model):
     def quantity_available(self):
         return max(self.quantity - self.quantity_allocated, 0)
 
+    # def get_attributes(self):
+    #     return get_product_attributes_data(self)
+
     # def check_quantity(self, quantity):
     #     """Check if there is at least the given quantity in stock
     #     if stock handling is enabled.
@@ -153,11 +161,25 @@ class ProductVariant(models.Model):
     def get_bal(self):
         
         st = StockTransaction.objects.filter(stock__variant_id = self.id)
-        ins = st.filter(activity_type__in=['P','SR','AR']).aggregate(
+        ins = st.filter(activity_type__in=['P','SR','AR'])
+        i={}
+        o={}
+        if ins.exists():
+            i = ins.aggregate(
             wt = Sum('weight'),qty=Sum('quantity'))
-        out = st.filter(activity_type__in=['S', 'PR', 'A']).aggregate(
+           
+        else:
+            i['wt']=0
+            i['qty']=0
+        out = st.filter(activity_type__in=['S', 'PR', 'A'])
+        if out.exists():
+            o = out.aggregate(
             wt=Sum('weight'), qty=Sum('quantity'))
-        total = {'wt':ins['wt']-out['wt'],'qty':ins['qty']-out['qty']}
+        else:
+            o['wt']=0
+            o['qty']=0
+
+        total = {'wt':i['wt']-o['wt'],'qty':i['qty']-o['qty']}
         return total
                 
     def get_absolute_url(self):

@@ -6,10 +6,10 @@ import re
 from django.utils import timezone
 from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Count,Sum,Q,Prefetch
-from django.db.models.functions import Cast,Coalesce
+from django.db.models.functions import Cast,Coalesce,ExtractYear,ExtractMonth
 from django.db.models.fields import DateField
 
-from .models import License, Series, Loan, Release, Adjustment, Month, Year
+from .models import License, Series, Loan, Release, Adjustment
 from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
                     ,Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm)
 from .tables import LoanTable,ReleaseTable
@@ -170,26 +170,30 @@ def home(request):
     fixed.append(sumbyitem['silver'])
     fixed.append(sumbyitem['bronze'])
     loan['sumbyitem']=fixed
-    datetimel = loans.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
-    datetime2 = unreleased.annotate(year=Year('created')).values('year').annotate(l = Sum('loanamount')).order_by('year').values_list('year','l',named=True)
-
-
-    thismonth = loans.filter(created__year = today.year,created__month = today.month)\
+    datetimel = loans.annotate(year=ExtractYear('created')
+                    ).values('year').annotate(l = Sum('loanamount')
+                    ).order_by('year').values_list('year','l',named=True)
+    
+    datetime2 = unreleased.annotate(year=ExtractYear('created')
+                ).values('year').annotate(l = Sum('loanamount')
+                ).order_by('year').values_list('year','l',named=True)
+    
+    thismonth = loans.filter(Q(created__year = today.year) & Q(created__month = today.month))\
                     .annotate(date_only=Cast('created', DateField()))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
 
-    lastmonth =  loans.filter(created__year = today.year,created__month = today.month -1)\
+    lastmonth =  loans.filter(Q(created__year = today.year) &Q(created__month = today.month -1))\
                     .annotate(date_only=Cast('created', DateField()))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
 
-    thisyear = loans.filter(created__year = today.year).annotate(month=Month('created'))\
+    thisyear = loans.filter(created__year = today.year).annotate(month = ExtractMonth('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
 
-    lastyear = loans.filter(created__year =today.year -1).annotate(month=Month('created'))\
+    lastyear = loans.filter(created__year =today.year -1).annotate(month=ExtractMonth('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
-    # lry = Loan.released.dates('created','year').values('created__year').annotate(c = Count('id'))
+   
     loan['status'] = [loans.count(),released.count()]
     
     loan['datechart']=datetimel
@@ -205,6 +209,7 @@ def home(request):
     data['customer']=customer
     data['license']=license
     data['loan']=loan
+    
     data['release']=release
     return render(request,'girvi/home.html',context={'data':data},)
 
@@ -452,6 +457,7 @@ class AdjustmentListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterV
 class AdjustmentCreateView(LoginRequiredMixin,CreateView):
     model = Adjustment
     form_class = AdjustmentForm
+    success_url = 'girvi_loan_detail'
     def get_initial(self):
         if self.kwargs:
             loan=Loan.objects.get(id=self.kwargs['pk'])

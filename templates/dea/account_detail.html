@@ -31,7 +31,7 @@
 
 <div class="card">
     <div class="card-body">
-        Opening Bal: {{ object.accountstatement_set.latest.cb}} | {{object.accountstatement_set.latest.created}}
+        Opening Bal: {{ object.accountstatements.latest.get_cb}} | {{object.accountstatements.latest.created}}
         <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
 
     </div>
@@ -42,7 +42,7 @@
             <div class="card-body">
                 <h5 class="card-title">Debit </h5>
                 <p class="card-text">
-                    {% for i in object.txns%}
+                    {% for i in txns%}
                     {%if i.XactTypeCode.XactTypeCode == 'Cr'%}
                     <li>{{i.amount}} | {{i.created|date}} From : {{i.ledgerno}} via : {{i.XactTypeCode_ext.description}}</li>
                     {%endif%}
@@ -57,7 +57,7 @@
             <div class="card-body">
                 <h5 class="card-title">Credit </h5>
                 <p class="card-text">
-                    {% for i in object.txns%}
+                    {% for i in txns%}
                     {%if i.XactTypeCode.XactTypeCode == 'Dr'%}
                     <li>{{i.amount}} | {{i.created|date}} To : {{i.ledgerno}} Via : {{i.XactTypeCode_ext.description }} </li>
                     {%endif%}

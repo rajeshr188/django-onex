@@ -5,7 +5,7 @@ from django.db import models,transaction
 from contact.models import Customer
 from product.models import Stock,StockTransaction
 from django.utils import timezone
-from django.db.models import Sum,Func
+from django.db.models import Sum,Func,Q
 from datetime import timedelta
 from dea.models import Journal,SalesJournal,ReceiptJournal
 from invoice.models import PaymentTerm
@@ -19,6 +19,44 @@ class Year(Func):
     function = 'EXTRACT'
     template = '%(function)s(YEAR from %(expressions)s)'
     output_field = models.IntegerField()
+
+
+class SalesQueryset(models.QuerySet):
+    def posted(self):
+        return self.filter(posted=True)
+
+    def unposted(self):
+        return self.filter(posted=False)
+
+    def gst(self):
+        return self.filter(is_gst=True)
+
+    def non_gst(self):
+        return self.filter(is_gst=False)
+
+    def total(self):
+        return self.aggregate(
+            cash=Sum('balance', filter=Q(balancetype='Cash')),
+            gold=Sum('balance', filter=Q(balancetype='Gold')),
+            silver=Sum('balance', filter=Q(balancetype='Silver')),
+        )
+
+    def total_with_ratecut(self):
+        return self.aggregate(
+            cash=Sum('balance', filter=Q(balancetype='Cash')),
+            cash_g=Sum('balance', filter=Q(
+                balancetype='Cash', metaltype='Gold')),
+            cash_s=Sum('balance', filter=Q(
+                balancetype='Cash', metaltype='Silver')),
+            cash_g_nwt=Sum('net_wt', filter=Q(
+                balancetype='Cash', metaltype='Gold')),
+            cash_s_nwt=Sum('net_wt', filter=Q(
+                balancetype='Cash', metaltype='Silver')),
+
+
+            gold=Sum('balance', filter=Q(balancetype='Gold')),
+            silver=Sum('balance', filter=Q(balancetype='Silver')),
+        )
 
 class Invoice(models.Model):
     # Fields
@@ -35,7 +73,11 @@ class Invoice(models.Model):
     btype_choices = (
         ("Cash", "Cash"),
         ("Gold", "Gold"),
-        ("Silver", "Silver"),
+        ("Silver", "Silver")
+    )
+    metal_choices = (
+        ("Gold","Gold"),
+        ("Silver","Silver")
     )
     status_choices = (
         ("Paid", "Paid"),
@@ -46,7 +88,10 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
+    metaltype = models.CharField(
+        max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
+    objects = SalesQueryset.as_manager()
 
     # Relationship Fields
     customer = models.ForeignKey(
@@ -78,6 +123,12 @@ class Invoice(models.Model):
 
     def get_update_url(self):
         return reverse('sales_invoice_update', args=(self.pk,))
+
+    def get_next(self):
+        return Invoice.objects.filter(id__gt=self.id).order_by('id').first()
+
+    def get_previous(self):
+        return Invoice.objects.filter(id__lt=self.id).order_by('id').last()
 
     def get_weight(self):
         return self.invoiceitem_set.aggregate(t=Sum('weight'));
@@ -129,7 +180,7 @@ class Invoice(models.Model):
             super(Invoice, self).delete(*args, **kwargs)
 
     def get_gst(self):
-        if self.invoicetype == 'GST':
+        if self.is_gst:
             return (self.balance * 3)/100
         return 0
 
@@ -179,6 +230,7 @@ class Invoice(models.Model):
     
 class InvoiceItem(models.Model):
     # Fields
+    HUID = models.CharField(max_length=6, null=True, blank=True)
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     # remove less stone

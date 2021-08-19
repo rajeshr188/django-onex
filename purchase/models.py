@@ -1,20 +1,53 @@
 from django.urls import reverse
-from django.contrib.contenttypes.models import ContentType
 
 from django.db import models,transaction
 from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum,Q,F
 
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
-from dea.models import Journal, LedgerStatement,PurchaseJournal,PaymentJournal
+from dea.models import Journal,PurchaseJournal,PaymentJournal
 from invoice.models import PaymentTerm
-# purchase can be deleted only if unposted or posted and paid 
-# purchase can be posted/unposted only if purchase.created > latest audit
+
+# if not posted : delete/edit
+#  if posted : !edit
+#  if posted and paid : delete
+#  if posted and unpaid : !delete
+class PurchaseQueryset(models.QuerySet):
+    def posted(self):
+        return self.filter(posted = True)
+    def unposted(self):
+        return self.filter(posted = False)
+    def gst(self):
+        return self.filter(is_gst = True)
+    def non_gst(self):
+        return self.filter(is_gst = False)
+    def total(self):
+        return self.aggregate(
+            cash=Sum('balance', filter=Q(balancetype='Cash')),
+            gold=Sum('balance', filter=Q(balancetype='Gold')),
+            silver=Sum('balance', filter=Q(balancetype='Silver')),
+        )
+    def total_with_ratecut(self):
+       
+        return self.aggregate(
+            cash=Sum('balance', filter=Q(balancetype='Cash')),
+            cash_g=Sum('balance', filter=Q(balancetype='Cash',metaltype='Gold')),
+            cash_s=Sum('balance', filter=Q(
+                balancetype='Cash',metaltype='Silver')),
+            cash_g_nwt=Sum('net_wt', filter=Q(
+                balancetype='Cash',metaltype='Gold')),
+            cash_s_nwt=Sum('net_wt', filter=Q(
+                balancetype='Cash',metaltype='Silver')),
+            
+            gold=Sum('balance', filter=Q(balancetype='Gold')),
+            silver=Sum('balance', filter=Q(balancetype='Silver')),
+        )
+     
 class Invoice(models.Model):
 
     # Fields
@@ -31,9 +64,12 @@ class Invoice(models.Model):
     btype_choices = (
         ("Cash", "Cash"),
         ("Gold", "Gold"),
-        ("Silver", "Silver"),
+        ("Silver", "Silver")
     )
-
+    metal_choices = (
+        ("Gold", "Gold"),
+        ("Silver", "Silver")
+    )
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
@@ -43,7 +79,8 @@ class Invoice(models.Model):
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
         max_length=30, choices=btype_choices, default="Cash")
- 
+    metaltype = models.CharField(
+        max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
 
     # Relationship Fields
@@ -58,6 +95,7 @@ class Invoice(models.Model):
         blank=True, null=True)
     journals = GenericRelation(Journal,related_query_name ='purchase_doc')
     stock_txns = GenericRelation(StockTransaction)
+    objects = PurchaseQueryset.as_manager()
 
     class Meta:
         ordering = ('-created',)
@@ -70,6 +108,12 @@ class Invoice(models.Model):
 
     def get_update_url(self):
         return reverse('purchase_invoice_update', args=(self.pk,))
+
+    def get_next(self):
+        return Invoice.objects.filter(id__gt=self.id).order_by('id').first()
+
+    def get_previous(self):
+        return Invoice.objects.filter(id__lt=self.id).order_by('id').last()
 
     def get_gross_wt(self):
         return self.purchaseitems.aggregate(t=Sum('weight'))['t']
@@ -93,10 +137,6 @@ class Invoice(models.Model):
             return self.balance - self.get_total_payments()
         return self.balance 
 
-    # if not posted : delete/edit
-    #  if posted : !edit
-    #  if posted and paid : delete 
-    #  if posted and unpaid : !delete
     def delete(self):
         if self.posted and self.get_balance() !=0:
             raise Exception("cant delete purchase if posted and unpaid")
@@ -114,56 +154,56 @@ class Invoice(models.Model):
 
         super(Invoice, self).save(*args, **kwargs)
 
-    # cant post unpost once statement is created
     def get_gst(self):
         return (self.balance *3)/100
         
-
     @transaction.atomic()
     def post(self):
-        try:
-            self.supplier.account
-        except:
-            self.supplier.save()
-        for i in self.purchaseitems.all():
-                i.post()
-        if self.balance >0 :
-            jrnl = PurchaseJournal.objects.create(
-                content_object=self,
-                desc='purchase'
-            )
-        else:
-            jrnl = PaymentJournal.objects.create(
-                content_object=self,
-                desc='purchase'
-            )
-        jrnl.transact()
-        self.posted = True
-        self.save(update_fields=['posted'])
+        if not self.posted:
+            try:
+                self.supplier.account
+            except:
+                self.supplier.save()
+            for i in self.purchaseitems.all():
+                    i.post()
+            if self.balance >0 :
+                jrnl = PurchaseJournal.objects.create(
+                    content_object=self,
+                    desc='purchase'
+                )
+            else:
+                jrnl = PaymentJournal.objects.create(
+                    content_object=self,
+                    desc='purchase'
+                )
+            jrnl.transact()
+            self.posted = True
+            self.save(update_fields=['posted'])
        
     @transaction.atomic()
     def unpost(self):
-        for i in self.purchaseitems.all():
-                i.unpost()
-        if self.balance>0:
-            jrnl = PurchaseJournal.objects.create(
-                content_object=self,
-                desc='purchase revert'
-            )
-        else:
-            jrnl = PaymentJournal.objects.create(
-                content_object=self,
-                desc='purchase revert'
-            )
-        jrnl.transact(revert = True)
-        self.posted = False
-        self.save(update_fields=['posted'])
+        if self.posted:
+            for i in self.purchaseitems.all():
+                    i.unpost()
+            if self.balance>0:
+                jrnl = PurchaseJournal.objects.create(
+                    content_object=self,
+                    desc='purchase revert'
+                )
+            else:
+                jrnl = PaymentJournal.objects.create(
+                    content_object=self,
+                    desc='purchase revert'
+                )
+            jrnl.transact(revert = True)
+            self.posted = False
+            self.save(update_fields=['posted'])
         
 
 class InvoiceItem(models.Model):
     # Fields
+    HUID = models.CharField(max_length = 6,null = True,blank = True)
     quantity = models.IntegerField()
-    # add melting here
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
     net_wt = models.DecimalField( max_digits=10, decimal_places=3,default = 0)
@@ -206,7 +246,6 @@ class InvoiceItem(models.Model):
                     attributes = get_product_attributes_data(
                         self.product.product)
                     purity = Attribute.objects.get(name='Purity')
-                    print(attributes)
                     stock.melting = int(attributes[purity].name)
                     stock.cost = self.touch
                     stock.touch = stock.cost+2
@@ -276,13 +315,9 @@ class Payment(models.Model):
     def get_update_url(self):
         return reverse('purchase_payment_update', args=(self.pk,))
 
-    # if not posted : delete/edit
-    #  if posted : !edit
-    #  if posted and allotted : delete
-    #  if posted and unallotted : !delete
     def delete(self):
         if self.posted and self.status != 'Allotted':
-            raise Exception("cant delete purchase if posted and unallotted")
+            raise Exception("cant delete payment if posted and unallotted")
         else:
             super(Payment, self).delete()
 
@@ -341,8 +376,8 @@ class Payment(models.Model):
                 desc = 'payment'
             )
             jrnl.transact()
-        self.posted = True
-        self.save(update_fields = ['posted'])
+            self.posted = True
+            self.save(update_fields = ['posted'])
 
     def unpost(self):
         if self.posted:
@@ -351,8 +386,8 @@ class Payment(models.Model):
                 desc='payment'
             )
             jrnl.transact(revert = True)
-        self.posted = False
-        self.save(update_fields=['posted'])
+            self.posted = False
+            self.save(update_fields=['posted'])
 
 class PaymentItem(models.Model):
     weight = models.DecimalField(

@@ -3,70 +3,63 @@
 {% block content %}
 <div class="card-columns">
   <div class="card">
-    <img class="card-img-top" src=".../100px160/" alt="Card image cap">
     <div class="card-body">
-      <h5 class="card-title">Card title that wraps to a new line</h5>
-      <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-    </div>
-  </div>
-  <div class="card p-3">
-    <blockquote class="blockquote mb-0 card-body">
-      <p>Moving average Price
-        <ol>
-          <li>{{total}}</li>
-          <li>{{map}}</li>
-        </ol>
+      <h5 class="card-title">ALL Purchase</h5>
+      <p class="card-text">
+        Total:
+            <ul>
+              <li>
+                Cash : {{total.total.cash}} (Gold:{{total.total.cash_g}}) (Silver:{{total.total.cash_s}})
+              </li>
+              <li>Gold : {{total.total.gold}}</li>
+              <li>Silver:{{total.total.silver}}</li>
+            </ul>
+          </li>
+        Map: 
+            <ul>
+              <li>Gold - {{total.total.gmap}}</li>
+              <li>Silver - {{total.total.smap}}</li>
+            </ul>
       </p>
-      <footer class="blockquote-footer">
-       
-        <small class="text-muted">
-          Someone famous in <cite title="Source Title">Source Title</cite>
-        </small>
-      </footer>
-    </blockquote>
-  </div>
-  <div class="card">
-    <img class="card-img-top" src=".../100px160/" alt="Card image cap">
-    <div class="card-body">
-      <h5 class="card-title">Card title</h5>
-      <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
-      <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
     </div>
   </div>
-  <div class="card bg-primary text-white text-center p-3">
-    <blockquote class="blockquote mb-0">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat.</p>
-      <footer class="blockquote-footer">
-        <small>
-          Someone famous in <cite title="Source Title">Source Title</cite>
-        </small>
-      </footer>
-    </blockquote>
-  </div>
-  <div class="card text-center">
+  <div class="card">
     <div class="card-body">
-      <h5 class="card-title">Card title</h5>
-      <p class="card-text">This card has a regular title and short paragraphy of text below it.</p>
+      <h5 class="card-title">GST</h5>
+      <p class="card-text">
+        Total
+            <ul>
+                <li>Cash : {{total.gst.cash}} (Gold:{{total.gst.cash_g}}) (Silver:{{total.gst.cash_s}})</li>
+                <li>Gold : {{total.gst.gold}}</li>
+                <li>Silver:{{total.gst.silver}}</li>   
+            </ul>
+        Map:
+            <ul>
+              <li>Gold - {{total.gst.gmap}}</li>
+              <li>Silver - {{total.gst.smap}}</li>
+            </ul>
+      </p>
       <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
     </div>
   </div>
   <div class="card">
-    <img class="card-img" src=".../100px260/" alt="Card image">
-  </div>
-  <div class="card p-3 text-right">
-    <blockquote class="blockquote mb-0">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
-      <footer class="blockquote-footer">
-        <small class="text-muted">
-          Someone famous in <cite title="Source Title">Source Title</cite>
-        </small>
-      </footer>
-    </blockquote>
-  </div>
-  <div class="card">
     <div class="card-body">
-      <h5 class="card-title">Card title</h5>
-      <p class="card-text">This is another card with title and supporting text below. This card has some additional content to make it slightly taller overall.</p>
+      <h5 class="card-title">Non-GST</h5>
+      <p class="card-text">
+       Total
+            <ul>
+              <li>
+                Cash : {{total.nongst.cash}} (Gold:{{total.nongst.cash_g}}) (Silver:{{total.nongst.cash_s}})
+              </li>
+              <li>Gold : {{total.nongst.gold}}</li>
+              <li>Silver:{{total.nongst.silver}}</li>
+            </ul>
+       Map:
+            <ul>
+              <li>Gold - {{total.nongst.gmap}}</li>
+              <li>Silver - {{total.nongst.smap}}</li>
+            </ul>
+       </p>
       <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
     </div>
   </div>

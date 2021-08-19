@@ -10,8 +10,9 @@ from django_filters.views import FilterView
 from .filters import InvoiceFilter,ReceiptFilter
 from .render import Render
 from num2words import num2words
+from django.db.models import DecimalField
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce,TruncMonth,TruncYear
 from django.shortcuts import render,redirect
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
@@ -21,30 +22,50 @@ from django.db import transaction
 
 def home(request):
     inv = Invoice.objects
-    sales_by_month=inv.annotate(month = Month('created'),year=Year('created')).\
-                    values('year','month').order_by('month').\
-                    annotate(tc = Coalesce(Sum('balance',filter = Q(balancetype='Cash')),0),
-                            tm = Coalesce(Sum('balance',filter = Q(balancetype = 'Metal')),0))
-    rec = Receipt.objects
-    receipts_by_month = rec.annotate(month = Month('created'),year=Year('created')).\
-                    values('month','year').order_by('month').\
-                    annotate(tc = Sum('total',filter = Q(type='Cash')),tm = Sum('total',filter = Q(type = 'Metal')))
+    # sales_by_month=inv.annotate(month = TruncMonth('created'),year=TruncYear('created')).\
+    #                 values('year','month').order_by('month').\
+    #                 annotate(tc = Coalesce(Sum('balance',filter = Q(balancetype='Cash')),0.0),
+    #                         tm = Coalesce(Sum('balance',filter = Q(balancetype = 'Gold')),0.0))
+    # rec = Receipt.objects
+    # receipts_by_month = rec.annotate(month = TruncMonth('created'),year=TruncYear('created')).\
+    #                 values('month','year').order_by('month').\
+    #                 annotate(tc = Sum('total',filter = Q(type='Cash')),tm = Sum('total',filter = Q(type = 'Gold')))
     data = dict()
-    data['sales_by_month']=sales_by_month
-    # var_fixed = []
-    # for row in (sales_by_month):
-    #     var_fixed.append([str(row[0]),int(float(row[1]))])
+    # data['sales_by_month']=sales_by_month
+    # data['receipts_by_month']=receipts_by_month
 
-    data['saleslist']=sales_by_month
-    data['receipts_by_month']=receipts_by_month
-    ratecut_inv = Invoice.objects.filter(balancetype = 'Cash')
-    total = ratecut_inv.aggregate(b=Sum('balance'),
-                    nwt = Sum('net_wt'),gwt = Sum('gross_wt'))
-    print(total)
-    map = total['b']/total['nwt']
-    data['total'] = total
-    data['map'] = map
-    return render(request,'sales/home.html',context={'data':data},)
+    context = {}
+    qs = Invoice.objects
+    qs_posted = qs.posted()
+    qs_unposted = qs.unposted()
+    total = dict()
+    total['total']=qs_posted.total_with_ratecut()
+    if total['total']['cash']:
+        total['total']['gmap'] = round(total['total']['cash_g'] / \
+            total['total']['cash_g_nwt'],3)
+        total['total']['smap'] = round(total['total']['cash_s'] / \
+            total['total']['cash_s_nwt'],3)
+    else:
+        total['total']['gmap']=0
+        total['total']['smap'] = 0
+    
+    total['gst'] = qs_posted.gst().total_with_ratecut()
+    if total['gst']['cash']: 
+        total['gst']['gmap'] = round(total['gst']['cash_g']/total['gst']['cash_g_nwt'],3)
+        total['gst']['smap'] = round(total['gst']['cash_s']/total['gst']['cash_s_nwt'],3)
+    else:
+        total['gst']['gmap']=0
+        total['gst']['smap']=0
+    
+    total['nongst'] = qs_posted.non_gst().total_with_ratecut()
+    if total['nongst']['cash']:
+        total['nongst']['gmap'] = round(total['nongst']['cash_g']/total['nongst']['cash_g_nwt'],3)
+        total['nongst']['smap'] = round(total['nongst']['cash_s']/total['nongst']['cash_s_nwt'],3)
+    else:
+        total['nongst']['gmap']=0
+        total['nongst']['smap']=0
+    context['total']=total
+    return render(request,'sales/home.html',context)
 
 def randomsales(request):
     c=Customer.objects.order_by("?")[:30]
@@ -272,6 +293,12 @@ class InvoiceCreateView(CreateView):
 
 class InvoiceDetailView(DetailView):
     model = Invoice
+
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceDetailView, self).get_context_data(**kwargs)
+        context['previous'] = self.object.get_previous()
+        context['next'] = self.object.get_next()
+        return context
 
 class InvoiceUpdateView(UpdateView):
     model = Invoice

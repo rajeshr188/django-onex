@@ -15,15 +15,15 @@ import qrcode
 import qrcode.image.svg
 from qrcode.image.pure import PymagingImage
 from io import BytesIO
-class Month(Func):
-    function = 'EXTRACT'
-    template = '%(function)s(MONTH from %(expressions)s)'
-    output_field = models.IntegerField()
+# class Month(Func):
+#     function = 'EXTRACT'
+#     template = '%(function)s(MONTH from %(expressions)s)'
+#     output_field = models.IntegerField()
 
-class Year(Func):
-    function = 'EXTRACT'
-    template = '%(function)s(YEAR from %(expressions)s)'
-    output_field = models.IntegerField()
+# class Year(Func):
+#     function = 'EXTRACT'
+#     template = '%(function)s(YEAR from %(expressions)s)'
+#     output_field = models.IntegerField()
 
 class License(models.Model):
 
@@ -166,7 +166,7 @@ class Loan(models.Model):
             return round(Decimal(((self.loanamount)*self.noofmonths(date)*(self.interestrate))/100),3)
 
     def total(self):
-        return self.interestdue() + float(self.loanamount)
+        return self.interestdue() + self.loanamount
 
     def get_total_adjustments(self):
         as_int =0

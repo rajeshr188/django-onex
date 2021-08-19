@@ -66,7 +66,7 @@
           <h5 class="card-title">Loans</h5>
           <ul class="list-group list-group-flush">
             <li>License Total :{% for c in data.license.totalloans %} {{c.id}}:{{c.t}}</li>{%endfor%}
-            <li class="list-group-item">Count :{{data.loan.count}}</li>
+            <li class="list-group-item">Count :{{data.loans.unreleased.count}}</li>
             <li class="list-group-item">Amount :{{data.loan.amount.t}} </li>
             <li class="list-group-item">{{data.loan.amount_words}}</li>
 
@@ -166,7 +166,7 @@
   var ds2 = {
   label: 'unreleased loan by year',
   borderColor: 'green',
-  data: [0,0,{% for i in data.loan.datechart1 %} {{i.l}},{% endfor %}]
+  data: [0,0,0,{% for i in data.loan.datechart1 %} {{i.l}},{% endfor %}]
   };
 
   var ctx1 = document.getElementById('loansbyyear').getContext('2d');

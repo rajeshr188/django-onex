@@ -95,6 +95,8 @@ def set_acc_ob(request, pk):
 
     return render(request, 'dea/set_acc_ob.html', {'form': form})
 
+
+@transaction.atomic()
 def audit_acc(request,pk):
     acc = get_object_or_404(Account,pk=pk)
     acc.audit()
@@ -125,6 +127,17 @@ class AccountListView(ListView):
 class AccountDetailView(DetailView):
     model = Account
 
+    def get_context_data(self, **kwargs):
+        ct = super().get_context_data(**kwargs)
+        
+        if ct['object'].accountstatements.exists():
+            ls_created = ct['object'].accountstatements.latest().created
+            ct['txns'] = ct['object'].txns(since=ls_created)
+        else:
+            ct['txns'] = ct['object'].txns()
+        
+        return ct
+
 class AccountStatementCreateView(CreateView):
     model = Account
     form_class = AccountStatementForm
@@ -141,6 +154,13 @@ class LedgerListView(ListView):
 
 class LedgerDetailView(DetailView):
     model = Ledger
+
+    def get_context_data(self, **kwargs) :
+        ct = super().get_context_data(**kwargs)
+        ls_created = ct['object'].ledgerstatements.latest().created
+        ct['dtxns']= ct['object'].dtxns(since=ls_created)
+        ct['ctxns']= ct['object'].ctxns(since = ls_created)
+        return ct
 
 class LedgerStatementCreateView(CreateView):
     model = LedgerStatement

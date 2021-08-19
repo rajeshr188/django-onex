@@ -32,8 +32,8 @@ class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
         fields = ['created','approval','rate','is_gst', 'balancetype',
-                'gross_wt','net_wt',
-                 'balance','term', 'customer','status','posted']
+                    'metaltype','gross_wt','net_wt','balance','term',
+                     'customer','status','posted']
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(

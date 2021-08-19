@@ -25,7 +25,13 @@
       <td>balance</td>
       <td>{{ object.balance }}</td>
     </tr>
+  <tr>
+    <td>Metal</td>
+    <td>{{ object.metaltype }}</td>
+  </tr>
+
   <tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
+  <tr><td>Total</td><td>{{object.total}}</td></tr>
   <tr><td>status</td><td>{{ object.status }}</td></tr>
   <tr><td>Paid</td><td>{{object.get_total_payments}}</td></tr>
   <tr>
@@ -76,5 +82,13 @@
   {%endfor%}
 </table>
 {%endif%}
-
+<div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+  {%if previous%}
+  <a href="{% url 'purchase_invoice_detail' previous.pk %}" type="button" class="btn btn-primary mr-2">Previous
+    {{previous.id}}</a>
+  {%endif%}
+  {%if next %}
+  <a href="{% url 'purchase_invoice_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.id}}</a>
+  {%endif%}
+</div>
 {% endblock %}

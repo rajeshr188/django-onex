@@ -452,20 +452,20 @@ class Stock(models.Model):
         self.update_status()
 
     def remove(self,weight,quantity,cto,at):
-        cb = self.current_balance()
-        if (cb['wt'] >= weight and cb['qty'] >= quantity):
-            StockTransaction.objects.create(
-                        stock = self,
-                        weight = weight,
-                        quantity = quantity,
-                        content_object = cto,
-                        activity_type=at
-                )
-            self.update_status()
+        # cb = self.current_balance()
+        # if (cb['wt'] >= weight and cb['qty'] >= quantity):
+        StockTransaction.objects.create(
+            stock=self,
+            weight=weight,
+            quantity=quantity,
+            content_object=cto,
+            activity_type=at
+        )
+        self.update_status()
             
-        else:
-            print("error here")
-            raise Exception(f" qty/wt mismatch .hence exception")
+        # else:
+        #     print("error here")
+        #     raise Exception(f" qty/wt mismatch .hence exception")
 
     def split(self,weight):
         # split from stock:tracking_type::lot to unique

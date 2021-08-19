@@ -21,7 +21,7 @@ class InvoiceTable(tables.Table):
 
     class Meta:
         model = Invoice
-        fields = ('id','created','customer','balancetype',
+        fields = ('id','created','customer','balancetype','metaltype',
                     'gross_wt','net_wt','balance','posted','status','term',
                     'due_date')
 

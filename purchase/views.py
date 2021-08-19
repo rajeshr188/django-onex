@@ -1,3 +1,4 @@
+from decimal import Context
 from dea.models import AccountStatement
 from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
@@ -25,13 +26,38 @@ from django_filters.views import FilterView
 
 def home(request):
     context = {}
-    ratecut_inv = Invoice.objects.filter(balancetype = 'Cash')
-    total = ratecut_inv.aggregate(b=Sum('balance'),
-                    nwt = Sum('net_wt'),gwt = Sum('gross_wt'))
-    print(total)
-    map = total['b']/total['nwt']
+    qs = Invoice.objects
+    qs_posted = qs.posted()
+    
+    total = dict()
+    total['total']=qs_posted.total_with_ratecut()
+    if total['total']['cash']:
+        total['total']['gmap'] = round(total['total']['cash_g'] / \
+            total['total']['cash_g_nwt'],3)
+        total['total']['smap'] = round(total['total']['cash_s'] / \
+            total['total']['cash_s_nwt'],3)
+    else:
+        total['total']['gmap']=0
+        total['total']['smap'] = 0
+    
+    total['gst'] = qs_posted.gst().total_with_ratecut()
+    if total['gst']['cash']: 
+        total['gst']['gmap'] = round(total['gst']['cash_g']/total['gst']['cash_g_nwt'],3)
+        total['gst']['smap'] = round(total['gst']['cash_s']/total['gst']['cash_s_nwt'],3)
+    else:
+        total['gst']['gmap']=0
+        total['gst']['smap']=0
+    
+    total['nongst'] = qs_posted.non_gst().total_with_ratecut()
+    if total['nongst']['cash']:
+        total['nongst']['gmap'] = round(total['nongst']['cash_g']/total['nongst']['cash_g_nwt'],3)
+        total['nongst']['smap'] = round(total['nongst']['cash_s']/total['nongst']['cash_s_nwt'],3)
+    else:
+        total['nongst']['gmap']=0
+        total['nongst']['smap']=0
+   
     context['total'] = total
-    context['map'] = map
+    
     return render(request,'purchase/home.html',context)
 
 def print_invoice(pk):
@@ -44,6 +70,11 @@ def print_payment(pk):
     params={'payment':payment,'inwords':num2words(payment.total,lang='en_IN')}
     return Render.render('purchase/payment.html',params)
 
+# def home(request):
+#     data={}
+#     data['qs']=Invoice.objects.all()
+#     return render(request,'purchase/home.html',context = {'data':data})
+
 def list_balance(request):
     acs = AccountStatement.objects.filter(AccountNo__contact = OuterRef('supplier')).order_by('-created')[:1]
     acs_cb = AccountStatement.objects.filter(
@@ -55,8 +86,7 @@ def list_balance(request):
         ).order_by().values('supplier')
     grec=payments.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
     crec=payments.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
-    invoices = Invoice.objects.filter(
-        posted=True,
+    invoices = Invoice.objects.posted().filter(
         supplier=OuterRef('pk'),
         created__gte=Subquery(acs.values('created'))
         ).order_by().values('supplier')
@@ -124,6 +154,12 @@ class InvoiceCreateView(CreateView):
 
 class InvoiceDetailView(DetailView):
     model = Invoice
+
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceDetailView, self).get_context_data(**kwargs)
+        context['previous'] = self.object.get_previous()
+        context['next'] = self.object.get_next()
+        return context
 
 class InvoiceUpdateView(UpdateView):
     model = Invoice

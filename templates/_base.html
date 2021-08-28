@@ -10,7 +10,11 @@
 <meta name="description" content="A framework for launching new Django projects quickly.">
 <meta name="author" content="">
 <link rel="shortcut icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
-
+<style>
+  .panel-body { /* parent container of the menu */
+    overflow:auto;
+}
+</style>
 {% block css %}
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
@@ -74,6 +78,8 @@
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'girvi_release_list'%}">Release</a>
               <div class="dropdown-divider"></div>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{%url 'bulk_release'%}">Bulk Release</a>
               <a class="dropdown-item" href="{%url 'girvi_license_list'%}">License</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#">Ledger</a>
@@ -81,6 +87,10 @@
               <a class="dropdown-item" href="{%url 'loan_archive' %}">Archive</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{%url 'notice' %}">Notice</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{%url 'girvi_physicalstock_add'%}">Add Physical</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{%url 'girvi_physicalstock_list'%}">Physical List</a>
             </div>
           </li>
           <li class="nav-item dropdown">

@@ -4,7 +4,7 @@ from django.db import models,transaction
 from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta,date
 from django.db.models import Sum,Q,F
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -15,8 +15,7 @@ from invoice.models import PaymentTerm
 
 # if not posted : delete/edit
 #  if posted : !edit
-#  if posted and paid : delete
-#  if posted and unpaid : !delete
+#  delete any time
 class PurchaseQueryset(models.QuerySet):
     def posted(self):
         return self.filter(posted = True)
@@ -32,6 +31,11 @@ class PurchaseQueryset(models.QuerySet):
             gold=Sum('balance', filter=Q(balancetype='Gold')),
             silver=Sum('balance', filter=Q(balancetype='Silver')),
         )
+    def today(self):
+        return self.filter(created__date = date.today())
+    def cur_month(self):
+        return self.filter(created__month = date.today().month,
+        created__year = date.today().year)
     def total_with_ratecut(self):
        
         return self.aggregate(
@@ -82,7 +86,7 @@ class Invoice(models.Model):
     metaltype = models.CharField(
         max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
-
+    is_active = models.BooleanField(default = True)
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -93,8 +97,8 @@ class Invoice(models.Model):
         PaymentTerm, on_delete=models.SET_NULL,
         related_name = 'purchase_term',
         blank=True, null=True)
-    journals = GenericRelation(Journal,related_query_name ='purchase_doc')
-    stock_txns = GenericRelation(StockTransaction)
+    # journals = GenericRelation(Journal,related_query_name ='purchase_doc')
+    # stock_txns = GenericRelation(StockTransaction)
     objects = PurchaseQueryset.as_manager()
 
     class Meta:
@@ -130,24 +134,23 @@ class Invoice(models.Model):
     
     @property
     def overdue_days(self):
-        return (timezone.now().date() - self.date_due).days
+        return (timezone.now().date() - self.due_date).days
 
     def get_balance(self):
         if self.get_total_payments() != None :
             return self.balance - self.get_total_payments()
         return self.balance 
 
-    def delete(self):
-        if self.posted and self.get_balance() !=0:
-            raise Exception("cant delete purchase if posted and unpaid")
-        else:
-            super(Invoice,self).delete()
+    # def delete(self):
+    #     if self.posted and self.get_balance() !=0:
+    #         raise Exception("cant delete purchase if posted and unpaid")
+    #     else:
+    #         super(Invoice,self).delete()
 
     def save(self, *args, **kwargs):
         if self.balance <0 :
             self.status = "Paid"
-        if self.term.due_days:
-            self.due_date = self.created + timedelta(days=self.term.due_days)
+        self.due_date = self.created + timedelta(days=self.term.due_days)
         self.total = self.balance
         if self.is_gst:    
             self.total += self.get_gst()
@@ -202,7 +205,7 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     # Fields
-    HUID = models.CharField(max_length = 6,null = True,blank = True)
+    huid = models.CharField(max_length = 6,null = True,blank = True,unique = True)
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
@@ -296,7 +299,8 @@ class Payment(models.Model):
                         )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal,related_query_name='payment_doc')
+    is_active = models.BooleanField(default=True)
+    # journals = GenericRelation(Journal,related_query_name='payment_doc')
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -315,11 +319,11 @@ class Payment(models.Model):
     def get_update_url(self):
         return reverse('purchase_payment_update', args=(self.pk,))
 
-    def delete(self):
-        if self.posted and self.status != 'Allotted':
-            raise Exception("cant delete payment if posted and unallotted")
-        else:
-            super(Payment, self).delete()
+    # def delete(self):
+    #     if self.posted and self.status != 'Allotted':
+    #         raise Exception("cant delete payment if posted and unallotted")
+    #     else:
+    #         super(Payment, self).delete()
 
     def get_line_totals(self):
         return self.paymentline_set.aggregate(t=Sum('amount'))['t']

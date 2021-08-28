@@ -2,18 +2,18 @@ from django.views.generic import DetailView, ListView, UpdateView, CreateView,De
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect
-import re
 from django.utils import timezone
 from django.shortcuts import render,redirect,get_object_or_404
-from django.db.models import Count,Sum,Q,Prefetch
-from django.db.models.functions import Cast,Coalesce,ExtractYear,ExtractMonth
-from django.db.models.fields import DateField
+from django.db.models import Count,Sum,Q,Prefetch,F,Max
+from django.db.models.functions import Coalesce,ExtractYear,ExtractMonth
 
-from .models import License, Series, Loan, Release, Adjustment
+from .models import License, LoanStatement, Series, Loan, Release, Adjustment
 from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
-                    ,Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm)
+                    ,Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm,
+                    PhysicalStockForm,
+                    SeriesForm)
 from .tables import LoanTable,ReleaseTable
-from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter
+from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter,LoanStatementFilter
 from contact.models import Customer
 
 from django_tables2.views import SingleTableMixin
@@ -115,6 +115,10 @@ def manage_loans(request):
 
     return render(request, 'girvi/manage_loans.html', {'formset': formset})
 
+def activate_series(request,pk):
+    s = get_object_or_404(Series,pk = pk)
+    s.activate()
+    return redirect('girvi_loan_list')
 from dateutil import relativedelta
 @login_required
 def home(request):
@@ -128,10 +132,7 @@ def home(request):
 
     customer=dict()
     c=Customer.objects
-    customer['count']=c.count()
-    customer['withoutloans']=c.filter(loan__isnull=True).count()
-    customer['withloans']=customer['count']-customer['withoutloans']
-    customer['latest']=','.join(lat.name for lat in c.order_by('-created')[:5])
+    
     customer['maxloans']=c.filter(loan__release__isnull=True).annotate(
         num_loans=Count('loan'),sum_loans=Sum('loan__loanamount'),tint = Sum('loan__interest')).values(
             'name','num_loans','sum_loans','tint').order_by('-num_loans','sum_loans','tint')[:10]
@@ -151,8 +152,7 @@ def home(request):
 
     l=unreleased
     loan['count']=l.count()
-    loan['uniquecount']=l.annotate(c=Count('customer')).order_by('c')
-    loan['latest']=','.join(lat.loanid for lat in l.order_by('-created')[:5])
+    
     loan['amount']=l.aggregate(t=Coalesce(Sum('loanamount'),0))
     loan['amount_words']=num2words(loan['amount']['t'],lang='en_IN')
     loan['gold_amount']=l.filter(itemtype='Gold').aggregate(t=Sum('loanamount'))
@@ -179,12 +179,12 @@ def home(request):
                 ).order_by('year').values_list('year','l',named=True)
     
     thismonth = loans.filter(Q(created__year = today.year) & Q(created__month = today.month))\
-                    .annotate(date_only=Cast('created', DateField()))\
+                    .annotate(date_only=F('created__day'))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
 
     lastmonth =  loans.filter(Q(created__year = today.year) &Q(created__month = today.month -1))\
-                    .annotate(date_only=Cast('created', DateField()))\
+                    .annotate(date_only=F('created__day'))\
                     .values('date_only').annotate(t=Sum('loanamount'))\
                     .order_by('date_only').values_list('date_only','t',named=True)
 
@@ -286,7 +286,31 @@ def bulk_release(request):
 
 def bulk_release_detail(request):
     return render(request,'girvi/bulk_release_detail.html')
+def physical_stock(request):
+    if request.method == 'POST':
+        form = PhysicalStockForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            date = form.cleaned_data['date']
+            loans = form.cleaned_data['loans']
+            print(loans)
+            if not date:
+                date = timezone.now().date()
 
+            for i in loans:
+                print(i)
+                ls = LoanStatement.objects.create(created =date,loan = i)
+                print(ls)
+    else:
+        form = PhysicalStockForm()
+    return render(request,'girvi/physicalstock.html',{'form':form})
+
+def physical_list(request):
+    physically_available = LoanStatement.objects.filter(
+                        pk__in = LoanStatement.objects.order_by().values('loan_id').annotate(max_id = Max('id')).values('max_id'))
+    filter = LoanStatementFilter(request.GET,queryset = physically_available)
+
+    return render(request,'girvi/physicallist.html',{'filter':filter})
 class LoanYearArchiveView(LoginRequiredMixin,YearArchiveView):
     queryset = Loan.unreleased.all()
     date_field = "created"
@@ -322,19 +346,19 @@ class LicenseDeleteView(LoginRequiredMixin,DeleteView):
     model=License
     success_url=reverse_lazy('girvi_license_list')
 
-# class SeriesListView(LoginRequiredMixin,ListView):
-#     model = Series
-#
-# class SeriesCreateView(LoginRequiredMixin,CreateView):
-#     model = Series
-#     form_class = SeriesForm
-#
-# class SeriesDetailView(LoginRequiredMixin,DetailView):
-#     model = Series
-#
-# class SeriesUpdateView(LoginRequiredMixin,UpdateView):
-#     model = Series
-#     form_class = SeriesForm
+class SeriesListView(LoginRequiredMixin,ListView):
+    model = Series
+
+class SeriesCreateView(LoginRequiredMixin,CreateView):
+    model = Series
+    form_class = SeriesForm
+
+class SeriesDetailView(LoginRequiredMixin,DetailView):
+    model = Series
+
+class SeriesUpdateView(LoginRequiredMixin,UpdateView):
+    model = Series
+    form_class = SeriesForm
 
 class LicenseSeriesDeleteView(LoginRequiredMixin,DeleteView):
     model=License
@@ -346,14 +370,6 @@ class LoanListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     template_name='girvi/loan_list.html'
     filterset_class=LoanFilter
     paginate_by=20
-
-def incloanid():
-    last=Loan.objects.all().order_by('id').last()
-    if not last:
-        return '1'
-    splitl=re.split('(\d+)',last.loanid)
-    billno=splitl[0] + str(int(splitl[1])+1)
-    return str(billno)
 
 def increlid():
     last=Release.objects.all().order_by('id').last()
@@ -370,13 +386,15 @@ def ld():
     return last.created
 
 class LoanCreateView(LoginRequiredMixin,CreateView):
+    
     model = Loan
     form_class = LoanForm
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) for s in Series.objects.all()}
+            series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) 
+                        for s in Series.objects.filter(is_active = True)}
             context['series']= series
         except Loan.DoesNotExist:
             context['series']=None
@@ -391,7 +409,6 @@ class LoanCreateView(LoginRequiredMixin,CreateView):
             }
         else:
             return{
-                # 'loanid':incloanid,
                 'created':ld,
             }
 

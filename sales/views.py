@@ -21,23 +21,11 @@ from django.http import JsonResponse
 from django.db import transaction
 
 def home(request):
-    inv = Invoice.objects
-    # sales_by_month=inv.annotate(month = TruncMonth('created'),year=TruncYear('created')).\
-    #                 values('year','month').order_by('month').\
-    #                 annotate(tc = Coalesce(Sum('balance',filter = Q(balancetype='Cash')),0.0),
-    #                         tm = Coalesce(Sum('balance',filter = Q(balancetype = 'Gold')),0.0))
-    # rec = Receipt.objects
-    # receipts_by_month = rec.annotate(month = TruncMonth('created'),year=TruncYear('created')).\
-    #                 values('month','year').order_by('month').\
-    #                 annotate(tc = Sum('total',filter = Q(type='Cash')),tm = Sum('total',filter = Q(type = 'Gold')))
-    data = dict()
-    # data['sales_by_month']=sales_by_month
-    # data['receipts_by_month']=receipts_by_month
-
+    
     context = {}
     qs = Invoice.objects
     qs_posted = qs.posted()
-    qs_unposted = qs.unposted()
+    
     total = dict()
     total['total']=qs_posted.total_with_ratecut()
     if total['total']['cash']:

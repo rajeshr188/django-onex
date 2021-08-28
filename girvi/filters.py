@@ -1,4 +1,4 @@
-from .models import Loan,Release,Adjustment
+from .models import Loan, LoanStatement,Release,Adjustment
 from contact.models import Customer
 import django_filters
 from django_select2.forms import Select2Widget
@@ -16,6 +16,15 @@ class LoanFilter(django_filters.FilterSet):
     class Meta:
         model=Loan
         fields=['loanid','series','customer','itemtype','itemweight','itemdesc','loanamount']
+
+class LoanStatementFilter(django_filters.FilterSet):
+    loan = django_filters.ModelChoiceFilter(
+        widget = Select2Widget,
+        queryset = Loan.objects.filter(series__is_active = True)
+    )
+    class Meta:
+        model = LoanStatement
+        fields = ['loan']
 
 class AdjustmentFilter(django_filters.FilterSet):
     class Meta:

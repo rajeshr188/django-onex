@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 # Create your models here.
 
-
+class voucher(models.Model):
+    pass
 class PaymentTerm(models.Model):
     name = models.CharField(max_length=30)
     description = models.TextField()

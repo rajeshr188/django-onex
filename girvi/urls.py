@@ -51,6 +51,7 @@ urlpatterns += (
     path('girvi/check/',views.check_girvi,name='check_girvi'),
     path('girvi/bulk_release/',views.bulk_release,name='bulk_release'),
     path('girvi/bulk_release_detail/',views.bulk_release_detail,name='bulk_release_detail'),
+    path('girvi/series/<int:pk>/activate',views.activate_series,name='girvi_activate_series'),
 )
 urlpatterns += (
     # urls for License
@@ -74,6 +75,8 @@ urlpatterns += (
     path('girvi/loan/<int:pk>/delete/',views.LoanDeleteView.as_view(),name='girvi_loan_delete'),
     path('girvi/loan/<int:pk>/post/',views.post_loan,name = 'girvi_loan_post'),
     path('girvi/loan/<int:pk>/unpost/', views.unpost_loan, name='girvi_loan_unpost'),
+    path('girvi/loan/take_physicalstock/',views.physical_stock,name="girvi_physicalstock_add"),
+    path('girvi/loan/physicalstock/',views.physical_list,name="girvi_physicalstock_list"),
 
 )
 urlpatterns += (

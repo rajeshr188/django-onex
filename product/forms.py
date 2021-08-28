@@ -110,7 +110,9 @@ class AttributesMixin:
             yield self[attr.get_formfield_name()]
 
     def get_saved_attributes(self):
+        data = {}
         attributes = {}
+        ja={}
         for attr in self.available_attributes:
             value = self.cleaned_data.pop(attr.get_formfield_name())
             if value:
@@ -121,7 +123,13 @@ class AttributesMixin:
                         attribute_id=attr.pk, name=value, slug=slugify(value))
                     value.save()
                 attributes[smart_text(attr.pk)] = smart_text(value.pk)
-        return attributes
+                
+                ja[smart_text(attr.name)] = smart_text(value.value)
+        data['attributes'] = attributes
+        data['ja']=ja
+        return data
+
+    
 
 class ProductForm(forms.ModelForm, AttributesMixin):
     category = TreeNodeChoiceField(
@@ -177,8 +185,9 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
 
 
     def save(self, commit=True):
-        attributes = self.get_saved_attributes()
-        self.instance.attributes = attributes
+        data = self.get_saved_attributes()
+        self.instance.attributes = data['attributes']
+        self.instance.jattributes = data['ja']
         attrs = self.instance.product.product_type.variant_attributes.all()
         self.instance.name = get_name_from_attributes(self.instance, attrs)
         return super().save(commit=commit)

@@ -19,6 +19,9 @@ class SeriesForm(forms.ModelForm):
 
 class LoanForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
+    series = forms.ModelChoiceField(queryset = Series.objects.exclude(is_active=False),
+                    # widget = Select2Widget
+                    )
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
@@ -79,6 +82,26 @@ class BulkReleaseForm(forms.Form):
     loans = forms.ModelMultipleChoiceField(
         widget=Select2MultipleWidget,
         queryset=Loan.unreleased.all())
+
+class PhysicalStockForm(forms.Form):
+    date = forms.DateTimeField(
+        widget=DateTimePicker(
+            options={
+                'minDate': '2010-01-01',
+                'useCurrent': True,
+                'collapse': True,
+            },
+            attrs={
+                'append': 'fa fa-calendar',
+                'input_toggle': False,
+                'icon_toggle': True,
+            }
+        ),
+    )
+    loans = forms.ModelMultipleChoiceField(
+        widget=Select2MultipleWidget,
+        queryset=Loan.objects.filter(series__is_active=True))
+    
 
 class AdjustmentForm(forms.ModelForm):
     created = forms.DateTimeField(

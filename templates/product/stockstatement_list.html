@@ -18,8 +18,8 @@
         <td><a href="{{object.get_absolute_url}}">{{object.pk}}</a></td>
         <td><a href="{% url 'product_stock_detail' object.stock.id%}">{{ object.stock }}</a></td>
         <td>qty:{{object.Closing_qty}} wt:{{object.Closing_wt}}</td>
-        <td>qty:{{object.total_wt_in}} wt:{{object.total_qty_in}}</td>
-        <td>qty:{{object.total_wt_in}} wt:{{object.total_qty_in}}</td>
+        <td>qty:{{object.total_qty_in}} wt:{{object.total_wt_in}}</td>
+        <td>qty:{{object.total_qty_out}} wt:{{object.total_wt_out}}</td>
         
     </tr>
     {% endfor %}

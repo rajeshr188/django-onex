@@ -8,8 +8,7 @@ from django.db import models,transaction
 from contact.models import Customer
 import datetime
 from django.utils import timezone
-from django.db.models import Sum,Func
-from .managers import LoanManager,ReleasedManager,UnReleasedManager,ReleaseManager
+from django.db.models import Sum,Q
 from django.contrib.contenttypes.fields import GenericRelation
 import qrcode
 import qrcode.image.svg
@@ -24,6 +23,50 @@ from io import BytesIO
 #     function = 'EXTRACT'
 #     template = '%(function)s(YEAR from %(expressions)s)'
 #     output_field = models.IntegerField()
+
+
+class LoanQuerySet(models.QuerySet):
+    def posted(self):
+        return self.filter(posted=True)
+
+    def unposted(self):
+        return self.filter(posted=False)
+
+    def released(self):
+        return self.filter(release__isnull=False)
+
+    def unreleased(self):
+        return self.filter(release__isnull=True)
+
+    def total(self):
+        return self.aggregate(
+            total=Sum('loanamount'),
+            gold=Sum('loanamount', filter=Q(itemtype='Gold')),
+            silver=Sum('loanamount', filter=Q(itemtype='Silver')),
+            bronze=Sum('loanamount', filter=Q(itemtype='Bronze'))
+        )
+    def interestdue(self):
+        return self.aggregate(t = Sum('interest'))
+
+
+class LoanManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('series', 'release', 'customer')
+
+
+class ReleasedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(release__isnull=False)
+
+
+class UnReleasedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(release__isnull=True)
+
+
+class ReleaseManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('loan')
 
 class License(models.Model):
 
@@ -60,6 +103,7 @@ class Series(models.Model):
     created = models.DateTimeField(auto_now_add = True,editable = False)
     last_updated = models.DateTimeField(auto_now = True)
     license = models.ForeignKey(License,on_delete = models.CASCADE)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ('created',)
@@ -73,6 +117,10 @@ class Series(models.Model):
 
     def get_update_url(self):
         return reverse('girvi_license_series_update', args=(self.pk,))
+    
+    def activate(self):
+        self.is_active = not self.is_active
+        self.save(update_fields=['is_active'])
 
     def loan_count(self):
         return self.loan_set.filter(release__isnull=True).count()
@@ -126,6 +174,7 @@ class Loan(models.Model):
     objects = LoanManager()
     released = ReleasedManager()
     unreleased = UnReleasedManager()
+    lqs = LoanQuerySet.as_manager()
 
     class Meta:
         ordering = ('series','lid')
@@ -259,6 +308,11 @@ class Adjustment(models.Model):
     def get_update_url(self):
         return reverse('girvi_adjustments_update', args = (self.pk,))
 
+class LoanStatement(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    loan = models.ForeignKey(Loan,on_delete=models.CASCADE)
+    def __str__(self):
+        return f"{self.created}"
 class Release(models.Model):
 
     # Fields

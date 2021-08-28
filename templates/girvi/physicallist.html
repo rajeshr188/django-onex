@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% load static %}
+{%load django_tables2%}
+{%load bootstrap4%}
+{% block content %}
+{{filter.form.media}}
+<div class="row">
+    <div class="col-9">
+        <table class = "table table-responsive table-sm">
+            <tbody>
+                {% for i in filter.qs%}
+                <tr>
+                    <td>{{i.created}}</td>
+                    <td>{{i.loan}}</td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-3">
+        <div class="sticky-top">
+        
+            {% if filter %}
+            <div class="card  bg-light mb-3 text-center">
+                <div class="card-header">
+                    Filter
+                </div>
+                <div class="card-body">
+                    <form action="" method="get" class="form-horizontal">
+                        {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
+                        {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+
+</div>
+
+{% endblock %}

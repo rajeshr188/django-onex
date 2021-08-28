@@ -1,6 +1,6 @@
 from decimal import Decimal
 from product.attributes import get_attributes_display_map, get_product_attributes_data
-from django.forms.fields import DecimalField
+from django.forms.fields import DecimalField, JSONField
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.postgres.fields import HStoreField
 from django.core.validators import MinValueValidator
@@ -116,7 +116,6 @@ class Product(models.Model):
     def get_attributes(self):
         return get_product_attributes_data(self)
 
-
 class ProductVariant(models.Model):
     sku = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255,unique = True)
@@ -125,6 +124,7 @@ class ProductVariant(models.Model):
 
     product_code = models.CharField(max_length=32,unique = True)
     attributes = HStoreField(default=dict, blank=True)
+    jattributes = models.JSONField(default = dict)
     images = models.ManyToManyField('ProductImage', through='VariantImage')
     # below fields not required?
     track_inventory = models.BooleanField('Tracked',default=True)
@@ -307,6 +307,40 @@ class VariantImage(models.Model):
     def get_update_url(self):
         return reverse('product_variantimage_update', args=(self.pk,))
 
+# class StockItem(MPTTModel):
+#     created = models.DateTimeField(auto_now_add=True)
+#     name = models.CharField()
+#     barcode = models.CharField(unique = True)
+#     huid = models.CharField(unique = True,null = True,blank = True)
+#     variant = models.ForeignKey(
+#         Product,on_delete= models.CASCADE,
+#         related_name='variants',
+#     )
+    
+#     is_batch = models.BooleanField(default = False)
+#     parent = TreeForeignKey(
+#         'self',null = True,blank = True,related_name = 'batches',
+#         on_delete = models.CASCADE
+#     )
+#     melting = models.DecimalField(max_digits=10, decimal_places=3, default=100)
+#     cost = models.DecimalField(max_digits=10, decimal_places=3, default=100)
+#     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+#     wastage = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+#     tracking_type = models.CharField(choices=(
+#         ('Lot', 'Lot'), ('Unique', 'Unique')),
+#         null=True, max_length=10,
+#         default='Lot')
+
+#     status = models.CharField(max_length=10, choices=(
+#         ('Empty', 'Empty'),
+#         ('Available', 'Available'), ('Sold', 'Sold'),
+#         ('Approval', 'Approval'), ('Return', 'Return'),
+#         ('Merged', 'Merged'),
+#     ),
+#         default='Empty')
+#     class MPPTMeta:
+#         order_insertion_by = ['name']
+
 class Stock(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -326,6 +360,7 @@ class Stock(models.Model):
     wastage = models.DecimalField(max_digits =10 ,decimal_places =3,default = 0) 
     tracking_type = models.CharField(choices = (
                                             ('Lot','Lot'),('Unique','Unique')),
+                                            verbose_name='track_by',
                                             null = True,max_length=10,
                                             default = 'Lot') 
     
@@ -514,7 +549,6 @@ class Stock(models.Model):
         if not self.barcode:
             self.barcode = encode(self.pk)
             self.save()
-
 
 class StockTransaction(models.Model):
 

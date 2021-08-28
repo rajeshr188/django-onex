@@ -37,7 +37,7 @@ class InvoiceItemForm(forms.ModelForm):
                 widget=Select2Widget)
     class Meta:
         model = InvoiceItem
-        fields = ['weight', 'touch', 'total', 'is_return', 'quantity', 'product', 'invoice','makingcharge','net_wt']
+        fields = ['weight', 'touch', 'total', 'is_return','huid', 'quantity', 'product', 'invoice','makingcharge','net_wt']
 
     # def save(self,commit = True):
     #     print("in form.save()")
@@ -56,7 +56,7 @@ class InvoiceItemForm(forms.ModelForm):
     #     return invoiceitem
 
 InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','product','quantity','weight', 'touch',
+    fields=('is_return','huid','product','quantity','weight', 'touch',
     'net_wt','makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):

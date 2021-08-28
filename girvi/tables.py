@@ -26,7 +26,8 @@ class LoanTable(tables.Table):
 
     class Meta:
         model = Loan
-        fields = ('id','cbox','series','loanid','lid','created','customer','itemdesc','itemweight','loanamount')
+        # row_attrs = {'b':lambda record:'#eee' if record.is_released else '#ddd'}
+        fields = ('id','cbox','loanid','created','customer','itemdesc','itemweight','loanamount')
         attrs = {"class":"table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no customers matching the search criteria..."
         template_name = 'django_tables2/bootstrap4.html'

@@ -181,20 +181,20 @@
   label: 'This month loan',
   borderColor: 'red',
   backgroundColor: 'red',
-  data: [{% for i in data.loan.thismonth %} {x:'{{i.date_only|date}}',y:{{i.t}}},{% endfor %}]
+  data: [{% for i in data.loan.thismonth %} {{i.t}},{% endfor %}]
     };
   var lasts2 = {
   label: 'last month loan',
   borderColor: 'blue',
   backgroundColor: 'blue',
-  data: [{% for i in data.loan.lastmonth %} {x:'{{i.date_only}}',y:{{i.t}}},{% endfor %}]
+  data: [{% for i in data.loan.lastmonth %} {{i.t}},{% endfor %}]
     };
 
   var ctx2 = document.getElementById('thismonthChart').getContext('2d');
   var chart = new Chart(ctx2, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels:[{% for i in data.loan.thismonth %}'{{i.date_only|date}}',{%endfor%}],
+      labels:[{% for i in data.loan.thismonth %}'{{i.date_only}}',{%endfor%}],
       datasets: [s2,lasts2] },
     });
 

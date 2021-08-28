@@ -6,7 +6,7 @@ from contact.models import Customer
 from product.models import Stock,StockTransaction
 from django.utils import timezone
 from django.db.models import Sum,Func,Q
-from datetime import timedelta
+from datetime import timedelta,date
 from dea.models import Journal,SalesJournal,ReceiptJournal
 from invoice.models import PaymentTerm
 
@@ -57,6 +57,12 @@ class SalesQueryset(models.QuerySet):
             gold=Sum('balance', filter=Q(balancetype='Gold')),
             silver=Sum('balance', filter=Q(balancetype='Silver')),
         )
+    def today(self):
+        return self.filter(created__date=date.today())
+
+    def cur_month(self):
+        return self.filter(created__month=date.today().month,
+                           created__year=date.today().year)
 
 class Invoice(models.Model):
     # Fields
@@ -91,6 +97,7 @@ class Invoice(models.Model):
     metaltype = models.CharField(
         max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
     objects = SalesQueryset.as_manager()
 
     # Relationship Fields
@@ -110,7 +117,7 @@ class Invoice(models.Model):
         related_name='bill'
     )
     # journals = GenericRelation(Journal,related_query_name='sales_doc')
-    stock_txns = GenericRelation(StockTransaction)
+    # stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -173,11 +180,14 @@ class Invoice(models.Model):
         self.save()
         
 
-    def delete(self, *args, **kwargs):
-        if self.posted and self.get_balance() != 0:
-            raise Exception("Cant delete sale if posted and unpaid")
-        else:
-            super(Invoice, self).delete(*args, **kwargs)
+    # def delete(self, *args, **kwargs):
+    #     if self.posted and self.get_balance() != 0:
+    #         raise Exception("Cant delete sale if posted and unpaid")
+    #     else:
+    #         super(Invoice, self).delete(*args, **kwargs)
+    def deactivate(self):
+        self.is_active = False
+        self.save(update_fields=['self.is_active'])
 
     def get_gst(self):
         if self.is_gst:
@@ -230,7 +240,7 @@ class Invoice(models.Model):
     
 class InvoiceItem(models.Model):
     # Fields
-    HUID = models.CharField(max_length=6, null=True, blank=True)
+    huid = models.CharField(max_length=6, null=True, blank=True,unique = True)
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     # remove less stone
@@ -318,7 +328,8 @@ class Receipt(models.Model):
     )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
-    journals = GenericRelation(Journal,related_query_name='receipt_doc')
+    is_active = models.BooleanField(default=True)
+    # journals = GenericRelation(Journal,related_query_name='receipt_doc')
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -341,11 +352,14 @@ class Receipt(models.Model):
     #  if posted : !edit
     #  if posted and paid : delete
     #  if posted and unpaid : !delete
-    def delete(self):
-        if self.posted and self.status != 'Allotted':
-            raise Exception("cant delete receipt if posted and unallotted")
-        else:
-            super(Receipt, self).delete()
+    # def delete(self):
+    #     if self.posted and self.status != 'Allotted':
+    #         raise Exception("cant delete receipt if posted and unallotted")
+    #     else:
+    #         super(Receipt, self).delete()
+    def deactivate(self):
+        self.is_active = False
+        self.save(update_fields=['is_active'])
 
     def get_line_totals(self):
         return self.receiptline_set.aggregate(t=Sum('amount'))['t']

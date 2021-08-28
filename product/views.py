@@ -8,7 +8,7 @@ from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
                      ProductImageForm, VariantImageForm,StockForm,UniqueForm,
                      StockTransactionForm)
-from .filters import ProductFilter,ProductVariantFilter
+from .filters import ProductFilter,ProductVariantFilter,StockFilter
 from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse,reverse_lazy
 from django.template.response import TemplateResponse
@@ -271,8 +271,9 @@ def merge_lot(request,pk):
 def stock_list(request):
     context = {}
     st = Stock.objects.all()
+    stock_filter = StockFilter(request.GET,queryset = st)
     stock = []
-    for i in st:
+    for i in stock_filter.qs:
         bal ={}
         try:
             ls = i.stockstatement_set.latest()
@@ -288,7 +289,7 @@ def stock_list(request):
         bal['qty'] = cqty + (in_txns['qty'] - out_txns['qty'])
         stock.append([i,bal])
     context['stock']=stock
-    return render(request,'product/stock_list.html',{'data':context})
+    return render(request,'product/stock_list.html',{'filter':stock_filter,'data':context})
 
 class StockCreateView(CreateView):
     model=Stock

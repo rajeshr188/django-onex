@@ -311,8 +311,10 @@ class Adjustment(models.Model):
 class LoanStatement(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     loan = models.ForeignKey(Loan,on_delete=models.CASCADE)
+
     def __str__(self):
         return f"{self.created}"
+
 class Release(models.Model):
 
     # Fields

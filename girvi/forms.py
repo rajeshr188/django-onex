@@ -1,10 +1,9 @@
 from django import forms
 from django.forms import modelformset_factory
-from datetime import datetime,timezone
-from tempus_dominus.widgets import DatePicker, TimePicker, DateTimePicker
+from datetime import datetime
+from tempus_dominus.widgets import DateTimePicker
 from .models import License, Loan, Release, Adjustment,Series
 from django_select2.forms import Select2Widget,ModelSelect2Widget,Select2MultipleWidget
-from django.forms.widgets import CheckboxSelectMultiple
 from contact.models import Customer
 
 class LicenseForm(forms.ModelForm):

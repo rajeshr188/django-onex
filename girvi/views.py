@@ -293,7 +293,6 @@ def physical_stock(request):
         if form.is_valid():
             date = form.cleaned_data['date']
             loans = form.cleaned_data['loans']
-            print(loans)
             if not date:
                 date = timezone.now().date()
 
@@ -423,7 +422,6 @@ def unpost_loan(request, pk):
     if loan.posted:
         loan.unpost()
     return redirect(loan)
-
 
 class LoanDetailView(LoginRequiredMixin,DetailView):
     model = Loan

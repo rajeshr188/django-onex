@@ -1,13 +1,15 @@
 from django import forms
 from mptt.forms import TreeNodeChoiceField
+from tempus_dominus.widgets import  DateTimePicker
 from django.utils.translation import pgettext_lazy
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, VariantImage,Stock,
-                    StockTransaction)
+                    StockTransaction,StockStatement)
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_text
 from .attributes import get_name_from_attributes,get_product_attributes_data,generate_name_from_values
 from django.utils.text import slugify
+from django_select2.forms import Select2Widget, ModelSelect2Widget, Select2MultipleWidget
 
 class ModelChoiceOrCreationField(forms.ModelChoiceField):
     """ModelChoiceField with the ability to create new choices.
@@ -227,3 +229,18 @@ class StockTransactionForm(forms.ModelForm):
     class Meta:
         model=StockTransaction
         exclude=['created','updated']
+
+class StockStatementForm(forms.Form):
+    stock = forms.ModelChoiceField(
+        queryset = Stock.objects.all(),
+        widget = Select2Widget
+    )
+
+    class Meta:
+        model=StockStatement
+        fields = ['stock','Closing_wt','Closing_qty']
+
+
+    
+stockstatement_formset = forms.modelformset_factory(StockStatement,
+fields = ("stock","Closing_qty","Closing_wt"),extra=1)

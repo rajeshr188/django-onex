@@ -1,47 +1,118 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
-<table class="table">
-  <tr><td>Created</td><td>{{ object.created }}</td></tr>
-  <tr><td>Barcode</td><td>{{object.barcode}}</td></tr>
-  <tr><td>Updated</td><td>{{ object.updated_on }}</td></tr>
-  <tr><td>Product</td><td>{{ object.variant }}</td></tr>
-  <tr><td>Cost</td><td>{{object.cost}}</td></tr>
-  <tr><td>Touch</td><td>{{object.touch}}</td></tr>
-  <tr><td>Wastage</td><td>{{object.wastage}}</td></tr>
-  <tr><td>Weight</td><td>{{object.current_balance.wt}}</td></tr>
-  <tr><td>Quantity</td><td>{{ object.current_balance.qty}}</td></tr>
-  <tr><td>Status</td><td>{{object.status}}</td></tr>
-  <tr><td>Reorderat</td><td>{{ object.reorderat }}</td></tr>
-  <tr>
-    <td>Action</td>
-    {%if object.tracking_type == "Lot"%}
-    <td><a class = "btn btn-primary" href="{% url 'product_stock_split' object.id%}">Split</a></td>
-    {%else%}
-    <td><a class = "btn btn-primary" href="{% url 'product_stock_merge' object.id%}">Merge</a></td>
-    {%endif%}
-  </tr>
-</table>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a>
+<p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a></p>
+<div class="row">
+  <div class="col-4">
+    <div class="card">
+      <div class="card-header">Detail</div>
+      <div class="card-body">
+        
+        <table class="table table-sm table-responsive">
+          <tbody>
+            <tr>
+              <td>Created</td>
+              <td>{{ object.created }}</td>
+            </tr>
+            <tr>
+              <td>Barcode</td>
+              <td>{{object.barcode}}</td>
+            </tr>
+            <tr>
+              <td>Updated</td>
+              <td>{{ object.updated_on }}</td>
+            </tr>
+            <tr>
+              <td>Product</td>
+              <td>{{ object.variant }}</td>
+            </tr>
+            <tr>
+              <td>Cost</td>
+              <td>{{object.cost}}</td>
+            </tr>
+            <tr>
+              <td>Touch</td>
+              <td>{{object.touch}}</td>
+            </tr>
+            <tr>
+              <td>Wastage</td>
+              <td>{{object.wastage}}</td>
+            </tr>
+            <tr>
+              <td>Weight</td>
+              <td>{{object.current_balance.wt}}</td>
+            </tr>
+            <tr>
+              <td>Quantity</td>
+              <td>{{ object.current_balance.qty}}</td>
+            </tr>
+            <tr>
+              <td>Status</td>
+              <td>{{object.status}}</td>
+            </tr>
+            <tr>
+              <td>Reorderat</td>
+              <td>{{ object.reorderat }}</td>
+            </tr>
+            <tr>
+              <td>Action</td>
+              {%if object.tracking_type == "Lot"%}
+              <td><a class="btn btn-primary" href="{% url 'product_stock_split' object.id%}">Split</a></td>
+              {%else%}
+              <td><a class="btn btn-primary" href="{% url 'product_stock_merge' object.id%}">Merge</a></td>
+              {%endif%}
+            </tr>
+            </table>
+          </tbody>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Transactions</h5>
+        {%if object.stocktransaction_set %}
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>type</th>
+              <th>activity_type</th>
+              <th>weight</th>
+              <th>quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%for i in object.stocktransaction_set.all %}
+            <tr>
+              <td>{{i.activity_type}}</td>
+              <td><a href="url '' {{i.content_object}}">{{i.activity_type}}:{{i.content_object}}</a></td>
+              <td>{{i.weight}}</td>
+              <td>{{i.quantity}}</td>
+            </tr>
+            {%endfor%}
+          </tbody>
+        </table>
+        {%endif%}
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Statements</h5>
+        {%if object.stockstatement_set%}
+        <ul class="list-group list-group-flush">
+          {%for i in object.stockstatement_set.all%}
+          <li class="list-group-item">
+            {{i.created}} wt:{{i.Closing_wt}} qty:{{i.Closing_qty}}
+          </li>
+        </ul>
+        {%endfor%}
+        {%endif%}
+      </div>
+    </div>
+  </div>
+</div>
 
-{%if object.stocktransaction_set %}
-<table class = "table table-sm">
-  <thead>
-    <tr>
-      <th>type</th><th>activity_type</th><th>weight</th><th>quantity</th>
-    </tr>
-  </thead>
-  <tbody>
-  {%for i in object.stocktransaction_set.all %}
-    <tr>
-      <td>{{i.activity_type}}</td>
-      <td><a href="url '' {{i.content_object}}">{{i.activity_type}}:{{i.content_object}}</a></td>
-      <td>{{i.weight}}</td>
-      <td>{{i.quantity}}</td>
-    </tr>
-  {%endfor%}
-  </tbody>
-</table>
-{%endif%}
 {% endblock %}

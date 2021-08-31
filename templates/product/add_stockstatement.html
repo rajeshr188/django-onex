@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+{{form.media}}
+<h1>Add a new stockstatement</h1>
+<form id="form-container" method="POST">
+    {% csrf_token %}
+    {{stockstatement_formset.management_form}}
+    {% for form in stockstatement_formset %}
+    <div class="inline {{stockstatement_formset.prefix}}">
+        {{form.as_p}}
+    </div>
+    {% endfor %}
+    
+    <button type="submit">Create Stock Statement</button>
+</form>
+<script type="text/javascript">
+    $(".inline.{{ stockstatement_formset.prefix }}").formset({
+            prefix: "{{ stockstatement_formset.prefix }}",
+            //formTemplate: $("#formset-template").clone(),
+            // initialize newly created heavy fields on the added callback
+            added: function ($row) {
+                // $row.find('.stock select').select2();
+                $row.find('.delete-row').addClass('btn-sm btn-danger');
+            },
+            removed: function ($row) {
+            },
+
+        });
+
+        $('.stock select').select2();
+        $('.add-row').addClass('btn-sm btn-success');
+        $('.delete-row').addClass('btn-sm btn-danger');
+</script>
+
+
+{%endblock%}

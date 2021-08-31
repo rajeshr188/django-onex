@@ -1,12 +1,13 @@
 import decimal
 from django.db.models.expressions import Subquery
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
+from django.views.generic.base import TemplateView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
                     AttributeValue, ProductImage, StockStatement, VariantImage,Stock,
                     StockTransaction)
 from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                     ProductVariantForm,AttributeForm, AttributeValueForm,
-                     ProductImageForm, VariantImageForm,StockForm,UniqueForm,
+                     ProductImageForm, stockstatement_formset, VariantImageForm,StockForm,UniqueForm,
                      StockTransactionForm)
 from .filters import ProductFilter,ProductVariantFilter,StockFilter
 from django.shortcuts import get_object_or_404,redirect
@@ -327,6 +328,23 @@ class StockTransactionDeleteView(DeleteView):
 class StockStatementListView(ListView):
     model = StockStatement
 
+class StockStatementView(TemplateView):
+    template_name = "product/add_stockstatement.html"
+
+    def get(self,*args,**kwargs):
+        formset = stockstatement_formset(queryset = StockStatement.objects.none())
+        return self.render_to_response({'stockstatement_formset': formset})
+
+    def post(self, *args, **kwargs):
+
+        formset =stockstatement_formset(data=self.request.POST)
+
+        # Check if submitted forms are valid
+        if formset.is_valid():
+            formset.save()
+            return redirect(reverse_lazy("stockstatement_list"))
+
+        return self.render_to_response({'stockstatement_formset': formset})
 def audit_stock(request):
     stocks = Stock.objects.all()
     for i in stocks:

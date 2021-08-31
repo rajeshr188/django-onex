@@ -108,4 +108,5 @@ urlpatterns +=(
 )
 urlpatterns +=(
     path('stockstatement/',views.StockStatementListView.as_view(),name = 'product_stockstatement_list'),
+    path('stockstatment/add_physical/',views.StockStatementView.as_view(),name='product_stockstatement_add'),
 )

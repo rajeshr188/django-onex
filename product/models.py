@@ -423,8 +423,8 @@ class Stock(models.Model):
         # filter since last audit
         st = self.stocktransaction_set.all()
         if ls :
-            st.filter(created__gte = ls.created)
-        st = self.stocktransaction_set.filter(
+            st = st.filter(created__gte = ls.created)
+        st = st.filter(
             activity_type__in=['P', 'SR', 'AR', 'AD'])
 
         return st.aggregate(
@@ -550,6 +550,15 @@ class Stock(models.Model):
             self.barcode = encode(self.pk)
             self.save()
 
+# class StockBatch(models.Model):
+#     created = models.DateTimeField(auto_now_add=True)
+#     qty = models.IntegerField(default =0)
+#     wt = models.DecimalField(max_digits=10,decimal_places=3)
+#     stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
+
+#     def __str__(self):
+#         return f"{self.id}"
+
 class StockTransaction(models.Model):
 
     created=models.DateTimeField(auto_now_add=True)
@@ -581,7 +590,8 @@ class StockTransaction(models.Model):
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES,default = "PURCHASE")
     #relational Fields
     stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
-
+    # stock_batch = models.ForeignKey(StockBatch,null = True,blank = True,
+    #                                 on_delete=models.CASCADE)
     # is generic foreignkey required here? 
     content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
                                                         null=True,blank=True)
@@ -602,14 +612,20 @@ class StockTransaction(models.Model):
         return reverse('product_stocktransaction_update', args=(self.pk,))
 
 class StockStatement(models.Model):
+    ss_method = (
+        ("Auto","Auto"),
+        ("Physical","Physical"),
+    )
+    method = models.CharField(max_length=20,choices=ss_method,default="Auto")
     stock = models.ForeignKey(Stock, on_delete = models.CASCADE)
     created = models.DateTimeField(auto_now = True)
     Closing_wt = models.DecimalField(max_digits = 14, decimal_places = 3)
     Closing_qty = models.IntegerField()
-    total_wt_in = models.DecimalField(max_digits = 14, decimal_places = 3)
-    total_wt_out = models.DecimalField(max_digits = 14, decimal_places = 3)
-    total_qty_in = models.IntegerField()
-    total_qty_out = models.IntegerField()
+    total_wt_in = models.DecimalField(max_digits = 14, decimal_places = 3,
+                    default =0.0)
+    total_wt_out = models.DecimalField(max_digits = 14, decimal_places = 3,default=0.0)
+    total_qty_in = models.IntegerField(default =0.0)
+    total_qty_out = models.IntegerField(default=0.0)
 
     class Meta:
         ordering = ('created',)

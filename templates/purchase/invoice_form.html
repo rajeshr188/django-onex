@@ -99,10 +99,12 @@
       console.log('update_balance');
       $(".total input").each(function () {
         if (!isNaN(this.value) && this.value.length != 0 && this.value !=0) {
+          console.log(sum,this.value)
           sum =sum + parseFloat(this.value);
         } 
       });
       $("#id_balance").val(sum.toFixed(3));
+      console.log($("#id_balance").val())
     }
   function update_row() {
       var rate = $('#id_rate').val();
@@ -130,20 +132,19 @@
     update_row();
     update_amounts();
   });
-  $(document).on('clicked','deelte-row',function(){
-    console.log('delete clicked');
-    update_amounts();
-  })
-
+  
   $(".inline.{{ invoiceitem_form.prefix }}").formset({
       prefix: "{{ invoiceitem_form.prefix }}",
       //formTemplate: $("#formset-template").clone(),
       // initialize newly created heavy fields on the added callback
       added: function ($row) {
+        update_amounts();
         $row.find('.product select').select2();
         $row.find('.delete-row').addClass('btn-sm btn-danger');
+        
       },
       removed: function ($row) {
+        update_row();
         update_amounts();
       },
 

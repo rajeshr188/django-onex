@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders','djmoney',
     # Local
     'users',
+    'company',
     'pages',
     'contact',
     'product',

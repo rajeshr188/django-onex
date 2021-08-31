@@ -11,19 +11,19 @@
     <a type="button" class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
 </div>
 
-<ul class="list-group list-group-flush p-3">
+<ul class="list-group list-group-flush p-3 root">
     {% recursetree object_list %}
     <li class="list-group-item d-flex justify-content-between align-items-center">
         <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a>
         {{node.current_balance}}
         {% if not node.is_leaf_node %}
-        <ul class="list-group children">
+        <ul class="children">
             {{ children }}
         </ul>
-
         {% endif %}
     </li>
 
     {% endrecursetree %}
 </ul>
+
 {% endblock %}

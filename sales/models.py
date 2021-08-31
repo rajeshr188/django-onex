@@ -116,8 +116,8 @@ class Invoice(models.Model):
         null=True, blank=True,
         related_name='bill'
     )
-    # journals = GenericRelation(Journal,related_query_name='sales_doc')
-    # stock_txns = GenericRelation(StockTransaction)
+    journals = GenericRelation(Journal,related_query_name='sales_doc')
+    stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -329,7 +329,7 @@ class Receipt(models.Model):
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
     is_active = models.BooleanField(default=True)
-    # journals = GenericRelation(Journal,related_query_name='receipt_doc')
+    journals = GenericRelation(Journal,related_query_name='receipt_doc')
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,

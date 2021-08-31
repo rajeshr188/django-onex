@@ -157,7 +157,7 @@ class LedgerDetailView(DetailView):
 
     def get_context_data(self, **kwargs) :
         ct = super().get_context_data(**kwargs)
-        ls_created = ct['object'].ledgerstatements.latest().created
+        ls_created = ct['object'].ledgerstatements.latest().created if ct['object'].ledgerstatements.exists() else None
         ct['dtxns']= ct['object'].dtxns(since=ls_created)
         ct['ctxns']= ct['object'].ctxns(since = ls_created)
         return ct

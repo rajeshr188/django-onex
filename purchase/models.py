@@ -97,8 +97,8 @@ class Invoice(models.Model):
         PaymentTerm, on_delete=models.SET_NULL,
         related_name = 'purchase_term',
         blank=True, null=True)
-    # journals = GenericRelation(Journal,related_query_name ='purchase_doc')
-    # stock_txns = GenericRelation(StockTransaction)
+    journals = GenericRelation(Journal,related_query_name ='purchase_doc')
+    stock_txns = GenericRelation(StockTransaction)
     objects = PurchaseQueryset.as_manager()
 
     class Meta:
@@ -140,12 +140,6 @@ class Invoice(models.Model):
         if self.get_total_payments() != None :
             return self.balance - self.get_total_payments()
         return self.balance 
-
-    # def delete(self):
-    #     if self.posted and self.get_balance() !=0:
-    #         raise Exception("cant delete purchase if posted and unpaid")
-    #     else:
-    #         super(Invoice,self).delete()
 
     def save(self, *args, **kwargs):
         if self.balance <0 :
@@ -245,7 +239,7 @@ class InvoiceItem(models.Model):
                 stock,created = Stock.objects.get_or_create(
                     variant=self.product, tracking_type='Lot')
                 if created:
-                    
+                    stock.huid = self.huid
                     attributes = get_product_attributes_data(
                         self.product.product)
                     purity = Attribute.objects.get(name='Purity')
@@ -300,7 +294,7 @@ class Payment(models.Model):
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
     is_active = models.BooleanField(default=True)
-    # journals = GenericRelation(Journal,related_query_name='payment_doc')
+    journals = GenericRelation(Journal,related_query_name='payment_doc')
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,

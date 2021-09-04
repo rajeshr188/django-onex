@@ -60,11 +60,14 @@ class Invoice(models.Model):
     rate = models.DecimalField(max_digits=10, decimal_places=3)
     is_gst = models.BooleanField(default=False)
     posted = models.BooleanField(default=False)
-    gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-    net_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-    total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
-    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    gross_wt = models.DecimalField(max_digits=14, decimal_places=4, 
+                default=0.0)
+    net_wt = models.DecimalField(max_digits=14, decimal_places=4,
+                default=0.0)
+    total = models.DecimalField(max_digits=14, decimal_places=4,
+                default=0.0)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
+    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
     btype_choices = (
         ("Cash", "Cash"),
         ("Gold", "Gold"),
@@ -102,7 +105,7 @@ class Invoice(models.Model):
     objects = PurchaseQueryset.as_manager()
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('id','created',)
 
     def __str__(self):
         return f"{self.id}"
@@ -139,20 +142,22 @@ class Invoice(models.Model):
     def get_balance(self):
         if self.get_total_payments() != None :
             return self.balance - self.get_total_payments()
-        return self.balance 
+        return self.total 
 
     def save(self, *args, **kwargs):
-        if self.balance <0 :
-            self.status = "Paid"
+        
         self.due_date = self.created + timedelta(days=self.term.due_days)
-        self.total = self.balance
+        # print(f"total:{self.total}")
+        # self.total = self.balance
+        # if self.total < 0:
+        #     self.status = "Paid"
         if self.is_gst:    
             self.total += self.get_gst()
 
         super(Invoice, self).save(*args, **kwargs)
 
     def get_gst(self):
-        return (self.balance *3)/100
+        return (self.balance *3)/100 if self.is_gst else 0
         
     @transaction.atomic()
     def post(self):
@@ -271,7 +276,6 @@ class InvoiceItem(models.Model):
                 at='PR'
             )
             
-
 class Payment(models.Model):
 
     # Fields

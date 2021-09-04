@@ -7,13 +7,15 @@ from django.forms.models import inlineformset_factory
 from django.db.models import Q
 from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Field, Fieldset, Div,Row,Column, HTML, ButtonHolder, Submit
+from utils.custom_layout_object import *
 
 class InvoiceForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
-
                 'useCurrent': True,
                 'collapse': False,
             },
@@ -27,9 +29,48 @@ class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
         fields = ['created','rate','is_gst','balancetype','metaltype',
-                    # 'paymenttype','gross_wt','net_wt',
+                    'gross_wt','net_wt','total',
                      'balance', 'supplier','term','status','posted']
 
+class CrispyInvoiceForm(InvoiceForm):
+    def __init__(self, *args, **kwargs):
+        super(InvoiceForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = True
+        self.helper.form_class = 'form-group'
+        self.helper.label_class = 'col-md-6 create-label'
+        self.helper.field_class = 'col-md-12'
+        self.helper.layout = Layout(
+            Row(
+                Column('created', css_class='form-group col-md-3 mb-0'),
+                Column('supplier', css_class='form-group col-md-3 mb-0'),
+                Column('is_gst', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('balancetype', css_class='form-group col-md-3 mb-0'),
+                Column('metaltype', css_class='form-group col-md-3 mb-0'),
+                Column('rate', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Fieldset('Add items',
+                             Formset('items')),
+            Row(
+                Column('gross_wt', css_class='form-group col-md-3 mb-0'),
+                Column('net_wt', css_class='form-group col-md-3 mb-0'),
+                Column('total', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('term', css_class='form-group col-md-3 mb-0'),
+                Column('balance', css_class='form-group col-md-3 mb-0'),
+                Column('status', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+                ),
+            ButtonHolder(Submit('submit', 'save'))
+
+            
+        )
 
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(
@@ -55,9 +96,10 @@ class InvoiceItemForm(forms.ModelForm):
     #             raise Exception("failed From Model Save")
     #     return invoiceitem
 
-InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
-    fields=('is_return','huid','product','quantity','weight', 'touch',
-    'net_wt','makingcharge','total', 'invoice'),form = InvoiceItemForm,extra=1,can_delete=True)
+
+InvoiceItemFormSet = inlineformset_factory(Invoice, InvoiceItem,form=InvoiceItemForm,
+    fields=['is_return','huid','product','quantity','weight', 'touch',
+    'net_wt','makingcharge','total', 'invoice'],extra=1,can_delete=True)
 
 class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(

@@ -11,6 +11,7 @@
             <td>{{i.created|date}}</td>
             <td>{{i.AccountNo}}</td>
             <td>{{i.get_cb}}</td>
+            <td><a href="{% url 'dea_accountstatement_delete' i.id%}">Delete</a></td>
         </tr>
         {%endfor%}
     </tbody>

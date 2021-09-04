@@ -1,12 +1,13 @@
 {% extends '_base.html' %}
+{%load crispy_forms_tags%}
 {% block title %}Account Creation{% endblock %}
 
 {% block content %}
 <h1>Add Account</h1>
-<p><a class="btn btn-default" href="{% url 'dea_home' %}">License Listing</a></p>
+<p><a class="btn btn-secondary" href="{% url 'dea_home' %}">Dea</a></p>
 <form method="post">
     {% csrf_token %}
-    {{form}}
+    {{form |crispy}}
     <button class="btn btn-primary" type="submit">Submit</button>
 </form>
 {% endblock content %}

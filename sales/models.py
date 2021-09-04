@@ -159,24 +159,24 @@ class Invoice(models.Model):
 
     def get_balance(self):
         if self.get_total_receipts() != None :
-            return self.balance - self.get_total_receipts()
-        return self.balance
+            return self.total - self.get_total_receipts()
+        return self.total
 
     def save(self, *args, **kwargs):
         # if self.id and self.posted:
         #     raise Http404
-        if self.term.due_days:
-            self.due_date = self.created + timedelta(days=self.term.due_days)
+        if self.total < 0:
+            self.status = "Paid"
+        self.due_date = self.created + timedelta(days=self.term.due_days)
+        self.total = self.balance
+        if self.is_gst:
+            self.total += self.get_gst()
         
         super(Invoice, self).save(*args, **kwargs)
     
     def update_bal(self):
         self.gross_wt = self.get_gross_wt()
         self.net_wt = self.get_net_wt()
-        self.balance = self.get_total_balance()
-        self.total = self.balance
-        if self.is_gst:
-            self.total += self.get_gst()
         self.save()
         
 

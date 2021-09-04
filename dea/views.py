@@ -1,3 +1,4 @@
+from datetime import time
 from typing import List
 from django.db import transaction
 from django.db.models.expressions import OuterRef, Subquery
@@ -5,11 +6,12 @@ from django.db.models.fields import DecimalField
 from django.db.models.query import Prefetch
 from django.db.models.query_utils import subclasses
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 from djmoney.models.fields import MoneyField
 # Create your views here.
-from .models import Account, AccountStatement, AccountTransaction, Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
+from .models import Account, AccountStatement, AccountTransaction, AccountType, Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 
 from django.db.models import Sum,Q,Max,F
@@ -19,8 +21,35 @@ from moneyed import Money
 
 def home(request):
     lb = Ledgerbalance.objects.all()
-      
+    
     context={}
+    balancesheet = {}
+    balancesheet['assets'] = lb.filter(AccountType = 'Asset')
+    
+    ta = Balance()
+    tl = Balance()
+    ti = Balance()
+    te = Balance()
+    for i in lb:
+        if i.AccountType == 'Asset':
+            ta = ta+ abs(i.get_cb())
+        elif i.AccountType == 'Liability':
+            tl = tl+ abs(i.get_cb())
+        elif i.AccountType == 'Income':
+            ti = ti + abs(i.get_cb())
+        elif i.AccountType == 'Expense':
+            te = te + abs(i.get_cb())
+    pnloss = {}
+    pnloss['income'] = lb.filter(AccountType = 'Income')
+    pnloss['expense'] = lb.filter(AccountType = 'Expense')
+    context['ta'] = ta
+    context['tl'] = tl
+    context['ti'] = ti
+    context['te'] = te
+    balancesheet['liabilities'] = lb.filter(AccountType = 'Liability')
+    context['pnloss'] = pnloss
+        
+    context['balancesheet'] = balancesheet
     context['ledger']=lb   
                       
     # context['accounts'] = AccountStatement.objects.filter(
@@ -40,8 +69,6 @@ def home(request):
     #                     'content_type':i.content_type,
     #                     # 'txns':txns
     #                     })
-    
-
     
     return render(request, 'dea/home.html', {'data': context})
 
@@ -144,6 +171,10 @@ class AccountStatementCreateView(CreateView):
 
 class AccountStatementListView(ListView):
     model = AccountStatement
+
+class AccountStatementDeleteView(DeleteView):
+    model = AccountStatement
+    success_url = reverse_lazy('dea_account_list')
 
 class LedgerCreateView(CreateView):
     model = Ledger

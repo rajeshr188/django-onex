@@ -12,15 +12,15 @@
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link active" id="internal-tab" data-toggle="tab" href="#internal" role="tab" aria-controls="Internal"
-            aria-selected="true">Ledger</a>
+            aria-selected="true">Ledgers</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link" id="external-tab" data-toggle="tab" href="#external" role="tab" aria-controls="External"
-            aria-selected="false">Accounts</a>
+            aria-selected="false">Balancesheet</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link" id="journal-tab" data-toggle="tab" href="#journal" role="tab" aria-controls="Journal"
-            aria-selected="false">Journal</a>
+            aria-selected="false">Profit and loss</a>
     </li>
 </ul>
 <div class="tab-content p-3" id="myTabContent">
@@ -33,6 +33,7 @@
       
         <table class = "table table-sm table-hover">
             <thead>
+                <th>Account Type</th>
                 <th>Ledger</th>
                 <th> statement Date</th>
                 <th> Prev Balance</th>
@@ -43,8 +44,8 @@
             <tbody>
                 {%for i in data.ledger%}
                 <tr>
-                    
-                    <td><a href="{% url 'dea_ledger_detail' i.id %}">{{ i.name }}</a></td>
+                    <td>{{i.AccountType}}</td>
+                    <td><a href="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
                     <td>{{i.created}}</td>
                     <td>{{i.get_cb}}</td>
                     <td>{{i.get_cr}}</td>
@@ -57,56 +58,45 @@
             
     </div>
     <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="profile-external">
-        <a class = "btn btn-primary" href="{% url 'dea_account_create' %}">Add Account</a>
-        <a class="btn btn-primary" href="{% url 'dea_account_create' %}">Audit all</a>
-        <div>
-            <table class="table table-sm table-hover">
-                <thead>
-                    <tr>
-                        <th>Account</th>
-                  
-                        <th>Balance</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in data.accounts%}
-                    <tr>
-                        <td><a href="{% url 'dea_account_detail' i.id%}">{{i.contact.name}}</a></td>
-                      
-                        <td>{{i.current_balance}}</td>
-                        <td>
-                            <a class="btn btn-info" href="">Edit</a>
-                            <a class="btn btn-danger" href="">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+       <div class="row">
+           <div class="col-6">
+                <ul>
+                    {%for i in data.balancesheet.assets%}
+                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    {%endfor%}
+                    <li>{{data.ta}}</li>
+                </ul>
+           </div>
+           <div class="col-6">
+                <ul>
+                {%for i in data.balancesheet.liabilities%}
+                <li>{{i.name}} {{i.ClosingBalance}}</li>
+                {%endfor%}
+                <li>{{data.tl}}</li>
+                </ul>
+           </div>
+       </div>
         
     </div>
     <div class="tab-pane fade" id="journal" role ="tabpanel" aria-labelledby="journal">
-        <table class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>created</th>
-                    <th>txn-type</th>
-                    <th>doc</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in data.journal %}
-                <tr>
-                    <td>{{i.id}}</td>
-                    <td>{{i.created|date}}</td>
-                    <td>{{i.content_type}}</td>
-                    <td>{{i.type}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="row">
+            <div class="col-6">
+                <ul>
+                    {%for i in data.pnloss.income%}
+                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    {%endfor%}
+                    <li>{{data.ti}}</li>
+                </ul>
+            </div>
+            <div class="col-6">
+                <ul>
+                    {%for i in data.pnloss.expense%}
+                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    {%endfor%}
+                    <li>{{data.te}}</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock content %}

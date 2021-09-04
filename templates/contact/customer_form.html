@@ -1,62 +1,10 @@
 {% extends "_base.html" %}
-{% load static %}
 {% load crispy_forms_tags %}
-{% load bootstrap4 %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'contact_customer_list' %}">Customer Listing</a></p>
+<p><a class="btn btn-secondary" href="{% url 'contact_customer_list' %}">Customer Listing</a></p>
 <div class="card">
   <div class="card-body" style="background-color: #eee;">
-    <div class="row ">
-      <div class="col-12 justify-content-md-center">
-        <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          {{ form.non_field_errors }}
-          <div class="form-row">
-            <div class="form-group col-md-3">
-              {{ form.name.errors }}
-              {% bootstrap_field form.name %}
-            </div>
-            <div class="form-group col-md-3">
-              {{ form.relatedas.errors }}
-              {% bootstrap_field form.relatedas %}
-            </div>
-            <div class="form-group col-md-3">
-              {{ form.relatedto.errors }}
-              {% bootstrap_field form.relatedto %}
-            </div>
-          </div>
-          <div class="form-row">
-             <div class="form-group col-md-3">
-               {{ form.type.errors }}
-               {% bootstrap_field form.type %}
-             </div>
-             <div class="form-group col-md-3">
-               {{ form.pic.errors }}
-               {% bootstrap_field form.pic %}
-
-             </div>
-
-           </div>
-           <div class="form-row">
-             <div class="form-group col-md-3">
-               {{ form.Address.errors }}
-               {% bootstrap_field form.Address %}
-             </div>
-              <div class="form-group col-md-3">
-                {{ form.phonenumber.errors }}
-                {% bootstrap_field form.phonenumber %}
-              </div>
-              <div class="form-group col-md-3">
-                {{ form.area.errors }}
-                {% bootstrap_field form.area %}
-              </div>
-
-            </div>
-            <button type="submit" class="btn btn-primary">Create Customer</button>
-
-        </form>
-      </div>
-    </div>
+    {% crispy form %}
   </div>
 </div>
 {% endblock %}

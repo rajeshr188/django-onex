@@ -4,9 +4,9 @@ from tempus_dominus.widgets import DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,ReceiptItem
 from django_select2.forms import Select2Widget
 from contact.models import Customer
+from approval.models import Approval
 from product.models import Stock
 from django.forms.models import inlineformset_factory
-
 
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
@@ -28,7 +28,9 @@ class InvoiceForm(forms.ModelForm):
         ),
     )
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),
-                widget=Select2Widget)
+                widget = Select2Widget)
+    approval = forms.ModelChoiceField(queryset = Approval.objects.all(),
+                widget = Select2Widget)
     class Meta:
         model = Invoice
         fields = ['created','approval','rate','is_gst', 'balancetype',
@@ -44,10 +46,11 @@ class InvoiceItemForm(forms.ModelForm):
         model = InvoiceItem
         fields = ['invoice','is_return','product','quantity','weight', 'less_stone','net_wt','touch','wastage','makingcharge','total',]
 
-InvoiceItemFormSet=inlineformset_factory(Invoice,InvoiceItem,
+InvoiceItemFormSet = inlineformset_factory(
+    Invoice, InvoiceItem, form=InvoiceItemForm,
     fields=('is_return','product','quantity',
     'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),
-    form = InvoiceItemForm,extra=1,can_delete=True)
+    extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
@@ -84,12 +87,10 @@ class ReceiptLineForm(forms.ModelForm):
 ReceiptLineFormSet=inlineformset_factory(Receipt,ReceiptLine,
     fields=('invoice','amount','receipt'),extra=0,can_delete=True,form=ReceiptLineForm)
 
-
 class ReceiptItemForm(forms.ModelForm):
     class Meta:
         models = ReceiptItem
         fields = '__all__'
-
 
 ReceiptItemFormSet = inlineformset_factory(Receipt, ReceiptItem,
     fields=('weight','touch','nettwt', 'amount','receipt'), extra=1, can_delete=True, form=ReceiptItemForm)

@@ -1,4 +1,3 @@
-from decimal import Context
 from dea.models import AccountStatement
 from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
@@ -10,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from .tables import InvoiceTable,PaymentTable
-from .forms import (InvoiceForm, InvoiceItemForm, 
+from .forms import (InvoiceForm, CrispyInvoiceForm,InvoiceItemForm, 
                     InvoiceItemFormSet, PaymentForm,
                     PaymentItemFormSet, PaymentLineForm,
                     )
@@ -69,12 +68,7 @@ def print_payment(pk):
     payment=Payment.objects.get(id=pk)
     params={'payment':payment,'inwords':num2words(payment.total,lang='en_IN')}
     return Render.render('purchase/payment.html',params)
-
-# def home(request):
-#     data={}
-#     data['qs']=Invoice.objects.all()
-#     return render(request,'purchase/home.html',context = {'data':data})
-
+    
 def list_balance(request):
     acs = AccountStatement.objects.filter(AccountNo__contact = OuterRef('supplier')).order_by('-created')[:1]
     acs_cb = AccountStatement.objects.filter(
@@ -109,49 +103,30 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
 
 class InvoiceCreateView(CreateView):
     model = Invoice
-    form_class = InvoiceForm
+    form_class = CrispyInvoiceForm
+    success_url = None
 
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet()
-
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(self.request.POST)
-
-        if (form.is_valid() and invoiceitem_form.is_valid()):
-            return self.form_valid(form, invoiceitem_form)
+    def get_context_data(self,**kwargs):
+        data = super(InvoiceCreateView,self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['items'] = InvoiceItemFormSet(self.request.POST)
         else:
-            return self.form_invalid(form, invoiceitem_form)
-
-    def form_valid(self, form, invoiceitem_form):
-        if invoiceitem_form.is_valid():
+            data['items'] = InvoiceItemFormSet()
+        return data
+  
+    def form_valid(self, form):
+        context = self.get_context_data()
+        items = context['items']
+        with transaction.atomic():
             self.object = form.save()
-            invoiceitem_form.instance = self.object
-            invoiceitem_form.save()
-            self.object.gross_wt = self.object.get_gross_wt()
-            self.object.net_wt = self.object.get_net_wt()
-            self.object.balance = self.object.get_total_balance()
-            self.object.save()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, invoiceitem_form):
-        """
-        Called if a form is invalid. Re-renders the context data with the
-        data-filled forms and errors.
-        """
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
-
+            if items.is_valid():
+                items.instance = self.object
+                items.save()
+        return super(InvoiceCreateView,self).form_valid(form)
+       
+    def get_success_url(self) -> str:
+        return reverse_lazy('purchase_invoice_detail',kwargs={'pk':self.object.pk})
+   
 class InvoiceDetailView(DetailView):
     model = Invoice
 
@@ -165,37 +140,33 @@ class InvoiceUpdateView(UpdateView):
     model = Invoice
     form_class = InvoiceForm
 
-    def get_context_data(self,*args,**kwargs):
+    def get_context_data(self,**kwargs):
         data = super(InvoiceUpdateView,self).get_context_data(**kwargs)
         if self.object.posted:
             raise Http404
         if self.request.POST:
-            data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,
+            data['items'] = InvoiceItemFormSet(self.request.POST,
                                                     instance = self.object)
         else:
-            data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
+            data['items'] = InvoiceItemFormSet(instance = self.object)
         return data
 
     @transaction.atomic()
     def form_valid(self, form):
         context = self.get_context_data()
-        invoiceitem_form = context['invoiceitem_form']
+        items = context['items']
 
-        print(f"form_valid:{invoiceitem_form.is_valid()}")
-        if invoiceitem_form.is_valid():
+        context = self.get_context_data()
+        items = context['items']
+        with transaction.atomic():
             self.object = form.save()
-            invoiceitem_form.save()
-            self.object.gross_wt = self.object.get_gross_wt()
-            self.object.net_wt = self.object.get_net_wt()
-            self.object.balance = self.object.get_total_balance()
-            self.object.save()
-           
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, invoiceitem_form):
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
+            if items.is_valid():
+                items.instance = self.object
+                items.save()
+        return super(InvoiceUpdateView,self).form_valid(form)  
+        
+    def get_success_url(self) -> str:
+        return reverse_lazy('purchase_invoice_detail', kwargs={'pk': self.object.pk})
 
 def post_purchase(request,pk):
     # use get_objector404

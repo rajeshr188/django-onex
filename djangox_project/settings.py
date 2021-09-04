@@ -45,22 +45,15 @@ INSTALLED_APPS = [
     'allauth','allauth.account',  # new
     'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
-    'widget_tweaks',
-    'tempus_dominus',
-    'actstream',
-    # 'controlcenter',
-    'debug_toolbar','django_extensions',
-    'corsheaders','djmoney',
+    'corsheaders', 'djmoney',
+    'widget_tweaks','tempus_dominus',
+    'actstream','debug_toolbar','django_extensions',# 'controlcenter',
+    
     # Local
-    'users',
-    'company',
-    'pages',
-    'contact',
-    'product',
-    'girvi',
+    'users','company','pages',
+    'contact','product','girvi',
     'invoice','sales','purchase','approval',
-    'Chitfund',
-    'daybook','dea','sea'
+    'Chitfund','daybook','dea','sea'
 ]
 
 MIDDLEWARE = [
@@ -213,7 +206,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-# DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap4.html'
 # CACHES = {
 #     'default': {
 #         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

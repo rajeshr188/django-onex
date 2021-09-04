@@ -10,20 +10,54 @@
     <a type="button" class="btn btn-outline-primary" href="{% url 'dea_account_create' %}">Add txn</a>
     <a type="button" class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
 </div>
-
-<ul class="list-group list-group-flush p-3 root">
-    {% recursetree object_list %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <a href="{% url 'dea_ledger_detail' node.id%}">{{ node.name }}</a>
-        {{node.current_balance}}
-        {% if not node.is_leaf_node %}
-        <ul class="children">
-            {{ children }}
+<div class="row">
+    <div class="col">
+        {% full_tree_for_model dea.Ledger as node %}
+        <ul class="list-group list-group-flush p-3 root">
+            {% recursetree node %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{node.AccountType}}
+                <a href="{% url 'dea_ledger_detail' node.id%}">
+                    {{ node.name }}
+                </a>
+                {{node.current_balance}}
+                {% if not node.is_leaf_node %}
+                <ul class="children">
+                    {{ children }}
+                </ul>
+                {% endif %}
+            </li>
+            {% endrecursetree %}
         </ul>
-        {% endif %}
-    </li>
-
-    {% endrecursetree %}
-</ul>
+    </div>
+    
+</div>
+<div class="row">
+    <div class="col">
+        <ul class="list-group list-group-flush p-3">
+            {% recursetree node %}
+            <div class='card'>
+                <div class="card-body">
+                    <a class="btn btn-outline-primary" data-toggle="collapse" href="#multiCollapseExample{{node.id}}"
+                        role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
+                        {{ node.name }} {{node.current_balance}}#({{node.get_descendant_count}})
+                    </a>
+                    <div class="row">
+                        <div class="col">
+                            <div class="collapse multi-collapse " id="multiCollapseExample{{node.id}}">
+                                <ul class="children">
+                                    {%if not node.is_leaf_node%}
+                                    {{children}}
+                                    {%endif%}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endrecursetree %}
+        </ul>
+    </div>
+</div>
 
 {% endblock %}

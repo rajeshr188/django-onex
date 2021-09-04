@@ -5,6 +5,8 @@ from tempus_dominus.widgets import DateTimePicker
 from .models import License, Loan, Release, Adjustment,Series
 from django_select2.forms import Select2Widget,ModelSelect2Widget,Select2MultipleWidget
 from contact.models import Customer
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit, Row, Column
 
 class LicenseForm(forms.ModelForm):
     class Meta:
@@ -39,6 +41,33 @@ class LoanForm(forms.ModelForm):
         model = Loan
         fields = [ 'series', 'customer','lid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('series', css_class='form-group col-md-3 mb-0'),
+                Column('lid', css_class='form-group col-md-3 mb-0'),
+                Column('created', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('customer', css_class='form-group col-md-3 mb-0'),
+                Column('itemtype', css_class='form-group col-md-3 mb-0'),
+                Column('interestrate', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+
+            Row(
+                Column('itemweight', css_class='form-group col-md-3 mb-0'),
+                Column('loanamount', css_class='form-group col-md-3 mb-0'),
+                Column('itemdesc', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+        
+            Submit('submit', 'Submit')
+        )
+
 class LoanRenewForm(forms.Form):
     amount = forms.IntegerField()
     interest = forms.IntegerField()
@@ -62,6 +91,23 @@ class ReleaseForm(forms.ModelForm):
     class Meta:
         model = Release
         fields = ['releaseid','loan', 'interestpaid',]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('releaseid', css_class='form-group col-md-3 mb-0'),
+                Column('created', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('loan', css_class='form-group col-md-3 mb-0'),
+                Column('interestpaid', css_class='form-group col-md-3 mb-0'),
+                css_class='form-row'
+            ),
+            Submit('submit', 'Submit')
+        )
 
 class BulkReleaseForm(forms.Form):
     date = forms.DateTimeField(

@@ -22,7 +22,7 @@ class InvoiceTable(tables.Table):
     class Meta:
         model = Invoice
         fields = ('id','created','customer','balancetype','metaltype',
-                    'gross_wt','net_wt','balance','posted','status','term',
+                    'gross_wt','net_wt','balance','posted','is_gst','status','term',
                     'due_date')
 
         attrs = {"class": "table table-sm table-striped table-bordered"}

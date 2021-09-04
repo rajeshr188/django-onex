@@ -1,0 +1,98 @@
+{%load crispy_forms_tags%}
+{%load static%}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+<table class="table table-responsive table-striped ">
+    {{ formset.management_form |crispy}}
+    {% for form in formset.forms %}
+    <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}}">
+        {% for field in form.visible_fields %}
+        <td class="{{field.name}}">
+            {{ field.errors.as_ul }}
+            {{ field|as_crispy_field}}
+        </td>
+        {% endfor %}
+    </tr>
+    {%endfor%}
+</table>
+<script type="text/javascript">
+
+    function update_amounts() {
+        var sum = 0;
+        var gwt = 0.0;
+        var nwt = 0.0;
+        var twt = 0.0;
+        console.log('update_balance');
+        $(".total input").each(function () {
+            if (!isNaN(this.value) && this.value.length != 0 && this.value != 0) {
+                console.log(sum, this.value)
+                sum = sum + parseFloat(this.value);
+            }
+        });
+        $(".weight input").each(function () {
+            if (!isNaN(this.value) && this.value.length != 0 && this.value != 0) {
+                console.log(sum, this.value)
+                gwt = gwt + parseFloat(this.value);
+            }
+        });
+        $(".net_wt input").each(function () {
+            if (!isNaN(this.value) && this.value.length != 0 && this.value != 0) {
+                console.log(sum, this.value)
+                nwt = nwt + parseFloat(this.value);
+            }
+        });
+
+        $("#id_balance").val(sum.toFixed(3));
+        $("#id_total").val(sum.toFixed(3));
+        $("#id_gross_wt").val(gwt.toFixed(3));
+        $("#id_net_wt").val(nwt.toFixed(3));
+        console.log($("#id_balance").val())
+    }
+    function update_row() {
+        var rate = $('#id_rate').val();
+        $('.inline').each(function () {
+            var wt = $(this).find('.weight input').val();
+            var touch = $(this).find('.touch input').val();
+            var ret = $(this).find('.is_return input').is(':checked');
+            var mc = $(this).find('.makingcharge input').val();
+
+            var nettwt = (wt * touch) / 100
+            var total = 0
+            if ($('#id_balancetype').val() == 'Cash')
+                total = Number(nettwt) * Number(rate) + Number(mc);
+            else {
+                total = Number(nettwt) + Number(mc);
+            }
+            if (ret)
+                total = -total
+            $(this).find('.net_wt input').val(nettwt.toFixed(3));
+            $(this).find('.total input').val(total.toFixed(3));
+            console.log(wt, touch, nettwt, rate, total.toFixed(3))
+        });
+    }
+    $(document).on('change', '.weight,.touch,#id_balancetype,#id_rate,.makingcharge,.is_return', function () {
+        update_row();
+        update_amounts();
+    });
+
+    $(".inline.{{ formset.prefix }}").formset({
+        addText: 'add another',
+        deleteText: 'remove',
+        prefix: "{{ formset.prefix }}",
+        
+        added: function ($row) {
+            update_amounts();
+            $row.find('.product select').select2();
+            $row.find('.delete-row').addClass('btn-sm btn-danger');
+
+        },
+        removed: function ($row) {
+            update_row();
+            update_amounts();
+        },
+
+    });
+
+    $('.product select').select2();
+    $('.add-row').addClass('btn-sm btn-success');
+    $('.delete-row').addClass('btn-sm btn-danger');
+</script>

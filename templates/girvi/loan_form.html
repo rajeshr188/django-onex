@@ -1,6 +1,6 @@
 {% extends "_base.html" %}
-{% load static %}
-{% load bootstrap4 %}
+{% load crispy_forms_tags %}
+
 {%block extra_js %}
 <script type="text/javascript">
   $(function () {
@@ -14,58 +14,15 @@
   });
 </script>
 {% endblock %}
+
 {% block content %}
+
 {{form.media}}
-<p><a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
-<form method="post" class="form">
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <div class="form-row">
-
-      <div class="form-group col-md-4">
-        {{ form.series.errors }}
-        {% bootstrap_field form.series %}
-      </div>
-      <div class="form-group col-md-4">
-        {{ form.lid.errors }}
-        {% bootstrap_field form.lid %}
-      </div>
-      <div class="form-group col-md-4">
-        {{ form.created.errors }}
-        {% bootstrap_field form.created %}
-      </div>
+<p><a class="btn btn-secondary" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
+<div class="card">
+  <div class="card-body" style="background-color: #eee;">
+    {% crispy form %}
   </div>
-  <div class="form-row">
-      <div class="form-group col-md-4">
-        {{ form.customer.errors }}
-        {% bootstrap_field form.customer %}
-      </div>
-      <div class="form-group col-md-4">
-        {{ form.itemtype.errors }}
-        {% bootstrap_field form.itemtype %}
-      </div>
-      <div class="form-group col-md-4">
-        {{ form.interestrate.errors }}
-        {% bootstrap_field form.interestrate %}
-      </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-4">
-      {{ form.itemweight.errors }}
-      {% bootstrap_field form.itemweight %}
-    </div>
-
-      <div class="form-group col-md-4">
-        {{ form.loanamount.errors }}
-        {% bootstrap_field form.loanamount %}
-      </div>
-
-      <div class="form-group col-md-4">
-        {{ form.itemdesc.errors }}
-        {% bootstrap_field form.itemdesc %}
-      </div>
-  </div>
-  <button class="btn btn-primary" type="submit">Save Loan</button>
-</form>
+</div>
 
 {% endblock %}

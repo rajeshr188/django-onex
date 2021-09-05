@@ -48,8 +48,8 @@
                     <td><a href="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
                     <td>{{i.created}}</td>
                     <td>{{i.get_cb}}</td>
-                    <td>{{i.get_cr}}</td>
                     <td>{{i.get_dr}}</td>
+                    <td>{{i.get_cr}}</td>
                     <td>{{i.get_currbal}}</td>
                 </tr>
                 {%endfor%}
@@ -60,20 +60,32 @@
     <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="profile-external">
        <div class="row">
            <div class="col-6">
-                <ul>
+                <ul class="list-group list-group-flush">
                     {%for i in data.balancesheet.assets%}
-                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{i.name}} 
+                        <span>{{i.get_currbal}}</span>
+                    </li>
                     {%endfor%}
-                    <li>{{data.ta}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Total :<span>{{data.ta}}</span>
+                    </li>
                 </ul>
+                
            </div>
            <div class="col-6">
-                <ul>
+                <ul class="list-group list-group-flush">
                 {%for i in data.balancesheet.liabilities%}
-                <li>{{i.name}} {{i.ClosingBalance}}</li>
-                {%endfor%}
-                <li>{{data.tl}}</li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{i.name}} 
+                    <span>{{i.get_currbal}}</span>
+                </li>
+                {%endfor%} 
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Total :<span>{{data.tl}}</span>
+                </li>
                 </ul>
+                
            </div>
        </div>
         
@@ -81,19 +93,29 @@
     <div class="tab-pane fade" id="journal" role ="tabpanel" aria-labelledby="journal">
         <div class="row">
             <div class="col-6">
-                <ul>
+                <ul class="list-group list-group-flush">
                     {%for i in data.pnloss.income%}
-                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center" >
+                        {{i.name}}
+                        <span>{{i.get_currbal}}</span> 
+                    </li>
                     {%endfor%}
-                    <li>{{data.ti}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Total: <span>{{data.ti}}</span>
+                    </li>
                 </ul>
             </div>
             <div class="col-6">
-                <ul>
+                <ul class="list-group list-group-flush">
                     {%for i in data.pnloss.expense%}
-                    <li>{{i.name}} {{i.ClosingBalance}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{i.name}} 
+                        Total :<span>{{i.get_currbal}}</span>
+                    </li>
                     {%endfor%}
-                    <li>{{data.te}}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Total: <span>{{data.te}}</span>
+                    </li>
                 </ul>
             </div>
         </div>

@@ -10,42 +10,45 @@
   {%endif%}
 
 </p>
+<div class="p-4 p-md-4 mb-2 text-white rounded bg-dark">
+  
+  <div class="row">
+    <div class="col-md-6 px-1">
+      
+        <ol class="list-unstyled mb-0  text-right">
+          <li>id <span>{{object.id}}</span></li>
+          <li>Supplier :{{object.supplier}}</li>
+          <li>created: {{object.created}}</li>
+          <li>updated {{object.last_updated}}</li>
+          <li>Metal : {{object.metaltype}}</li>
+          <li>BalanceType: {{object.balancetype}}</li>
+          <li>Status : {{object.status}}</li>
+        </ol>
+      
+    </div>
+    <div class="col-md-6 px-1"> 
+      <p class="lead my-1">
+        <ol class="list-unstyled mb-0">
+          <li >Gross Wt: {{object.gross_wt}}</li>
+          <li >Net Wt: {{object.net_wt}}</li>
+          <li >Balance :{{object.balance}}</li>
+          <li >Total :{{object.total}}</li>
+          <li >Paid : {{object.get_total_payments}}</li>
+          <li >
+            {%if object.posted%}
+            <a class="btn btn-danger" href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
+            {%else%}
+            <a class="btn btn-success" href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
+            {%endif%}
+          </li>
+        </ul>
+      </p>
+    
+    </div>
+  </div>
+</div>
 
-<table class="table table-sm table-striped table-bordered">
-  <tr><td>Supplier</td><td>{{object.supplier}}</td></tr>
-  <tr><td>id</td><td>{{ object.id }}</td></tr>
-  <tr><td>created</td><td>{{ object.created }}</td></tr>
-  <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
-  <tr><td>Gross Wt</td><td>{{object.gross_wt}}</td></tr>
-  <tr><td>Nett Wt</td><td>{{object.net_wt}}</td></tr>
-  <tr>
-    <td>rate</td>
-    <td>{{ object.rate }}</td>
-  </tr>
-    <tr>
-      <td>balance</td>
-      <td>{{ object.balance }}</td>
-    </tr>
-  <tr>
-    <td>Metal</td>
-    <td>{{ object.metaltype }}</td>
-  </tr>
 
-  <tr><td>balancetype</td><td>{{ object.balancetype }}</td></tr>
-  <tr><td>Total</td><td>{{object.total}}</td></tr>
-  <tr><td>status</td><td>{{ object.status }}</td></tr>
-  <tr><td>Paid</td><td>{{object.get_total_payments}}</td></tr>
-  <tr>
-    <td>Posted</td>
-    <td>
-    {%if object.posted%}
-    <a class="btn btn-danger" href="{% url 'purchase_invoice_unpost' object.pk%}">Unpost</a>
-    {%else%}
-    <a class ="btn btn-success" href="{% url 'purchase_invoice_post' object.pk%}">Post</a>
-    {%endif%}
-    </td>
-  </tr>
-</table>
 
 {% if object.purchaseitems %}
   <table class="table table-sm table-striped table-bordered">

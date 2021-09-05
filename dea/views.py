@@ -32,13 +32,13 @@ def home(request):
     te = Balance()
     for i in lb:
         if i.AccountType == 'Asset':
-            ta = ta+ abs(i.get_cb())
+            ta = ta+ abs(i.get_currbal())
         elif i.AccountType == 'Liability':
-            tl = tl+ abs(i.get_cb())
+            tl = tl+ abs(i.get_currbal())
         elif i.AccountType == 'Income':
-            ti = ti + abs(i.get_cb())
+            ti = ti + abs(i.get_currbal())
         elif i.AccountType == 'Expense':
-            te = te + abs(i.get_cb())
+            te = te + abs(i.get_currbal())
     pnloss = {}
     pnloss['income'] = lb.filter(AccountType = 'Income')
     pnloss['expense'] = lb.filter(AccountType = 'Expense')

@@ -629,7 +629,7 @@ class SalesJournal(Journal):
                 )
             LedgerTransaction.objects.create_txn(
                 journal = self,
-                ledgerno = "IGST", ledgerno_dr = "Sundry Debtors",amount = Money(tax,'INR'))
+                ledgerno = "Output Igst", ledgerno_dr = "Sundry Debtors",amount = Money(tax,'INR'))
             AccountTransaction.objects.create_txn(
                 journal = self,
                 ledgerno = "Sales",xacttypecode = "Cr",
@@ -639,13 +639,13 @@ class SalesJournal(Journal):
             LedgerTransaction.objects.create_txn(
                 journal=self,
                 ledgerno="Sundry Debtors", ledgerno_dr="Sales", amount=money)
-            LedgerTransaction.objects.create(
+            LedgerTransaction.objects.create_txn(
                 journal=self,
-                ledgerno=cogs, ledgerno_dr="Inventory", amount=money
+                ledgerno=cogs, ledgerno_dr=inv, amount=money
             )
             LedgerTransaction.objects.create_txn(
                 journal=self,
-                ledgerno="Sundry Debtors", ledgerno_dr="IGST", amount=Money(tax, 'INR'))
+                ledgerno="Sundry Debtors", ledgerno_dr="Output Igst", amount=Money(tax, 'INR'))
             AccountTransaction.objects.create_txn(
                 journal=self,
                 ledgerno="Sales", xacttypecode="Dr",
@@ -732,7 +732,7 @@ class PurchaseJournal(Journal):
             )
             LedgerTransaction.objects.create_txn(
                 journal = self,
-                ledgerno =  "Sundry Creditors",ledgerno_dr = "IGST",amount = Money(tax,'INR')
+                ledgerno =  "Sundry Creditors",ledgerno_dr = "Input Igst",amount = Money(tax,'INR')
             )
             AccountTransaction.objects.create_txn(
                 journal = self,
@@ -747,7 +747,7 @@ class PurchaseJournal(Journal):
             )
             LedgerTransaction.objects.create_txn(
                 journal=self,
-                ledgerno= "IGST", ledgerno_dr='Sundry Creditors', amount=Money(tax,'INR')
+                ledgerno= "Input Igst", ledgerno_dr='Sundry Creditors', amount=Money(tax,'INR')
             )
             AccountTransaction.objects.create_txn(
                 journal=self,
@@ -831,8 +831,6 @@ class Ledgerbalance(models.Model):
 
     def get_cr(self):
         return Balance(self.cr)
-# how to import ledger and account iniital balance?
-    # -- create formset view of corresponding statement sorted by latest
 
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created
 

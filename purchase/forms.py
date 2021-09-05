@@ -9,6 +9,7 @@ from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset, Div,Row,Column, HTML, ButtonHolder, Submit
+# from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
 class InvoiceForm(forms.ModelForm):
@@ -42,9 +43,9 @@ class CrispyInvoiceForm(InvoiceForm):
         self.helper.field_class = 'col-md-12'
         self.helper.layout = Layout(
             Row(
-                Column('created', css_class='form-group col-md-3 mb-0'),
-                Column('supplier', css_class='form-group col-md-3 mb-0'),
-                Column('is_gst', css_class='form-group col-md-3 mb-0'),
+                Column(Field('created',css_class ='form-control'), css_class='form-group col-md-3 mb-0'),
+                Column(Field('supplier',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
+                Column(Field('is_gst'), css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'
             ),
             Row(
@@ -56,9 +57,9 @@ class CrispyInvoiceForm(InvoiceForm):
             Fieldset('Add items',
                              Formset('items')),
             Row(
-                Column('gross_wt', css_class='form-group col-md-3 mb-0'),
-                Column('net_wt', css_class='form-group col-md-3 mb-0'),
-                Column('total', css_class='form-group col-md-3 mb-0'),
+                Column(Field('gross_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
+                Column(Field('net_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
+                Column(Field('total',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'
             ),
             Row(

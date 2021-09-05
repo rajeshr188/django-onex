@@ -43,7 +43,7 @@ INSTALLED_APPS = [
 
     # Third-party
     'allauth','allauth.account',  # new
-    'crispy_forms','bootstrap4' ,'import_export','versatileimagefield', # new
+    'crispy_forms', "crispy_bootstrap5", 'bootstrap4', 'import_export', 'versatileimagefield',  # new
     'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
     'corsheaders', 'djmoney',
     'widget_tweaks','tempus_dominus',
@@ -206,6 +206,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+# CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+# CRISPY_TEMPLATE_PACK = "bootstrap5"
 # CACHES = {
 #     'default': {
 #         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

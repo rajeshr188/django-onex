@@ -1,44 +1,29 @@
+from product.models import StockTransaction
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 
 # Create your models here.
 class VoucherType(models.Model):
-    pass
+    name = models.CharField()
 
 class Voucher(models.Model):
     voucher_type = models.ForeignKey(VoucherType)
     created = models.DateTimeField()
     modified = models.DateTimeField()
     voucher_no = models.CharField()
-    account = models.ForeignKey()
-    from_ledger = models.ForeignKey()
-    to_ledger = ForeignKey()
     amount = models.DecimalField()
-    is_posted = models.BooleanField()
+    posted = models.BooleanField()
 
-class Transaction(models.Model):
-    voucher = models.ForeignKey(Voucher)
-    created = models.DateTimeField()
-    ledger = models.ForeignKey()
-    amount = models.DecimalField()
+    def transact(self,revert = False):
+        # do self.ledgertransactions
+        # do self.acc tranxn
+        # do self.stock trxn
+        return NotImplementedError
 
-class LedgerTransaction(models.Model):
-    ledgerno_dr = models.ForeignKey()
 
-class AccountTransaction(models.Model):
-    pass
-    # XactTypeCode = models.ForeignKey(TransactionType_DE,
-    #                 on_delete = models.CASCADE)
-    # XactTypeCode_ext = models.ForeignKey(TransactionType_Ext,
-    #                     on_delete=models.CASCADE)
-    # Account = models.ForeignKey(Account,on_delete=models.CASCADE,
-    #                         related_name='accounttransactions')
 
-class InventoryTransaction(models.Model):
-    ledgerno_dr = models.ForeignKey()
-
-class salesVoucher(Voucher):
+class InvoiceVoucher(Voucher):
     # l - l trnsaction# from_ledger isinventory to ledger is sales
     # l-a trsxn from inventory to acc
     #  if is gst add another l-l txns cr from taxliabnility debit to sundryt debtor
@@ -50,7 +35,7 @@ class salesVoucher(Voucher):
     is_gst = models.BooleanField()
     status = models.CharField()
 
-class PurchaseVoucher(Voucher):
+class PaymentVoucher(Voucher):
     acc = models.ForeignKey()
     invoice_no = models.IntegerField()
     gross_wt = models.DecimalField()
@@ -60,12 +45,23 @@ class PurchaseVoucher(Voucher):
     is_gst = models.BooleanField()
     status = models.CharField()
 
-class ReceiptVoucher(Voucher):
-    acc =models.ForeignKey()
+    def post(self):
+        # LedgerTransaction.objects.create_txn()
+        # LedgerTransaction.objects.create_txn()
+        # AccountTransaction.objects.create_Txn()
+        for i in self.items:
+            i.post()
 
-class PaymentVoucher(Voucher):
-    acc = models.ForeignKey()
+        self.posted = True
 
+    def unpost(self):
+        # LedgerTransaction.objects.create_txn()
+        # LedgerTransaction.objects.create_txn()
+        # AccountTransaction.objects.create_Txn()
+        for i in self.items:
+            i.unpost()
+
+        self.posted = False
 
 
 

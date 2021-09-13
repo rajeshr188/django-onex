@@ -1,0 +1,40 @@
+{% extends "_base.html" %}
+{% load static %}
+{%block content%}
+<div class="row mb-2">
+    <div class="col-md-6">
+        <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+            <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary">Company Info</strong>
+                <h3 class="mb-0">{{object.name}}</h3>
+                <div class="mb-1 text-muted">{{object.created}}</div>
+                <p class="card-text mb-auto">
+                    {{object.address}}
+                    <hr>{{object.pincode}} | {{object.mobileno}}
+                </p>
+                <a href="#" class="stretched-link">Continue reading</a>
+            </div>
+            
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-title p-4 ">
+                <h3>Members</h3>
+                {%ifequal user company.companyowner.user%}
+                <a href="{% url 'company_add_member' %}">Add Members</a>
+                {%endifequal%}
+            </div>
+            <div class="card-body">
+                <ol class="list-unstyled">
+                    <li>Owner : {{company.companyowner.user}}</li>
+                    {%for i in company.membership_set.all%}
+                    <li>{{i.user}} - {{i.role}}</li>
+                    {%endfor%}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<br/>
+{%endblock%}

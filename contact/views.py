@@ -14,7 +14,7 @@ from django.db.models import  Sum,Q,Count
 from datetime import datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.messages.views import SuccessMessageMixin
 @login_required
 def home(request):
     data = dict()
@@ -38,10 +38,17 @@ class CustomerListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterVie
     filterset_class = CustomerFilter
     paginate_by = 25
 
-class CustomerCreateView(LoginRequiredMixin,CreateView):
+class CustomerCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
     model = Customer
     form_class = CustomerForm
     success_url=reverse_lazy('contact_customer_list')
+    success_message = "%(calculated_field)s was created successfully"
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            calculated_field=self.object,
+        )
 
 def reallot_receipts(request,pk):
     customer = Customer.objects.get(pk = pk)

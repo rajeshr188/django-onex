@@ -20,7 +20,7 @@
                 <a href="{% url 'dea_ledger_detail' node.id%}">
                     {{ node.name }}
                 </a>
-                {{node.current_balance}}
+                {{node.current_balance_wrt_descendants}}
                 {% if not node.is_leaf_node %}
                 <ul class="children">
                     {{ children }}

@@ -18,18 +18,3 @@ class CustomerSerializer(serializers.ModelSerializer):
             'relatedto','active','gender','religion',
             'loan_set',
         )
-
-
-# class SupplierSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = models.Supplier
-#         fields = (
-#             'id',
-#             'name',
-#             'created',
-#             'last_updated',
-#             'organisation',
-#             'phonenumber',
-#             'initial',
-#         )

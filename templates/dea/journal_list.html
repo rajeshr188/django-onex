@@ -12,12 +12,13 @@
                 <th>created</th>
                 <th>txn-type</th>
                 <th>doc</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for i in object_list %}
             <tr>
-                <td>{{i.id}}</td>
+                <td><a href="{% url 'dea_journal_detail' i.id%}">{{i.id}}</a></td>
                 <td>{{i.created|date}}</td>
                 <td>{{i.desc}}</td>
                 <td>
@@ -28,6 +29,7 @@
                     None
                     {%endif%}
                 </td>
+                <td><a class="btn btn-danger" href="{% url 'dea_journal_delete' i.id%}">Delete</a></td>
                
             </tr>
             {% endfor %}

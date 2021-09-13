@@ -1,24 +1,14 @@
-from datetime import time
-from typing import List
 from django.db import transaction
-from django.db.models.expressions import OuterRef, Subquery
-from django.db.models.fields import DecimalField
-from django.db.models.query import Prefetch
 from django.db.models.query_utils import subclasses
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
-from djmoney.models.fields import MoneyField
 # Create your views here.
-from .models import Account, AccountStatement, AccountTransaction, AccountType, Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
+from .models import Account, AccountStatement,Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
-
-from django.db.models import Sum,Q,Max,F
-from django.db.models.functions import Coalesce
 from dea.utils.currency import Balance
 from moneyed import Money
-
 def home(request):
     lb = Ledgerbalance.objects.all()
     
@@ -56,7 +46,7 @@ def home(request):
     #                 pk__in = AccountStatement.objects.order_by().values('AccountNo').annotate(max_id = Max('id')).values('max_id')).select_related("AccountNo","AccountNo__contact")
     # a = Account.objects.filter(contact__type='Su')
     context['accounts'] = []
-    # journal = Journal.objects.all().select_related('content_type')
+    
     context['journal'] = []
     # jrnls = []
     # for i in journal:
@@ -102,7 +92,6 @@ def set_ledger_ob(request, pk):
 
     return render(request, 'dea/set_ledger_ob.html', {'form': form})
 
-
 def set_acc_ob(request, pk):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -122,7 +111,6 @@ def set_acc_ob(request, pk):
 
     return render(request, 'dea/set_acc_ob.html', {'form': form})
 
-
 @transaction.atomic()
 def audit_acc(request,pk):
     acc = get_object_or_404(Account,pk=pk)
@@ -136,12 +124,15 @@ def audit_ledger(request):
         l.audit()
     return redirect("/dea")
     
-
 class JournalListView(ListView):
     queryset = Journal.objects.all().select_related('content_type')
 
 class JournalDetailView(DetailView):
     model = Journal
+
+class JournalDeleteView(DeleteView):
+    model = Journal
+    success_url = reverse_lazy('dea_journals_list')
 
 class AccountCreateView(CreateView):
     model = Account
@@ -156,13 +147,36 @@ class AccountDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ct = super().get_context_data(**kwargs)
-        
+        acc = ct['object']
         if ct['object'].accountstatements.exists():
-            ls_created = ct['object'].accountstatements.latest().created
-            ct['txns'] = ct['object'].txns(since=ls_created)
+            acc_stmt = acc.accountstatements.latest()
+            ls_created = acc_stmt.created 
+            txns = list(acc.txns(since=ls_created))
+            
         else:
-            ct['txns'] = ct['object'].txns()
-        
+            txns = list(acc.txns())
+            acc_stmt = None
+
+        ct['acc_stmt'] = acc_stmt
+        op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
+        running_bal = op_bal
+        txn_list = []
+        for i in txns:
+            txn_dict = {}
+            txn_dict['created'] = i.created
+            txn_dict['voucher'] = i.journal.content_object
+            txn_dict['voucher_url'] = i.journal.get_url_string()
+            txn_dict['description'] = i.XactTypeCode_ext.description
+            txn_dict['xactcode'] = i.XactTypeCode.XactTypeCode
+            txn_dict['amount'] = i.amount
+            if i.XactTypeCode.XactTypeCode == 'Dr':
+               
+                txn_dict['running_bal'] = running_bal + Balance([i.amount])
+            else:
+                
+                txn_dict['running_bal'] = running_bal - Balance([i.amount])
+            txn_list.append(txn_dict)
+        ct['txns'] = txn_list
         return ct
 
 class AccountStatementCreateView(CreateView):

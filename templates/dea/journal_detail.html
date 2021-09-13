@@ -1,0 +1,32 @@
+{% extends '_base.html' %}
+{% block title %}Acount detail{% endblock %}
+
+{% block content %}
+<p>Journal Details</p>
+<p>{{object.type}}</p>
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <h3>Ledger Transaction</h3>
+            <ul>
+                {%for i in object.ltxns.all%}
+                <li>From {{i.ledgerno}} To {{i.ledgerno_dr}} - {{i.amount}}</li>
+                {%endfor%}
+            </ul>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <h3>Account Transaction</h3>
+            <ul>
+                {%for i in object.atxns.all%}
+                <li>{{i.account}} {{i.XactTypeCode}}{{i.amount}}</li>
+                {%endfor%}
+            </ul>
+        </div>
+    </div>
+    <div class="col-4">
+        <h3>Stock Transaction</h3>
+    </div>
+</div>
+{%endblock%}

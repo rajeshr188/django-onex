@@ -20,7 +20,6 @@ class Year(Func):
     template = '%(function)s(YEAR from %(expressions)s)'
     output_field = models.IntegerField()
 
-
 class SalesQueryset(models.QuerySet):
     def posted(self):
         return self.filter(posted=True)
@@ -108,8 +107,8 @@ class Invoice(models.Model):
     )
     term = models.ForeignKey(
         PaymentTerm, on_delete=models.SET_NULL,
-        related_name='sale_term',
-        blank=True, null=True)
+        null=True,
+        related_name='sale_term',)
     approval = models.OneToOneField(
         'approval.Approval',
         on_delete=models.PROTECT,
@@ -180,11 +179,15 @@ class Invoice(models.Model):
         self.save()
         
 
-    # def delete(self, *args, **kwargs):
-    #     if self.posted and self.get_balance() != 0:
-    #         raise Exception("Cant delete sale if posted and unpaid")
-    #     else:
-    #         super(Invoice, self).delete(*args, **kwargs)
+    def delete(self, *args, **kwargs):
+        # if self.posted and self.get_balance() != 0:
+        #     raise Exception("Cant delete sale if posted and unpaid")
+        # else:
+        #     super(Invoice, self).delete(*args, **kwargs)
+        if self.approval:
+            self.approval.is_billed = False
+        super(Invoice, self).delete(*args, **kwargs)
+
     def deactivate(self):
         self.is_active = False
         self.save(update_fields=['self.is_active'])
@@ -197,35 +200,38 @@ class Invoice(models.Model):
     @transaction.atomic()
     def post(self):
         if not self.posted:
-            saleitems = self.saleitems.all()
             if self.approval:
                 for i in self.approval.items.filter(status = 'Pending'):
                     apr = ApprovalLineReturn.objects.create(
                         line=i, quantity=i.quantity, weight=i.weight)
                     apr.post()
                     i.update_status()
-            for i in saleitems:
+                self.approval.is_billed = True
+                self.approval.save()
+                self.approval.update_status()
+            for i in self.saleitems.all():
                 i.post()
             jrnl = SalesJournal.objects.create(
-                    content_object = self,
-                    desc = 'sale'
-                )
+                    content_object = self, desc = 'sale')
                 # credit/cash cash/gold   
             jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
         
-
     @transaction.atomic()   
     def unpost(self):
         if self.posted:
             for i in self.saleitems.all():
                 i.unpost()
             if self.approval:
+                self.approval.is_billed = False
                 for i in self.approval.items.all():
+                    i.unpost()
                     i.product.add(i.weight, i.quantity,
                                     i, 'A')
                     i.update_status()
+                self.approval.save()
+                self.approval.update_status()
                 
             jrnl = SalesJournal.objects.create(
                     content_object=self,

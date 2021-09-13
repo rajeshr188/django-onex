@@ -110,7 +110,11 @@
         var nettwt = (wt * touch) / 100
         $(this).find('.nettwt input').val(nettwt);
         if ($('#id_type').val() != 'Cash') {
-          $(this).find('.amount input').val(nettwt * rate);
+          if(rate != 0){
+            $(this).find('.amount input').val(nettwt * rate);}
+          else{
+             $(this).find('.amount input').val(nettwt);
+          }
         }
         update_bal();
         console.log(wt, touch, nettwt, rate);

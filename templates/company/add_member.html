@@ -1,0 +1,13 @@
+{% extends "_base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<p><a class="btn btn-secondary" href="{% url 'company_owned_list' %}">Company List</a></p>
+<h3>Add Member to {{user.workspace.company.name}}</h3>
+<div class="card">
+    <div class="card-body" style="background-color: #eee;">
+        <form method="post">
+            {% crispy form%}
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -12,11 +12,3 @@ class CustomerViewSet(viewsets.ModelViewSet):
     filterset_class = CustomerFilter
     search_fields = ['name','relatedas','relatedto','phonenumber']
     # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-# class SupplierViewSet(viewsets.ModelViewSet):
-#     """ViewSet for the Supplier class"""
-#
-#     queryset = models.Supplier.objects.all()
-#     serializer_class = serializers.SupplierSerializer
-#     # permission_classes = [permissions.IsAuthenticatedOrReadOnly]

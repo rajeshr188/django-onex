@@ -1,6 +1,6 @@
 from django import forms
 from .models import Invoice, InvoiceItem, Payment, PaymentItem,PaymentLine
-from django_select2.forms import Select2Widget,ModelSelect2Widget
+from django_select2.forms import Select2Widget
 from contact.models import Customer
 from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
@@ -8,32 +8,28 @@ from django.db.models import Q
 from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset, Div,Row,Column, HTML, ButtonHolder, Submit
+from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
 # from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
 class InvoiceForm(forms.ModelForm):
-    supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),widget=Select2Widget)
+    supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),
+                    widget=Select2Widget)
     created = forms.DateTimeField(
         widget=DateTimePicker(
             options={
                 'useCurrent': True,
-                'collapse': False,
-            },
+                'collapse': False,},
             attrs={
                'append': 'fa fa-calendar',
                'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
-    )
+               'icon_toggle': True,}),)
     class Meta:
         model = Invoice
         fields = ['created','rate','is_gst','balancetype','metaltype',
                     'gross_wt','net_wt','total',
                      'balance', 'supplier','term','status','posted']
 
-class CrispyInvoiceForm(InvoiceForm):
     def __init__(self, *args, **kwargs):
         super(InvoiceForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -46,31 +42,25 @@ class CrispyInvoiceForm(InvoiceForm):
                 Column(Field('created',css_class ='form-control'), css_class='form-group col-md-3 mb-0'),
                 Column(Field('supplier',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
                 Column(Field('is_gst'), css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'
-            ),
+                css_class='form-row'),
             Row(
                 Column('balancetype', css_class='form-group col-md-3 mb-0'),
                 Column('metaltype', css_class='form-group col-md-3 mb-0'),
                 Column('rate', css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'
-            ),
+                css_class='form-row'),
             Fieldset('Add items',
                              Formset('items')),
             Row(
                 Column(Field('gross_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
                 Column(Field('net_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
                 Column(Field('total',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'
-            ),
+                css_class='form-row'),
             Row(
                 Column('term', css_class='form-group col-md-3 mb-0'),
                 Column('balance', css_class='form-group col-md-3 mb-0'),
                 Column('status', css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'
-                ),
-            ButtonHolder(Submit('submit', 'save'))
-
-            
+                css_class='form-row'),
+            ButtonHolder(Submit('submit', 'save'))      
         )
 
 class InvoiceItemForm(forms.ModelForm):
@@ -80,23 +70,6 @@ class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return','huid', 'quantity', 'product', 'invoice','makingcharge','net_wt']
-
-    # def save(self,commit = True):
-    #     print("in form.save()")
-    #     invoiceitem = super(InvoiceItemForm,self).save(commit = False)
-    #     if invoiceitem.id:
-    #
-    #         if any( x in self.changed_data for x in ['product','quantity','weight']):
-    #             print("deleting line items that changed")
-    #             InvoiceItem.objects.get(id = invoiceitem.id).delete()
-    #
-    #     if commit:
-    #         try:
-    #             invoiceitem.save()
-    #         except Exception:
-    #             raise Exception("failed From Model Save")
-    #     return invoiceitem
-
 
 InvoiceItemFormSet = inlineformset_factory(Invoice, InvoiceItem,form=InvoiceItemForm,
     fields=['is_return','huid','product','quantity','weight', 'touch',

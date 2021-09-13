@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from .tables import InvoiceTable,PaymentTable
-from .forms import (InvoiceForm, CrispyInvoiceForm,InvoiceItemForm, 
+from .forms import (InvoiceForm,InvoiceItemForm, 
                     InvoiceItemFormSet, PaymentForm,
                     PaymentItemFormSet, PaymentLineForm,
                     )
@@ -103,7 +103,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
 
 class InvoiceCreateView(CreateView):
     model = Invoice
-    form_class = CrispyInvoiceForm
+    form_class = InvoiceForm
     success_url = None
 
     def get_context_data(self,**kwargs):

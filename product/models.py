@@ -1,6 +1,5 @@
 from decimal import Decimal
 from product.attributes import get_attributes_display_map, get_product_attributes_data
-from django.forms.fields import DecimalField, JSONField
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.postgres.fields import HStoreField
 from django.core.validators import MinValueValidator
@@ -20,6 +19,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from .managers import StockManager
 from utils.friendlyid import encode
+
 class Category(MPTTModel):
     # gold ,silver ,other
     name = models.CharField(max_length=128,unique=True)

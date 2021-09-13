@@ -166,18 +166,16 @@ class Invoice(models.Model):
                 self.supplier.account
             except:
                 self.supplier.save()
-            for i in self.purchaseitems.all():
-                    i.post()
+ 
             if self.balance >0 :
                 jrnl = PurchaseJournal.objects.create(
-                    content_object=self,
-                    desc='purchase'
-                )
+                    content_object=self,desc='purchase')
             else:
                 jrnl = PaymentJournal.objects.create(
-                    content_object=self,
-                    desc='purchase'
-                )
+                    content_object=self,desc='purchase')
+
+            for i in self.purchaseitems.all():
+                i.post()
             jrnl.transact()
             self.posted = True
             self.save(update_fields=['posted'])
@@ -185,23 +183,19 @@ class Invoice(models.Model):
     @transaction.atomic()
     def unpost(self):
         if self.posted:
-            for i in self.purchaseitems.all():
-                    i.unpost()
+            
             if self.balance>0:
                 jrnl = PurchaseJournal.objects.create(
-                    content_object=self,
-                    desc='purchase revert'
-                )
+                    content_object=self,desc='purchase revert')
             else:
                 jrnl = PaymentJournal.objects.create(
-                    content_object=self,
-                    desc='purchase revert'
-                )
+                    content_object=self,desc='purchase revert')
+            for i in self.purchaseitems.all():
+                i.unpost()
             jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields=['posted'])
         
-
 class InvoiceItem(models.Model):
     # Fields
     huid = models.CharField(max_length = 6,null = True,blank = True,unique = True)
@@ -214,14 +208,11 @@ class InvoiceItem(models.Model):
     makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
     # Relationship Fields
     product = models.ForeignKey(
-        ProductVariant,
-        on_delete=models.CASCADE,
-        related_name="products"
-    )
+        ProductVariant,on_delete=models.CASCADE,
+        related_name="products")
     invoice = models.ForeignKey(
-        'purchase.Invoice',
-        on_delete=models.CASCADE, related_name="purchaseitems"
-    )
+        'purchase.Invoice',on_delete=models.CASCADE, 
+        related_name="purchaseitems")
 
     class Meta:
         ordering = ('-pk',)
@@ -270,31 +261,24 @@ class InvoiceItem(models.Model):
         else:
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
-            stock.remove(
-                self.weight, self.quantity,
-                cto=self.invoice,
-                at='PR'
-            )
+            stock.remove(self.weight, self.quantity,
+                cto=self.invoice,at='PR')
             
 class Payment(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    btype_choices=(
-                ("Cash","Cash"),
+    btype_choices=(("Cash","Cash"),
                 ("Gold","Gold"),
-                ("silver","Silver")
-            )
+                ("Silver","Silver"))
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
-    status_choices = (
-                        ("Allotted","Allotted"),
+    status_choices = (("Allotted","Allotted"),
                         ("Partially Allotted","PartiallyAllotted"),
-                        ("Unallotted","Unallotted"),
-                        )
+                        ("Unallotted","Unallotted"), )
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
     is_active = models.BooleanField(default=True)
@@ -317,12 +301,6 @@ class Payment(models.Model):
     def get_update_url(self):
         return reverse('purchase_payment_update', args=(self.pk,))
 
-    # def delete(self):
-    #     if self.posted and self.status != 'Allotted':
-    #         raise Exception("cant delete payment if posted and unallotted")
-    #     else:
-    #         super(Payment, self).delete()
-
     def get_line_totals(self):
         return self.paymentline_set.aggregate(t=Sum('amount'))['t']
 
@@ -343,10 +321,8 @@ class Payment(models.Model):
         print(f"remaining : {remaining_amount}")
         try:
             invtopay = Invoice.objects.filter(supplier = self.supplier,
-                                            balancetype = self.type,
-                                            posted = True,balance__gte = 0)\
-                                            .exclude(status = "Paid")\
-                                            .order_by("created")
+                        balancetype = self.type,posted = True,balance__gte = 0)\
+                            .exclude(status = "Paid").order_by("created")
         except IndexError:
             invtopay = None
         print(f" invtopay :{invtopay}")

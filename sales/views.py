@@ -121,7 +121,6 @@ def list_balance(request):
 def graph(request):
     return render(request, 'sales/graph.html')
 
-
 def sales_count_by_month(request):
     # data = Invoice.objects.extra(select={'date': 'DATE(created)'},order_by=['date']).values('date').annotate(count_items=Count('id'))
     data = Invoice.objects.annotate(month = Month('created')).values('month').\
@@ -130,7 +129,6 @@ def sales_count_by_month(request):
 
 import tablib
 from .admin import InvoiceResource,ReceiptResource
-import datetime
 from openpyxl import load_workbook
 import re
 import pytz
@@ -206,78 +204,39 @@ from approval.models import Approval
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
+    success_url = None
 
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet()
-
-        if 'approvalid' in request.GET:
-            approval = Approval.objects.get(id = request.GET['approvalid'])
-            approvallines = approval.items.filter(status = 'Pending').values()
-            
-            form.fields["customer"].queryset = Customer.objects.filter(id=approval.contact.id)
-            form.fields["approval"].initial = approval
-            
-            for subform, data in zip(invoiceitem_form.forms, approvallines):
-                data.pop('id')
-                subform.initial = data
-                
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form)
-                                  )
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        invoiceitem_form = InvoiceItemFormSet(self.request.POST)
-    
-        if (form.is_valid() and invoiceitem_form.is_valid()):
-            return self.form_valid(form, invoiceitem_form)
+    def get_context_data(self,*args,**kwargs):
+        data = super(InvoiceCreateView,self).get_context_data(*args,**kwargs)
+        if self.request.method == 'POST':
+            data['items'] = InvoiceItemFormSet(self.request.POST)
         else:
-            return self.form_invalid(form, invoiceitem_form)
+            data['items'] = InvoiceItemFormSet()
+            if 'approvalid' in self.request.GET:
+                
+                approval = Approval.objects.get(id=self.request.GET['approvalid'])
+                approvallines = approval.items.filter(status='Pending').values()
+                data['form'].fields["customer"].queryset = Customer.objects.filter(
+                    id=approval.contact.id)
+                data['form'].fields["approval"].initial = approval
 
-    @transaction.atomic()
-    def form_valid(self, form, invoiceitem_form):
-        if invoiceitem_form.is_valid():
+                for subform, da in zip(data['items'].forms, approvallines):
+                    da.pop('id')
+                    subform.initial = da  
+        return data
+
+    def form_valid(self,form):
+        context = self.get_context_data()
+        items = context['items']
+        with transaction.atomic():
             self.object = form.save()
-            invoiceitem_form.instance = self.object
-            items = invoiceitem_form.save()
-            for i in items:
-                i.net_wt = i.get_nettwt()
-                i.total = i.get_total()
-                i.save()
-            self.object.update_bal()
-            # try:
-                # self.object = form.save()
-                # invoiceitem_form.instance = self.object
-                # items = invoiceitem_form.save()
-                # for i in items:
-                #     i.net_wt = i.get_nettwt()
-                #     i.total = i.get_total()
-                #     i.save()
-                # self.object.update_bal()
-            # except Exception:
-            #     form.add_error(None,'error in transfer')
-            #     return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
-            if self.object.approval:
-                self.object.approval.is_billed = True
-                self.object.approval.save()
-        
+            if items.is_valid():
+                items.instance = self.object
+                items.save()
+        return super(InvoiceCreateView, self).form_valid(form)
 
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, invoiceitem_form):
-        """
-        Called if a form is invalid. Re-renders the context data with the
-        data-filled forms and errors.
-        """
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
+    def get_success_url(self) -> str:
+        return reverse_lazy('sales_invoice_detail', kwargs={'pk': self.object.pk})
 
 class InvoiceDetailView(DetailView):
     model = Invoice
@@ -298,39 +257,25 @@ class InvoiceUpdateView(UpdateView):
         if self.object.posted:
             raise Http404
         if self.request.POST:
-            data['invoiceitem_form'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
+            data['items'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
         else:
-            data['invoiceitem_form'] = InvoiceItemFormSet(instance = self.object)
+            data['items'] = InvoiceItemFormSet(instance = self.object)
         return data
 
     @transaction.atomic()
     def form_valid(self, form):
         context = self.get_context_data()
-        invoiceitem_form = context['invoiceitem_form']
+        items = context['items']
 
-        if invoiceitem_form.is_valid():
-            try:
-                self.object = form.save()
-                invoiceitem_form.instance = self.object
-                items =invoiceitem_form.save()
-                for i in items:
-                    i.net_wt = i.get_nettwt()
-                    i.total = i.get_total()
-                    i.save()
-                self.object.update_bal()
-                if self.object.approval:
-                    self.object.approval.is_billed = True
-                    self.object.approval.save()
-            except Exception:
-                # raise Exception("Failed Form Save")
-                form.add_error(None,'error in transfer qty or wt mismatch')
-                return self.form_invalid(form = form,invoiceitem_form = invoiceitem_form)
-        return HttpResponseRedirect(self.get_success_url())
+        with transaction.atomic():
+            self.object = form.save()
+            if items.is_valid():
+                items.instance = self.object
+                items.save()
+        return super(InvoiceCreateView, self).form_valid(form)
 
-    def form_invalid(self, form, invoiceitem_form):
-        return self.render_to_response(
-            self.get_context_data(form=form,
-                                  invoiceitem_form=invoiceitem_form))
+    def get_success_url(self) -> str:
+        return reverse_lazy('sales_invoice_detail', kwargs={'pk': self.object.pk})
                                   
 @transaction.atomic()
 def post_sales(request,pk):

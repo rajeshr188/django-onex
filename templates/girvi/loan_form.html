@@ -1,28 +1,24 @@
 {% extends "_base.html" %}
 {% load crispy_forms_tags %}
-
 {%block extra_js %}
 <script type="text/javascript">
   $(function () {
     $(document).ready(function () {
-      $(document).on('change', '#id_series', function (evt) {
-        var series_data = {{ series }}
-        $('#id_lid').val(parseInt(series_data[evt.target.value]) + 1)
+      $(document).on('change', '#id_series', function (evt){
+        var series_data = {{ series }};
+        $('#id_lid').val(parseInt(series_data[evt.target.value]) + 1);
 
       });
-  })
+  });
   });
 </script>
 {% endblock %}
-
-{% block content %}
-
 {{form.media}}
+{% block content %}
 <p><a class="btn btn-secondary" href="{% url 'girvi_loan_list' %}">Loan Listing</a></p>
 <div class="card">
   <div class="card-body" style="background-color: #eee;">
     {% crispy form %}
   </div>
 </div>
-
 {% endblock %}

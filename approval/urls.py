@@ -26,20 +26,3 @@ urlpatterns +=(
          views.unpost_approvallinereturn, name='approvallinereturn_unpost'),
     path('approval/convert_sale/<int:pk>/',views.convert_sales,name='approval_convert_sale'),
 )
-#approvalreturn urls
-# )
-#
-#
-# urlpatterns +=(
-#     path('approvalreturn/',views.ApprovalReturnListView.as_view(),name = 'approval_approvalreturn_list'),
-#     path('approvalreturn/detail/<int:pk>/',views.ApprovalReturnDetailView.as_view(),name = 'approval_approvalreturn_detail'),
-#     path('approvalreturn/create/',views.ApprovalReturnCreateView.as_view(),name ='approval_approvalreturn_create'),
-#     path('approvalreturn/update/<int:pk>/',views.ApprovalReturnUpdateView.as_view(),name = 'approval_approvalreturn_update'),
-#     path('approvalreturn/delete/<int:pk>/',views.ApprovalReturnDeleteView.as_view(),name = 'approval_approvalreturn_delete'),
-# #approvalreturn urls
-# )
-#
-# urlpatterns +=(
-#     path('approvalreturnline/create/',views.ApprovalReturnLineCreateView.as_view(),name ='approval_approvalRtuenline_create'),
-# #approvalreturn urls
-# )

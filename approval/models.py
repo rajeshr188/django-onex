@@ -7,25 +7,19 @@ from django.db.models import Sum
 class Approval(models.Model):
 
     created_at = models.DateTimeField(auto_now_add = True,
-                        editable = False)
+                editable = False)
     updated_at = models.DateTimeField(auto_now = True,
-                        editable = False)
+                editable = False)
     contact  = models.ForeignKey(Customer,
-                        related_name = 'contact',
-                        on_delete = models.CASCADE)
-
+                related_name = 'contact',on_delete = models.CASCADE)
     total_wt = models.DecimalField(max_digits=10,
-                        decimal_places=3,
-                        default =0)
+                decimal_places=3,default =0)
     total_qty = models.IntegerField(default=0)
     posted = models.BooleanField(default = False)
     is_billed = models.BooleanField(default = False)
     status = models.CharField(max_length = 10,
-                        choices = (
-                            ('Pending','Pending'),
-                            ('Complete','Complete')
-                            ),
-                            default = 'Pending')
+            choices = (('Pending','Pending'),
+                ('Complete','Complete')),default = 'Pending')
 
     class Meta:
         ordering = ('created_at',)
@@ -94,9 +88,8 @@ class ApprovalLine(models.Model):
         return f"{self.id}"
 
     def balance(self):
-        return (self.weight - self.approvallinereturn_set.filter(
-                                posted = True).aggregate(
-                                    t = Sum('weight'))['t'])
+        return (self.weight - self.approvallinereturn_set.filter(posted = True).\
+            aggregate(t = Sum('weight'))['t'])
 
     def post(self):
         self.product.remove(self.weight,self.quantity,self.approval,'A')
@@ -123,9 +116,7 @@ class ApprovalLine(models.Model):
 
 class ApprovalLineReturn(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
-    line = models.ForeignKey(ApprovalLine,on_delete = models.CASCADE,
-                            # related_name='line_return'
-                            )
+    line = models.ForeignKey(ApprovalLine,on_delete = models.CASCADE)
     quantity = models.IntegerField(default = 0)
     weight = models.DecimalField(max_digits = 10,
                     decimal_places = 3,default =0.0)
@@ -149,37 +140,3 @@ class ApprovalLineReturn(models.Model):
             self.posted = False
             self.save(update_fields=['posted'])
             self.line.update_status()
-
-# class ApprovalReturn(models.Model):
-#
-#     created_at = models.DateTimeField(auto_now_add = True,editable = False)
-#     updated_at = models.DateTimeField(auto_now = True,editable = False)
-#     total_wt = models.DecimalField(max_digits=10,decimal_places=3,default =0)
-#     total_qty = models.IntegerField(default=0)
-#     approval = models.ForeignKey(Approval,
-#                                     on_delete = models.CASCADE)
-#
-#     class Meta:
-#         ordering = ('created_at',)
-#
-#     def __str__(self):
-#         return self.id
-#
-#     def get_absolute_url(self):
-#         return reverse('approval_approvalreturn_detail',args=(self.pk,))
-#
-#
-# class ApprovalReturnLine(models.Model):
-#     product = models.ForeignKey(Stree,
-#                                 on_delete=models.CASCADE)
-#     quantity = models.IntegerField(default=0)
-#     weight = models.DecimalField(max_digits=10,decimal_places=3,default = 0.0)
-#
-#     approvalreturn = models.ForeignKey(ApprovalReturn,
-#                                 on_delete = models.CASCADE)
-#
-#     class Meta:
-#         ordering = ('approvalreturn',)
-#
-#     def __str__(self):
-#         return self.id

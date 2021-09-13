@@ -1,13 +1,10 @@
 {% extends "_base.html" %}
-{% load static %}
 {%load bootstrap4%}
 {% block content %}
 <p>
     <a class="btn btn-primary" href="{% url 'product_stock_list' %}">Stock Listing</a>
     <a class="btn btn-primary" href="{% url 'product_stock_audit' %}">Stock Audit</a>
     <a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>
-
-
 </p>
 <div class="row">
     <div class="col-9">
@@ -23,7 +20,6 @@
                 <td>Quantity</td>
                 <td>updated_on</td>
                 <td>Status</td>
-        
             </tr>
             {% for object,bal in data.stock %}
             <tr>
@@ -37,14 +33,12 @@
                 <td>{{bal.qty}}</td>
                 <td>{{object.updated_on}}</td>
                 <td>{{object.status}}</td>
-        
             </tr>
             {% endfor %}
         </table>
     </div>
     <div class="col-3">
         <div class="sticky-top">
-
             {% if filter %}
             <div class="card  bg-light mb-3 text-center">
                 <div class="card-header">
@@ -61,7 +55,4 @@
         </div>
     </div>
 </div>
-
-
-
 {% endblock %}

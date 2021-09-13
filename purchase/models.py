@@ -175,15 +175,14 @@ class Invoice(models.Model):
                     content_object=self,desc='purchase')
 
             for i in self.purchaseitems.all():
-                i.post()
+                i.post(journal = jrnl)
             jrnl.transact()
             self.posted = True
             self.save(update_fields=['posted'])
        
     @transaction.atomic()
     def unpost(self):
-        if self.posted:
-            
+        if self.posted:  
             if self.balance>0:
                 jrnl = PurchaseJournal.objects.create(
                     content_object=self,desc='purchase revert')
@@ -191,7 +190,7 @@ class Invoice(models.Model):
                 jrnl = PaymentJournal.objects.create(
                     content_object=self,desc='purchase revert')
             for i in self.purchaseitems.all():
-                i.unpost()
+                i.unpost(journal = jrnl)
             jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields=['posted'])
@@ -230,39 +229,37 @@ class InvoiceItem(models.Model):
         return (self.weight * self.touch)/100
 
     @transaction.atomic()
-    def post(self):
+    def post(self,journal):
         if not self.is_return:
-                stock,created = Stock.objects.get_or_create(
+            stock,created = Stock.objects.get_or_create(
                     variant=self.product, tracking_type='Lot')
-                if created:
-                    stock.huid = self.huid
-                    attributes = get_product_attributes_data(
-                        self.product.product)
-                    purity = Attribute.objects.get(name='Purity')
-                    stock.melting = int(attributes[purity].name)
-                    stock.cost = self.touch
-                    stock.touch = stock.cost+2
-                    stock.wastage = 10
-                    stock.save()
-                stock.add(self.weight, self.quantity, self.invoice, 'P')
+            if created:
+                stock.huid = self.huid
+                attributes = get_product_attributes_data(
+                              self.product.product)
+                purity = Attribute.objects.get(name='Purity')
+                stock.melting = int(attributes[purity].name)
+                stock.cost = self.touch
+                stock.touch = stock.cost+2
+                stock.wastage = 10
+                stock.save()
+            stock.add(journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
         else:
             stock = Stock.objects.get(name=self.product.name,
                         tracking_type="Lot")
-            stock.remove(self.weight, self.quantity,
-                         self.invoice, 'PR')
+            stock.remove(journal = journal,weight = self.weight,quantity = self.quantity,activity_type = 'PR')
 
     @transaction.atomic()
-    def unpost(self):
+    def unpost(self,journal):
         if self.is_return:
             # add lot back to stock
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
-            stock.add(self.weight, self.quantity, self.invoice, 'P')
+            stock.add(journal = journal,weight = self.weight,quantity = self.quantity,activity_type = 'P')
         else:
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
-            stock.remove(self.weight, self.quantity,
-                cto=self.invoice,at='PR')
+            stock.remove(journal = journal,weight = self.weight,quantity = self.quantity,activity_type ='PR')
             
 class Payment(models.Model):
 

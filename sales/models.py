@@ -209,11 +209,12 @@ class Invoice(models.Model):
                 self.approval.is_billed = True
                 self.approval.save()
                 self.approval.update_status()
-            for i in self.saleitems.all():
-                i.post()
+            
             jrnl = SalesJournal.objects.create(
                     content_object = self, desc = 'sale')
                 # credit/cash cash/gold   
+            for i in self.saleitems.all():
+                i.post(jrnl)
             jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
@@ -221,22 +222,21 @@ class Invoice(models.Model):
     @transaction.atomic()   
     def unpost(self):
         if self.posted:
-            for i in self.saleitems.all():
-                i.unpost()
+            
             if self.approval:
                 self.approval.is_billed = False
                 for i in self.approval.items.all():
                     i.unpost()
-                    i.product.add(i.weight, i.quantity,
-                                    i, 'A')
+                    i.product.add(i.weight, i.quantity,i, 'A')
                     i.update_status()
                 self.approval.save()
                 self.approval.update_status()
                 
             jrnl = SalesJournal.objects.create(
                     content_object=self,
-                    desc='sale-revert'
-                )
+                    desc='sale-revert')
+            for i in self.saleitems.all():
+                i.unpost(jrnl)
                 # credit/cash cash/gold
 
             jrnl.transact(revert = True)
@@ -296,22 +296,20 @@ class InvoiceItem(models.Model):
     def save(self,*args,**kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)
         
-
-    def post(self):
+    def post(self,jrnl):
         
         if not self.is_return:#if sold
-            self.product.remove(self.weight,self.quantity,self.invoice,'S')
+            self.product.remove(self.weight,self.quantity,jrnl,'S')
         else:#if returned
-            self.product.add(self.weight,self.quantity,self.invoice,'SR')
+            self.product.add(self.weight,self.quantity,jrnl,'SR')
     
     @transaction.atomic()
-    def unpost(self):
+    def unpost(self,jrnl):
        
         if self.is_return:
-            self.product.remove(self.weight,self.quantity,self.invoice,'SR')
+            self.product.remove(self.weight,self.quantity,jrnl,'SR')
         else:   
-            self.product.add(self.weight,self.quantity,self.invoice,'SR')
-
+            self.product.add(self.weight,self.quantity,jrnl,'SR')
 
 class Receipt(models.Model):
 
@@ -321,8 +319,7 @@ class Receipt(models.Model):
     btype_choices=(
                 ("Cash","Cash"),
                 ("Gold", "Gold"),
-                ("silver", "Silver")
-            )
+                ("silver", "Silver"))
     type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
     rate= models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3,default = 0)
@@ -330,8 +327,7 @@ class Receipt(models.Model):
     status_choices=(
                     ("Allotted","Allotted"),
                     ("Partially Allotted","PartiallyAllotted"),
-                    ("Unallotted","Unallotted")
-    )
+                    ("Unallotted","Unallotted"))
     status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
     posted = models.BooleanField(default = False)
     is_active = models.BooleanField(default=True)
@@ -339,8 +335,7 @@ class Receipt(models.Model):
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE, related_name="receipts"
-    )
+        on_delete=models.CASCADE, related_name="receipts")
     
     class Meta:
         ordering = ('-created',)
@@ -392,9 +387,8 @@ class Receipt(models.Model):
 
         try:
             invtopay = Invoice.objects.filter(customer=self.customer,
-                                        balancetype=self.type,
-                                        posted = True).exclude(
-                                        status="Paid").order_by('created')
+                            balancetype=self.type,posted = True
+                            ).exclude(status="Paid").order_by('created')
         except IndexError:
             invtopay = None
 
@@ -411,24 +405,23 @@ class Receipt(models.Model):
                 i.status="PartiallyPaid"
                 remaining_amount=0
             i.save()
-        print('allotted receipt')
+        
         self.update_status()
     
     def post(self):
         if not self.posted:
             jrnl = ReceiptJournal.objects.create(
                 content_object = self,
-                desc = 'Receipt'
-                )
+                desc = 'Receipt')
             jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
+
     def unpost(self):
         if self.posted:
             jrnl = ReceiptJournal.objects.create(
                 content_object=self,
-                desc='Receipt-Revert'
-            )
+                desc='Receipt-Revert')
             jrnl.transact(revert = True)
             self.posted = False
             self.save(update_fields = ['posted'])

@@ -88,7 +88,10 @@
             <tr>
               <td>{{i.id}}</td>
               <td>{{i.activity_type}}</td>
-              <td><a href="url '' {{i.content_object}}">{{i.activity_type}}:{{i.content_object}}</a></td>
+              <td>
+                <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object%}">
+                  {{i.activity_type}}:{{i.journal}}</a>
+              </td>
               <td>{{i.weight}}</td>
               <td>{{i.quantity}}</td>
             </tr>

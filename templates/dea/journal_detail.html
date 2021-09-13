@@ -27,6 +27,12 @@
     </div>
     <div class="col-4">
         <h3>Stock Transaction</h3>
+        <ul>
+            {{i.stxns.all}}
+            {%for i in object.stxns.all%}
+            <li>{{i.stock}} {{i.activity_type}} wt:{{i.weight}} qty:{{i.quantity}}</li>
+            {%endfor%}
+        </ul>
     </div>
 </div>
 {%endblock%}

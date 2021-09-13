@@ -92,13 +92,13 @@ class ApprovalLine(models.Model):
             aggregate(t = Sum('weight'))['t'])
 
     def post(self):
-        self.product.remove(self.weight,self.quantity,self.approval,'A')
+        self.product.remove(self.weight,self.quantity,None,'A')
 
     def unpost(self):
         for i in self.approvallinereturn_set.all():
             i.unpost()
             i.delete()
-        self.product.add(self.weight, self.quantity, self.approval, 'AR')
+        self.product.add(self.weight, self.quantity, None, 'AR')
 
     def update_status(self):
         ret = self.approvallinereturn_set.filter(
@@ -130,13 +130,13 @@ class ApprovalLineReturn(models.Model):
 
     def post(self):
         if not self.posted:
-            self.line.product.add(self.weight, self.quantity, self, 'AR')
+            self.line.product.add(self.weight, self.quantity, None, 'AR')
             self.posted = True
             self.save(update_fields=['posted'])
             self.line.update_status()
     def unpost(self):
         if self.posted:
-            self.line.product.remove(self.weight, self.quantity, self, 'A')
+            self.line.product.remove(self.weight, self.quantity, None, 'A')
             self.posted = False
             self.save(update_fields=['posted'])
             self.line.update_status()

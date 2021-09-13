@@ -1,3 +1,4 @@
+from dea.models import Journal
 from decimal import Decimal
 from product.attributes import get_attributes_display_map, get_product_attributes_data
 from django_extensions.db.fields import AutoSlugField
@@ -15,8 +16,6 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel,TreeForeignKey
 from versatileimagefield.fields import PPOIField, VersatileImageField
 from .weight import WeightUnits, zero_weight
-from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from .managers import StockManager
 from utils.friendlyid import encode
 
@@ -436,7 +435,6 @@ class Stock(models.Model):
         
     def stock_out_txns(self,ls):
         # filter since last audit
-        
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte = ls.created)
@@ -444,14 +442,11 @@ class Stock(models.Model):
             activity_type__in=['PR', 'S', 'A', 'RM'])
         
         return st.aggregate(
-                            qty=Coalesce(
-                                Sum('quantity', output_field=models.IntegerField()), 0),
-                            wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0))
-                        )
+                    qty=Coalesce(Sum('quantity', output_field=models.IntegerField()), 0),
+                    wt=Coalesce(Sum('weight',output_field = models.DecimalField()), Decimal(0.0)))
 
     def current_balance(self):
         # compute cb from last audit and append following
-        
         bal = {}
         try:
             ls = self.stockstatement_set.latest()  
@@ -476,31 +471,20 @@ class Stock(models.Model):
             # check if sold then timedelta between created and last sales transaction
             # else timedelta between today and date created
 
-    def add(self,Wih,Qih,cto,at):
-        StockTransaction.objects.create(
-                        stock = self,
-                        weight = Wih,
-                        quantity = Qih,
-                        content_object = cto,
-                        activity_type=at
-                )
+    def add(self,weight,quantity,journal,activity_type):
+        print('came to create stxns')
+        StockTransaction.objects.create(journal = journal,
+            stock = self,weight = weight,quantity = quantity,activity_type=activity_type)
         self.update_status()
+        print('succeded')
 
-    def remove(self,weight,quantity,cto,at):
-        # cb = self.current_balance()
-        # if (cb['wt'] >= weight and cb['qty'] >= quantity):
+    def remove(self,weight,quantity,journal,activity_type):
         StockTransaction.objects.create(
+            journal = journal,
             stock=self,
-            weight=weight,
-            quantity=quantity,
-            content_object=cto,
-            activity_type=at
-        )
+            weight=weight,quantity=quantity,
+            activity_type=activity_type)
         self.update_status()
-            
-        # else:
-        #     print("error here")
-        #     raise Exception(f" qty/wt mismatch .hence exception")
 
     def split(self,weight):
         # split from stock:tracking_type::lot to unique
@@ -592,11 +576,13 @@ class StockTransaction(models.Model):
     stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
     # stock_batch = models.ForeignKey(StockBatch,null = True,blank = True,
     #                                 on_delete=models.CASCADE)
-    # is generic foreignkey required here? 
-    content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
-                                                        null=True,blank=True)
-    object_id=models.PositiveIntegerField(null=True,blank=True)
-    content_object=GenericForeignKey('content_type','object_id')
+    # is generic foreignkey required here? Ans : NO
+    # content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
+    #                                                     null=True,blank=True)
+    # object_id=models.PositiveIntegerField(null=True,blank=True)
+    # content_object=GenericForeignKey('content_type','object_id')
+    journal = models.ForeignKey(
+        Journal, on_delete=models.CASCADE, related_name='stxns')
 
     class Meta:
         ordering=('-created',)

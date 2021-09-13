@@ -1,5 +1,3 @@
-import decimal
-from django.db.models.expressions import Subquery
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from django.views.generic.base import TemplateView
 from .models import (Category, ProductType, Product, ProductVariant, Attribute,
@@ -10,8 +8,8 @@ from .forms import (CategoryForm, ProductTypeForm, ProductForm,
                      ProductImageForm, stockstatement_formset, VariantImageForm,StockForm,UniqueForm,
                      StockTransactionForm)
 from .filters import ProductFilter,ProductVariantFilter,StockFilter
-from django.shortcuts import get_object_or_404,redirect
-from django.urls import reverse,reverse_lazy
+from django.shortcuts import get_object_or_404,redirect, render
+from django.urls import reverse_lazy
 from django.template.response import TemplateResponse
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -219,46 +217,17 @@ class VariantImageUpdateView(LoginRequiredMixin,UpdateView):
     model = VariantImage
     form_class = VariantImageForm
 
-# def print_qr(self,request):
-#     node = get_object_or_404(Stree,pk = pk)
-#
-#     label_writer = Labelwriter("product/item_qr_template.html",
-#                                 default_stylesheets = ("style.css",))
-#     records = [
-#         dict(sample_id = node.barcode,sample_name=node.full_name)
-#     ]
-#     label_writer.write_labels(records,target='qrcode_and_date.pdf')
-
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
-from decimal import *
 def split_lot(request,pk):
-    # If this is a POST request then process the Form data
     stock = get_object_or_404(Stock,pk = pk)
     if request.method == 'POST':
-
-        # Create a form instance and populate it with data from the request (binding):
         form = UniqueForm(request.POST or None)
-
-        # Check if the form is valid:
         if form.is_valid():
-            # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
-            print(form)
-            print(form.cleaned_data)
             weight = form.cleaned_data['weight']
             stock.split(weight)
-
-            # redirect to a new URL:
-            return HttpResponseRedirect(reverse('product_stock_list') )
-
-    # If this is a GET (or any other method) create the default form.
+            return reverse_lazy('product_stock_list')
     else:
-        # form = UniqueForm(initial = {"parent":parent})
         form = UniqueForm(initial = {"stock":stock})
-
-    context = {
-        'form': form,
-    }
+    context = {'form': form,}
 
     return render(request, 'product/split_lot.html', context)
 
@@ -266,8 +235,7 @@ def merge_lot(request,pk):
     node = Stock.objects.get(id=pk)
     print(f"to merge node{node}")
     node.merge()
-
-    return HttpResponseRedirect(reverse('product_stock_list') )
+    return reverse_lazy('product_stock_list')
 
 def stock_list(request):
     context = {}
@@ -336,17 +304,15 @@ class StockStatementView(TemplateView):
         return self.render_to_response({'stockstatement_formset': formset})
 
     def post(self, *args, **kwargs):
-
         formset =stockstatement_formset(data=self.request.POST)
-
-        # Check if submitted forms are valid
         if formset.is_valid():
             formset.save()
             return redirect(reverse_lazy("stockstatement_list"))
 
         return self.render_to_response({'stockstatement_formset': formset})
+
 def audit_stock(request):
     stocks = Stock.objects.all()
     for i in stocks:
         i.audit()
-    return HttpResponseRedirect(reverse('product_stock_list'))
+    return reverse_lazy('product_stock_list')

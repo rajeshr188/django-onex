@@ -1,7 +1,4 @@
-from dea.models import (InterestPaidJournal,LoanGivenJournal,
-                        LoanTakenJournal,LoanReleaseJournal,
-                        LoanPaidJournal,Journal,
-                        InterestReceivedJournal)
+from dea.models import Journal,JournalTypes
 from django.urls import reverse
 from decimal import Decimal
 from django.db import models,transaction
@@ -14,6 +11,7 @@ import qrcode
 import qrcode.image.svg
 from qrcode.image.pure import PymagingImage
 from io import BytesIO
+from moneyed import Money
 # class Month(Func):
 #     function = 'EXTRACT'
 #     template = '%(function)s(MONTH from %(expressions)s)'
@@ -185,10 +183,8 @@ class Loan(models.Model):
     def noofmonths(self,date = datetime.datetime.now(timezone.utc)):
         cd = date #datetime.datetime.now()
         nom = (cd.year-self.created.year)*12 + cd.month - self.created.month
-        if(nom<=0):
-            return 1
-        else:
-            return nom -1
+        return 1 if nom<=0 else nom-1
+
     @property
     def get_qr(self):
         factory = qrcode.image.svg.SvgImage
@@ -198,6 +194,7 @@ class Loan(models.Model):
         img.save(stream)
         svg = stream.getvalue().decode()
         return svg 
+
     @property
     def is_released(self):
         return hasattr(self,'release')
@@ -245,46 +242,48 @@ class Loan(models.Model):
             self.customer.account
         except:
             self.customer.save()
-        
+        amount = Money(self.loanamount,'INR')
+        interest = Money(self.interest_amt(),'INR')
         if self.customer.type == 'Su':
-            l_jrnl = LoanTakenJournal.objects.create(content_object = self,                
-                                desc = 'Loan Taken')
-            l_jrnl.transact()
-            pi_jrnl = InterestPaidJournal.objects.create(content_object = self,
-                                desc ='Pay Interest')
-            pi_jrnl.transact()
-            
+            print (self.customer.type)
+            jrnl = Journal.objects.create(type = JournalTypes.LT,
+                content_object = self,desc = 'Loan Taken')
+            lt = [{'ledgerno': 'Loans', 'ledgerno_dr': 'Cash',
+                     'amount': amount},
+                    {'ledgerno': 'Cash', 'ledgerno_dr': 'Interest Paid',
+                      'amount': amount}, ]
+            at = [{'ledgerno': 'Loans', 'Xacttypecode': 'Dr', 'xacttypecode_ext': 'LT',
+                     'account': self.customer.account,'amount': amount},
+                    {'ledgerno': 'Interest Payable', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
+                              'account': self.customer.account, 'amount': amount}]
         else:
-            l_jrnl = LoanGivenJournal.objects.create(content_object=self,
-                                                     desc='Loan Given')
-            l_jrnl.transact()
-            pi_jrnl = InterestReceivedJournal.objects.create(content_object=self,
-                                                         desc='Interest Received')
-            pi_jrnl.transact()
-        
-        # create ledgerTrasaction
-        # create AccTransaction   
+            jrnl = Journal.objects.create(type = JournalTypes.LG,
+                content_object=self,desc = 'Loan Given')
+            lt = [{'ledgerno': 'Cash', 'ledgerno_dr': 'Loans & Advances',
+                     'amount':amount},
+                    {'ledgerno': 'Interest Received', 'ledgerno_dr': 'Cash',
+                     'amount': interest}, ]
+            at = [{'ledgerno': 'Loans & Advances', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LG',
+                    'account':self.customer.account,'amount':amount},
+                    {'ledgerno': 'Interest Received', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
+                    'account': self.customer.account, 'amount': interest}]
+        jrnl.transact(lt,at)
+         
         self.posted = True
         self.save(update_fields=['posted'])
 
     @transaction.atomic()
     def unpost(self):
         # delete journals if accounts and ledger not closed
+        last_jrnl = self.journals.latest()
         if self.customer.type == 'Su':
-            l_jrnl = LoanTakenJournal.objects.create(content_object=self,
-                                                     desc='Loan Taken Revert')
-            l_jrnl.transact(revert = True)
-            pi_jrnl = InterestPaidJournal.objects.create(content_object=self,
-                                                         desc='Pay Interest Revert')
-            pi_jrnl.transact(revert = True)
-
+            l_jrnl = Journal.objects.create(
+                content_object=self,desc='Loan Taken Revert')
         else:
-            l_jrnl = LoanGivenJournal.objects.create(content_object=self,
-                                                     desc='Loan Given Revert')
-            l_jrnl.transact(revert = True)
-            pi_jrnl = InterestReceivedJournal.objects.create(content_object=self,
-                                                             desc='Interest Received Revert')
-            pi_jrnl.transact(revert = True)
+            l_jrnl = Journal.objects.create(
+                content_object=self,desc='Loan Given Revert')
+        l_jrnl.untransact(last_jrnl)
+        # i_jrnl.untransact()
         self.posted = False
         self.save(update_fields = ['posted'])
     
@@ -352,25 +351,43 @@ class Release(models.Model):
         return self.loan.loanamount + self.interestpaid
     
     def post(self):
-        if self.loan.customer.type == 'Su':
-            jrnl = LoanPaidJournal.objects.create(content_object = self,
-                            desc = 'Loan Repaid')
-            jrnl.transact()
+        amount = Money(self.loan.loanamount, 'INR')
+        interest = Money(self.interestpaid, 'INR')
+        if self.customer.type == 'Su':
+            jrnl = Journal.objects.create(
+                content_object=self, desc='Loan Repaid')
+            lt = [{'ledgerno': 'Cash', 'ledgerno_dr': 'Loans',
+                     'amount': amount},
+                    {'ledgerno': 'Cash', 'ledgerno_dr': 'Interest Paid',
+                     'amount': amount}, ]
+            at = [{'ledgerno': 'Loans', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LP',
+                     'account': self.customer.account, 'amount': amount},
+                    {'ledgerno': 'Interest Payable', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
+                     'account': self.customer.account, 'amount': amount}]  
         else:
-            jrnl = LoanReleaseJournal.objects.create(content_object = self,
-                            desc = 'Loan Released')
-            jrnl.transact()
+            jrnl = Journal.objects.create(
+                content_object=self, desc='Loan Released')
+            lt = [{'ledgerno': 'Loans & Advances', 'ledgerno_dr': 'Cash',
+                     'amount': amount},
+                  {'ledgerno': 'Interest Received', 'ledgerno_dr': 'Cash',
+                      'amount': amount}, ]
+            at = [{'ledgerno': 'Loans & Advances', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'LR',
+                    'account': self.customer.account, 'amount': amount},
+                  {'ledgerno': 'Interest Received', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
+                   'account': self.customer.account, 'amount': interest}]
+        jrnl.transact(lt, at)
+        
         self.posted = True
         self.save(update_fields=['posted'])
 
     def unpost(self):
+        last_jrnl = self.journals.latest()
         if self.loan.customer.type == 'Su':
-            jrnl = LoanPaidJournal.objects.create(content_object=self,
-                                                  desc='Loan Repaid Revert')
-            jrnl.transact(revert = True)
+            jrnl = Journal.objects.create(
+                content_object=self,desc='Loan Repaid Revert')
         else:
-            jrnl = LoanReleaseJournal.objects.create(content_object=self,
-                                                     desc='Loan Released Revert')
-            jrnl.transact(revert = True)
+            jrnl = Journal.objects.create(
+                content_object=self,desc='Loan Released Revert')
+        jrnl.untransact(last_jrnl)
         self.posted = False
         self.save(update_fields='posted')

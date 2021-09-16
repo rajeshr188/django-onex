@@ -132,7 +132,7 @@ class Account(models.Model):
             return None
 
     def txns(self,since = None):    
-        if since is not None:
+        if since:
             return self.accounttransactions.filter(
                 created__gte = since
             )
@@ -317,12 +317,27 @@ class Ledger(MPTTModel):
         
         return bal
 
+
+class JournalTypes(models.TextChoices):
+    BJ = "Base Journal", "base journal"
+    LT = "Loan Taken", "Loan taken"
+    LG = "Loan Given", "Loan given"
+    LR = "Loan Released", "Loan released"
+    LP = "Loan Paid", "Loan paid"
+    IP = "Interest Paid", "Interest Paid"
+    IR = "Interest Received", "Interest Received"
+    SJ = "Sales", "Sales"
+    SR = "Sales Return", "Sales Return"
+    RC = "Receipt", "Receipt"
+    PJ = "Purchase", "Purchase"
+    PR = "Purchase Return", "Purchase Return"
+    PY = "Payment", "Payment"
+
 class Journal(models.Model):
 
     created = models.DateTimeField(auto_now_add =True)
-    base_type = managers.JournalTypes.BJ
-    type = models.CharField(max_length = 50,choices = managers.JournalTypes.choices,
-                        default = base_type)
+    type = models.CharField(max_length = 50,choices = JournalTypes.choices,
+                        default = JournalTypes.BJ)
     desc = models.TextField(blank = True,null = True)
     # Below the mandatory fields for generic relation
     content_type = models.ForeignKey(ContentType,
@@ -331,6 +346,9 @@ class Journal(models.Model):
     object_id = models.PositiveIntegerField(blank = True,null = True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    class Meta:
+        get_latest_by = ('id')
+
     def __str__(self):
         return self.desc
 
@@ -338,40 +356,40 @@ class Journal(models.Model):
         if self.content_type:
             return f"{self.content_type.app_label}_{self.content_type.model}_detail"
     
-    def save(self,*args,**kwargs):
-        if not self.id:
-            self.type = self.base_type
-        return super().save(*args,**kwargs)
-    # def get_at(self):
-    #     raise NotImplementedError
-    # def get_at(self):
-    #     raise NotImplementedError
-    def transact(self):
-        raise NotImplementedError
-
-    # @transaction.atomic()
-    # def transact(self,revert = False,lt = [],at=[]):
-        # for i in lt:
-            # if not revert:
-                # LedgerTransactions.objects.create_txn(ledgerno,ledgerno_dr,amount) 
-            # else:
-                # LedgerTransaction.object.create_txn(ledgerno_dr,ledgerno,amount)
-        # for i in at:
-            # if not revert:
-                # AccountTransactions.objects.create_txn(ledgerno,xactcode_Type,xactcode_ext ,account,amount) 
-            # else:
-                # if xactcode = 'Cr':
-                #     xactCode = 'Dr'
-                #     xactcode_ext = 'AC'
-                # elif xactcode = 'Dr':
-                #     xactcode = 'Cr'
-                #     xactcode_ext = 'DC' 
-                # AccountTransaction.object.create_txn()
+    @transaction.atomic()
+    def transact(self,lt=[],at=[]):
+        for i in lt:
+            LedgerTransaction.objects.create_txn(self,i['ledgerno'],i['ledgerno_dr'],i['amount']) 
+        for i in at:
+            AccountTransaction.objects.create_txn(self,i['ledgerno'],i['xacttypecode'],
+                i['xacttypecode_ext'] ,i['account'],i['amount']) 
+        
+    @transaction.atomic()
+    def untransact(self,last_jrnl):
+        if last_jrnl:
+            for i in last_jrnl.ltxns.all():
+                LedgerTransaction.objects.create_txn(self,i.ledgerno_dr,i.ledgerno,i.amount)
+            for i in last_jrnl.atxns.all():
+                xacttypecode =''
+                xacttypecode_ext=''
+                print(i.XactTypeCode.XactTypeCode)
+                if i.XactTypeCode.XactTypeCode == 'Cr':
+                    xacttypecode = 'Dr'
+                    xacttypecode_ext = 'AC'
+                else:
+                    xacttypecode = 'Cr'
+                    xacttypecode_ext = 'AD'
+                AccountTransaction.objects.create_txn(self,i.ledgerno,xacttypecode,
+                    xacttypecode_ext ,i.Account,i.amount)   
+        else:
+            print("No Last Journal to undo")
 
 class LedgerTransactionManager(models.Manager):
-    def create_txn(self,journal,ledgerno_dr,ledgerno,amount):
+    def create_txn(self,journal,ledgerno,ledgerno_dr,amount):
         dr = Ledger.objects.get(name = ledgerno_dr)
         cr = Ledger.objects.get(name = ledgerno)
+        print(f"cr:{cr}")
+        print(f"dr {dr}")
         txn = self.create(journal = journal,ledgerno = cr,ledgerno_dr=dr,amount = amount)
         return txn
 
@@ -438,394 +456,6 @@ class AccountTransaction(models.Model):
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
 
-# proxy models for all types of journals
-# all journals to be seperated into another file figure out how
-
-class LoanGivenJournal(Journal):
-    base_type = managers.JournalTypes.LG
-    objects = managers.LoanGivenJournalManager()
-    class Meta:
-        proxy = True
-    
-    # def get_lt(self):
-    #     return [{'ledgerno':'Cash','ledgerno_dr':'Loans & Advances',
-    #                 'amount':Money(self.content_object.loanamount,'INR')},
-    #                 ]
-    # def get_at(self):
-    #     return [{'ledgerno':'Loans & Advances','XactTypeCode':'Cr','XactTypeCode_ext':'LG',
-    #             'Account':self.content_object.account,
-    #             'amount':Money(self.content_object.loanamount,'INR')}]
-    @transaction.atomic()
-    def transact(self, revert = False):
-        account = self.content_object.customer.account
-        amount = Money(self.content_object.loanamount,"INR")
-        if not revert :
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Cash",
-                ledgerno_dr="Loans & Advances", amount=amount
-            )
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Loans & Advances", xacttypecode='Cr',
-                xacttypecode_ext='LG', account=account, amount=amount
-            )
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Loans & Advances",
-                ledgerno_dr="Cash", amount=amount
-            )
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Loans & Advances", xacttypecode='Dr',
-                xacttypecode_ext='AC', account=account, amount=amount
-            )
-        
-class LoanTakenJournal(Journal):
-    base_type = managers.JournalTypes.LT
-    objects = managers.LoanTakenJournalManager()
-
-    class Meta:
-        proxy = True
-
-    def get_lt(self):
-        return [{'ledgerno': 'Loans', 'ledgerno_dr': 'Cash',
-                 'amount': Money(self.content_object.loanamount, 'INR')},
-                ]
-
-    def get_at(self):
-        return [{'ledgerno': 'Loans', 'XactTypeCode': 'Dr', 'XactTypeCode_ext': 'LT',
-                'account': self.content_object.account,
-                 'amount': Money(self.content_object.loanamount, 'INR')}]
-    @transaction.atomic()
-    def transact(self,revert = True):
-        account = self.content_object.customer.account
-        amount = Money(self.content_object.loanamount,"INR")
-        if not revert:
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans',xacttypecode='Dr',xacttypecode_ext='LT',
-                account=account,amount=amount)
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans',ledgerno_dr='Cash',amount=amount)
-        else:
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans',xacttypecode='Cr',xacttypecode_ext='AD',
-                account=account,amount=amount)
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Cash',ledgerno_dr='Loans',amount=amount)
-       
-class InterestPaidJournal(Journal):
-    base_type = managers.JournalTypes.IP
-    objects = managers.InterestPaidJournalManager()
-    
-    class Meta:
-        proxy = True
-
-    @transaction.atomic()
-    def transact(self,revert = False):
-        account = self.content_object.customer.account
-        amount = Money(self.content_object.interest,'INR')
-
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Cash',
-                ledgerno_dr='Interest Paid', amount=amount)
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Interest Payable', xacttypecode='Cr',
-                xacttypecode_ext='IP', account=account, amount=amount)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Interest Paid',
-                ledgerno_dr='Cash', amount=amount)
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Interest Payable', xacttypecode='Dr',
-                xacttypecode_ext='AC', account=account, amount=amount)
-
-class InterestReceivedJournal(Journal):
-    base_type = managers.JournalTypes.IR
-    objects = managers.InterestReceivedJournalManager()
-
-    class Meta:
-        proxy = True
-
-    def transact(self,revert = False):
-        account= self.content_object.customer.account
-        interest = Money(self.content_object.interestdue(),'INR')
-        
-        if not revert :
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Interest Received',
-                ledgerno_dr='Cash', amount=interest)
-            AccountTransaction.objects.create_txn(
-                journal=self,ledgerno='Interest Received',
-                xacttypecode='Dr', xacttypecode_ext='IR',
-                account=account, amount=interest)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Cash',
-                ledgerno_dr='Interest Received', amount=interest)
-            AccountTransaction.objects.create_txn(
-                journal=self,ledgerno='Interest Received',
-                xacttypecode='Cr', xacttypecode_ext='AD',
-                account=account, amount=interest)
-
-class LoanReleaseJournal(Journal):
-    base_type = managers.JournalTypes.LR
-    objects = managers.LoanReleaseJournalManager()
-
-    class Meta:
-        proxy = True
-
-    @transaction.atomic()
-    def transact(self,revert = False):
-        account = self.content_object.customer.account
-        amount = Money(self.content_object.get_total(),"INR")
-
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans & Advances', ledgerno_dr='Cash', amount=amount)
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans & Advances', xacttypecode='Dr',
-                xacttypecode_ext='LR', account=account, amount=amount)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Cash', ledgerno_dr='Loan & Advances', amount=amount)
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans & Advances', xacttypecode='Cr',
-                xacttypecode_ext='AD', account=account, amount=amount)
-
-class LoanPaidJournal(Journal):
-    
-    base_type = managers.JournalTypes.LP
-    objects = managers.LoanRepayJournalManager()
-
-    class Meta:
-        proxy = True
-
-    @transaction.atomic()
-    def transact(self,revert = False):
-        account = self.content_object.customer.account
-        amount = self.content_object.get_total()
-
-        if not revert :
-            AccountTransaction.objects.create_txn(
-            journal=self,
-            ledgerno='Loans', XactTypeCode='Cr',
-            xacttypecode_ext='LP', account=account, amount=amount)
-
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Cash',
-                ledgerno_dr='Loans', amount=amount)
-        else:
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno='Loans', xacttypecode='Dr',
-                xacttypecode_ext='AC', account=account, amount=amount)
-
-            LedgerTransaction.objects.create_txn(
-                journal=self,ledgerno='Loans',
-                ledgerno_dr='Cash', amount=amount)
-
-class SalesJournal(Journal):
-    base_type = managers.JournalTypes.SJ
-    objects = managers.SalesJournalManager()
-
-    class Meta:
-        proxy = True
-
-    def transact(self,revert = False):
-       
-        account = self.content_object.customer.account
-        amount = self.content_object.balance
-        tax = self.content_object.get_gst()
-        balance_type = self.content_object.balancetype
-        inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
-        cogs = "GST COGS" if self.content_object.is_gst else "Non-GST COGS"
-                
-        if balance_type == 'Cash':
-            money = Money(amount, 'INR')
-        elif balance_type == 'Gold':
-            money = Money(amount, 'USD')
-        else:
-            money = Money(amount, 'AUD')
-
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno = 'Sales',ledgerno_dr = 'Sundry Debtors',amount = money)
-            LedgerTransaction.objects.create_txn(
-                    journal=self,
-                    ledgerno = inv,ledgerno_dr = cogs,amount = money)
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = "Output Igst", ledgerno_dr = "Sundry Debtors",amount = Money(tax,'INR'))
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = "Sales",xacttypecode = "Cr",
-                xacttypecode_ext = "CRSL",account = account,amount = amount)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Sundry Debtors", ledgerno_dr="Sales", amount=money)
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno=cogs, ledgerno_dr=inv, amount=money)
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Sundry Debtors", ledgerno_dr="Output Igst", amount=Money(tax, 'INR'))
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno="Sales", xacttypecode="Dr",
-                xacttypecode_ext="AC", account=account, amount=amount)
-
-class SaleReturnJournal(Journal):
-    base_type = managers.JournalTypes.SR
-    class Meta:
-        proxy = True
-
-class ReceiptJournal(Journal):
-    base_type = managers.JournalTypes.RC
-    objects = managers.ReceiptJournalManager()
-
-    class Meta:
-        proxy = True
-
-    def transact(self,revert = False):
-        account = self.content_object.customer.account
-        amount = self.content_object.total
-        balance_type = self.content_object.type
-        
-        if balance_type =='Cash':
-            money = Money(amount,'INR')
-        elif balance_type =='Gold':
-            money = Money(amount,'USD')
-        else:
-            money = Money(amount,'AUD')
-        
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Sundry Debtors',ledgerno_dr = 'Cash',amount = money)
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Sundry Debtors',XactTypeCode ='Cr',
-                XactTypeCode_ext ='RCT', Account = account,amount = money)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno='Cash', ledgerno_dr='Sundry Debtors', amount=money)
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Sundry Debtors',XactTypeCode = 'Cr',
-                XactTypeCode_ext ='AC', Account = account,amount = money)
-
-class PurchaseJournal(Journal):
-    base_type = managers.JournalTypes.PJ
-    purchase = managers.PurchaseJournalManager()
-
-    class Meta:
-        proxy =True
-
-    @transaction.atomic()
-    def transact(self,revert = False):
-        account = self.content_object.supplier.account
-        amount = self.content_object.balance
-        tax =  self.content_object.get_gst()
-        balance_type = self.content_object.balancetype
-        inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
-
-        if balance_type =='Cash':
-            money = Money(amount,'INR')
-        elif balance_type =='Gold':
-            money = Money(amount,'USD')
-        else:
-            money = Money(amount,'AUD')
-
-        # using perpetual inventory managent method
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = "Sundry Creditors",ledgerno_dr = inv,amount =money
-            )
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno =  "Sundry Creditors",ledgerno_dr = "Input Igst",amount = Money(tax,'INR')
-            )
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = "Sundry Creditors",xacttypecode = "Dr",
-                xacttypecode_ext = "CRPU",account = account,amount = money + Money(tax,'INR')
-            )
-            
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = inv, ledgerno_dr= "Sundry Creditors", amount=money
-            )
-            LedgerTransaction.objects.create_txn(
-                journal=self,
-                ledgerno= "Input Igst", ledgerno_dr='Sundry Creditors', amount=Money(tax,'INR')
-            )
-            AccountTransaction.objects.create_txn(
-                journal=self,
-                ledgerno= "Sundry Creditors", xacttypecode="Cr",
-                xacttypecode_ext="AD", account=account, amount=money + Money(tax,'INR')
-            )
-
-class PurchaseReturnJournal(Journal):
-    base_type = managers.JournalTypes.PR
-    objects = managers.PurchaseReturnJournalManager()
-    class Meta:
-        proxy = True
-
-class PaymentJournal(Journal):
-    base_type = managers.JournalTypes.PY
-    objects = managers.PaymentJournalManager()
-    class Meta:
-        proxy = True
-
-    @transaction.atomic()
-    def transact(self,revert = False):
-        account = self.content_object.supplier.account
-        amount = self.content_object.total
-        balance_type = self.content_object.type
-        
-        if balance_type == 'Cash':
-            money = Money(amount,'INR')
-        elif balance_type == 'Gold':
-            money = Money(amount,'USD')
-        else:
-            money = Money(amount,'AUD')
-        if not revert:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Cash',ledgerno_dr = 'Sundry Creditors',amount =money)
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Sundry Creditors',xacttypecode = 'Cr',
-                xacttypecode_ext = 'PYT',
-                account = account,amount = money)
-        else:
-            LedgerTransaction.objects.create_txn(
-                journal = self,
-                ledgerno='Sundry Creditors', ledgerno_dr='Cash', amount=money)
-            AccountTransaction.objects.create_txn(
-                journal = self,
-                ledgerno = 'Sundry Creditors',xacttypecode = 'Dr',
-                xacttypecode_ext = 'AC',
-                account = account,amount = money)
-
 # postgresql read-only-view
 class Ledgerbalance(models.Model):
     ledgerno = models.OneToOneField(Ledger,on_delete = models.DO_NOTHING,primary_key = True)
@@ -850,10 +480,7 @@ class Ledgerbalance(models.Model):
                 [i.ledgerbalance.get_currbal() 
                 for i in self.ledgerno.get_descendants(include_self = True)],Balance()
                 )
-        # print(descendants.get_currbal())
-        # return 0
-        # return sum(descendants)
-    
+
     def get_dr(self):
         return Balance(self.dr)
 

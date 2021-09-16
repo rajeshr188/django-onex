@@ -7,8 +7,9 @@ from product.models import Stock,StockTransaction
 from django.utils import timezone
 from django.db.models import Sum,Func,Q
 from datetime import timedelta,date
-from dea.models import Journal,SalesJournal,ReceiptJournal
+from dea.models import Journal,JournalTypes
 from invoice.models import PaymentTerm
+from moneyed import Money
 
 class Month(Func):
     function = 'EXTRACT'
@@ -120,6 +121,7 @@ class Invoice(models.Model):
 
     class Meta:
         ordering = ('-created',)
+        get_latest_by = ('id')
 
     def __str__(self):
         return f"{self.id}"
@@ -178,12 +180,7 @@ class Invoice(models.Model):
         self.net_wt = self.get_net_wt()
         self.save()
         
-
     def delete(self, *args, **kwargs):
-        # if self.posted and self.get_balance() != 0:
-        #     raise Exception("Cant delete sale if posted and unpaid")
-        # else:
-        #     super(Invoice, self).delete(*args, **kwargs)
         if self.approval:
             self.approval.is_billed = False
         super(Invoice, self).delete(*args, **kwargs)
@@ -210,19 +207,33 @@ class Invoice(models.Model):
                 self.approval.save()
                 self.approval.update_status()
             
-            jrnl = SalesJournal.objects.create(
+            jrnl = Journal.objects.create(type = JournalTypes.SJ,
                     content_object = self, desc = 'sale')
-                # credit/cash cash/gold   
+
+            inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
+            cogs = "GST COGS" if self.content_object.is_gst else "Non-GST COGS"
+            if self.balancetype == 'Cash':
+                money = Money(self.balance, 'INR')
+            elif self.balancetype == 'Gold':
+                money = Money(self.balance, 'USD')
+            else:
+                money = Money(self.balance, 'AUD')
+            tax = Money(self.get_gst(), 'INR')
+            lt = [{'ledgerno': 'sales', 'ledgerno_dr': 'Sundry Debtors', 'amount': money},
+                  {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': money},
+                  {'ledgerno': 'Output Igst', 'ledgerno_dr': 'Sundry Debtors', 'amount': tax}]
+            at = [{'ledgerno': 'sales', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'CRSL',
+                   'account': self.customer.account, 'amount': money + tax}]
+            jrnl.transact(lt,at)
             for i in self.saleitems.all():
                 i.post(jrnl)
-            jrnl.transact()
             self.posted = True
             self.save(update_fields = ['posted'])
         
     @transaction.atomic()   
     def unpost(self):
-        if self.posted:
-            
+        if self.posted: 
+            last_jrnl = self.journals.latest()
             if self.approval:
                 self.approval.is_billed = False
                 for i in self.approval.items.all():
@@ -232,18 +243,14 @@ class Invoice(models.Model):
                 self.approval.save()
                 self.approval.update_status()
                 
-            jrnl = SalesJournal.objects.create(
-                    content_object=self,
+            jrnl = Journal.objects.create(content_object=self,
                     desc='sale-revert')
+            jrnl.untransact(last_jrnl)
             for i in self.saleitems.all():
-                i.unpost(jrnl)
-                # credit/cash cash/gold
-
-            jrnl.transact(revert = True)
+                i.post(jrnl)
             self.posted = False
             self.save(update_fields = ['posted'])
-
-    
+  
 class InvoiceItem(models.Model):
     # Fields
     huid = models.CharField(max_length=6, null=True, blank=True,unique = True)
@@ -295,7 +302,8 @@ class InvoiceItem(models.Model):
 
     def save(self,*args,**kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)
-        
+
+    @transaction.atomic()   
     def post(self,jrnl):
         
         if not self.is_return:#if sold
@@ -349,15 +357,6 @@ class Receipt(models.Model):
     def get_update_url(self):
         return reverse('sales_receipt_update', args=(self.pk,))
 
-    # if not posted : delete/edit
-    #  if posted : !edit
-    #  if posted and paid : delete
-    #  if posted and unpaid : !delete
-    # def delete(self):
-    #     if self.posted and self.status != 'Allotted':
-    #         raise Exception("cant delete receipt if posted and unallotted")
-    #     else:
-    #         super(Receipt, self).delete()
     def deactivate(self):
         self.is_active = False
         self.save(update_fields=['is_active'])
@@ -410,19 +409,28 @@ class Receipt(models.Model):
     
     def post(self):
         if not self.posted:
-            jrnl = ReceiptJournal.objects.create(
-                content_object = self,
-                desc = 'Receipt')
-            jrnl.transact()
+            jrnl = Journal.objects.create(content_object = self,
+                type = JournalTypes.RC, desc = 'Receipt')
+            if self.type == 'Cash':
+                money = Money(self.total, 'INR')
+            elif self.type == 'Gold':
+                money = Money(self.total, 'USD')
+            else:
+                money = Money(self.total, 'AUD')
+            lt = [{'ledgerno': 'Sundry Debtors', 'ledgerno_dr': 'Cash', 'amount': money}]
+            at = [{'ledgerno': 'Sundry Debtors', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'RCT',
+                   'account': self.customer.account, 'amount': money}]
+            jrnl.transact(lt,at)
             self.posted = True
             self.save(update_fields = ['posted'])
 
     def unpost(self):
         if self.posted:
-            jrnl = ReceiptJournal.objects.create(
+            last_jrnl =- self.journals.latest()
+            jrnl = Journal.objects.create(
                 content_object=self,
                 desc='Receipt-Revert')
-            jrnl.transact(revert = True)
+            jrnl.untransact(last_jrnl)
             self.posted = False
             self.save(update_fields = ['posted'])
 

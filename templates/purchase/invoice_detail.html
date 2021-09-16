@@ -10,6 +10,15 @@
   {%endif%}
 
 </p>
+<div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+  {%if previous%}
+  <a href="{% url 'purchase_invoice_detail' previous.pk %}" type="button" class="btn btn-primary mr-2">Previous
+    {{previous.id}}</a>
+  {%endif%}
+  {%if next %}
+  <a href="{% url 'purchase_invoice_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.id}}</a>
+  {%endif%}
+</div>
 <div class="p-4 p-md-4 mb-2 text-white rounded bg-dark">
   
   <div class="row">
@@ -86,13 +95,8 @@
   {%endfor%}
 </table>
 {%endif%}
-<div class="btn-group justify-content-between" role="group" aria-label="Basic example">
-  {%if previous%}
-  <a href="{% url 'purchase_invoice_detail' previous.pk %}" type="button" class="btn btn-primary mr-2">Previous
-    {{previous.id}}</a>
-  {%endif%}
-  {%if next %}
-  <a href="{% url 'purchase_invoice_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.id}}</a>
-  {%endif%}
-</div>
+{%if object.journals%}
+{{object.journals.all}}
+{%endif%}
+
 {% endblock %}

@@ -63,6 +63,10 @@ class InvoiceForm(forms.ModelForm):
             ButtonHolder(Submit('submit', 'save'))      
         )
 
+class InvoiceUpdateForm(InvoiceForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout.fields[-1].value = "Save Changes"
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(
                 queryset=ProductVariant.objects.all(),

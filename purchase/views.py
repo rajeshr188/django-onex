@@ -10,7 +10,7 @@ from django.urls import reverse, reverse_lazy
 from .models import Invoice, InvoiceItem, Payment,PaymentLine
 from .tables import InvoiceTable,PaymentTable
 from .forms import (InvoiceForm,InvoiceItemForm, 
-                    InvoiceItemFormSet, PaymentForm,
+                    InvoiceItemFormSet, InvoiceUpdateForm, PaymentForm,
                     PaymentItemFormSet, PaymentLineForm,
                     )
 from .filters import InvoiceFilter, PaymentFilter
@@ -138,7 +138,7 @@ class InvoiceDetailView(DetailView):
 
 class InvoiceUpdateView(UpdateView):
     model = Invoice
-    form_class = InvoiceForm
+    form_class = InvoiceUpdateForm
 
     def get_context_data(self,**kwargs):
         data = super(InvoiceUpdateView,self).get_context_data(**kwargs)

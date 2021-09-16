@@ -1,5 +1,4 @@
 from django.urls import reverse
-
 from django.db import models,transaction
 from contact.models import Customer
 from product.models import ProductVariant
@@ -10,9 +9,9 @@ from django.db.models import Sum,Q,F
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
 from product.attributes import get_product_attributes_data
-from dea.models import Journal,PurchaseJournal,PaymentJournal
+from dea.models import Journal,JournalTypes
 from invoice.models import PaymentTerm
-
+from moneyed import Money
 # if not posted : delete/edit
 #  if posted : !edit
 #  delete any time
@@ -147,10 +146,6 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         
         self.due_date = self.created + timedelta(days=self.term.due_days)
-        # print(f"total:{self.total}")
-        # self.total = self.balance
-        # if self.total < 0:
-        #     self.status = "Paid"
         if self.is_gst:    
             self.total += self.get_gst()
 
@@ -167,31 +162,38 @@ class Invoice(models.Model):
             except:
                 self.supplier.save()
  
-            if self.balance >0 :
-                jrnl = PurchaseJournal.objects.create(
+            jrnl = Journal.objects.create(type = JournalTypes.PJ,
                     content_object=self,desc='purchase')
-            else:
-                jrnl = PaymentJournal.objects.create(
-                    content_object=self,desc='purchase')
+            
+            inv = "GST INV" if self.is_gst else "Non-GST INV"
 
+            if self.balancetype == 'Cash':
+                money = Money(self.balance, 'INR')
+            elif self.balancetype == 'Gold':
+                money = Money(self.balance, 'USD')
+            else:
+                money = Money(self.balance, 'AUD')
+            tax = Money(self.get_gst(), 'INR')
+            lt = [{'ledgerno':'Sundry Creditors','ledgerno_dr':inv,'amount':money},
+                  {'ledgerno':'Sundry Creditors', 'ledgerno_dr': 'Input Igst', 'amount': tax}, ]
+            at = [{'ledgerno':'Sundry Creditors','xacttypecode':'Dr','xacttypecode_ext':'CRPU',
+                    'account':self.supplier.account,'amount':money + tax}]
+            jrnl.transact(lt,at)
             for i in self.purchaseitems.all():
-                i.post(journal = jrnl)
-            jrnl.transact()
+                i.post(jrnl)
             self.posted = True
             self.save(update_fields=['posted'])
        
     @transaction.atomic()
     def unpost(self):
         if self.posted:  
-            if self.balance>0:
-                jrnl = PurchaseJournal.objects.create(
+            last_jrnl = self.journals.latest()
+            jrnl = Journal.objects.create(
                     content_object=self,desc='purchase revert')
-            else:
-                jrnl = PaymentJournal.objects.create(
-                    content_object=self,desc='purchase revert')
+            
+            jrnl.untransact(last_jrnl)
             for i in self.purchaseitems.all():
-                i.unpost(journal = jrnl)
-            jrnl.transact(revert = True)
+                i.unpost(jrnl)
             self.posted = False
             self.save(update_fields=['posted'])
         
@@ -276,15 +278,14 @@ class Payment(models.Model):
     status_choices = (("Allotted","Allotted"),
                         ("Partially Allotted","PartiallyAllotted"),
                         ("Unallotted","Unallotted"), )
-    status=models.CharField(max_length=18,choices=status_choices,default="Unallotted")
+    status=models.CharField(max_length=18,choices=status_choices,
+                    default="Unallotted")
     posted = models.BooleanField(default = False)
     is_active = models.BooleanField(default=True)
     journals = GenericRelation(Journal,related_query_name='payment_doc')
     # Relationship Fields
-    supplier = models.ForeignKey(
-        Customer,
-        on_delete=models.CASCADE, related_name="payments"
-    )
+    supplier = models.ForeignKey(Customer,
+        on_delete=models.CASCADE, related_name="payments")
 
     class Meta:
         ordering = ('-created',)
@@ -346,21 +347,29 @@ class Payment(models.Model):
 
     def post(self):
         if not self.posted:
-            jrnl = PaymentJournal.objects.create(
+            jrnl = Journal.objects.create(type = JournalTypes.PY,
                 content_object = self,
-                desc = 'payment'
-            )
-            jrnl.transact()
+                desc = 'payment')
+            if self.balance_type == 'Cash':
+                money = Money(self.total, 'INR')
+            elif self.balance_type == 'Gold':
+                money = Money(self.total, 'USD')
+            else:
+                money = Money(self.total, 'AUD')
+            lt = [{'ledgerno':'Cash','ledgerno_dr':'Sundry Creditors','amount':money}]
+            at = [{'ledgerno':'Sundry Creditors','xacttypecode':'Dr','xacttypecode_ext':'PYT',
+                    'account':self.supplier.account,'amount':money}]
+            jrnl.transact(lt,at)
             self.posted = True
             self.save(update_fields = ['posted'])
 
     def unpost(self):
         if self.posted:
-            jrnl = PaymentJournal.objects.create(
+            last_jrnl = self.journals.latest()
+            jrnl = Journal.objects.create(
                 content_object=self,
-                desc='payment'
-            )
-            jrnl.transact(revert = True)
+                desc='payment')
+            jrnl.untransact(last_jrnl)
             self.posted = False
             self.save(update_fields=['posted'])
 

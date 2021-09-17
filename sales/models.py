@@ -10,7 +10,7 @@ from datetime import timedelta,date
 from dea.models import Journal,JournalTypes
 from invoice.models import PaymentTerm
 from moneyed import Money
-
+from django.utils.translation import gettext_lazy as _
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -36,26 +36,26 @@ class SalesQueryset(models.QuerySet):
 
     def total(self):
         return self.aggregate(
-            cash=Sum('balance', filter=Q(balancetype='Cash')),
-            gold=Sum('balance', filter=Q(balancetype='Gold')),
-            silver=Sum('balance', filter=Q(balancetype='Silver')),
+            cash=Sum('balance', filter=Q(balancetype='INR')),
+            gold=Sum('balance', filter=Q(balancetype='USD')),
+            silver=Sum('balance', filter=Q(balancetype='AUD')),
         )
 
     def total_with_ratecut(self):
         return self.aggregate(
-            cash=Sum('balance', filter=Q(balancetype='Cash')),
+            cash=Sum('balance', filter=Q(balancetype='INR')),
             cash_g=Sum('balance', filter=Q(
-                balancetype='Cash', metaltype='Gold')),
+                balancetype='INR', metaltype='Gold')),
             cash_s=Sum('balance', filter=Q(
-                balancetype='Cash', metaltype='Silver')),
+                balancetype='INR', metaltype='Silver')),
             cash_g_nwt=Sum('net_wt', filter=Q(
-                balancetype='Cash', metaltype='Gold')),
+                balancetype='INR', metaltype='Gold')),
             cash_s_nwt=Sum('net_wt', filter=Q(
-                balancetype='Cash', metaltype='Silver')),
+                balancetype='INR', metaltype='Silver')),
 
 
-            gold=Sum('balance', filter=Q(balancetype='Gold')),
-            silver=Sum('balance', filter=Q(balancetype='Silver')),
+            gold=Sum('balance', filter=Q(balancetype='USD')),
+            silver=Sum('balance', filter=Q(balancetype='AUD')),
         )
     def today(self):
         return self.filter(created__date=date.today())
@@ -76,11 +76,11 @@ class Invoice(models.Model):
     total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
     discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-    btype_choices = (
-        ("Cash", "Cash"),
-        ("Gold", "Gold"),
-        ("Silver", "Silver")
-    )
+
+    class BType(models.TextChoices):
+        CASH = 'INR', _("Cash"),
+        GOLD = 'USD', _("Gold"),
+        SILVER = 'AUD', _("Silver")
     metal_choices = (
         ("Gold","Gold"),
         ("Silver","Silver")
@@ -93,7 +93,7 @@ class Invoice(models.Model):
     status = models.CharField(
         max_length=15, choices=status_choices, default="Unpaid")
     balancetype = models.CharField(
-        max_length=30, choices=btype_choices, default="Cash")
+        max_length=30, choices=BType.choices, default=BType.CASH)
     metaltype = models.CharField(
         max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
@@ -212,12 +212,7 @@ class Invoice(models.Model):
 
             inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
             cogs = "GST COGS" if self.content_object.is_gst else "Non-GST COGS"
-            if self.balancetype == 'Cash':
-                money = Money(self.balance, 'INR')
-            elif self.balancetype == 'Gold':
-                money = Money(self.balance, 'USD')
-            else:
-                money = Money(self.balance, 'AUD')
+            money = Money(self.balance, self.btype)
             tax = Money(self.get_gst(), 'INR')
             lt = [{'ledgerno': 'sales', 'ledgerno_dr': 'Sundry Debtors', 'amount': money},
                   {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': money},
@@ -324,11 +319,13 @@ class Receipt(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    btype_choices=(
-                ("Cash","Cash"),
-                ("Gold", "Gold"),
-                ("silver", "Silver"))
-    type = models.CharField(max_length=30,verbose_name='Currency',choices=btype_choices,default="Cash")
+
+    class BType(models.TextChoices):
+        CASH = 'INR', _("Cash"),
+        GOLD = 'USD', _("Gold"),
+        SILVER = 'AUD', _("Silver")
+    type = models.CharField(max_length=30,verbose_name='Currency',
+            choices=BType.choices,default= BType.CASH)
     rate= models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3,default = 0)
     description = models.TextField(max_length=50,default="describe here")
@@ -411,12 +408,8 @@ class Receipt(models.Model):
         if not self.posted:
             jrnl = Journal.objects.create(content_object = self,
                 type = JournalTypes.RC, desc = 'Receipt')
-            if self.type == 'Cash':
-                money = Money(self.total, 'INR')
-            elif self.type == 'Gold':
-                money = Money(self.total, 'USD')
-            else:
-                money = Money(self.total, 'AUD')
+            
+            money = Money(self.total, self.type)
             lt = [{'ledgerno': 'Sundry Debtors', 'ledgerno_dr': 'Cash', 'amount': money}]
             at = [{'ledgerno': 'Sundry Debtors', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'RCT',
                    'account': self.customer.account, 'amount': money}]

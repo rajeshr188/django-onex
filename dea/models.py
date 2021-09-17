@@ -317,7 +317,6 @@ class Ledger(MPTTModel):
         
         return bal
 
-
 class JournalTypes(models.TextChoices):
     BJ = "Base Journal", "base journal"
     LT = "Loan Taken", "Loan taken"

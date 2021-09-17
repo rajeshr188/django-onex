@@ -1,11 +1,10 @@
 from dea.models import Journal
 from decimal import Decimal
-from product.attributes import get_attributes_display_map, get_product_attributes_data
+from product.attributes import get_product_attributes_data
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.postgres.fields import HStoreField
-from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q,Sum
+from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.encoding import smart_text
@@ -24,9 +23,8 @@ class Category(MPTTModel):
     name = models.CharField(max_length=128,unique=True)
     slug = AutoSlugField(populate_from='name', blank=True)
     description = models.TextField(blank=True)
-    parent = TreeForeignKey(
-        'self', null=True, blank=True, related_name='children',
-        on_delete=models.CASCADE)
+    parent = TreeForeignKey('self', null=True, blank=True,
+            related_name='children',on_delete=models.CASCADE)
     background_image = VersatileImageField(
         upload_to='category-backgrounds', blank=True, null=True)
 
@@ -71,13 +69,14 @@ class ProductType(models.Model):
 
 class Product(models.Model):
     # tv ring,plate ring,dc chain,gc chain
-    product_type = models.ForeignKey(
-        ProductType, related_name='products', on_delete=models.CASCADE)
+    product_type = models.ForeignKey(ProductType, 
+                related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=128,unique = True)
     description = models.TextField()
-    category = models.ForeignKey(
-        Category, related_name='products', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, 
+                related_name='products', on_delete=models.CASCADE)
     attributes = HStoreField(default=dict, blank=True)
+    jattributes = models.JSONField(default = dict,blank = True,null = True)
 
     class Meta:
         app_label = 'product'
@@ -102,60 +101,34 @@ class Product(models.Model):
     def get_update_url(self):
         return reverse('product_product_update', args=(self.pk,))
 
-    # def get_slug(self):
-    #     return slugify(smart_text(unidecode(self.name)))
-
     def is_in_stock(self):
         return any(variant.is_in_stock() for variant in self)
 
     def get_first_image(self):
         images = list(self.images.all())
         return images[0].image if images else None
-    from .attributes import get_product_attributes_data
+
     def get_attributes(self):
         return get_product_attributes_data(self)
 
 class ProductVariant(models.Model):
     sku = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255,unique = True)
-    product = models.ForeignKey(
-        Product, related_name='variants', on_delete=models.CASCADE)
-
+    product = models.ForeignKey(Product, 
+                related_name='variants', on_delete=models.CASCADE)
     product_code = models.CharField(max_length=32,unique = True)
     attributes = HStoreField(default=dict, blank=True)
     jattributes = models.JSONField(default = dict)
     images = models.ManyToManyField('ProductImage', through='VariantImage')
-    # below fields not required?
-    track_inventory = models.BooleanField('Tracked',default=True)
-    quantity = models.IntegerField(
-        validators=[MinValueValidator(0)], default=Decimal(1))
-    quantity_allocated = models.IntegerField(
-        validators=[MinValueValidator(0)], default=Decimal(0))
-    
-
+ 
     class Meta:
         app_label = 'product'
 
     def __str__(self):
         return f"{self.name} {self.product_code}"
 
-    @property
-    def quantity_available(self):
-        return max(self.quantity - self.quantity_allocated, 0)
-
-    # def get_attributes(self):
-    #     return get_product_attributes_data(self)
-
-    # def check_quantity(self, quantity):
-    #     """Check if there is at least the given quantity in stock
-    #     if stock handling is enabled.
-    #     """
-    #     if self.track_inventory and quantity > self.quantity_available:
-    #          raise InsufficientStock(self)
-    # def get_weight(self):
-    #     return (
-    #         self.weight or self.product.weight or
-    #         self.product.product_type.weight)
+    def get_attributes(self):
+        return get_product_attributes_data(self.product)
 
     def get_bal(self):
         
@@ -186,10 +159,6 @@ class ProductVariant(models.Model):
 
     def get_update_url(self):
         return reverse('product_productvariant_update', args=(self.pk,))
-
-    
-    def is_in_stock(self):
-        return self.quantity_available > 0
 
     def display_product(self, translated=False):
         if translated:
@@ -273,8 +242,8 @@ class AttributeValue(models.Model):
         return self.attribute.values.all()
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(
-        Product, related_name='images', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, 
+            related_name='images', on_delete=models.CASCADE)
     image = VersatileImageField(
         upload_to='product/', ppoi_field='ppoi', blank=False)
     ppoi = PPOIField('Image PPOI')
@@ -345,32 +314,27 @@ class Stock(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     reorderat = models.IntegerField(default=1)
     barcode = models.CharField(max_length=6, null = True,
-                        blank=True, unique=True,editable = False)
+                blank=True, unique=True,editable = False)
     huid = models.CharField(max_length=6,null=True,blank=True,unique = True)
-    variant = models.ForeignKey(ProductVariant, 
-                                    on_delete=models.CASCADE,
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE,
                                     # related_name = 'stocks'
-                                    )
+            )
 
     # following atrributes are not in dnf  i.e duplkicates of variant
     melting = models.DecimalField(max_digits =10,decimal_places=3, default =100)
     cost = models.DecimalField(max_digits = 10,decimal_places = 3,default = 100)
     touch = models.DecimalField(max_digits =10,decimal_places =3,default = 0)
     wastage = models.DecimalField(max_digits =10 ,decimal_places =3,default = 0) 
-    tracking_type = models.CharField(choices = (
-                                            ('Lot','Lot'),('Unique','Unique')),
-                                            verbose_name='track_by',
-                                            null = True,max_length=10,
-                                            default = 'Lot') 
+    tracking_type = models.CharField(choices = (('Lot','Lot'),
+                    ('Unique','Unique')),verbose_name='track_by',
+                    null = True,max_length=10,default = 'Lot') 
     
     status = models.CharField(max_length=10,choices = (
-                                    ('Empty','Empty'),
-                                    ('Available','Available'),('Sold','Sold'),
-                                    ('Approval','Approval'),('Return','Return'),
-                                    ('Merged','Merged'),
-                                    ),
-                                    default = 'Empty')
+                ('Empty','Empty'),('Available','Available'),('Sold','Sold'),
+                ('Approval','Approval'),('Return','Return'),('Merged','Merged'),
+                ),default = 'Empty')
     objects = StockManager()
+    
     class Meta:
         ordering=('-created',)
         
@@ -490,8 +454,6 @@ class Stock(models.Model):
         # split from stock:tracking_type::lot to unique
         cb = self.current_balance()
         if self.tracking_type == "Lot" and cb['wt'] >= weight and cb['qty'] >1:
-            print('splitting')
-            
             uniq_stock = Stock.objects.create(variant = self.variant,
                     tracking_type = 'Unique')
             uniq_stock.barcode='je'+ str(uniq_stock.id)
@@ -509,7 +471,6 @@ class Stock(models.Model):
     def merge(self):
         # merge stock:tracking_type:unique to lot
         if self.tracking_type == "Unique":
-            print('merging')
             lot = Stock.objects.get(variant = self.variant,tracking_type = "Lot")
             cb=self.current_balance()
             lot.add(cb['wt'],cb['qty'],None,'AD')
@@ -559,30 +520,24 @@ class StockTransaction(models.Model):
     APPROVALRETURN = 'AR'
     REMOVE = 'RM'
     ADD = 'AD'
-    ACTIVITY_TYPES = (
-        (PURCHASE, 'Purchase'),
+    ACTIVITY_TYPES = ((PURCHASE, 'Purchase'),
         (PURCHASERETURN, 'Purchase Return'),
         (SALES, 'Sales'),
         (SALESRETURN, 'Sales Return'),
         (APPROVAL, 'Approval'),
         (APPROVALRETURN, 'Approval Return'),
         (REMOVE,'Remove'),
-        (ADD,'Add'),
-    )
+        (ADD,'Add'))
 
-    # user = models.ForeignKey(User)
+    # user = models.ForeignKey(CustomUser)
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES,default = "PURCHASE")
     #relational Fields
     stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
     # stock_batch = models.ForeignKey(StockBatch,null = True,blank = True,
     #                                 on_delete=models.CASCADE)
-    # is generic foreignkey required here? Ans : NO
-    # content_type=models.ForeignKey(ContentType,on_delete=models.CASCADE,
-    #                                                     null=True,blank=True)
-    # object_id=models.PositiveIntegerField(null=True,blank=True)
-    # content_object=GenericForeignKey('content_type','object_id')
-    journal = models.ForeignKey(
-        Journal, on_delete=models.CASCADE, related_name='stxns')
+    
+    journal = models.ForeignKey(Journal, on_delete=models.CASCADE, 
+                related_name='stxns')
 
     class Meta:
         ordering=('-created',)

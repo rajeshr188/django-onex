@@ -464,6 +464,7 @@ class Ledgerbalance(models.Model):
     ClosingBalance = ArrayField(MoneyValueField(null = True,blank = True))
     cr =ArrayField(MoneyValueField(null = True,blank = True))
     dr = ArrayField(MoneyValueField(null=True, blank=True))
+
     class Meta:
         managed = False
         db_table = 'ledger_balance'
@@ -485,5 +486,26 @@ class Ledgerbalance(models.Model):
 
     def get_cr(self):
         return Balance(self.cr)
+
+class Accountbalance(models.Model):
+    entity = models.CharField(max_length=30)
+    acc_type = models.CharField(max_length=30)
+    acc_name= models.CharField(max_length=50)
+    AccountNo = models.OneToOneField(
+        Account, on_delete=models.DO_NOTHING, primary_key=True)
+    created = models.DateTimeField()
+    TotalCredit = ArrayField(MoneyValueField(null=True, blank=True))
+    TotalDebit = ArrayField(MoneyValueField(null=True, blank=True))
+    ClosingBalance = ArrayField(MoneyValueField(null=True, blank=True))
+    cr = ArrayField(MoneyValueField(null=True, blank=True))
+    dr = ArrayField(MoneyValueField(null=True, blank=True))
+
+    class Meta:
+        managed = False
+        db_table = 'account_balance'
+
+    def get_currbal(self):
+        return Balance(self.ClosingBalance) + Balance(self.dr) - Balance(self.cr)
+    
 
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created

@@ -16,7 +16,6 @@ def get_name_from_attributes(variant, attributes):
     values = get_attributes_display_map(variant, attributes)
     return variant.product.name +'/'+generate_name_from_values(values)
 
-
 def get_attributes_display_map(obj, attributes):
     """Returns attributes associated with an object,
     as dict of Attribute: AttributeValue values.
@@ -31,7 +30,6 @@ def get_attributes_display_map(obj, attributes):
             choices = {str(a.pk): a for a in attribute.values.all()}
             display_map[attribute.pk] = choices[value]
     return display_map
-
 
 def generate_name_from_values(attributes_dict):
     """Generates name from AttributeValues. Attributes dict is sorted,

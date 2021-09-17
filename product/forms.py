@@ -1,15 +1,11 @@
 from django import forms
 from mptt.forms import TreeNodeChoiceField
-from tempus_dominus.widgets import  DateTimePicker
 from django.utils.translation import pgettext_lazy
-from .models import (Category, ProductType, Product, ProductVariant, Attribute,
-                    AttributeValue, ProductImage, VariantImage,Stock,
-                    StockTransaction,StockStatement)
-from django.shortcuts import get_object_or_404
+from .models import *
 from django.utils.encoding import smart_text
-from .attributes import get_name_from_attributes,get_product_attributes_data,generate_name_from_values
+from .attributes import *
 from django.utils.text import slugify
-from django_select2.forms import Select2Widget, ModelSelect2Widget, Select2MultipleWidget
+from django_select2.forms import Select2Widget,Select2MultipleWidget
 
 class ModelChoiceOrCreationField(forms.ModelChoiceField):
     """ModelChoiceField with the ability to create new choices.
@@ -17,7 +13,6 @@ class ModelChoiceOrCreationField(forms.ModelChoiceField):
     This field allows to select values from a queryset, but it also accepts
     new values that can be used to create new model choices.
     """
-
     def to_python(self, value):
         if value in self.empty_values:
             return None
@@ -28,15 +23,21 @@ class ModelChoiceOrCreationField(forms.ModelChoiceField):
             return value
         else:
             return obj
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ['name',  'description', 'parent']
 
-
 class ProductTypeForm(forms.ModelForm):
-    product_attributes=forms.ModelMultipleChoiceField(widget=forms.CheckboxSelectMultiple,queryset=Attribute.objects.all(),required=False)
-    variant_attributes=forms.ModelMultipleChoiceField(widget=forms.CheckboxSelectMultiple,queryset=Attribute.objects.all(),required=False)
+    product_attributes=forms.ModelMultipleChoiceField(
+            # widget=forms.CheckboxSelectMultiple,
+            widget = Select2MultipleWidget,
+            queryset=Attribute.objects.all(),required=False)
+    variant_attributes=forms.ModelMultipleChoiceField(
+        # widget=forms.CheckboxSelectMultiple,
+        widget = Select2MultipleWidget,
+        queryset=Attribute.objects.all(),required=False)
     class Meta:
         model = ProductType
         exclude = []
@@ -54,6 +55,7 @@ class ProductTypeForm(forms.ModelForm):
                 'Product type attributes',
                 'Attributes common to all variants'),
             }
+
     def clean(self):
         data = super().clean()
         has_variants = self.cleaned_data['has_variants']
@@ -73,12 +75,9 @@ class ProductTypeForm(forms.ModelForm):
 
         if not self.instance.pk:
             return data
-
         # self.check_if_variants_changed(has_variants)
         # self.update_variants_names(saved_attributes=variant_attr)
         return data
-
-
 
 class AttributesMixin:
     """Form mixin that dynamically adds attribute fields."""
@@ -131,8 +130,6 @@ class AttributesMixin:
         data['ja']=ja
         return data
 
-    
-
 class ProductForm(forms.ModelForm, AttributesMixin):
     category = TreeNodeChoiceField(
         queryset=Category.objects.all(),label=pgettext_lazy('Category', 'Category'))
@@ -147,7 +144,9 @@ class ProductForm(forms.ModelForm, AttributesMixin):
         self.available_attributes = (
             product_type.product_attributes.prefetch_related('values').all())
         self.prepare_fields_for_attributes()
-        # self.fields['attributes']=forms.ModelMultipleChoiceField(queryset=Attribute.objects.all())
+        self.fields['attributes']=forms.ModelMultipleChoiceField(
+            queryset=Attribute.objects.all(),widget = Select2MultipleWidget)
+
     def save(self, commit=True):
         attributes = self.get_saved_attributes()
         self.instance.attributes = attributes
@@ -161,20 +160,12 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
 
     class Meta:
         model = ProductVariant
-        fields = [
-            'sku',
-            'product_code',
-            'quantity','track_inventory']
+        fields = ['sku','product_code',]
         labels = {
             'sku': pgettext_lazy('SKU', 'SKU'),
             'quantity': pgettext_lazy('Integer number', 'Number in stock'),
             'cost_price': pgettext_lazy('Currency amount', 'Cost price'),
-            'track_inventory': pgettext_lazy(
-                'Track inventory field', 'Track inventory')}
-        help_texts = {
-            'track_inventory': pgettext_lazy(
-                'product variant handle stock field help text',
-                'Automatically track this product\'s inventory')}
+            }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -184,7 +175,6 @@ class ProductVariantForm(forms.ModelForm, AttributesMixin):
                 self.instance.product.product_type.variant_attributes.all()
                     .prefetch_related('values'))
             self.prepare_fields_for_attributes()
-
 
     def save(self, commit=True):
         data = self.get_saved_attributes()
@@ -199,18 +189,15 @@ class AttributeForm(forms.ModelForm):
         model = Attribute
         fields = [ 'name']
 
-
 class AttributeValueForm(forms.ModelForm):
     class Meta:
         model = AttributeValue
         fields = ['name', 'value',  'attribute']
 
-
 class ProductImageForm(forms.ModelForm):
     class Meta:
         model = ProductImage
         fields = [ 'alt']
-
 
 class VariantImageForm(forms.ModelForm):
     class Meta:
@@ -233,14 +220,11 @@ class StockTransactionForm(forms.ModelForm):
 class StockStatementForm(forms.Form):
     stock = forms.ModelChoiceField(
         queryset = Stock.objects.all(),
-        widget = Select2Widget
-    )
+        widget = Select2Widget)
 
     class Meta:
         model=StockStatement
         fields = ['stock','Closing_wt','Closing_qty']
-
-
-    
+ 
 stockstatement_formset = forms.modelformset_factory(StockStatement,
 fields = ("stock","Closing_qty","Closing_wt"),extra=1)

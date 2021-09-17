@@ -5,10 +5,10 @@ from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
 # Create your views here.
-from .models import Account, AccountStatement,Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
+from .models import Account, AccountStatement, Accountbalance,Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 from dea.utils.currency import Balance
-from moneyed import Money
+
 def home(request):
     lb = Ledgerbalance.objects.all()
     
@@ -139,8 +139,10 @@ class AccountCreateView(CreateView):
     form_class = AccountForm
 
 class AccountListView(ListView):
-    queryset = Account.objects.all().select_related('entity','AccountType_Ext','contact')
-    paginate_by = 10
+    # queryset = Account.objects.all().select_related('entity','AccountType_Ext','contact')
+    queryset = Accountbalance.objects.all()
+    template_name = 'dea/account_list.html'
+    # paginate_by = 10
 
 class AccountDetailView(DetailView):
     model = Account

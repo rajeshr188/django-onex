@@ -167,7 +167,6 @@ class Invoice(models.Model):
                     content_object=self,desc='purchase')
             
             inv = "GST INV" if self.is_gst else "Non-GST INV"
-
             money = Money(self.balance,self.balancetype)
             tax = Money(self.get_gst(), 'INR')
             lt = [{'ledgerno':'Sundry Creditors','ledgerno_dr':inv,'amount':money},
@@ -186,7 +185,6 @@ class Invoice(models.Model):
             last_jrnl = self.journals.latest()
             jrnl = Journal.objects.create(
                     content_object=self,desc='purchase revert')
-            
             jrnl.untransact(last_jrnl)
             for i in self.purchaseitems.all():
                 i.unpost(jrnl)

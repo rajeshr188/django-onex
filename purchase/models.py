@@ -55,7 +55,11 @@ class Invoice(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now, db_index=True)
-    last_updated = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='purchased')
     rate = models.DecimalField(max_digits=10, decimal_places=3)
     is_gst = models.BooleanField(default=False)
     posted = models.BooleanField(default=False)
@@ -261,7 +265,10 @@ class Payment(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now_add=True,editable = False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
 
     class BType(models.TextChoices):
         CASH = 'INR', _("Cash"),

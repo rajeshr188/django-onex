@@ -41,7 +41,7 @@ class InvoiceResource(resources.ModelResource):
 class InvoiceAdmin(ImportExportActionModelAdmin):
     form = InvoiceAdminForm
     resource_class = InvoiceResource
-    list_display = ['id', 'created', 'last_updated', 'rate', 'balancetype', 'balance', 'status']
+    list_display = ['id', 'created', 'updated', 'rate', 'balancetype', 'balance', 'status']
 
 admin.site.register(Invoice, InvoiceAdmin)
 
@@ -75,14 +75,14 @@ class ReceiptResource(resources.ModelResource):
                             widget = CustomDecimalWidget())
     class Meta:
         model = Receipt
-        fields=('id','customer','created','last_updated','type','total','description','status')
+        fields=('id','customer','created','updated','type','total','description','status')
         skip_unchanged = True
         report_skipped = False
 
 class ReceiptAdmin(ImportExportActionModelAdmin):
     form = ReceiptAdminForm
     resource_class = ReceiptResource
-    list_display = ['id','customer','created', 'last_updated', 'type', 'total', 'description','status']
+    list_display = ['id','customer','created', 'updated', 'type', 'total', 'description','status']
 
 
 admin.site.register(Receipt, ReceiptAdmin)

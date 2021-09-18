@@ -11,6 +11,7 @@ from dea.models import Journal,JournalTypes
 from invoice.models import PaymentTerm
 from moneyed import Money
 from django.utils.translation import gettext_lazy as _
+
 class Month(Func):
     function = 'EXTRACT'
     template = '%(function)s(MONTH from %(expressions)s)'
@@ -67,7 +68,11 @@ class SalesQueryset(models.QuerySet):
 class Invoice(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now, db_index=True)
-    last_updated = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now_add=True,editable = False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+         null=True,blank = True,
+        related_name = 'sold')
     rate = models.DecimalField(max_digits=10, decimal_places=3,default=0)
     is_gst = models.BooleanField(default=False)
     posted = models.BooleanField(default=False)
@@ -318,7 +323,10 @@ class Receipt(models.Model):
 
     # Fields
     created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
 
     class BType(models.TextChoices):
         CASH = 'INR', _("Cash"),

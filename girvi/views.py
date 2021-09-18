@@ -8,11 +8,10 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Count,Sum,Q,Prefetch,F,Max
 from django.db.models.functions import Coalesce,ExtractYear,ExtractMonth
 
-from .models import License, LoanStatement, Series, Loan, Release, Adjustment
-from .forms import (LicenseForm, LoanForm, ReleaseForm,Release_formset
-                    ,Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm,
-                    PhysicalStockForm,
-                    SeriesForm)
+from .models import *
+from .forms import (LicenseForm, LoanForm, ReleaseForm,
+                    Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm,
+                    PhysicalStockForm,SeriesForm)
 from .tables import LoanTable,ReleaseTable
 from .filters import LoanFilter,ReleaseFilter,AdjustmentFilter,LoanStatementFilter
 from contact.models import Customer
@@ -120,7 +119,7 @@ def activate_series(request,pk):
     s = get_object_or_404(Series,pk = pk)
     s.activate()
     return redirect('girvi_loan_list')
-from dateutil import relativedelta
+
 @login_required
 def home(request):
     data = dict()
@@ -268,7 +267,8 @@ def bulk_release(request):
                                             releaseid=releaseid,
                                             loan=l,
                                             created = date,#datetime.now(timezone.utc),
-                                            interestpaid =  l.interestdue(date)
+                                            interestpaid =  l.interestdue(date),
+                                            created_by = request.user
                                             )
                     success.append(l)
                 except IntegrityError:
@@ -287,6 +287,7 @@ def bulk_release(request):
 
 def bulk_release_detail(request):
     return render(request,'girvi/bulk_release_detail.html')
+
 def physical_stock(request):
     if request.method == 'POST':
         form = PhysicalStockForm(request.POST)
@@ -311,6 +312,7 @@ def physical_list(request):
     filter = LoanStatementFilter(request.GET,queryset = physically_available)
 
     return render(request,'girvi/physicallist.html',{'filter':filter})
+
 class LoanYearArchiveView(LoginRequiredMixin,YearArchiveView):
     queryset = Loan.unreleased.all()
     date_field = "created"
@@ -420,13 +422,17 @@ class LoanCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
                 'created':ld,
             }
 
-def post_loan(request,pk):
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+def post_loan(pk):
     loan = get_object_or_404(Loan, pk=pk)
     if not loan.posted:
         loan.post()
     return redirect(loan)
 
-def unpost_loan(request, pk):
+def unpost_loan(pk):
     loan = get_object_or_404(Loan, pk=pk)
     if loan.posted:
         loan.unpost()
@@ -482,10 +488,15 @@ class AdjustmentCreateView(LoginRequiredMixin,CreateView):
     model = Adjustment
     form_class = AdjustmentForm
     success_url = 'girvi_loan_detail'
+
     def get_initial(self):
         if self.kwargs:
             loan=Loan.objects.get(id=self.kwargs['pk'])
             return {'loan':loan,}
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 class AdjustmentUpdateView(LoginRequiredMixin,UpdateView):
     model = Adjustment
@@ -510,6 +521,10 @@ class ReleaseCreateView(LoginRequiredMixin,CreateView):
         if self.kwargs:
             loan=Loan.objects.get(id=self.kwargs['pk'])
             return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 class ReleaseDetailView(LoginRequiredMixin,DetailView):
     model = Release

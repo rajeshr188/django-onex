@@ -44,6 +44,11 @@ from django.utils import timezone
 class Customer(models.Model):
 
     # Fields
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    updated = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
     name = models.CharField(max_length=255)
     firstname = models.CharField(max_length =255,blank = True)
     lastname = models.CharField(max_length =255,blank = True)
@@ -55,8 +60,6 @@ class Customer(models.Model):
                                 ('Christian','Christian'),('Atheist','Atheist')
                                 ),default = 'Hindu' )
     pic = models.ImageField(upload_to='contacts/customer/pic/',null=True,blank=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
     phonenumber = models.CharField(max_length=15,default='911',verbose_name='Phone No')
     Address = models.TextField(max_length=100,blank=True)
     ctype = (('Wh','Wholesale'),('Re','Retail'),('Su','Supplier'))

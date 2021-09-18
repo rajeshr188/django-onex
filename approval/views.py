@@ -98,6 +98,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
 
     @transaction.atomic()
     def form_valid(self,form,approvalline_form):
+        form.instance.created_by = self.request.user
         self.object = form.save()
         approvalline_form.instance = self.object
         items = approvalline_form.save()
@@ -108,9 +109,7 @@ class ApprovalCreateView(LoginRequiredMixin,CreateView):
             wt +=i.weight
         self.object.total_wt = wt
         self.object.total_qty =qty
-        self.object.save(update_fields = ['total_wt','total_qty'])
-
-            
+        self.object.save(update_fields = ['total_wt','total_qty'])   
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,approvalline_form):

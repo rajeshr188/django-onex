@@ -19,8 +19,8 @@ class CustomerAdminForm(forms.ModelForm):
 class CustomerAdmin(ImportExportActionModelAdmin):
     form = CustomerAdminForm
     resource_class=CustomerResource
-    list_display = ['name', 'id', 'created', 'last_updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
-    readonly_fields = ['name', 'id', 'created', 'last_updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
+    list_display = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
+    readonly_fields = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
 
 admin.site.register(Customer, CustomerAdmin)
 

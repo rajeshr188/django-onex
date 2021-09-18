@@ -22,6 +22,7 @@ class CompanyCreateView(SuccessMessageMixin,CreateView):
 
     @transaction.atomic()
     def form_valid(self, form):
+        # form.instance.created_by = self.request.user
         response = super(CompanyCreateView, self).form_valid(form)
         # do something with self.object
         owner = CompanyOwner.objects.create(company = self.object,user = self.request.user)

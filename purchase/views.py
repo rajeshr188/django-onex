@@ -118,6 +118,7 @@ class InvoiceCreateView(CreateView):
         context = self.get_context_data()
         items = context['items']
         with transaction.atomic():
+            form.instance.created_by = self.request.user
             self.object = form.save()
             if items.is_valid():
                 items.instance = self.object
@@ -231,6 +232,7 @@ class PaymentCreateView(CreateView):
             return self.form_invalid(form, paymentitem_form)
 
     def form_valid(self, form, paymentitem_form):
+        form.instance.created_by = self.request.user
         self.object = form.save()
         paymentitem_form.instance = self.object
         paymentitem_form.save()

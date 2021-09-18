@@ -15,7 +15,7 @@ class LicenseAdminForm(forms.ModelForm):
 
 class LicenseAdmin(admin.ModelAdmin):
     form = LicenseAdminForm
-    list_display = ['name', 'id', 'created', 'last_updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
+    list_display = ['name', 'id', 'created', 'updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
 
 admin.site.register(License, LicenseAdmin)
 admin.site.register(Series)
@@ -43,18 +43,15 @@ class LoanAdminForm(forms.ModelForm):
         model = Loan
         fields = '__all__'
 
-
 class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
-    list_display = ['id','loanid','customer','series','created', 'last_updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
+    list_display = ['id','loanid','customer','series','created', 'updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
 
 admin.site.register(Loan, LoanAdmin)
 
 class ReleaseResource(resources.ModelResource):
-    # customer=fields.Field(column_name='customer',
-    #                         attribute='customer',
-    #                         widget=ForeignKeyWidget(Customer,'pk'))
+
     loan=fields.Field(column_name='loan',
                             attribute='loan',
                             widget=ForeignKeyWidget(Loan,'pk'))
@@ -68,11 +65,10 @@ class ReleaseAdminForm(forms.ModelForm):
         model = Release
         fields = '__all__'
 
-
 class ReleaseAdmin(ImportExportModelAdmin):
     form = ReleaseAdminForm
     resource_class=ReleaseResource
 
-    list_display = ['releaseid','loan','created', 'last_updated', 'interestpaid']
+    list_display = ['releaseid','loan','created', 'updated', 'interestpaid']
 
 admin.site.register(Release, ReleaseAdmin)

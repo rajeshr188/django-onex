@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
+
 @login_required
 def home(request):
     data = dict()
@@ -49,6 +50,10 @@ class CustomerCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
             cleaned_data,
             calculated_field=self.object,
         )
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 def reallot_receipts(request,pk):
     customer = Customer.objects.get(pk = pk)

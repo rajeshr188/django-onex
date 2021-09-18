@@ -10,7 +10,6 @@ from django_filters.views import FilterView
 from .filters import InvoiceFilter,ReceiptFilter
 from .render import Render
 from num2words import num2words
-from django.db.models import DecimalField
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
 from django.db.models.functions import Coalesce,TruncMonth,TruncYear
 from django.shortcuts import render,redirect
@@ -229,6 +228,7 @@ class InvoiceCreateView(CreateView):
         context = self.get_context_data()
         items = context['items']
         with transaction.atomic():
+            form.instance.created_by = self.request.user
             self.object = form.save()
             if items.is_valid():
                 items.instance = self.object
@@ -343,6 +343,7 @@ class ReceiptCreateView(CreateView):
             return self.form_invalid(form, receiptitem_form)
 
     def form_valid(self, form, receiptitem_form):
+        form.instance.created_by = self.request.user
         self.object = form.save()
         receiptitem_form.instance = self.object
         receiptitem_form.save()

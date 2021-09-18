@@ -67,7 +67,7 @@ class License(models.Model):
     # Fields
     name = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
+    updated = models.DateTimeField(auto_now=True, editable=False)
     lt=(('PBL','Pawn Brokers License'),
         ('GST','Goods & Service Tax'))
     type = models.CharField(max_length=30,choices=lt,default='PBL')
@@ -137,10 +137,13 @@ class Series(models.Model):
 class Loan(models.Model):
 
     # Fields
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
     lid = models.IntegerField(blank=True,null=True)
     loanid = models.CharField(max_length=255,unique=True)
-    created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
     itype=(
             ('Gold','Gold'),
             ('Silver','Silver'),
@@ -156,9 +159,7 @@ class Loan(models.Model):
     series = models.ForeignKey(Series,on_delete = models.CASCADE,
         blank=True,null = True,)
     customer = models.ForeignKey(
-        Customer,
-        on_delete=models.CASCADE,
-    )
+        Customer,on_delete=models.CASCADE)
     posted = models.BooleanField(default = False)
     journals = GenericRelation(Journal,related_query_name='loan_doc')
 
@@ -296,6 +297,9 @@ class Loan(models.Model):
         
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add = True)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
     amount_received = models.IntegerField(default =0)
     as_interest = models.BooleanField(default = True)
     loan = models.ForeignKey('girvi.Loan',on_delete = models.CASCADE,
@@ -313,6 +317,9 @@ class Adjustment(models.Model):
 
 class LoanStatement(models.Model):
     created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null = True,blank = True)
     loan = models.ForeignKey(Loan,on_delete=models.CASCADE)
 
     def __str__(self):
@@ -321,9 +328,12 @@ class LoanStatement(models.Model):
 class Release(models.Model):
 
     # Fields
-    releaseid = models.CharField(max_length=255,unique=True)
     created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
+    updated = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
+    releaseid = models.CharField(max_length=255,unique=True)
     interestpaid = models.IntegerField(default=0)
     posted = models.BooleanField(default = False)
     # Relationship Fields

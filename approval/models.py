@@ -10,6 +10,8 @@ class Approval(models.Model):
                 editable = False)
     updated_at = models.DateTimeField(auto_now = True,
                 editable = False)
+    created_by = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE,
+                    null=True,blank = True)
     contact  = models.ForeignKey(Customer,
                 related_name = 'contact',on_delete = models.CASCADE)
     total_wt = models.DecimalField(max_digits=10,
@@ -113,9 +115,11 @@ class ApprovalLine(models.Model):
         self.save()
         self.approval.update_status()
 
-
 class ApprovalLineReturn(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
+    created_by = models.ForeignKey(
+        'users.CustomUser', on_delete=models.CASCADE,
+        null=True, blank=True)
     line = models.ForeignKey(ApprovalLine,on_delete = models.CASCADE)
     quantity = models.IntegerField(default = 0)
     weight = models.DecimalField(max_digits = 10,

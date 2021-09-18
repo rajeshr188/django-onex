@@ -14,8 +14,10 @@ class Company(models.Model):
         through='Membership',
         through_fields=('company', 'user'),
     )
+    
     class Meta:
         ordering = ['name']
+
     def __str__(self):
         return f"{self.name} {self.address}"
 
@@ -39,7 +41,4 @@ class Membership(models.Model):
     #     related_name="membership_invites",
     # )
     # invite_reason = models.CharField(max_length=64)
-
-class Workspace(models.Model):
-    user = models.OneToOneField(CustomUser,on_delete = models.CASCADE)
-    company = models.OneToOneField(Company,on_delete = models.CASCADE)
+ 

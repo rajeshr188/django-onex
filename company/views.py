@@ -1,5 +1,5 @@
 from django.contrib.messages.views import SuccessMessageMixin
-from company.forms import CompanyForm, WorkspaceForm,MembershipForm
+from company.forms import CompanyForm,MembershipForm
 from company.models import Company,CompanyOwner,Membership
 from django.shortcuts import render
 from django.views.generic import ListView,DetailView,CreateView, DeleteView
@@ -17,7 +17,7 @@ class CompanyOwnerListView(ListView):
 class CompanyCreateView(SuccessMessageMixin,CreateView):
     model = Company
     form_class = CompanyForm
-    success_url = reverse_lazy('company_list')
+    success_url = reverse_lazy('membership_list')
     success_message = 'Company Created Successfully'
 
     @transaction.atomic()
@@ -41,26 +41,12 @@ class MembershipListView(ListView):
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
 
-def select_company(request):
-    # if request.user is admin or member of pk
-    # change workspace to pk
-    # else do nothing
-    user = request.user
-    if request.method == 'POST':
-        
-        form = WorkspaceForm(user,request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-    else:
-        form = WorkspaceForm(user)
-    
-    return render(request, 'company/set_workspace.html', {'form': form})
-def change_company(request,pk):
+def change_workspace(request,pk):
     company = Company.objects.get(id=pk)
-    request.user.workspace.company = company
-    request.user.workspace.save()
-    return render(request,'company/company_list.html')
+    request.user.workspace = company
+    request.user.save()
+    return redirect('/')
+
 def add_member(request):
     user = request.user
     if request.method =='POST':

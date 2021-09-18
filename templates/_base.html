@@ -36,16 +36,14 @@
           </li>
           {% if user.is_authenticated %}
           <div class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Workspace -{{user.workspace.company.name}}</a>
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{user.workspace.name}}</a>
             <div class="dropdown-menu">
               {%for i in user.company_set.all%}
                 <div class="dropdown-item">
-                  <a href="{% url 'workspace_change_company' i.id%}">{{i.name}}</a>
+                  <a href="{% url 'company_change_workspace' i.id%}">{{i.name}}</a>
                 </div>
               {%endfor%}
-              
-            </div>
-            
+            </div> 
           </div>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
@@ -54,18 +52,12 @@
               <a href="{% url 'company_owned_list' %}" class="dropdown-item">Company List</a>
               <div class="dropdown-divider"></div>
               <a href="{% url 'membership_list' %}" class="dropdown-item">membership List</a>
-              <div class="dropdown-divider"></div>
-              <a href="{% url 'company_create' %}" class="dropdown-item">Add Company</a>
-              <div class="dropdown-divider"></div>
             </div>
-
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="{% url 'contact_home' %}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Contact</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'contact_home' %}">Contact</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'contact_customer_create' %}">Add Customer</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'contact_customer_list' %}">Customer List</a>
             </div>
@@ -83,8 +75,6 @@
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'product_stock_list' %}">Stock</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'product_stocktransaction_list' %}">Stock Transactions</a>
-                <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'product_stockstatement_list' %}">Stock Statement</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'product_stockstatement_add' %}">Add Physical Statement</a>
@@ -99,11 +89,7 @@
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'girvi_release_list'%}">Release</a>
               <div class="dropdown-divider"></div>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{%url 'bulk_release'%}">Bulk Release</a>
               <a class="dropdown-item" href="{%url 'girvi_license_list'%}">License</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#">Ledger</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{%url 'loan_archive' %}">Archive</a>
               <div class="dropdown-divider"></div>
@@ -118,12 +104,8 @@
             <a class="nav-link dropdown-toggle" href="{% url 'sales_home'%}"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sales</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'sales_home' %}">Home</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'sales_invoice_create' %}">Add Invoice</a>
-              <div class="dropdown-divider"></div>
+              <div class="dropdown-divider"></div> 
               <a class="dropdown-item" href="{% url 'sales_invoice_list' %}">Invoice List</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'sales_receipt_create' %}">Add Receipt</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'sales_receipt_list' %}">Receipt List</a>
               <div class="dropdown-divider"></div>
@@ -149,11 +131,7 @@
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'purchase_home'%}">Home</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'purchase_invoice_create'%}">Add Purchase</a>
-              <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'purchase_invoice_list'%}">Purchase List</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'purchase_payment_create'%}">Payment</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'purchase_payment_list'%}">Payment List</a>
               <div class="dropdown-divider"></div>
@@ -173,9 +151,7 @@
           <li class="nav-item active">
             <a class="nav-link" href="{% url 'daybook' %}">Daybook <span class="sr-only">(current)</span></a>
           </li>
-          
           {% endif %}
-         
         </ul>
 
         {% if user.is_authenticated %}

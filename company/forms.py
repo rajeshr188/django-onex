@@ -1,5 +1,5 @@
 from django import forms
-from .models import Company, Membership, Workspace
+from .models import Company, Membership
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
 
@@ -24,21 +24,21 @@ class CompanyForm(forms.ModelForm):
             Submit('submit','Submit')
         )
 
-class WorkspaceForm(forms.ModelForm):
+# class WorkspaceForm(forms.ModelForm):
 
-    def __init__(self,user,*args, **kwargs):
-        super(WorkspaceForm, self).__init__(*args, **kwargs)
+    # def __init__(self,user,*args, **kwargs):
+    #     super(WorkspaceForm, self).__init__(*args, **kwargs)
         
-        self.fields['company'].queryset = user.company_set.all()
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            Row(Column('company', css_class='form-group col-md-3 mb-0')),
-            Submit('submit','Submit')
-        )
+    #     self.fields['company'].queryset = user.company_set.all()
+    #     self.helper = FormHelper()
+    #     self.helper.layout = Layout(
+    #         Row(Column('company', css_class='form-group col-md-3 mb-0')),
+    #         Submit('submit','Submit')
+    #     )
 
-    class Meta:
-        model = Workspace
-        fields = ['company','user']
+    # class Meta:
+    #     model = Workspace
+    #     fields = ['company','user']
 
 class MembershipForm(forms.ModelForm):
     def __init__(self,user,*args,**kwargs):

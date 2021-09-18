@@ -69,11 +69,9 @@ class Command(BaseCommand):
                 releaseid = Release.objects.order_by('-id')[0]
                 releaseid = str(int(releaseid.releaseid)+1)
                 r = Release.objects.create(
-                                        releaseid=releaseid,
-                                        loan=l,
-                                        created = date,#datetime.now(timezone.utc),
-                                        interestpaid =  l.interestdue(date)
-                                        )
+                        releaseid=releaseid,loan=l,
+                        created = date,#datetime.now(timezone.utc),
+                        interestpaid =  l.interestdue(date))
                 self.stdout.write(self.style.SUCCESS(f"Successfully closed Loan:{l} with Release id: {r} nom:{l.noofmonths(date)} interest received:{r.interestpaid}"))
             except IntegrityError:
                 # raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")

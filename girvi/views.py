@@ -1,3 +1,4 @@
+from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from django.urls import reverse,reverse_lazy
@@ -384,10 +385,18 @@ def ld():
         return datetime.date.today()
     return last.created
 
-class LoanCreateView(LoginRequiredMixin,CreateView):
+class LoanCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
     
     model = Loan
     form_class = LoanForm
+    success_url=reverse_lazy('girvi_loan_create')
+    success_message = "%(calculated_field)s was created successfully"
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            calculated_field=self.object,
+        )
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)

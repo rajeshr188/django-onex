@@ -39,6 +39,7 @@ pymaging = {editable = true, git = "git://github.com/ojii/pymaging.git"}
 pymaging-png = {editable = true, git = "git://github.com/ojii/pymaging-png.git"}
 crispy-bootstrap5 = "*"
 django-guardian = "*"
+django-tenant-schemas = "*"
 
 [dev-packages]
 "autopep8" = "*"

@@ -14,7 +14,7 @@
     {%for i in object_list%}
     <li class="list-group-item">
         <a href="{%url 'company_detail' i.company.id%}" >{{i.company.name}}</a>
-        <span><a class="btn btn-danger" href="{% url 'company_delete' i.id%}">Delete</a></span>
+        <span><a class="btn btn-danger" href="{% url 'company_delete' i.company.id%}">Delete</a></span>
     </li>
     {%endfor%}
 </ul>

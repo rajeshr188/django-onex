@@ -23,6 +23,8 @@ class CompanyCreateView(SuccessMessageMixin,CreateView):
     @transaction.atomic()
     def form_valid(self, form):
         # form.instance.created_by = self.request.user
+        form.instance.schema_name = form.instance.name
+        form.instance.domain_url = form.instance.name
         response = super(CompanyCreateView, self).form_valid(form)
         # do something with self.object
         owner = CompanyOwner.objects.create(company = self.object,user = self.request.user)
@@ -34,7 +36,7 @@ class CompanyDetailView(DetailView):
 
 class CompanyDeleteView(DeleteView):
     model = Company
-    success_url = reverse_lazy('company_delete')
+    success_url = reverse_lazy('company_owned_list')
 
 class MembershipListView(ListView):
     model = Membership

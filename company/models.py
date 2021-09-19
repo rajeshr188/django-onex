@@ -1,9 +1,11 @@
 from django.db import models
 from users.models import CustomUser
+from tenant_schemas.models import TenantMixin
 # Create your models here.
-class Company(models.Model):
+
+class Company(TenantMixin):
     created = models.DateField(auto_now_add=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,unique = True)
     address = models.TextField(max_length=500)
     state = models.CharField(max_length=50)
     pincode = models.CharField(max_length=6)
@@ -14,7 +16,12 @@ class Company(models.Model):
         through='Membership',
         through_fields=('company', 'user'),
     )
-    
+    paid_until = models.DateField(auto_now_add=True)
+    on_trial = models.BooleanField(default = False)
+    # default true, schema will be automatically created and synced when it is saved
+    auto_create_schema = True
+    auto_drop_schema = True
+
     class Meta:
         ordering = ['name']
 

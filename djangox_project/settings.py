@@ -26,11 +26,36 @@ SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*","192.168.1.100","192.168.1.101","192.168.102","localhost","127.0.0.1"]
+ALLOWED_HOSTS = ["*","localhost","127.0.0.1"]
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Application definition
 
+SHARED_APPS = [
+    'tenant_schemas',  # mandatory, should always be before any django app
+    'company',  # you must list the app where your tenant model resides in
+    
+    'allauth','allauth.account','users', # shared auth
+    'pages',
+    'django.contrib.contenttypes',
+
+    # everything below here is optional
+    'django.contrib.auth',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.admin',
+]
+TENANT_APPS =[
+    'django.contrib.contenttypes',
+    'actstream',
+    # 'django.contrib.messages',
+    'contact','girvi',
+    'Chitfund','daybook',
+    'product','approval','dea',
+    'invoice','sales','purchase',
+]
 INSTALLED_APPS = [
+    'tenant_schemas',
     'django_select2',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,11 +69,13 @@ INSTALLED_APPS = [
 
     # Third-party
     'allauth','allauth.account',  # new
-    'crispy_forms', "crispy_bootstrap5", 'bootstrap4', 'import_export', 'versatileimagefield',  # new
-    'rest_framework','mptt','phonenumber_field','django_tables2','django_filters',
-    'corsheaders', 'djmoney',
-    'widget_tweaks','tempus_dominus',
-    'actstream','debug_toolbar','django_extensions',# 'controlcenter',
+    'crispy_forms', "crispy_bootstrap5", 'bootstrap4', 
+    'import_export', 'versatileimagefield',  # new
+    'rest_framework', 'corsheaders', 'mptt', 'django_tables2', 'django_filters',
+    'djmoney', 'phonenumber_field',
+     'actstream',
+    'widget_tweaks', 'tempus_dominus',
+    'debug_toolbar','django_extensions',# 'controlcenter',
     
     # Local
     'users','company','pages',
@@ -56,10 +83,14 @@ INSTALLED_APPS = [
     'invoice','sales','purchase','approval',
     'Chitfund','daybook','dea','sea'
 ]
+TENANT_MODEL = "company.Company"
+PUBLIC_SCHEMA_NAME = 'public'
+DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
+    
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -67,9 +98,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'company.middleware.WorkspaceMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -118,20 +149,35 @@ WSGI_APPLICATION = 'djangox_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
+# single tenant
+# DATABASES = {
+#         'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'onex',
+#         'USER': 'postgres',
+#         'PASSWORD': 'kanchan188',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#         }
+# }
+# multitenant
 DATABASES = {
-        'default': {
-
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'onex',
+    'default': {
+        'ENGINE': 'tenant_schemas.postgresql_backend',
+        'NAME': 'onex_multi-tenant',
         'USER': 'postgres',
         'PASSWORD': 'kanchan188',
         'HOST': 'localhost',
         'PORT': '5432',
-        }
+    }
 }
-
-
+DATABASE_ROUTERS = (
+    'tenant_schemas.routers.TenantSyncRouter',
+)
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.core.context_processors.request',
+    #...
+)
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 

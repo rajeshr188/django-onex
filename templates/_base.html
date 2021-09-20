@@ -35,8 +35,9 @@
             <a class="nav-link" href="{% url 'about' %}">About <span class="sr-only">(current)</span></a>
           </li>
           {% if user.is_authenticated %}
-          <div class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{user.workspace.name}}</a>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" 
+              href="" aria-expanded="false">{{user.workspace.name}}</a>
             <div class="dropdown-menu">
               {%for i in user.company_set.all%}
                 <div class="dropdown-item">
@@ -44,18 +45,20 @@
                 </div>
               {%endfor%}
             </div> 
-          </div>
+          </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                          aria-expanded="false">Company</a>
+                href="" aria-expanded="false">Company</a>
             <div class="dropdown-menu">
               <a href="{% url 'company_owned_list' %}" class="dropdown-item">Company List</a>
               <div class="dropdown-divider"></div>
               <a href="{% url 'membership_list' %}" class="dropdown-item">membership List</a>
             </div>
           </li>
+          {%if user.workspace %}
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="{% url 'contact_home' %}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Contact</a>
+            <a class="nav-link dropdown-toggle" href="" data-toggle="dropdown" 
+                aria-haspopup="true" aria-expanded="false">Contact</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'contact_home' %}">Contact</a>
               <div class="dropdown-divider"></div>
@@ -113,7 +116,8 @@
             </div>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Approval</a>
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" 
+              href="" aria-haspopup="true" aria-expanded="false">Approval</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'sales_home' %}">Home</a>
               <div class="dropdown-divider"></div>
@@ -149,52 +153,50 @@
             </div>
           </li>
           <li class="nav-item active">
-            <a class="nav-link" href="{% url 'daybook' %}">Daybook <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="{% url 'daybook' %}">Daybook </a>
           </li>
-          {% endif %}
-        </ul>
+          <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#" id="deaMenu" data-toggle="dropdown" aria-haspopup="true"
+              aria-expanded="false">
+              DEA
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deaMenu">
+              <a class="dropdown-item" href=" {% url 'dea_home' %}">Home</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_ledger_list' %}">Ledgers</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_general_ledger' %}">General Ledger</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_ledgerstatement_list'%}">Ledger statement</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_account_list' %}">Accounts</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_accountstatement_list' %}">Account statement</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_journals_list' %}">Journals</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'dea_daybook' %}">Daybook</a>
+            </div>
+          </li>
 
-        {% if user.is_authenticated %}
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-            </li>
-            <li class = "nav-item">  
-              <a class="nav-link dropdown-toggle" href="#" id="deaMenu" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false">
-                DEA
-              </a>
-              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deaMenu">
-                <a class="dropdown-item" href=" {% url 'dea_home' %}">Home</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_ledger_list' %}">Ledgers</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_general_ledger' %}">General Ledger</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_ledgerstatement_list'%}">Ledger statement</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_account_list' %}">Accounts</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_accountstatement_list' %}">Account statement</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_journals_list' %}">Journals</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_daybook' %}">Daybook</a>
-              </div>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {{ user.email }}
-              </a>
-              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenu">
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Preferences</a>
-                <a class="dropdown-item" href="{% url 'account_change_password' %}">Change password</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
-              </div>
-            </li>
-          </ul>
+          {% endif %}
+          
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown" aria-haspopup="true"
+              aria-expanded="false">
+              {{ user.email }}
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenu">
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#">Preferences</a>
+              <a class="dropdown-item" href="{% url 'account_change_password' %}">Change password</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
+            </div>
+          </li>
+        </ul>
         {% else %}
           <form class="form-inline ml-auto">
             <a href="{% url 'account_login' %}" class="btn btn-outline-secondary">Log in</a>

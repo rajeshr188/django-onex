@@ -1,4 +1,5 @@
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib import messages
 from company.forms import CompanyForm,MembershipForm
 from company.models import Company,CompanyOwner,Membership
 from django.shortcuts import render
@@ -6,15 +7,18 @@ from django.views.generic import ListView,DetailView,CreateView, DeleteView
 from django.urls import reverse_lazy
 from django.db import transaction
 from django.shortcuts import redirect
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from tenant_schemas.utils import remove_www
 # Create your views here.
-class CompanyOwnerListView(ListView):
+
+class CompanyOwnerListView(LoginRequiredMixin,ListView):
     model = CompanyOwner
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
 
-class CompanyCreateView(SuccessMessageMixin,CreateView):
+class CompanyCreateView(SuccessMessageMixin, LoginRequiredMixin,CreateView):
     model = Company
     form_class = CompanyForm
     success_url = reverse_lazy('membership_list')
@@ -23,39 +27,44 @@ class CompanyCreateView(SuccessMessageMixin,CreateView):
     @transaction.atomic()
     def form_valid(self, form):
         # form.instance.created_by = self.request.user
-        form.instance.schema_name = form.instance.name
-        form.instance.domain_url = form.instance.name
+        schema_name = form.instance.name.lower() 
+        form.instance.schema_name = schema_name
+        hostname = remove_www(self.request.get_host().split(":")[0]).lower()
+        form.instance.domain_url = schema_name + hostname
         response = super(CompanyCreateView, self).form_valid(form)
         # do something with self.object
         owner = CompanyOwner.objects.create(company = self.object,user = self.request.user)
         member = Membership.objects.create(company = self.object,user = self.request.user,role='admin')
         return response
 
-class CompanyDetailView(DetailView):
+class CompanyDetailView(LoginRequiredMixin,DetailView):
     model = Company
 
-class CompanyDeleteView(DeleteView):
+class CompanyDeleteView(LoginRequiredMixin,DeleteView):
     model = Company
     success_url = reverse_lazy('company_owned_list')
 
-class MembershipListView(ListView):
+class MembershipListView(LoginRequiredMixin,ListView):
     model = Membership
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
 
+@login_required
 def change_workspace(request,pk):
     company = Company.objects.get(id=pk)
     request.user.workspace = company
     request.user.save()
     return redirect('/')
 
+@login_required
 def add_member(request):
     user = request.user
     if request.method =='POST':
         form = MembershipForm(user,request.POST)
         if form.is_valid():
             form.save()
+            messages.add_message(request, messages.INFO, 'Member added successfully.')
             redirect('company_owned_list')
     else:
         form = MembershipForm(user)

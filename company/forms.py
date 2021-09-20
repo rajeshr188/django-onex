@@ -44,7 +44,7 @@ class MembershipForm(forms.ModelForm):
     def __init__(self,user,*args,**kwargs):
         super(MembershipForm,self).__init__(*args,**kwargs)
 
-        self.fields['company'].queryset = user.company_set.all()
+        self.fields['company'].queryset = user.company_set.filter(membership__role = 'admin')
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(

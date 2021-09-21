@@ -1,5 +1,6 @@
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
+from django.views.generic.base import View
 from company.forms import CompanyForm,MembershipForm
 from company.models import Company,CompanyOwner,Membership
 from django.shortcuts import render
@@ -10,6 +11,22 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from tenant_schemas.utils import remove_www
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+
+class MemberOnly(UserPassesTestMixin, View):
+
+    def test_func(self):
+        return Membership.objects.filter(user = self.request.user,
+        company = self.get_object()).exists()
+
+
+class AdminOnly(UserPassesTestMixin, View):
+
+    def test_func(self):
+        return Membership.objects.filter(user=self.request.user,
+             company=self.get_object(),role='admin').exists()
+
 # Create your views here.
 
 class CompanyOwnerListView(LoginRequiredMixin,ListView):
@@ -37,10 +54,12 @@ class CompanyCreateView(SuccessMessageMixin, LoginRequiredMixin,CreateView):
         member = Membership.objects.create(company = self.object,user = self.request.user,role='admin')
         return response
 
-class CompanyDetailView(LoginRequiredMixin,DetailView):
+# only members/admin shall pass
+class CompanyDetailView(LoginRequiredMixin,MemberOnly,DetailView):
     model = Company
 
-class CompanyDeleteView(LoginRequiredMixin,DeleteView):
+# only admin shall pass
+class CompanyDeleteView(LoginRequiredMixin,AdminOnly,DeleteView):
     model = Company
     success_url = reverse_lazy('company_owned_list')
 
@@ -63,6 +82,7 @@ def clear_workspace(request):
     request.user.save()
     return redirect('/')
 
+# only admin shall pass
 @login_required
 def add_member(request):
     user = request.user

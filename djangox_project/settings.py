@@ -33,7 +33,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 SHARED_APPS = [
     'tenant_schemas',  # mandatory, should always be before any django app
     'company',  # you must list the app where your tenant model resides in
-    
+ 
     'allauth','allauth.account','users', # shared auth
     'pages',
     'django.contrib.contenttypes',

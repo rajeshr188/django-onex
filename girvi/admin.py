@@ -5,6 +5,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
 from .models import License, Loan, Release, Series, Adjustment
 from contact.models import Customer
+from utils.tenant_admin import admin_site
 
 class LicenseAdminForm(forms.ModelForm):
 
@@ -17,9 +18,21 @@ class LicenseAdmin(admin.ModelAdmin):
     form = LicenseAdminForm
     list_display = ['name', 'id', 'created', 'updated', 'type', 'shopname', 'address', 'phonenumber', 'propreitor']
 
-admin.site.register(License, LicenseAdmin)
-admin.site.register(Series)
-admin.site.register(Adjustment)
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(License, LicenseAdmin)
+admin_site.register(Series)
+admin_site.register(Adjustment)
 
 class LoanResource(resources.ModelResource):
     customer = fields.Field(column_name='customer',
@@ -48,7 +61,19 @@ class LoanAdmin(ImportExportModelAdmin):
     resource_class=LoanResource
     list_display = ['id','loanid','customer','series','created', 'updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
 
-admin.site.register(Loan, LoanAdmin)
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Loan, LoanAdmin)
 
 class ReleaseResource(resources.ModelResource):
 
@@ -71,4 +96,16 @@ class ReleaseAdmin(ImportExportModelAdmin):
 
     list_display = ['releaseid','loan','created', 'updated', 'interestpaid']
 
-admin.site.register(Release, ReleaseAdmin)
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Release, ReleaseAdmin)

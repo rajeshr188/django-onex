@@ -4,6 +4,7 @@ from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget
 from .models import Customer
+from utils.tenant_admin import admin_site
 
 class CustomerResource(resources.ModelResource):
 
@@ -22,24 +23,16 @@ class CustomerAdmin(ImportExportActionModelAdmin):
     list_display = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
     readonly_fields = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
 
-admin.site.register(Customer, CustomerAdmin)
+    def has_add_permission(self, request):
+        return True
 
-# class SupplierResource(resources.ModelResource):
-#
-#     class Meta:
-#         model = Supplier
-#
-# class SupplierAdminForm(forms.ModelForm):
-#
-#     class Meta:
-#         model = Supplier
-#         fields = '__all__'
-#
-#
-# class SupplierAdmin(ImportExportActionModelAdmin):
-#     form = SupplierAdminForm
-#     resource_class = SupplierResource
-#     list_display = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
-#     readonly_fields = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
-#
-# admin.site.register(Supplier, SupplierAdmin)
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Customer, CustomerAdmin)

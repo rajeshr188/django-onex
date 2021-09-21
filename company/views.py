@@ -58,6 +58,12 @@ def change_workspace(request,pk):
     return redirect('/')
 
 @login_required
+def clear_workspace(request):
+    request.user.workspace = None
+    request.user.save()
+    return redirect('/')
+
+@login_required
 def add_member(request):
     user = request.user
     if request.method =='POST':

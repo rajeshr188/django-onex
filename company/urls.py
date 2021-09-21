@@ -8,4 +8,5 @@ urlpatterns = (
     path('membership/', views.MembershipListView.as_view(), name='membership_list'),
     path('membership/add/',views.add_member,name='company_add_member'),
     path('workspace/change/<int:pk>/',views.change_workspace,name='company_change_workspace'),
+    path('workspace/clear/',views.clear_workspace,name='company_clear_workspace'),
 )

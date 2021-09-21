@@ -4,6 +4,7 @@ from django import forms
 from .models import (Category, ProductType, Product, 
             ProductVariant, Attribute, AttributeValue, 
             ProductImage, VariantImage)
+from utils.tenant_admin import admin_site
 
 class CategoryAdminForm(forms.ModelForm):
     class Meta:
@@ -15,7 +16,20 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'description']
     # readonly_fields = ['name', 'description']
 
-admin.site.register(Category, CategoryAdmin)
+    def has_add_permission(self, request):
+        return request.tenant.name != 'public'
+
+    def has_change_permission(self, request, obj=None):
+        return request.tenant.name != 'public'
+
+    def has_view_permission(self, request, obj=None):
+        return request.tenant.name != 'public'
+
+    def has_module_permission(self, request) -> bool:
+        return request.tenant.name != 'public'
+    
+
+admin_site.register(Category, CategoryAdmin)
 
 class ProductTypeAdminForm(forms.ModelForm):
     class Meta:

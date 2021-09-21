@@ -44,6 +44,11 @@
                   <a href="{% url 'company_change_workspace' i.id%}">{{i.name}}</a>
                 </div>
               {%endfor%}
+              {%if user.workspace%}
+              <div class="dropdown-item">
+              <a href="{% url 'company_clear_workspace'%}">Public</a>
+              </div>
+              {%endif%}
             </div> 
           </li>
           <li class="nav-item dropdown">
@@ -155,12 +160,12 @@
           <li class="nav-item active">
             <a class="nav-link" href="{% url 'daybook' %}">Daybook </a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="deaMenu" data-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               DEA
             </a>
-            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="deaMenu">
+            <div class="dropdown-menu" aria-labelledby="deaMenu">
               <a class="dropdown-item" href=" {% url 'dea_home' %}">Home</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'dea_ledger_list' %}">Ledgers</a>

@@ -13,7 +13,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 # Create your views here.
 @transaction.atomic
 def post_approval(request,pk):

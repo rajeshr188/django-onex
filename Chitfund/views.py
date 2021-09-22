@@ -1,11 +1,11 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView
 from .models import Contact, Chit, Collection, Allotment
 from .forms import ContactForm, ChitForm, CollectionForm, AllotmentForm
-from django.shortcuts import get_object_or_404
-from django.template.response import TemplateResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
 
+import logging
+
+logger = logging.getLogger(__name__)
 class ContactListView(LoginRequiredMixin,ListView):
     model = Contact
 

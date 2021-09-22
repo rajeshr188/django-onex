@@ -22,7 +22,9 @@ from num2words import num2words
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from django_filters.views import FilterView
+import logging
 
+logger = logging.getLogger(__name__)
 def home(request):
     context = {}
     qs = Invoice.objects

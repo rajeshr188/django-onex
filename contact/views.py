@@ -15,7 +15,9 @@ from datetime import datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
+import logging
 
+logger = logging.getLogger(__name__)
 @login_required
 def home(request):
     data = dict()

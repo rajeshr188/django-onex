@@ -8,7 +8,9 @@ from django.shortcuts import render
 from .models import Account, AccountStatement, Accountbalance,Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
 from dea.utils.currency import Balance
+import logging
 
+logger = logging.getLogger(__name__)
 def home(request):
     lb = Ledgerbalance.objects.all()
     

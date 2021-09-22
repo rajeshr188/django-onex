@@ -14,6 +14,9 @@ from django.template.response import TemplateResponse
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+import logging
+
+logger = logging.getLogger(__name__)
 # from blabel import Labelwriter
 
 class CategoryListView(LoginRequiredMixin,ListView):

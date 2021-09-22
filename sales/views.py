@@ -18,7 +18,9 @@ from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
 from django.http import JsonResponse
 from django.db import transaction
+import logging
 
+logger = logging.getLogger(__name__)
 def home(request):
     
     context = {}

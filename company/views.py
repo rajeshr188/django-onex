@@ -12,8 +12,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from tenant_schemas.utils import remove_www
 from django.contrib.auth.mixins import UserPassesTestMixin
+import logging
 
-
+logger = logging.getLogger(__name__)
 class MemberOnly(UserPassesTestMixin, View):
 
     def test_func(self):

@@ -30,7 +30,9 @@ from utils.render import Render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from openpyxl import load_workbook
+import logging
 
+logger = logging.getLogger(__name__)
 @login_required
 def print_loanpledge(request,pk):
     loan=Loan.objects.get(id=pk)

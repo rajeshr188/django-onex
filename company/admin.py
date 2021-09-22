@@ -16,5 +16,3 @@ class CompanyAdmin(admin.ModelAdmin):
 admin_site.register(Company,CompanyAdmin)
 admin_site.register(CompanyOwner,CompanyAdmin)
 admin_site.register(Membership,CompanyAdmin)
-
-

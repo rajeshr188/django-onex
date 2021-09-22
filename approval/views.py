@@ -18,24 +18,28 @@ import logging
 logger = logging.getLogger(__name__)
 # Create your views here.
 @transaction.atomic
+@login_required
 def post_approval(request,pk):
     approval = get_object_or_404(Approval,pk=pk)
     approval.post()
     return redirect(approval)
 
 @transaction.atomic
+@login_required
 def unpost_approval(request,pk):
     approval = get_object_or_404(Approval, pk=pk)
     approval.unpost()
     return redirect(approval)
 
 @transaction.atomic
+@login_required
 def post_approvallinereturn(request, pk):
     approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
     approval_lr.post()
     return redirect(approval_lr.line.approval)
 
 @transaction.atomic
+@login_required
 def unpost_approvallinereturn(request, pk):
     approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
     approval_lr.unpost()

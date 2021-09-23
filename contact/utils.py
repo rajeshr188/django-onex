@@ -1,6 +1,8 @@
 from django.utils import timezone
 from dateutil import relativedelta
 from girvi.models import Loan
+import tablib
+
 def calculate_score(contact):
     l = Loan.objects.filter(customer = contact)
     for i in l:
@@ -31,6 +33,30 @@ def calculate_score(contact):
             if no_of_years > 1:
                 contact.contactscore_set.create(
                     score=-5, desc='unreleased > 1 year')
+
+
+def eliminate_dups(ds):
+    seen = set()
+    uniq = []
+
+    for row in ds:
+        if not(tuple((row[4], row[13], row[14])) in seen or seen.add(tuple((row[4], row[13], row[14])))):
+           uniq.append(row)
+
+        else:
+            row_l = list(row)
+            row_l[4] = row_l[4] + ' +'
+            row_l[2] = row_l[1]
+            uniq.append(tuple(row_l))
+    headers = ('id', 'created', 'updated', 'created_by', 'name', 'firstname', 'lastname', 'gender', 'religion',
+                        'pic','phonenumber', 'Address', 'type', 'relatedas', 'relatedto', 'area', 'active')
+    ds = tablib.Dataset(*uniq,headers = headers)
+
+    return ds
+
+def remove_dups(ds):
+    seen = set()
+    return [row for row in ds if not (tuple((row[3], row[12], row[13])) in seen or seen.add(tuple((row[3], row[12], row[13]))))]
 
 # def setrank():
 #     c_score_list = 

@@ -252,10 +252,3 @@ class Customer(models.Model):
 
         return txn_list
 
-class ContactScore(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    score = models.FloatField(default=0)
-    contact = models.ForeignKey(Customer,on_delete=models.CASCADE)
-    desc = models.TextField(verbose_name='description')
-
-    

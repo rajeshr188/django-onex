@@ -10,6 +10,7 @@ class CustomerResource(resources.ModelResource):
 
     class Meta:
         model=Customer
+        use_bulk = True
 
 class CustomerAdminForm(forms.ModelForm):
 
@@ -21,13 +22,13 @@ class CustomerAdmin(ImportExportActionModelAdmin):
     form = CustomerAdminForm
     resource_class=CustomerResource
     list_display = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
-    readonly_fields = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
+    # readonly_fields = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
 
     def has_add_permission(self, request):
         return True
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return True
 
     def has_view_permission(self, request, obj=None):
         return True

@@ -47,7 +47,10 @@ class LoanResource(resources.ModelResource):
     class Meta:
         model=Loan
         #import_id_fields = ('id',)
-        fields=('id','loanid','customer','series','created','itemtype','itemweight','itemdesc','loanamount','interestrate','value')
+        fields=('id','loanid','customer','series','created',
+                'itemtype','itemweight','itemdesc','loanamount',
+                'interestrate','value')
+        use_bulk = True
 
 class LoanAdminForm(forms.ModelForm):
     date_heirarchy = 'created'

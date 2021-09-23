@@ -53,7 +53,7 @@ def print_notice(request,pk):
 def notice(request):
     qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
-    a_yr_ago = timezone.now() - relativedelta.relativedelta(years=int(qyr))
+    a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
 
     cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
                                         loan__release__isnull=True).\

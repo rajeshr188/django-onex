@@ -1,3 +1,4 @@
+from contact.utils import eliminate_dups
 from django.views.generic import DetailView, UpdateView, CreateView,DeleteView
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
@@ -16,8 +17,30 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 import logging
-
+import tablib
+from .admin import CustomerResource
+from import_export import resources
 logger = logging.getLogger(__name__)
+
+
+def simple_upload(request):
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        ds = tablib.Dataset()
+        ds.xlsx = myfile
+        logger.warning(f"initial {type(ds)} height : {ds.height}")
+        uniq = eliminate_dups(ds)
+        logger.warning(f"unique {type(uniq) }height :{uniq.height}")
+        # logger.warning(ds)
+        customer_resource = resources.modelresource_factory(model = Customer)()
+        result = customer_resource.import_data(uniq,dry_run=False,raise_errors=True)
+        if not result.has_errors():
+            logger.warning("no errors in import")
+            customer_resource.import_data(uniq,dry_run = True,raise_errors=True)
+        else:
+            logger.warning("Error importing")
+
+    return render(request,'contact/simpleupload.html')
 @login_required
 def home(request):
     data = dict()

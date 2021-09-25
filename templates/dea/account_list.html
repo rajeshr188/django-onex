@@ -1,35 +1,20 @@
-{% extends '_base.html' %}
 
-{% block title %}Account List{% endblock %}
-
+{% extends "_base.html" %}
+{% load static %}
+{%load django_tables2%}
+{%load bootstrap4%}
 {% block content %}
-<h1>Accounts</h1>
-<h2> create Account</h2>
+{{ filter.form.media }}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Customers</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <a class="btn btn-primary mr-2" href="{% url 'dea_account_create' %}" role="button">New Customer</a>
+            <a class="btn btn-primary mr-2" href="{% url 'dea_account_list' %}" role="button">Account List</a>
+            <a class="btn btn-primary" href="{% export_url " ods" %}" role="button">export</a>
+        </div>
+    </div>
+</div>
 
-<table class = "table table-sm">
-    <thead>
-        <tr>
-            <th>Account</th>
-            <th>Type</th>
-            <th>Entity</th>
-            <th>Balance</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for i in object_list%}
-        <tr>
-            <td><a href="{% url 'dea_account_detail' i.AccountNo.id %}">{{i.acc_name}}</a></td>
-            <td>{{i.acc_type}}</td>
-            <td>{{i.entity}}</td>
-            <!-- <td>{{i.current_balance}}</td> -->
-            <td>{{i.get_currbal}}</td>
-            <td>
-                <a class = "btn btn-info" href="">Edit</a>
-                <a class="btn btn-danger" href="">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock content %}
+{% include 'table.html'%}
+{% endblock %}

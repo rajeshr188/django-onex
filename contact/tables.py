@@ -34,8 +34,7 @@ class CustomerTable(tables.Table):
 
     class Meta:
         model = Customer
-        fields = (
-                    'id','pic','name','Address')
+        fields = ('id','pic','name','Address')
         attrs = {"class": "table table-sm text-center  table-striped table-bordered"}
         empty_text = "There are no customers matching the search criteria..."
         template_name='django_tables2/bootstrap4.html'

@@ -1,3 +1,6 @@
+from dea.tables import AccountbalanceTable
+from typing import List
+from django_tables2.views import SingleTableMixin
 from openpyxl import load_workbook
 from django.db import transaction
 from django.db.models.query_utils import subclasses
@@ -5,6 +8,12 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, ListView, DeleteView, DetailView
 from django.shortcuts import render
+from django_filters.views import FilterView
+from django_tables2.export.views import ExportMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+from.filters import AccountFilter,LedgerFilter
 # Create your views here.
 from .models import Account, AccountStatement, Accountbalance,Journal, Ledger, LedgerStatement, LedgerTransaction,Ledgerbalance
 from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
@@ -141,11 +150,13 @@ class AccountCreateView(CreateView):
     model = Account
     form_class = AccountForm
 
-class AccountListView(ListView):
+class AccountListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     # queryset = Account.objects.all().select_related('entity','AccountType_Ext','contact')
-    queryset = Accountbalance.objects.all()
+    table_class = AccountbalanceTable
+    model = Accountbalance
+    filterset_class = AccountFilter
     template_name = 'dea/account_list.html'
-    # paginate_by = 10
+    paginate_by = 10
 
 class AccountDetailView(DetailView):
     model = Account
@@ -245,8 +256,3 @@ def import_acc_opbal(request):
                 TotalCredit = Balance().monies(),TotalDebit = Balance().monies())            
         
     return render(request, 'sales/simpleupload.html')
-
-
-
-    
-

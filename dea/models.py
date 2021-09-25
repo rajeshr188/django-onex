@@ -504,9 +504,12 @@ class Accountbalance(models.Model):
     class Meta:
         managed = False
         db_table = 'account_balance'
+    
+    def get_cb(self):
+        return Balance(self.ClosingBalance)
 
     def get_currbal(self):
-        return Balance(self.ClosingBalance) + Balance(self.dr) - Balance(self.cr)
+        return Balance(self.ClosingBalance) + Balance(self.dr)  - Balance(self.cr) 
     
 
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created

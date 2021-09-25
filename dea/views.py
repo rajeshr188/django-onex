@@ -1,3 +1,4 @@
+from openpyxl import load_workbook
 from django.db import transaction
 from django.db.models.query_utils import subclasses
 from django.shortcuts import get_object_or_404, render, redirect
@@ -221,6 +222,29 @@ class LedgerStatementListView(ListView):
 class LedgerTransactionListView(ListView):
     model=LedgerTransaction
 
+from openpyxl import load_workbook
+from moneyed import Money
+from .utils.currency import Balance
+from decimal import Decimal
+def import_acc_opbal(request):
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        wb = load_workbook(myfile,read_only=True)
+        ws = wb.active
+        for row in ws.iter_rows(min_row=2,max_row=ws.max_row):
+            name = row[0].value
+            amt_bal = Money(Decimal(row[2].value),'INR')
+            gold_bal = Money(Decimal(row[3].value),'USD')
+            cb = Balance([amt_bal,gold_bal])
+            try:
+                acc = Account.objects.get(contact__name = name)
+
+            except Account.DoesNotExist:
+                logger.warning("Account Doesnot Exist")
+            AccountStatement.objects.create(AccountNo = acc,ClosingBalance = cb.monies(),
+                TotalCredit = Balance().monies(),TotalDebit = Balance().monies())            
+        
+    return render(request, 'sales/simpleupload.html')
 
 
 

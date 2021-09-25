@@ -4,6 +4,7 @@ urlpatterns = [
     path('', views.home, name='dea_home'),
     path('dea/gl/',views.generalledger,name='dea_general_ledger'),
     path('daybook/',views.daybook, name='dea_daybook'),
+    path('account/importopbal/',views.import_acc_opbal,name = 'dea_account_importopbal'),
     path('account/', views.AccountListView.as_view(),
           name="dea_account_list"),
     path('account/<int:pk>/', views.AccountDetailView.as_view(),

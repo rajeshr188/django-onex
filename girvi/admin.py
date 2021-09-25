@@ -30,8 +30,23 @@ class LicenseAdmin(admin.ModelAdmin):
     def has_module_permission(self, request) -> bool:
         return True
 
+
 admin_site.register(License, LicenseAdmin)
-admin_site.register(Series)
+
+class SeriesAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Series,SeriesAdmin)
 admin_site.register(Adjustment)
 
 class LoanResource(resources.ModelResource):
@@ -47,9 +62,9 @@ class LoanResource(resources.ModelResource):
     class Meta:
         model=Loan
         #import_id_fields = ('id',)
-        fields=('id','loanid','customer','series','created',
-                'itemtype','itemweight','itemdesc','loanamount',
-                'interestrate','value')
+        fields=('id','lid','loanid','created',
+                'itemtype', 'itemdesc', 'itemweight', 'loanamount',
+                'itemvalue', 'interestrate','interest', 'customer', 'series',)
         use_bulk = True
 
 class LoanAdminForm(forms.ModelForm):
@@ -62,7 +77,9 @@ class LoanAdminForm(forms.ModelForm):
 class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
-    list_display = ['id','loanid','customer','series','created', 'updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
+    list_display = ['id','lid','loanid','customer','series','created', 
+                        'updated', 'itemtype', 'itemdesc', 'itemweight',
+                         'itemvalue', 'loanamount', 'interestrate', 'interest']
 
     def has_add_permission(self, request):
         return True

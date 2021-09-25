@@ -53,22 +53,24 @@ class Customer(models.Model):
     firstname = models.CharField(max_length =255,blank = True)
     lastname = models.CharField(max_length =255,blank = True)
     gender = models.CharField( max_length = 1,
-                                choices = (('M','M'),('F','F'),('N','N')),
-                                default = 'M')
+                choices = (('M','M'),('F','F'),('N','N')),
+                default = 'M',blank = True,null = True)
     religion = models.CharField(max_length = 10,choices = (
-                                ('Hindu','Hindu'),('Muslim','Muslim'),
-                                ('Christian','Christian'),('Atheist','Atheist')
-                                ),default = 'Hindu' )
+                    ('Hindu','Hindu'),('Muslim','Muslim'),
+                    ('Christian','Christian'),('Atheist','Atheist')),
+                    blank = True,null = True,default = 'Hindu' )
     pic = models.ImageField(upload_to='contacts/customer/pic/',null=True,blank=True)
-    phonenumber = models.CharField(max_length=15,default='911',verbose_name='Phone No')
-    Address = models.TextField(max_length=100,blank=True)
+    phonenumber = models.CharField(max_length=15,default='911',
+                    blank = True,null = True,verbose_name='Phone No')
+    Address = models.TextField(max_length=100,blank=True,null = True)
     ctype = (('Wh','Wholesale'),('Re','Retail'),('Su','Supplier'))
     type = models.CharField(max_length=30,choices=ctype,default='Re')
     ras = (('S/o','S/o'),('D/o','D/o'),('W/o','W/o'),('R/o','R/o'))
-    relatedas = models.CharField(max_length=5,choices=ras,default='S/o')
-    relatedto = models.CharField(max_length=30,blank=True)
-    area = models.CharField(max_length=50,blank=True)
-    active = models.BooleanField(blank = True,default = True)
+    relatedas = models.CharField(max_length=5,choices=ras,
+                    blank = True,null = True,default='S/o')
+    relatedto = models.CharField(max_length=30,blank=True,null = True)
+    area = models.CharField(max_length=50,blank=True,null = True)
+    active = models.BooleanField(blank = True,null = True,default = True)
     # rank =models.IntegerField(verbose_name='Rank')
 
     class Meta:

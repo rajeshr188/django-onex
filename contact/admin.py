@@ -10,7 +10,7 @@ class CustomerResource(resources.ModelResource):
 
     class Meta:
         model=Customer
-        use_bulk = True
+        # use_bulk = True
 
 class CustomerAdminForm(forms.ModelForm):
 

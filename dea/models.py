@@ -457,7 +457,8 @@ class AccountTransaction(models.Model):
 
 # postgresql read-only-view
 class Ledgerbalance(models.Model):
-    ledgerno = models.OneToOneField(Ledger,on_delete = models.DO_NOTHING,primary_key = True)
+    ledgerno = models.OneToOneField(Ledger,
+                on_delete = models.DO_NOTHING,primary_key = True)
     name = models.CharField(max_length = 20)
     AccountType = models.CharField(max_length=20)
     created = models.DateTimeField()

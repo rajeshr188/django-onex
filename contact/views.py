@@ -26,12 +26,14 @@ logger = logging.getLogger(__name__)
 def simple_upload(request):
     if request.method == 'POST' and request.FILES['myfile']:
         myfile = request.FILES['myfile']
+
         ds = tablib.Dataset()
         ds.xlsx = myfile
+
         logger.warning(f"initial {type(ds)} height : {ds.height}")
         uniq = eliminate_dups(ds)
         logger.warning(f"unique {type(uniq) }height :{uniq.height}")
-        # logger.warning(ds)
+        
         customer_resource = resources.modelresource_factory(model = Customer)()
         result = customer_resource.import_data(uniq,dry_run=False,raise_errors=True)
         if not result.has_errors():

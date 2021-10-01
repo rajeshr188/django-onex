@@ -239,6 +239,9 @@ class Loan(models.Model):
     @transaction.atomic()
     def post(self):
         # get contact.Account
+        from dea.models import Ledger
+        ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+
         try:
             self.customer.account
         except:
@@ -246,28 +249,27 @@ class Loan(models.Model):
         amount = Money(self.loanamount,'INR')
         interest = Money(self.interest_amt(),'INR')
         if self.customer.type == 'Su':
-            print (self.customer.type)
             jrnl = Journal.objects.create(type = JournalTypes.LT,
                 content_object = self,desc = 'Loan Taken')
-            lt = [{'ledgerno': 'Loans', 'ledgerno_dr': 'Cash',
+            lt = [{'ledgerno': ledgers['Loans'], 'ledgerno_dr': ledgers['Cash'],
                      'amount': amount},
-                    {'ledgerno': 'Cash', 'ledgerno_dr': 'Interest Paid',
+                    {'ledgerno': ledgers['Cash'], 'ledgerno_dr': ledgers['Interest Paid'],
                       'amount': amount}, ]
-            at = [{'ledgerno': 'Loans', 'Xacttypecode': 'Dr', 'xacttypecode_ext': 'LT',
-                     'account': self.customer.account,'amount': amount},
-                    {'ledgerno': 'Interest Payable', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
-                              'account': self.customer.account, 'amount': amount}]
+            at = [{'ledgerno': ledgers['Loans'], 'Xacttypecode': 'Dr', 'xacttypecode_ext': 'LT',
+                     'account': self.customer.account.id,'amount': amount},
+                    {'ledgerno': ledgers['Interest Payable'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
+                              'account': self.customer.account.id, 'amount': amount}]
         else:
             jrnl = Journal.objects.create(type = JournalTypes.LG,
                 content_object=self,desc = 'Loan Given')
-            lt = [{'ledgerno': 'Cash', 'ledgerno_dr': 'Loans & Advances',
+            lt = [{'ledgerno': ledgers['Cash'], 'ledgerno_dr': ledgers['Loans & Advances'],
                      'amount':amount},
-                    {'ledgerno': 'Interest Received', 'ledgerno_dr': 'Cash',
+                    {'ledgerno': ledgers['Interest Received'], 'ledgerno_dr': ledgers['Cash'],
                      'amount': interest}, ]
-            at = [{'ledgerno': 'Loans & Advances', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LG',
-                    'account':self.customer.account,'amount':amount},
-                    {'ledgerno': 'Interest Received', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
-                    'account': self.customer.account, 'amount': interest}]
+            at = [{'ledgerno': ledgers['Loans & Advances'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LG',
+                    'account':self.customer.account.id,'amount':amount},
+                    {'ledgerno': ledgers['Interest Received'], 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
+                    'account': self.customer.account.id, 'amount': interest}]
         jrnl.transact(lt,at)
          
         self.posted = True

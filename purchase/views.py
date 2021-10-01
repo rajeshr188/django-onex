@@ -171,6 +171,8 @@ class InvoiceUpdateView(UpdateView):
     def get_success_url(self) -> str:
         return reverse_lazy('purchase_invoice_detail', kwargs={'pk': self.object.pk})
 
+
+@transaction.atomic()
 def post_purchase(request,pk):
     # use get_objector404
     purchase_inv = Invoice.objects.get(id = pk)
@@ -178,11 +180,29 @@ def post_purchase(request,pk):
     purchase_inv.post()
     return redirect(purchase_inv)
 
+
+@transaction.atomic()
 def unpost_purchase(request,pk):
     purchase_inv = Invoice.objects.get(id = pk)
     # unpost to dea & stock
     purchase_inv.unpost() 
     return redirect(purchase_inv)
+
+
+@transaction.atomic()
+def post_all_purchase(request):
+    all_purchases = Invoice.objects.filter(posted = False)
+    for i in all_purchases:
+        i.post()
+    return reverse('purchase_invoice_list')
+
+
+@transaction.atomic()
+def unpost_all_purchase(request):
+    all_purchases = Invoice.objects.filter(posted=True)
+    for i in all_purchases:
+        i.unpost()
+    return reverse('purchase_invoice_list')
 
 class InvoiceDeleteView(DeleteView):
     model = Invoice
@@ -268,6 +288,8 @@ class PaymentLineDeleteView(DeleteView):
     model = PaymentLine
     success_url = reverse_lazy('purchase_paymentline_list')
 
+
+@transaction.atomic()
 def post_payment(request,pk):
     # use get_objector404
     payment = Payment.objects.get(id = pk)
@@ -275,8 +297,26 @@ def post_payment(request,pk):
     payment.post()
     return redirect(payment)
 
+
+@transaction.atomic()
 def unpost_payment(request,pk):
     payment = Payment.objects.get(id = pk)
     # unpost to dea
     payment.unpost()
     return redirect(payment)
+
+
+@transaction.atomic()
+def post_all_payment(request):
+    all_payts = Payment.objects.filter(posted=False)
+    for i in all_payts:
+        i.post()
+    return reverse('purchase_payment_list')
+
+
+@transaction.atomic()
+def unpost_all_payment(request):
+    all_payts = Payment.objects.filter(posted=False)
+    for i in all_payts:
+        i.unpost()
+    return reverse('purchase_payment_list')

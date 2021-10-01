@@ -18,6 +18,10 @@ urlpatterns = (
 urlpatterns += (
     # urls for Invoice
     path('purchase/home/',views.home,name = 'purchase_home'),
+    path('purchase/invoice/postall/',views.post_all_purchase,name='purchase_invoice_postall'),
+    path('purchase/invlice/unpostall/', views.unpost_all_purchase,
+         name='purchase_invoice_unpostall'),
+
     path('purchase/invoice/', views.InvoiceListView.as_view(), name='purchase_invoice_list'),
     path('purchase/invoice/create/', views.InvoiceCreateView.as_view(), name='purchase_invoice_create'),
     path('purchase/invoice/detail/<int:pk>/', views.InvoiceDetailView.as_view(), name='purchase_invoice_detail'),
@@ -48,5 +52,10 @@ urlpatterns += (
     path('purchase/payment/delete/<int:pk>/', views.PaymentDeleteView.as_view(), name='purchase_payment_delete'),
     path('purchase/payment/<int:pk>/post/',views.post_payment,name = 'purchase_payment_post'),
     path('purchase/payment/<int:pk>/unpost/',views.unpost_payment,name='purchase_payment_unpost'),
+    path('purchase/payment/postall/', views.post_all_payment,
+         name='purchase_invoice_postall'),
+    path('purchase/payment/unpostall/', views.unpost_all_payment,
+         name='purchase_invoice_unpostall'),
+
 
 )

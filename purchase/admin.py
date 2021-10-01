@@ -6,6 +6,7 @@ from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget,DecimalWidget
 import decimal
+from utils.tenant_admin import admin_site
 
 class CustomDecimalWidget(DecimalWidget):
     """
@@ -15,6 +16,7 @@ class CustomDecimalWidget(DecimalWidget):
         if self.is_empty(value):
             return None
         return decimal.Decimal(str(value))
+
 class supplierWidget(ForeignKeyWidget):
 
     def clean(self, value, row=None, *args, **kwargs):
@@ -31,16 +33,30 @@ class InvoiceResource(resources.ModelResource):
                                 widget=supplierWidget(Customer,'name'))
     class Meta:
         model = Invoice
-        fields=('id','supplier','created','rate','balancetype','balance','status',)
-        skip_unchanged = True
-        report_skipped = False
+        fields=('id','supplier','created','created_by','rate','gross_wt','net_wt',
+                'balancetype','balance','term',)
+        use_bulk = True
+        # skip_unchanged = True
+        # report_skipped = False
 
 class InvoiceAdmin(ImportExportActionModelAdmin):
     form = InvoiceAdminForm
     resource_class = InvoiceResource
     list_display = ['id','created', 'updated', 'rate', 'balancetype', 'balance', 'status']
 
-admin.site.register(Invoice, InvoiceAdmin)
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Invoice, InvoiceAdmin)
 
 
 class InvoiceItemAdminForm(forms.ModelForm):
@@ -77,5 +93,17 @@ class PaymentAdmin(ImportExportActionModelAdmin):
     resource_class = PaymentResourse
     list_display = ['id','created', 'updated', 'type', 'total', 'description','status']
 
+    def has_add_permission(self, request):
+        return True
 
-admin.site.register(Payment, PaymentAdmin)
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+
+admin_site.register(Payment, PaymentAdmin)

@@ -6,7 +6,7 @@ from django.utils.html import format_html
 class InvoiceTable(tables.Table):
     id = tables.Column(linkify=True)
     customer = tables.LinkColumn('contact_customer_detail',text=lambda record: f"{record.customer.name}{record.customer.area}",args=[A('customer.id')])
-    paid = tables.Column(accessor='get_total_receipts',verbose_name="Paid",orderable=False)
+    # paid = tables.Column(accessor='get_total_receipts',verbose_name="Paid",orderable=False)
     edit = tables.LinkColumn('sales_invoice_update', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     remove = tables.LinkColumn('sales_invoice_delete', args=[A('id')],attrs={'a':{"class":"btn btn-outline-danger","role":"button"}}, orderable=False, empty_values=())
 
@@ -21,7 +21,7 @@ class InvoiceTable(tables.Table):
 
     class Meta:
         model = Invoice
-        fields = ('id','created','customer','balancetype','metaltype',
+        fields = ('id','created','customer','balancetype','metaltype','rate',
                     'gross_wt','net_wt','balance','posted','is_gst','status','term',
                     'due_date')
 

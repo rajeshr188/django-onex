@@ -5,9 +5,9 @@ from django.db import models,transaction
 from contact.models import Customer
 from product.models import Stock,StockTransaction
 from django.utils import timezone
-from django.db.models import Sum,Func,Q
+from django.db.models import Sum,Func,Q,Avg
 from datetime import timedelta,date
-from dea.models import Journal,JournalTypes
+from dea.models import Journal,JournalTypes,Ledger
 from invoice.models import PaymentTerm
 from moneyed import Money
 from django.utils.translation import gettext_lazy as _
@@ -58,12 +58,21 @@ class SalesQueryset(models.QuerySet):
             gold=Sum('balance', filter=Q(balancetype='USD')),
             silver=Sum('balance', filter=Q(balancetype='AUD')),
         )
+    
     def today(self):
         return self.filter(created__date=date.today())
+    
+    def avg_rate(self):
+        return self.aggregate(gold=Avg('rate', filter=Q(balancetype='INR', metaltype='Gold')),
+                                silver=Avg('rate', filter=Q(balancetype='INR', metaltype='Silver')))
 
     def cur_month(self):
         return self.filter(created__month=date.today().month,
                            created__year=date.today().year)
+
+class InvoiceManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('customer','term')
 
 class Invoice(models.Model):
     # Fields
@@ -103,8 +112,8 @@ class Invoice(models.Model):
         max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    objects = SalesQueryset.as_manager()
-
+    # objects = SalesQueryset.as_manager()
+    objects = InvoiceManager.from_queryset(SalesQueryset)()
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -122,7 +131,6 @@ class Invoice(models.Model):
         related_name='bill'
     )
     journals = GenericRelation(Journal,related_query_name='sales_doc')
-    stock_txns = GenericRelation(StockTransaction)
 
     class Meta:
         ordering = ('-created',)
@@ -175,8 +183,7 @@ class Invoice(models.Model):
             self.status = "Paid"
         self.due_date = self.created + timedelta(days=self.term.due_days)
         self.total = self.balance
-        if self.is_gst:
-            self.total += self.get_gst()
+        self.total += self.get_gst()
         
         super(Invoice, self).save(*args, **kwargs)
     
@@ -199,9 +206,13 @@ class Invoice(models.Model):
             return (self.balance * 3)/100
         return 0
 
-    @transaction.atomic()
+   
     def post(self):
         if not self.posted:
+            ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+            jrnl = Journal.objects.create(type=JournalTypes.SJ,
+                                          content_object=self, desc='sale')
+
             if self.approval:
                 for i in self.approval.items.filter(status = 'Pending'):
                     apr = ApprovalLineReturn.objects.create(
@@ -211,43 +222,58 @@ class Invoice(models.Model):
                 self.approval.is_billed = True
                 self.approval.save()
                 self.approval.update_status()
+            if self.saleitems.exists():
+                for i in self.saleitems.all():
+                    i.post(jrnl)
             
-            jrnl = Journal.objects.create(type = JournalTypes.SJ,
-                    content_object = self, desc = 'sale')
-
-            inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
-            cogs = "GST COGS" if self.content_object.is_gst else "Non-GST COGS"
-            money = Money(self.balance, self.btype)
-            tax = Money(self.get_gst(), 'INR')
-            lt = [{'ledgerno': 'sales', 'ledgerno_dr': 'Sundry Debtors', 'amount': money},
+            money = Money(self.balance, self.balancetype)
+            
+            if self.is_gst:
+                inv = ledgers["GST INV"]
+                cogs = ledgers["GST COGS"]
+                gst = Money(self.gst(),'INR')
+                amount = money + gst
+               
+            else:
+                inv = ledgers["Non-GST INV"]
+                cogs = ledgers["Non-GST COGS"]
+                amount = money
+                gst = Money(0,'INR')
+            
+            lt = [{'ledgerno': ledgers['Sales'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': money},
                   {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': money},
-                  {'ledgerno': 'Output Igst', 'ledgerno_dr': 'Sundry Debtors', 'amount': tax}]
-            at = [{'ledgerno': 'sales', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'CRSL',
-                   'account': self.customer.account, 'amount': money + tax}]
+                  {'ledgerno': ledgers['Output Igst'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': gst}]
+            at = [{'ledgerno': ledgers['Sales'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'CRSL',
+                   'account': self.customer.account.id, 'amount': amount}]
+
             jrnl.transact(lt,at)
-            for i in self.saleitems.all():
-                i.post(jrnl)
+            
             self.posted = True
             self.save(update_fields = ['posted'])
         
-    @transaction.atomic()   
+    
     def unpost(self):
         if self.posted: 
             last_jrnl = self.journals.latest()
+            jrnl = Journal.objects.create(content_object=self,
+                                          desc='sale-revert')
             if self.approval:
                 self.approval.is_billed = False
-                for i in self.approval.items.all():
+                approval_items = self.approval.items.all()
+                for i in approval_items:
                     i.unpost()
                     i.product.add(i.weight, i.quantity,i, 'A')
                     i.update_status()
                 self.approval.save()
                 self.approval.update_status()
                 
-            jrnl = Journal.objects.create(content_object=self,
-                    desc='sale-revert')
+            sale_items = self.saleitems.all()
+            if self.saleitems:
+                for i in sale_items:
+                    i.unpost(jrnl)
+
             jrnl.untransact(last_jrnl)
-            for i in self.saleitems.all():
-                i.post(jrnl)
+            
             self.posted = False
             self.save(update_fields = ['posted'])
   
@@ -414,20 +440,22 @@ class Receipt(models.Model):
     
     def post(self):
         if not self.posted:
+            ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+
             jrnl = Journal.objects.create(content_object = self,
                 type = JournalTypes.RC, desc = 'Receipt')
             
             money = Money(self.total, self.type)
-            lt = [{'ledgerno': 'Sundry Debtors', 'ledgerno_dr': 'Cash', 'amount': money}]
-            at = [{'ledgerno': 'Sundry Debtors', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'RCT',
-                   'account': self.customer.account, 'amount': money}]
+            lt = [{'ledgerno': ledgers['Sundry Debtors'], 'ledgerno_dr':ledgers['Cash'], 'amount': money}]
+            at = [{'ledgerno': ledgers['Sundry Debtors'], 'xacttypecode': ledgers['Dr'], 'xacttypecode_ext': 'RCT',
+                   'account': self.customer.account.id, 'amount': money}]
             jrnl.transact(lt,at)
             self.posted = True
             self.save(update_fields = ['posted'])
 
     def unpost(self):
         if self.posted:
-            last_jrnl =- self.journals.latest()
+            last_jrnl = self.journals.latest()
             jrnl = Journal.objects.create(
                 content_object=self,
                 desc='Receipt-Revert')

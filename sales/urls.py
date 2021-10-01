@@ -25,6 +25,10 @@ urlpatterns += (
     path('sales/invoice/delete/<int:pk>/', views.InvoiceDeleteView.as_view(), name='sales_invoice_delete'),
     path('sales/invoice/<int:pk>/post/',views.post_sales,name = 'sales_invoice_post'),
     path('sales/invoice/<int:pk>/unpost/',views.unpost_sales,name='sales_invoice_unpost'),
+    path('sales/invoice/postall/',views.post_allsales,name='sales_invoice_postall'),
+    path('sales/invoice/unpostall/', views.unpost_allsales,
+         name='sales_invoice_unpostall'),
+
 )
 urlpatterns+=(
             path('sales/',views.home,name='sales_home'),
@@ -54,4 +58,8 @@ urlpatterns += (
          views.post_receipt, name='sales_receipt_post'),
     path('sales/receipt/<int:pk>/unpost/',
          views.unpost_receipt, name='sales_receipt_unpost'),
+    path('sales/receipt/postall/',views.post_allrcpts,name='sales_receipt_postall'),
+    path('sales/receipt/unpostall/', views.unpost_allrcpts,
+         name='sales_receipt_unpostall'),
+
 )

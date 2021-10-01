@@ -50,7 +50,10 @@ class PurchaseQueryset(models.QuerySet):
             gold=Sum('balance', filter=Q(balancetype='USD')),
             silver=Sum('balance', filter=Q(balancetype='AUD')),
         )
-     
+
+class InvoiceManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('supplier','term')
 class Invoice(models.Model):
 
     # Fields
@@ -60,7 +63,7 @@ class Invoice(models.Model):
         'users.CustomUser', on_delete=models.CASCADE,
         null=True, blank=True,
         related_name='purchased')
-    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    rate = models.DecimalField(max_digits=10, decimal_places=3,default = 0)
     is_gst = models.BooleanField(default=False)
     posted = models.BooleanField(default=False)
     gross_wt = models.DecimalField(max_digits=14, decimal_places=4, 
@@ -105,9 +108,9 @@ class Invoice(models.Model):
         related_name = 'purchase_term',
         blank=True, null=True)
     journals = GenericRelation(Journal,related_query_name ='purchase_doc')
-    stock_txns = GenericRelation(StockTransaction)
-    objects = PurchaseQueryset.as_manager()
-
+    
+    # objects = PurchaseQueryset.as_manager()
+    objects = InvoiceManager.from_queryset(PurchaseQueryset)()
     class Meta:
         ordering = ('id','created',)
 
@@ -151,8 +154,7 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         
         self.due_date = self.created + timedelta(days=self.term.due_days)
-        if self.is_gst:    
-            self.total += self.get_gst()
+        self.total += self.get_gst()
 
         super(Invoice, self).save(*args, **kwargs)
 
@@ -162,6 +164,9 @@ class Invoice(models.Model):
     @transaction.atomic()
     def post(self):
         if not self.posted:
+            from dea.models import Ledger
+            ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+
             try:
                 self.supplier.account
             except:
@@ -169,17 +174,27 @@ class Invoice(models.Model):
  
             jrnl = Journal.objects.create(type = JournalTypes.PJ,
                     content_object=self,desc='purchase')
-            
-            inv = "GST INV" if self.is_gst else "Non-GST INV"
-            money = Money(self.balance,self.balancetype)
-            tax = Money(self.get_gst(), 'INR')
-            lt = [{'ledgerno':'Sundry Creditors','ledgerno_dr':inv,'amount':money},
-                  {'ledgerno':'Sundry Creditors', 'ledgerno_dr': 'Input Igst', 'amount': tax}, ]
-            at = [{'ledgerno':'Sundry Creditors','xacttypecode':'Dr','xacttypecode_ext':'CRPU',
-                    'account':self.supplier.account,'amount':money + tax}]
-            jrnl.transact(lt,at)
+
             for i in self.purchaseitems.all():
                 i.post(jrnl)
+
+            money = Money(self.balance,self.balancetype)
+            
+            if self.is_gst:
+                inv = ledgers["GST INV"]
+                tax = Money(self.get_gst(), 'INR')
+                amount = money + tax
+            else:
+                inv = ledgers["Non-GST INV"]
+                amount = money
+
+            lt = [{'ledgerno':ledgers['Sundry Creditors'],'ledgerno_dr':inv,'amount':money},
+                  {'ledgerno':ledgers['Sundry Creditors'], 'ledgerno_dr': ledgers['Input Igst'], 'amount': tax}, ]
+            at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'CRPU',
+                    'account':self.supplier.account,'amount':amount}]
+
+            jrnl.transact(lt,at)
+ 
             self.posted = True
             self.save(update_fields=['posted'])
        
@@ -352,14 +367,17 @@ class Payment(models.Model):
 
     def post(self):
         if not self.posted:
+            from dea.models import Ledger
+            ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+
             jrnl = Journal.objects.create(type = JournalTypes.PY,
                 content_object = self,
                 desc = 'payment')
             
             money = Money(self.total, self.type)
-            lt = [{'ledgerno':'Cash','ledgerno_dr':'Sundry Creditors','amount':money}]
-            at = [{'ledgerno':'Sundry Creditors','xacttypecode':'Dr','xacttypecode_ext':'PYT',
-                    'account':self.supplier.account,'amount':money}]
+            lt = [{'ledgerno':ledgers['Cash'],'ledgerno_dr':ledgers['Sundry Creditors'],'amount':money}]
+            at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'PYT',
+                    'account':self.supplier.accountid,'amount':money}]
             jrnl.transact(lt,at)
             self.posted = True
             self.save(update_fields = ['posted'])

@@ -53,11 +53,6 @@ for row in sheet.iter_rows(min_row=2):
         elif 'Retail Customer' in row[0].value:
             retailers.append(row[0].coordinate)
 
-print(f"Accounts :{len(Account)}")
-print(f"creditors :{len(creditors)}")
-print(f"debtors :{len(debtors)}")
-print(f"retailers :{len(retailers)}")
-
 def previous_and_next(some_iterable):
     prevs, items, nexts = tee(some_iterable, 3)
     prevs = chain([None], prevs)
@@ -88,28 +83,27 @@ for previous, item, nxt in previous_and_next(Account):
     nxt_row = sheet[str(nxt)].row
     nxt_col = sheet[str(nxt)].column
 
-    balance=[name,tt]
-    balance.append(sheet.cell(row=nxt_row-2,column=7).value)
-    balance.append(sheet.cell(row=nxt_row-2,column=10).value) 
+    balance = [name, tt, sheet.cell(
+        row=nxt_row-2, column=7).value, sheet.cell(row=nxt_row-2, column=10).value] 
     bal_ws.append(balance)
 
-    for cell in sheet[f"B{row+1}:AA{nxt_row-4}"]:
-        r = cell[0].row
-        tdict = {}
+    # for cell in sheet[f"B{row+1}:AA{nxt_row-4}"]:
+    #     r = cell[0].row
+    #     tdict = {}
 
-        tdict['date'] = sheet['B'+str(r)].value
-        tdict['description'] = sheet['C'+str(r)].value
-        tdict['docno'] = sheet['D'+str(r)].value
-        tdict['debitamount'] = sheet['E'+str(r)].value
-        tdict['creditamount'] = sheet['F'+str(r)].value
-        tdict['balanceamount'] = sheet['G'+str(r)].value
-        tdict['debitmetal'] = sheet['H'+str(r)].value
-        tdict['creditmetal'] = sheet['I'+str(r)].value
-        tdict['balancemetal'] = sheet['J'+str(r)].value
-        txn = [name,tdict['date'], tdict['description'], tdict['docno'],
-                tdict['debitamount'],tdict['creditamount'],tdict['balanceamount'],
-                tdict['debitmetal'],tdict['creditmetal'],tdict['balancemetal']]
-        txn_ws.append(txn)
+    #     tdict['date'] = sheet['B'+str(r)].value
+    #     tdict['description'] = sheet['C'+str(r)].value
+    #     tdict['docno'] = sheet['D'+str(r)].value
+    #     tdict['debitamount'] = sheet['E'+str(r)].value
+    #     tdict['creditamount'] = sheet['F'+str(r)].value
+    #     tdict['balanceamount'] = sheet['G'+str(r)].value
+    #     tdict['debitmetal'] = sheet['H'+str(r)].value
+    #     tdict['creditmetal'] = sheet['I'+str(r)].value
+    #     tdict['balancemetal'] = sheet['J'+str(r)].value
+    #     txn = [name,tdict['date'], tdict['description'], tdict['docno'],
+    #             tdict['debitamount'],tdict['creditamount'],tdict['balanceamount'],
+    #             tdict['debitmetal'],tdict['creditmetal'],tdict['balancemetal']]
+    #     txn_ws.append(txn)
     #     if tdict['debitamount'] is not None:
     #         inva = ['',name,tdict['date'],'',tdict['description'],tdict['docno'],'Cash','Credit',tdict['debitamount']]
     #         inv_ws.append(inva)
@@ -130,7 +124,7 @@ for previous, item, nxt in previous_and_next(Account):
 # txn_rcpt_ws = rcpt_wb.copy_worksheet(rcpt_ws)
 # txn_bal_ws = bal_wb.copy_worksheet(bal_ws)
 
-txn_wb.save(filename='clean_data_txn.xlsx')
+# txn_wb.save(filename='clean_data_txn.xlsx')
 # inv_wb.save(filename='clean_data_inv.xlsx')
 # rcpt_wb.save(filename='clean_data_rcpt.xlsx')
 bal_wb.save(filename='clean_data_bal.xlsx')

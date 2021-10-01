@@ -19,7 +19,11 @@
                 Total:
               <ul>
                 <li>
-                  Cash : {{total.total.cash}} (Gold:{{total.total.cash_g}}) (Silver:{{total.total.cash_s}})
+                  Cash : {{total.total.cash}} 
+                  <ul>
+                    <li>Gold ({{total.total.cash_g_nwt}}):{{total.total.cash_g}}</li>
+                    <li>Silver({{total.total.cash_s_nwt}}):{{total.total.cash_s}}</li>
+                  </ul> 
                 </li>
                 <li>Gold : {{total.total.gold}}</li>
                 <li>Silver:{{total.total.silver}}</li>
@@ -59,7 +63,13 @@
                 Total
               <ul>
                 <li>
-                  Cash : {{total.nongst.cash}} (Gold:{{total.nongst.cash_g}}) (Silver:{{total.nongst.cash_s}})
+                  Cash : {{total.nongst.cash}} 
+                  <ul>
+                    <li>Gold ({{total.nongst.cash_g_nwt}}):{{total.nongst.cash_g}}</li>
+                    <li>Silver ({{total.nongst.cash_s_nwt}}):{{total.nongst.cash_s}}</li>
+                  </ul>
+                  
+                  
                 </li>
                 <li>Gold : {{total.nongst.gold}}</li>
                 <li>Silver:{{total.nongst.silver}}</li>

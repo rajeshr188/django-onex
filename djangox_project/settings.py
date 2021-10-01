@@ -296,8 +296,16 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'debug.log')
         }
     },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
     'root': {
         'handlers': ['console','file'],
         'level': 'WARNING',
     },
 }
+TENANT_LIMIT_SET_CALLS = True

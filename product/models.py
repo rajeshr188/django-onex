@@ -436,12 +436,11 @@ class Stock(models.Model):
             # else timedelta between today and date created
 
     def add(self,weight,quantity,journal,activity_type):
-        print('came to create stxns')
         StockTransaction.objects.create(journal = journal,
-            stock = self,weight = weight,quantity = quantity,activity_type=activity_type)
+            stock = self,weight = weight,quantity = quantity,
+            activity_type=activity_type)
         self.update_status()
-        print('succeded')
-
+    
     def remove(self,weight,quantity,journal,activity_type):
         StockTransaction.objects.create(
             journal = journal,

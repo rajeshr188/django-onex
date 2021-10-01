@@ -6,7 +6,7 @@ from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget,DecimalWidget
 import decimal
-
+from utils.tenant_admin import admin_site
 class CustomDecimalWidget(DecimalWidget):
     """
     Widget for converting decimal fields.
@@ -43,7 +43,19 @@ class InvoiceAdmin(ImportExportActionModelAdmin):
     resource_class = InvoiceResource
     list_display = ['id', 'created', 'updated', 'rate', 'balancetype', 'balance', 'status']
 
-admin.site.register(Invoice, InvoiceAdmin)
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Invoice, InvoiceAdmin)
 
 
 class InvoiceItemAdminForm(forms.ModelForm):
@@ -84,5 +96,16 @@ class ReceiptAdmin(ImportExportActionModelAdmin):
     resource_class = ReceiptResource
     list_display = ['id','customer','created', 'updated', 'type', 'total', 'description','status']
 
+    def has_add_permission(self, request):
+        return True
 
-admin.site.register(Receipt, ReceiptAdmin)
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_module_permission(self, request) -> bool:
+        return True
+
+admin_site.register(Receipt, ReceiptAdmin)

@@ -16,7 +16,7 @@ from django.shortcuts import render,redirect
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseRedirect
 from django.db import transaction
 import logging
 
@@ -26,30 +26,33 @@ def home(request):
     context = {}
     qs = Invoice.objects
     qs_posted = qs.posted()
-    
+    avgrate = qs_posted.avg_rate()
     total = dict()
     total['total']=qs_posted.total_with_ratecut()
     if total['total']['cash']:
-        total['total']['gmap'] = round(total['total']['cash_g'] / \
-            total['total']['cash_g_nwt'],3)
-        total['total']['smap'] = round(total['total']['cash_s'] / \
-            total['total']['cash_s_nwt'],3)
+        total['total']['gmap'] = round(avgrate['gold'],2)
+        total['total']['smap'] = round(avgrate['silver'],2)
+        
     else:
         total['total']['gmap']=0
         total['total']['smap'] = 0
     
+    gst_avgrate = qs_posted.gst().avg_rate()
     total['gst'] = qs_posted.gst().total_with_ratecut()
     if total['gst']['cash']: 
-        total['gst']['gmap'] = round(total['gst']['cash_g']/total['gst']['cash_g_nwt'],3)
-        total['gst']['smap'] = round(total['gst']['cash_s']/total['gst']['cash_s_nwt'],3)
+        total['gst']['gmap'] = round(gst_avgrate['gold'], 2)
+        total['gst']['smap'] = round(gst_avgrate['silver'], 2)
+       
     else:
         total['gst']['gmap']=0
         total['gst']['smap']=0
     
     total['nongst'] = qs_posted.non_gst().total_with_ratecut()
+    nongst_avgrate = qs_posted.non_gst().avg_rate()
     if total['nongst']['cash']:
-        total['nongst']['gmap'] = round(total['nongst']['cash_g']/total['nongst']['cash_g_nwt'],3)
-        total['nongst']['smap'] = round(total['nongst']['cash_s']/total['nongst']['cash_s_nwt'],3)
+        total['nongst']['gmap'] = round(nongst_avgrate['gold'], 2)
+        total['nongst']['smap'] = round(nongst_avgrate['silver'], 2)
+       
     else:
         total['nongst']['gmap']=0
         total['nongst']['smap']=0
@@ -289,7 +292,173 @@ def post_sales(request,pk):
 def unpost_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
     sales_inv.unpost()
+    sales_inv.posted = False
+    sales_inv.save(update_fields=['posted'])
     return redirect(sales_inv)
+
+# @transaction.atomic()
+# def post_allsales(request):
+#     all_sales = Invoice.objects.filter(posted = False)
+#     from dea.models import Ledger
+#     ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+#     for i in all_sales:
+#         logger.warning(f"posting journals for {i.id}")
+#         i.post(ledgers = ledgers)  
+#     all_sales.update(posted = True)
+#     return HttpResponseRedirect(reverse('sales_invoice_list'))
+
+from dea.models import Ledger,Journal,JournalTypes, LedgerTransaction,AccountTransaction
+from approval.models import ApprovalLineReturn
+from moneyed import Money
+@transaction.atomic()
+def post_allsales(request):
+    all_sales = Invoice.objects.filter(posted = False).select_related('customer')
+    ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+    lt = []
+    at = []
+    for sale in all_sales:
+        j = Journal.objects.create(content_type_id =35,object_id = sale.id,type = JournalTypes.SJ,desc = 'sale')
+        if sale.approval:
+            for i in sale.approval.items.filter(status='Pending'):
+                apr = ApprovalLineReturn.objects.create(
+                line=i, quantity=i.quantity, weight=i.weight)
+                apr.post()
+                i.update_status()
+                sale.approval.is_billed = True
+                sale.approval.save()
+                sale.approval.update_status()
+        if sale.saleitems.exists():
+            for i in sale.saleitems.all():
+                i.post(j)
+
+        money = Money(sale.balance, sale.balancetype)
+
+        if sale.is_gst:
+            inv = ledgers["GST INV"]
+            cogs = ledgers["GST COGS"]
+            gst = Money(sale.gst(),'INR')
+            amount = money + gst
+
+        else:
+            inv = ledgers["Non-GST INV"]
+            cogs = ledgers["Non-GST COGS"]
+            amount = money
+            gst = Money(0,'INR')
+
+        lt.append(LedgerTransaction(journal_id = j.id,ledgerno_id = ledgers['Sales'], ledgerno_dr_id =  ledgers['Sundry Debtors'], amount = money))
+        lt.append(LedgerTransaction(journal_id = j.id,ledgerno_id = inv, ledgerno_dr_id = cogs, amount = money))
+        lt.append(LedgerTransaction(journal_id = j.id,ledgerno_id =ledgers['Output Igst'],ledgerno_dr_id = ledgers['Sundry Debtors'],amount = gst))
+        at.append(AccountTransaction(journal_id =j.id,ledgerno_id = ledgers['Sales'],XactTypeCode_id = 'Cr', XactTypeCode_ext_id = 'CRSL',
+                 Account_id = sale.customer.account.id,amount = amount))
+
+    LedgerTransaction.objects.bulk_create(lt)
+    AccountTransaction.objects.bulk_create(at)
+    logger.warning('at and lt created successfully')
+
+    all_sales.update(posted=True)
+    return HttpResponseRedirect(reverse('sales_invoice_list'))
+
+# def post_allsales(request):
+#     all_sales = Invoice.objects.values_list('id',flat = True)
+#     ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+
+#     j_objs = []
+#     for i in all_sales:
+#         j_objs.append(Journal(content_type_id =35,object_id = i,type = JournalTypes.SJ,desc = 'sale'))
+
+
+#     js = Journal.objects.bulk_create(j_objs)
+#     logger.warning('journals created successfully')
+#     lt =[]
+#     at=[]
+#     for i in js:
+#         sale = i.content_object
+#         if sale.approval:
+#            for i in sale.approval.items.filter(status='Pending'):
+#                apr = ApprovalLineReturn.objects.create(
+#                    line=i, quantity=i.quantity, weight=i.weight)
+#                apr.post()
+#                i.update_status()
+#                sale.approval.is_billed = True
+#                sale.approval.save()
+#                sale.approval.update_status()
+#         if sale.saleitems.exists():
+#             for i in sale.saleitems.all():
+#                 i.post(i)
+            
+#         money = Money(sale.balance, sale.balancetype)
+            
+#         if sale.is_gst:
+#             inv = ledgers["GST INV"]
+#             cogs = ledgers["GST COGS"]
+#             gst = Money(sale.gst(),'INR')
+#             amount = money + gst
+               
+#         else:
+#             inv = ledgers["Non-GST INV"]
+#             cogs = ledgers["Non-GST COGS"]
+#             amount = money
+#             gst = Money(0,'INR')
+            
+#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id = ledgers['Sales'], ledgerno_dr_id =  ledgers['Sundry Debtors'], amount = money))
+#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id = inv, ledgerno_dr_id = cogs, amount = money))
+#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id =ledgers['Output Igst'],ledgerno_dr_id = ledgers['Sundry Debtors'],amount = gst))
+#         at.append(AccountTransaction(journal_id =i.id,ledgerno_id = ledgers['Sales'],XactTypeCode_id = 'Cr', XactTypeCode_ext_id = 'CRSL',
+#                    Account_id = sale.customer.account.id,amount = amount))
+
+#     LedgerTransaction.objects.bulk_create(lt)
+#     AccountTransaction.objects.bulk_create(at)
+#     logger.warning('at and lt created successfully')
+
+#     all_sales.update(posted=True)
+#     return HttpResponseRedirect(reverse('sales_invoice_list'))
+
+@transaction.atomic()
+def unpost_allsales(request):
+    all_sales = Invoice.objects.filter(posted = True).select_related('customer')
+    logger.warning('retreived sales')
+    ltl = []
+    atl = []
+    for sale in all_sales:
+        last_jrnl = sale.journals.latest()
+        jrnl = Journal.objects.create(content_object=sale,
+                                         desc='sale-revert')
+        if sale.approval:
+            sale.approval.is_billed = False
+            approval_items = sale.approval.items.all()
+            for i in approval_items:
+                i.unpost()
+                i.product.add(i.weight, i.quantity, i, 'A')
+                i.update_status()
+            sale.approval.save()
+            sale.approval.update_status()
+
+        sale_items = sale.saleitems
+        if sale.saleitems.exists():
+            for i in sale_items.all():
+                i.unpost(jrnl)
+
+        ltxns = last_jrnl.ltxns.all()
+        atxns = last_jrnl.atxns.all()
+
+        for i in ltxns:
+            ltl.append(LedgerTransaction(journal=jrnl, ledgerno_id=i.ledgerno_dr_id,
+                                             ledgerno_dr_id=i.ledgerno_id, amount=i.amount))
+            
+        
+        for i in atxns:
+            if i.XactTypeCode_id == 'Cr':  # 1
+                atl.append(AccountTransaction(journal = jrnl, ledgerno_id = i.ledgerno_id, XactTypeCode_id = 'Dr',#2
+                        XactTypeCode_ext_id = 'AC' , Account_id = i.Account_id, amount = i.amount))#1
+            else:
+                atl.append(AccountTransaction(journal = jrnl, ledgerno_id = i.ledgerno_id, XactTypeCode_id = 'Cr',#1
+                        XactTypeCode_ext_id = 'AD' , Account_id = i.Account_id, amount = i.amount))   #2
+
+    logger.warning('bulk creating lt and at')
+    LedgerTransaction.objects.bulk_create(ltl)
+    AccountTransaction.objects.bulk_create(atl)
+    all_sales.update(posted = False)
+    return HttpResponseRedirect(reverse('sales_invoice_list'))
 
 class InvoiceDeleteView(DeleteView):
     model = Invoice
@@ -372,6 +541,20 @@ def unpost_receipt(request, pk):
     rcpt.unpost()
     return redirect(rcpt)
     
+@transaction.atomic()
+def post_allrcpts(request):
+    all_rcpts = Receipt.objects.filter(posted = False)
+    for i in all_rcpts:
+        i.post()
+    return reverse('sales_receipt_list')
+
+@transaction.atomic()
+def unpost_allrcpts(request):
+    all_rcpts = Receipt.objects.filter(posted=True)
+    for i in all_rcpts:
+        i.unpost()
+    return reverse('sales_receipt_list')
+
 class ReceiptDetailView(DetailView):
     model = Receipt
 

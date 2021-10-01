@@ -95,7 +95,7 @@ class Account(models.Model):
                         on_delete = models.CASCADE,
                         related_name='account'
                         )
-    objects = managers.AccountManager()
+    # objects = managers.AccountManager()
     class Meta:
         ordering = ('id',)
 
@@ -231,7 +231,7 @@ class Ledger(MPTTModel):
                             blank = True,
                             on_delete = models.CASCADE,
                             related_name = 'children')
-    objects = managers.LedgerManager()
+    # objects = managers.LedgerManager()
     
     class MPTTMeta:
         order_insertion_by = ['name']
@@ -281,6 +281,7 @@ class Ledger(MPTTModel):
         # this statement will serve as opening balance for this acc
         return LedgerStatement.objects.create(ledgerno=self,
                                               ClosingBalance=self.current_balance().monies())
+    
     def current_balance_wrt_descendants(self):
         descendants = [ i.current_balance() for i in self.get_descendants(include_self=False)]
         bal = sum(descendants,self.current_balance())
@@ -355,42 +356,46 @@ class Journal(models.Model):
         if self.content_type:
             return f"{self.content_type.app_label}_{self.content_type.model}_detail"
     
-    @transaction.atomic()
-    def transact(self,lt=[],at=[]):
+    def transact(self,lt,at):
+        ltl = []
+        atl = []
         for i in lt:
-            LedgerTransaction.objects.create_txn(self,i['ledgerno'],i['ledgerno_dr'],i['amount']) 
+            ltl.append(LedgerTransaction(journal = self,ledgerno_id =i['ledgerno'],
+                ledgerno_dr_id = i['ledgerno_dr'],amount=i['amount']))
+        LedgerTransaction.objects.bulk_create(ltl,ignore_conflicts=True)
+
         for i in at:
-            AccountTransaction.objects.create_txn(self,i['ledgerno'],i['xacttypecode'],
-                i['xacttypecode_ext'] ,i['account'],i['amount']) 
+            atl.append(AccountTransaction(journal = self,ledgerno_id = i['ledgerno'],
+                XactTypeCode_id = i['xacttypecode'],XactTypeCode_ext_id = i['xacttypecode_ext'] ,
+                Account_id = i['account'],amount = i['amount'])) 
+        AccountTransaction.objects.bulk_create(atl,ignore_conflicts=True)
         
-    @transaction.atomic()
     def untransact(self,last_jrnl):
         if last_jrnl:
-            for i in last_jrnl.ltxns.all():
-                LedgerTransaction.objects.create_txn(self,i.ledgerno_dr,i.ledgerno,i.amount)
-            for i in last_jrnl.atxns.all():
-                xacttypecode =''
-                xacttypecode_ext=''
-                print(i.XactTypeCode.XactTypeCode)
-                if i.XactTypeCode.XactTypeCode == 'Cr':
-                    xacttypecode = 'Dr'
-                    xacttypecode_ext = 'AC'
-                else:
-                    xacttypecode = 'Cr'
-                    xacttypecode_ext = 'AD'
-                AccountTransaction.objects.create_txn(self,i.ledgerno,xacttypecode,
-                    xacttypecode_ext ,i.Account,i.amount)   
+            ltxns = last_jrnl.ltxns.all()
+            ltl = []
+            for i in ltxns:
+                ltl.append(LedgerTransaction(journal = self,ledgerno_id = i.ledgerno_dr_id,
+                            ledgerno_dr_id = i.ledgerno_id,amount = i.amount))
+            LedgerTransaction.objects.bulk_create(ltl,ignore_conflicts=True)               
+            atxns = last_jrnl.atxns.all()
+            for i in atxns:
+                if i.XactTypeCode_id == 'Cr':#1      
+                    AccountTransaction.objects.create(journal = self,ledgerno_id = i.ledgerno_id,XactTypeCode_id = 'Dr',#2
+                        XactTypeCode_ext_id = 'AC' ,Account_id = i.Account_id,amount = i.amount)#1
+                else: 
+                    AccountTransaction.objects.create(journal = self,ledgerno_id = i.ledgerno_id,XactTypeCode_id = 'Cr',#1
+                        XactTypeCode_ext_id = 'AD' ,Account_id = i.Account_id,amount = i.amount)   #2       
         else:
             print("No Last Journal to undo")
 
-class LedgerTransactionManager(models.Manager):
-    def create_txn(self,journal,ledgerno,ledgerno_dr,amount):
-        dr = Ledger.objects.get(name = ledgerno_dr)
-        cr = Ledger.objects.get(name = ledgerno)
-        print(f"cr:{cr}")
-        print(f"dr {dr}")
-        txn = self.create(journal = journal,ledgerno = cr,ledgerno_dr=dr,amount = amount)
-        return txn
+# class LedgerTransactionManager(models.Manager):
+#     def create_txn(self,journal,ledgerno,ledgerno_dr,amount):
+#         dr = Ledger.objects.only('id').get(name = ledgerno_dr)
+#         cr = Ledger.objects.only('id').get(name = ledgerno)
+       
+#         self.create(journal = journal,ledgerno = cr,ledgerno_dr=dr,amount = amount)
+        
 
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='ltxns')
@@ -404,7 +409,7 @@ class LedgerTransaction(models.Model):
     # amount = models.DecimalField(max_digits=13, decimal_places=3)
     amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR',
                     validators =[ MinValueValidator(limit_value= 0.0)])
-    objects = LedgerTransactionManager()
+    # objects = LedgerTransactionManager()
 
     def __str__(self):
         return self.ledgerno.name
@@ -428,14 +433,13 @@ class LedgerStatement(models.Model):
     def get_cb(self):
         return Balance(self.ClosingBalance)
 
-class AccountTransactionManager(models.Manager):
-    def create_txn(self,journal, ledgerno, xacttypecode, xacttypecode_ext, account, amount):
-        l = Ledger.objects.get(name=ledgerno)
-        xc = TransactionType_DE.objects.get(XactTypeCode = xacttypecode)
-        xc_ext = TransactionType_Ext.objects.get(XactTypeCode_ext = xacttypecode_ext)
-        txn = self.create(journal = journal,ledgerno = l,XactTypeCode = xc,
-                XactTypeCode_ext = xc_ext,Account = account,amount = amount)
-        return txn
+# class AccountTransactionManager(models.Manager):
+#     def create_txn(self,journal, ledgerno, xacttypecode, xacttypecode_ext, account, amount):
+#         l = Ledger.objects.only('id').get(name=ledgerno)
+        
+#         txn = self.create(journal = journal,ledgerno = l,XactTypeCode_id = xacttypecode,
+#                 XactTypeCode_ext_id = xacttypecode_ext,Account = account,amount = amount)
+#         return txn
 
 class AccountTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='atxns')
@@ -451,7 +455,7 @@ class AccountTransaction(models.Model):
                             related_name='accounttransactions')
     amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR',
                         validators=[MinValueValidator(limit_value=0.0)])
-    objects = AccountTransactionManager()
+    # objects = AccountTransactionManager()
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
 

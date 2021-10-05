@@ -45,9 +45,6 @@ def print_release(request,pk):
     params = {'release':release}
     return Render.render('girvi/release_pdf.html',params)
 
-@login_required
-def print_notice(request,pk):
-    pass
 
 @login_required
 def notice(request):
@@ -56,8 +53,8 @@ def notice(request):
     a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
 
     cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
-                                        loan__release__isnull=True).\
-                                        prefetch_related(Prefetch('loan_set',
+                    loan__release__isnull=True
+                    ).prefetch_related(Prefetch('loan_set',
                                                 queryset = Loan.objects.filter(
                                                 release__isnull=True,
                                                 created__lt=a_yr_ago

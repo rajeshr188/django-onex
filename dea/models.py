@@ -12,7 +12,7 @@ from moneyed import Money
 from .utils.currency import Balance
 from psycopg2.extras import register_composite
 from psycopg2.extensions import register_adapter, adapt, AsIs
-from . import managers
+
 
 MoneyValue = register_composite(
     'money_value',
@@ -223,6 +223,7 @@ class AccountType(models.Model):
 # ledger is chart of accounts
 # add ledgerno
 class Ledger(MPTTModel):
+    # id/code = models.IntegerField(primary_key = True)
     AccountType = models.ForeignKey(AccountType,
                     on_delete = models.CASCADE)
     name = models.CharField(max_length=100)
@@ -389,14 +390,6 @@ class Journal(models.Model):
         else:
             print("No Last Journal to undo")
 
-# class LedgerTransactionManager(models.Manager):
-#     def create_txn(self,journal,ledgerno,ledgerno_dr,amount):
-#         dr = Ledger.objects.only('id').get(name = ledgerno_dr)
-#         cr = Ledger.objects.only('id').get(name = ledgerno)
-       
-#         self.create(journal = journal,ledgerno = cr,ledgerno_dr=dr,amount = amount)
-        
-
 class LedgerTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='ltxns')
     ledgerno = models.ForeignKey(Ledger,on_delete =models.CASCADE ,
@@ -411,6 +404,9 @@ class LedgerTransaction(models.Model):
                     validators =[ MinValueValidator(limit_value= 0.0)])
     # objects = LedgerTransactionManager()
 
+    class Meta:
+        indexes = [models.Index(fields =['ledgerno',]),
+                    models.Index(fields = ['ledgerno_dr',])]
     def __str__(self):
         return self.ledgerno.name
  
@@ -433,14 +429,6 @@ class LedgerStatement(models.Model):
     def get_cb(self):
         return Balance(self.ClosingBalance)
 
-# class AccountTransactionManager(models.Manager):
-#     def create_txn(self,journal, ledgerno, xacttypecode, xacttypecode_ext, account, amount):
-#         l = Ledger.objects.only('id').get(name=ledgerno)
-        
-#         txn = self.create(journal = journal,ledgerno = l,XactTypeCode_id = xacttypecode,
-#                 XactTypeCode_ext_id = xacttypecode_ext,Account = account,amount = amount)
-#         return txn
-
 class AccountTransaction(models.Model):
     journal = models.ForeignKey(Journal,on_delete = models.CASCADE,related_name='atxns')
     ledgerno = models.ForeignKey(Ledger,on_delete = models.CASCADE)
@@ -456,6 +444,10 @@ class AccountTransaction(models.Model):
     amount = MoneyField(max_digits=13,decimal_places=3,default_currency='INR',
                         validators=[MinValueValidator(limit_value=0.0)])
     # objects = AccountTransactionManager()
+
+    class Meta:
+        indexes = [models.Index(fields =['ledgerno',]),]
+
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
 
@@ -515,5 +507,4 @@ class Accountbalance(models.Model):
     def get_currbal(self):
         return Balance(self.ClosingBalance) + Balance(self.dr)  - Balance(self.cr) 
     
-
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created

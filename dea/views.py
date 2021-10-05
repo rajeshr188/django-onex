@@ -76,7 +76,7 @@ def home(request):
 
 def generalledger(request):
     context = {}
-    context['lt'] = LedgerTransaction.objects.all().order_by('-created')
+    context['lt'] = LedgerTransaction.objects.all().order_by('-created').select_related('journal')
     return render(request,'dea/gl.html',{'data':context})
 
 def daybook(request):

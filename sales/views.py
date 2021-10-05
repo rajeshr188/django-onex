@@ -292,20 +292,8 @@ def post_sales(request,pk):
 def unpost_sales(request,pk):
     sales_inv = Invoice.objects.get(id = pk)
     sales_inv.unpost()
-    sales_inv.posted = False
-    sales_inv.save(update_fields=['posted'])
     return redirect(sales_inv)
 
-# @transaction.atomic()
-# def post_allsales(request):
-#     all_sales = Invoice.objects.filter(posted = False)
-#     from dea.models import Ledger
-#     ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
-#     for i in all_sales:
-#         logger.warning(f"posting journals for {i.id}")
-#         i.post(ledgers = ledgers)  
-#     all_sales.update(posted = True)
-#     return HttpResponseRedirect(reverse('sales_invoice_list'))
 
 from dea.models import Ledger,Journal,JournalTypes, LedgerTransaction,AccountTransaction
 from approval.models import ApprovalLineReturn
@@ -318,15 +306,17 @@ def post_allsales(request):
     at = []
     for sale in all_sales:
         j = Journal.objects.create(content_type_id =35,object_id = sale.id,type = JournalTypes.SJ,desc = 'sale')
+
         if sale.approval:
             for i in sale.approval.items.filter(status='Pending'):
                 apr = ApprovalLineReturn.objects.create(
-                line=i, quantity=i.quantity, weight=i.weight)
+                    line=i, quantity=i.quantity, weight=i.weight)
                 apr.post()
                 i.update_status()
-                sale.approval.is_billed = True
-                sale.approval.save()
-                sale.approval.update_status()
+            sale.approval.is_billed = True
+            sale.approval.save()
+            sale.approval.update_status()
+
         if sale.saleitems.exists():
             for i in sale.saleitems.all():
                 i.post(j)
@@ -358,60 +348,6 @@ def post_allsales(request):
     all_sales.update(posted=True)
     return HttpResponseRedirect(reverse('sales_invoice_list'))
 
-# def post_allsales(request):
-#     all_sales = Invoice.objects.values_list('id',flat = True)
-#     ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
-
-#     j_objs = []
-#     for i in all_sales:
-#         j_objs.append(Journal(content_type_id =35,object_id = i,type = JournalTypes.SJ,desc = 'sale'))
-
-
-#     js = Journal.objects.bulk_create(j_objs)
-#     logger.warning('journals created successfully')
-#     lt =[]
-#     at=[]
-#     for i in js:
-#         sale = i.content_object
-#         if sale.approval:
-#            for i in sale.approval.items.filter(status='Pending'):
-#                apr = ApprovalLineReturn.objects.create(
-#                    line=i, quantity=i.quantity, weight=i.weight)
-#                apr.post()
-#                i.update_status()
-#                sale.approval.is_billed = True
-#                sale.approval.save()
-#                sale.approval.update_status()
-#         if sale.saleitems.exists():
-#             for i in sale.saleitems.all():
-#                 i.post(i)
-            
-#         money = Money(sale.balance, sale.balancetype)
-            
-#         if sale.is_gst:
-#             inv = ledgers["GST INV"]
-#             cogs = ledgers["GST COGS"]
-#             gst = Money(sale.gst(),'INR')
-#             amount = money + gst
-               
-#         else:
-#             inv = ledgers["Non-GST INV"]
-#             cogs = ledgers["Non-GST COGS"]
-#             amount = money
-#             gst = Money(0,'INR')
-            
-#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id = ledgers['Sales'], ledgerno_dr_id =  ledgers['Sundry Debtors'], amount = money))
-#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id = inv, ledgerno_dr_id = cogs, amount = money))
-#         lt.append(LedgerTransaction(journal_id = i.id,ledgerno_id =ledgers['Output Igst'],ledgerno_dr_id = ledgers['Sundry Debtors'],amount = gst))
-#         at.append(AccountTransaction(journal_id =i.id,ledgerno_id = ledgers['Sales'],XactTypeCode_id = 'Cr', XactTypeCode_ext_id = 'CRSL',
-#                    Account_id = sale.customer.account.id,amount = amount))
-
-#     LedgerTransaction.objects.bulk_create(lt)
-#     AccountTransaction.objects.bulk_create(at)
-#     logger.warning('at and lt created successfully')
-
-#     all_sales.update(posted=True)
-#     return HttpResponseRedirect(reverse('sales_invoice_list'))
 
 @transaction.atomic()
 def unpost_allsales(request):
@@ -444,8 +380,7 @@ def unpost_allsales(request):
         for i in ltxns:
             ltl.append(LedgerTransaction(journal=jrnl, ledgerno_id=i.ledgerno_dr_id,
                                              ledgerno_dr_id=i.ledgerno_id, amount=i.amount))
-            
-        
+             
         for i in atxns:
             if i.XactTypeCode_id == 'Cr':  # 1
                 atl.append(AccountTransaction(journal = jrnl, ledgerno_id = i.ledgerno_id, XactTypeCode_id = 'Dr',#2

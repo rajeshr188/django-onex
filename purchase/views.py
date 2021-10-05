@@ -188,21 +188,76 @@ def unpost_purchase(request,pk):
     purchase_inv.unpost() 
     return redirect(purchase_inv)
 
-
+from dea.models import Ledger,Journal,JournalTypes, LedgerTransaction,AccountTransaction
+from moneyed import Money
 @transaction.atomic()
 def post_all_purchase(request):
-    all_purchases = Invoice.objects.filter(posted = False)
-    for i in all_purchases:
-        i.post()
-    return reverse('purchase_invoice_list')
+    all_purchases = Invoice.objects.filter(posted = False).select_related('supplier')
+    ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+    lt = []
+    at = []
+    for purc in all_purchases:
+        j = Journal.objects.create(
+            content_type_id=40, object_id=purc.id, type=JournalTypes.PJ, desc='purchase')
+        for i in purc.purchaseitems.all():
+                i.post(j)
+
+        money = Money(purc.balance,purc.balancetype)
+            
+        if purc.is_gst:
+            inv = ledgers["GST INV"]
+            tax = Money(purc.get_gst(), 'INR')
+            amount = money + tax
+        else:
+            inv = ledgers["Non-GST INV"]
+            amount = money
+
+        lt.append(LedgerTransaction(ledgerno = ledgers['Sundry Creditors'],ledgerno_dr = inv,amount =money))
+        lt.append(LedgerTransaction(ledgerno = ledgers['Sundry Creditors'],ledgerno_dr = ledgers['Input Igst'], amount = tax))
+        at.append(AccountTransaction(ledgerno = ledgers['Sundry Creditors'],XactTypeCode_id = Dr,XactTypeCode_ext_id = 'CRPU',
+                    Account_id = purc.supplier.account.id,amount = amount))
+    
+    LedgerTransaction.objects.bulk_create(lt)
+    AccountTransaction.objects.bulk_create(at)
+    logger.warning('at and lt created successfully')
+
+    all_purchases.update(posted=True)
+    return HttpResponseRedirect(reverse('purchase_invoice_list'))
 
 
 @transaction.atomic()
 def unpost_all_purchase(request):
-    all_purchases = Invoice.objects.filter(posted=True)
-    for i in all_purchases:
-        i.unpost()
-    return reverse('purchase_invoice_list')
+    all_purchases = Invoice.objects.filter(posted=True).select_related('supplier')
+    ltl = []
+    atl = []
+    for purc in all_purchases:
+        last_jrnl = purc.journals.latest()
+        jrnl = Journal.objects.create(content_object=purc,
+                                      desc='purchase-revert')
+        purc_items = purc.purchaseitems
+        if purc_items.exists():
+            for i in purc_items.all():
+                i.unpost(jrnl)
+        ltxns = last_jrnl.ltxns.all()
+        atxns = last_jrnl.atxns.all()
+        for i in ltxns:
+            ltl.append(LedgerTransaction(journal=jrnl, ledgerno_id=i.ledgerno_dr_id,
+                                         ledgerno_dr_id=i.ledgerno_id, amount=i.amount))
+
+        for i in atxns:
+            if i.XactTypeCode_id == 'Cr':  # 1
+                atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Dr',  # 2
+                                              XactTypeCode_ext_id='AC', Account_id=i.Account_id, amount=i.amount))  # 1
+            else:
+                atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Cr',  # 1
+                                              XactTypeCode_ext_id='AD', Account_id=i.Account_id, amount=i.amount))  # 2
+
+    logger.warning('bulk creating lt and at')
+    LedgerTransaction.objects.bulk_create(ltl)
+    AccountTransaction.objects.bulk_create(atl)
+    all_purchases.update(posted = False)
+
+    return HttpResponseRedirect(reverse('purchase_invoice_list'))
 
 class InvoiceDeleteView(DeleteView):
     model = Invoice

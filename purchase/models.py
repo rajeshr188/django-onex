@@ -377,7 +377,7 @@ class Payment(models.Model):
             money = Money(self.total, self.type)
             lt = [{'ledgerno':ledgers['Cash'],'ledgerno_dr':ledgers['Sundry Creditors'],'amount':money}]
             at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'PYT',
-                    'account':self.supplier.accountid,'amount':money}]
+                    'account':self.supplier.account.id,'amount':money}]
             jrnl.transact(lt,at)
             self.posted = True
             self.save(update_fields = ['posted'])

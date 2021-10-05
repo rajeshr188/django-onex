@@ -354,9 +354,6 @@ class ProductVariant(ModelWithMetadata):
         images = list(self.images.all())
         return images[0] if images else self.product.get_first_image()
 
-
-
-
 class BaseAttributeQuerySet(models.QuerySet):
     @staticmethod
     def user_has_access_to_all(user: "User") -> bool:
@@ -369,7 +366,6 @@ class BaseAttributeQuerySet(models.QuerySet):
         if self.user_has_access_to_all(user):
             return self.all()
         return self.get_public_attributes()
-
 
 class BaseAssignedAttribute(models.Model):
     assignment = None
@@ -386,7 +382,6 @@ class BaseAssignedAttribute(models.Model):
     def attribute_pk(self):
         return self.assignment.attribute_id
 
-
 class AssignedProductAttribute(BaseAssignedAttribute):
     """Associate a product type attribute and selected values to a given product."""
 
@@ -399,7 +394,6 @@ class AssignedProductAttribute(BaseAssignedAttribute):
 
     class Meta:
         unique_together = (("product", "assignment"),)
-
 
 class AssignedVariantAttribute(BaseAssignedAttribute):
     """Associate a product type attribute and selected values to a given variant."""
@@ -414,11 +408,9 @@ class AssignedVariantAttribute(BaseAssignedAttribute):
     class Meta:
         unique_together = (("variant", "assignment"),)
 
-
 class AssociatedAttributeQuerySet(BaseAttributeQuerySet):
     def get_public_attributes(self):
         return self.filter(attribute__visible_in_storefront=True)
-
 
 class AttributeProduct(SortableModel):
     attribute = models.ForeignKey(
@@ -444,7 +436,6 @@ class AttributeProduct(SortableModel):
     def get_ordering_queryset(self):
         return self.product_type.attributeproduct.all()
 
-
 class AttributeVariant(SortableModel):
     attribute = models.ForeignKey(
         "Attribute", related_name="attributevariant", on_delete=models.CASCADE
@@ -468,7 +459,6 @@ class AttributeVariant(SortableModel):
 
     def get_ordering_queryset(self):
         return self.product_type.attributevariant.all()
-
 
 class AttributeQuerySet(BaseAttributeQuerySet):
     def get_unassigned_attributes(self, product_type_pk: int):
@@ -503,7 +493,6 @@ class AttributeQuerySet(BaseAttributeQuerySet):
 
     def variant_attributes_sorted(self, asc=True):
         return self._get_sorted_m2m_field("attributevariant", asc)
-
 
 class Attribute(ModelWithMetadata):
     slug = models.SlugField(max_length=250, unique=True, allow_unicode=True)
@@ -541,8 +530,7 @@ class Attribute(ModelWithMetadata):
     available_in_grid = models.BooleanField(default=True, blank=True)
 
     objects = AttributeQuerySet.as_manager()
-    translated = TranslationProxy()
-
+    
     class Meta:
         ordering = ("storefront_search_position", "slug")
 
@@ -552,9 +540,6 @@ class Attribute(ModelWithMetadata):
     def has_values(self) -> bool:
         return self.values.exists()
 
-
-
-
 class AttributeValue(SortableModel):
     name = models.CharField(max_length=250)
     value = models.CharField(max_length=100, blank=True, default="")
@@ -562,8 +547,6 @@ class AttributeValue(SortableModel):
     attribute = models.ForeignKey(
         Attribute, related_name="values", on_delete=models.CASCADE
     )
-
-    translated = TranslationProxy()
 
     class Meta:
         ordering = ("sort_order", "pk")
@@ -578,8 +561,3 @@ class AttributeValue(SortableModel):
 
     def get_ordering_queryset(self):
         return self.attribute.values.all()
-
-
-
-
-

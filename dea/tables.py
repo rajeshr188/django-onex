@@ -2,7 +2,9 @@ import django_tables2 as tables
 from .models import Accountbalance,Ledgerbalance
 
 class AccountbalanceTable(tables.Table):
-    
+    acc_name = tables.Column(linkify=('dea_account_detail', [tables.A("pk")]),
+                             empty_values=(),
+                             )
     def render_ClosingBalance(self,record):
         return record.get_cb()
     

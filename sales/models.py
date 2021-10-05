@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 from django.db import models,transaction
 from contact.models import Customer
-from product.models import Stock,StockTransaction
+from product.models import Stock
 from django.utils import timezone
 from django.db.models import Sum,Func,Q,Avg
 from datetime import timedelta,date
@@ -258,12 +258,13 @@ class Invoice(models.Model):
             jrnl = Journal.objects.create(content_object=self,
                                           desc='sale-revert')
             if self.approval:
-                self.approval.is_billed = False
+               
                 approval_items = self.approval.items.all()
                 for i in approval_items:
                     i.unpost()
                     i.product.add(i.weight, i.quantity,i, 'A')
                     i.update_status()
+                self.approval.is_billed = False
                 self.approval.save()
                 self.approval.update_status()
                 

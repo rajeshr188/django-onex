@@ -1,28 +1,31 @@
-from product.models import StockTransaction
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models.fields.related import ForeignKey
 
 # Create your models here.
-class VoucherType(models.Model):
-    name = models.CharField()
-
 class Voucher(models.Model):
-    voucher_type = models.ForeignKey(VoucherType)
+    
     created = models.DateTimeField()
     modified = models.DateTimeField()
     voucher_no = models.CharField()
     amount = models.DecimalField()
     posted = models.BooleanField()
 
-    def transact(self,revert = False):
-        # do self.ledgertransactions
-        # do self.acc tranxn
-        # do self.stock trxn
-        return NotImplementedError
+    def get_lt(self):
+        return []
+    
+    def get_at(self):
+        return []
 
+    def get_st(self):
+        return []
 
+    def post():
+        return 
+    
+    def unpost():
+        return
 
+    
 class InvoiceVoucher(Voucher):
     # l - l trnsaction# from_ledger isinventory to ledger is sales
     # l-a trsxn from inventory to acc
@@ -46,20 +49,15 @@ class PaymentVoucher(Voucher):
     status = models.CharField()
 
     def post(self):
-        # LedgerTransaction.objects.create_txn()
-        # LedgerTransaction.objects.create_txn()
-        # AccountTransaction.objects.create_Txn()
-        for i in self.items:
-            i.post()
+        # create a journal
+        # get at,lt,st as list and pass it to journal.trnasact
 
         self.posted = True
 
     def unpost(self):
-        # LedgerTransaction.objects.create_txn()
-        # LedgerTransaction.objects.create_txn()
-        # AccountTransaction.objects.create_Txn()
-        for i in self.items:
-            i.unpost()
+        
+        # get last jrnl
+        # create new jrnl and pass last jrnl as jrnl.untransact(last_jrnl)
 
         self.posted = False
 

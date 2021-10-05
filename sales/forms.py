@@ -38,7 +38,7 @@ class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
         fields = ['created','approval','rate','is_gst', 'balancetype',
-                    'metaltype','gross_wt','net_wt','balance','term',
+                    'metaltype','gross_wt','net_wt','balance','total','term',
                      'customer','status','posted']
 
     def __init__(self, *args, **kwargs):

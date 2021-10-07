@@ -1,21 +1,7 @@
 from django.contrib import admin
 from django import forms
-from .models import Contact, Chit, Collection, Allotment
-
-class ContactAdminForm(forms.ModelForm):
-
-    class Meta:
-        model = Contact
-        fields = '__all__'
-
-
-class ContactAdmin(admin.ModelAdmin):
-    form = ContactAdminForm
-    list_display = ['name', 'slug', 'created', 'last_updated', 'phoneno']
-    readonly_fields = ['name', 'slug', 'created', 'last_updated', 'phoneno']
-
-admin.site.register(Contact, ContactAdmin)
-
+from .models import Chit, Collection, Allotment
+from utils.tenant_admin import admin_site
 
 class ChitAdminForm(forms.ModelForm):
 
@@ -29,7 +15,7 @@ class ChitAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'created', 'last_updated', 'type', 'amount', 'commission', 'member_limit', 'date_to_allot']
     readonly_fields = ['name', 'slug', 'created', 'last_updated', 'type', 'amount', 'commission', 'member_limit', 'date_to_allot']
 
-admin.site.register(Chit, ChitAdmin)
+admin_site.register(Chit, ChitAdmin)
 
 
 class CollectionAdminForm(forms.ModelForm):
@@ -44,7 +30,7 @@ class CollectionAdmin(admin.ModelAdmin):
     list_display = ['slug', 'date_collected', 'amount','allotment','member']
     readonly_fields = ['slug', 'date_collected', 'amount']
 
-admin.site.register(Collection, CollectionAdmin)
+admin_site.register(Collection, CollectionAdmin)
 
 
 class AllotmentAdminForm(forms.ModelForm):
@@ -59,4 +45,4 @@ class AllotmentAdmin(admin.ModelAdmin):
     list_display = ['amount', 'slug', 'created','installment']
     readonly_fields = ['amount', 'slug', 'created','installment']
 
-admin.site.register(Allotment, AllotmentAdmin)
+admin_site.register(Allotment, AllotmentAdmin)

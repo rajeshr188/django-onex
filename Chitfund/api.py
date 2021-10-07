@@ -3,14 +3,6 @@ from . import serializers
 from rest_framework import viewsets, permissions
 
 
-class ContactViewSet(viewsets.ModelViewSet):
-    """ViewSet for the Contact class"""
-
-    queryset = models.Contact.objects.all()
-    serializer_class = serializers.ContactSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
 class ChitViewSet(viewsets.ModelViewSet):
     """ViewSet for the Chit class"""
 

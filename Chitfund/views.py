@@ -1,24 +1,11 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView
-from .models import Contact, Chit, Collection, Allotment
-from .forms import ContactForm, ChitForm, CollectionForm, AllotmentForm
+from .models import Chit, Collection, Allotment
+from .forms import ChitForm, CollectionForm, AllotmentForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 import logging
 
 logger = logging.getLogger(__name__)
-class ContactListView(LoginRequiredMixin,ListView):
-    model = Contact
-
-class ContactCreateView(LoginRequiredMixin,CreateView):
-    model = Contact
-    form_class = ContactForm
-
-class ContactDetailView(LoginRequiredMixin,DetailView):
-    model = Contact
-
-class ContactUpdateView(LoginRequiredMixin,UpdateView):
-    model = Contact
-    form_class = ContactForm
 
 class ChitListView(LoginRequiredMixin,ListView):
     model = Chit

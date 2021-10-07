@@ -144,12 +144,13 @@ class ProductForm(forms.ModelForm, AttributesMixin):
         self.available_attributes = (
             product_type.product_attributes.prefetch_related('values').all())
         self.prepare_fields_for_attributes()
-        self.fields['attributes']=forms.ModelMultipleChoiceField(
-            queryset=Attribute.objects.all(),widget = Select2MultipleWidget)
+        # self.fields['attributes']=forms.ModelMultipleChoiceField(
+        #     queryset=Attribute.objects.all(),widget = Select2MultipleWidget)
 
     def save(self, commit=True):
         attributes = self.get_saved_attributes()
-        self.instance.attributes = attributes
+        self.instance.attributes = attributes['attributes']
+        self.instance.jattributes = attributes['ja']
         attrs = get_product_attributes_data(self.instance)
         self.instance.name = self.instance.product_type.name + ' '+generate_name_from_values(attrs)
         instance = super().save()

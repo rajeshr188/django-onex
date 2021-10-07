@@ -1,14 +1,16 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'product_producttype_list' %}">ProductType Listing</a></p>
+<p>
+    <a class="btn btn-default" href="{% url 'product_producttype_list' %}">ProductType Listing</a>
+    <a class="btn btn-primary" href="{% url 'product_producttype_create' %}">Create new ProductType</a>
+</p>
 <table class="table table-sm table-striped">
 <tr>
 <td>ID</td><td>Link</td>
     <td>name</td>
     <td>has_variants</td>
     <td></td>
-
 </tr>
 {% for object in object_list %}
 <tr>
@@ -20,5 +22,5 @@
 
 </tr>
 {% endfor %}
-</table><a class="btn btn-primary" href="{% url 'product_producttype_create' %}">Create new ProductType</a>
+</table>
 {% endblock %}

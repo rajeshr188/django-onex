@@ -18,6 +18,8 @@ from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
 from django.http import JsonResponse,HttpResponseRedirect
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -197,11 +199,11 @@ def simple_upload(request):
 
     return render(request, 'sales/simpleupload.html')
 
-class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
-    model = Invoice
+class InvoiceListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class = InvoiceTable
-    filterset_class = InvoiceFilter
+    model = Invoice
     template_name = 'sales/invoice_list.html'
+    filterset_class = InvoiceFilter
     paginate_by = 25
 
 from approval.models import Approval

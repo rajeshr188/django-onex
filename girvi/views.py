@@ -33,6 +33,7 @@ from openpyxl import load_workbook
 import logging
 
 logger = logging.getLogger(__name__)
+
 @login_required
 def print_loanpledge(request,pk):
     loan=Loan.objects.get(id=pk)
@@ -44,7 +45,6 @@ def print_release(request,pk):
     release = Release.objects.get(id=pk)
     params = {'release':release}
     return Render.render('girvi/release_pdf.html',params)
-
 
 @login_required
 def notice(request):
@@ -66,32 +66,6 @@ def notice(request):
     data['cust']=cust
 
     return render(request,'girvi/notice.html',context={'data':data})
-
-@login_required
-@csrf_exempt
-def multirelease(request,id=None):
-    if request.method == 'POST': #<- Checking for method type
-        id_list = request.POST.getlist('cbox')
-        action = request.POST.get('action')
-        print("action" + str(request.POST.get('action')))
-        if action == 'delete':
-            # delete all selected rows
-            print('in delete action')
-            Loan.objects.filter(id__in=id_list).delete()
-            print('deleted'+ id_list)
-        elif action == 'edit':
-            print('in edit action'+str(id_list))
-            formset = Loan_formset(queryset = Loan.objects.filter(id__in=id_list))
-            return render(request, 'girvi/manage_loans.html', {'formset': formset})
-        elif action =='release' :
-            print('in releaseaction')
-            for loan_id in id_list:
-                last=Release.objects.all().order_by('id').last()
-                if not last:
-                    return '1'
-                Release.objects.create(releaseid=int(last.id)+1,created=timezone.now(),loan_id=loan_id,interestpaid=0)
-
-    return HttpResponseRedirect(reverse('girvi_loan_list'))
 
 @login_required
 def manage_loans(request):
@@ -425,13 +399,13 @@ class LoanCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
-def post_loan(pk):
+def post_loan(request,pk):
     loan = get_object_or_404(Loan, pk=pk)
     if not loan.posted:
         loan.post()
     return redirect(loan)
 
-def unpost_loan(pk):
+def unpost_loan(request,pk):
     loan = get_object_or_404(Loan, pk=pk)
     if loan.posted:
         loan.unpost()

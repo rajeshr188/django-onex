@@ -242,7 +242,7 @@ class Invoice(models.Model):
             
             lt = [{'ledgerno': ledgers['Sales'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': money},
                   {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': money},
-                  {'ledgerno': ledgers['Output Igst'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': gst}]
+                  {'ledgerno': ledgers['Output IGST'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': gst}]
             at = [{'ledgerno': ledgers['Sales'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'CRSL',
                    'account': self.customer.account.id, 'amount': amount}]
 
@@ -448,7 +448,7 @@ class Receipt(models.Model):
             
             money = Money(self.total, self.type)
             lt = [{'ledgerno': ledgers['Sundry Debtors'], 'ledgerno_dr':ledgers['Cash'], 'amount': money}]
-            at = [{'ledgerno': ledgers['Sundry Debtors'], 'xacttypecode': ledgers['Dr'], 'xacttypecode_ext': 'RCT',
+            at = [{'ledgerno': ledgers['Sundry Debtors'], 'xacttypecode': 'Dr', 'xacttypecode_ext': 'RCT',
                    'account': self.customer.account.id, 'amount': money}]
             jrnl.transact(lt,at)
             self.posted = True

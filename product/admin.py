@@ -41,7 +41,7 @@ class ProductTypeAdmin(admin.ModelAdmin):
     list_display = ['name', 'has_variants']
     # readonly_fields = ['name', 'has_variants']
 
-admin.site.register(ProductType, ProductTypeAdmin)
+admin_site.register(ProductType, ProductTypeAdmin)
 
 class ProductAdminForm(forms.ModelForm):
     class Meta:
@@ -53,7 +53,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'description']
     # readonly_fields = ['name', 'description']
 
-admin.site.register(Product, ProductAdmin)
+admin_site.register(Product, ProductAdmin)
 
 class ProductVariantAdminForm(forms.ModelForm):
     class Meta:
@@ -65,7 +65,7 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_display = ['sku', 'name',]
     # readonly_fields = ['sku', 'name', 'track_inventory', 'quantity', 'cost_price', 'weight']
 
-admin.site.register(ProductVariant, ProductVariantAdmin)
+admin_site.register(ProductVariant, ProductVariantAdmin)
 
 class AttributeAdminForm(forms.ModelForm):
     class Meta:
@@ -77,7 +77,7 @@ class AttributeAdmin(admin.ModelAdmin):
     list_display = ['slug', 'name']
     readonly_fields = ['slug', 'name']
 
-admin.site.register(Attribute, AttributeAdmin)
+admin_site.register(Attribute, AttributeAdmin)
 
 class AttributeValueAdminForm(forms.ModelForm):
     class Meta:
@@ -89,7 +89,7 @@ class AttributeValueAdmin(admin.ModelAdmin):
     list_display = ['name', 'value', 'slug']
     readonly_fields = ['name', 'value', 'slug']
 
-admin.site.register(AttributeValue, AttributeValueAdmin)
+admin_site.register(AttributeValue, AttributeValueAdmin)
 
 class ProductImageAdminForm(forms.ModelForm):
     class Meta:
@@ -100,7 +100,7 @@ class ProductImageAdmin(admin.ModelAdmin):
     form = ProductImageAdminForm
     # list_display = ['ppoi', 'alt']
     # readonly_fields = ['ppoi', 'alt']
-admin.site.register(ProductImage, ProductImageAdmin)
+admin_site.register(ProductImage, ProductImageAdmin)
 
 class VariantImageAdminForm(forms.ModelForm):
     class Meta:
@@ -110,4 +110,4 @@ class VariantImageAdminForm(forms.ModelForm):
 class VariantImageAdmin(admin.ModelAdmin):
     form = VariantImageAdminForm
 
-admin.site.register(VariantImage, VariantImageAdmin)
+admin_site.register(VariantImage, VariantImageAdmin)

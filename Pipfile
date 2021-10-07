@@ -41,6 +41,7 @@ crispy-bootstrap5 = "*"
 django-guardian = "*"
 django-tenant-schemas = "*"
 beautifulsoup4 = "*"
+coverage = "*"
 
 [dev-packages]
 "autopep8" = "*"

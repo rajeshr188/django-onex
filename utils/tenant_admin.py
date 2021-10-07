@@ -29,4 +29,4 @@ class TenantAwareAdminSite(admin.AdminSite):
         
         return tenant_aware_apps
 
-admin_site = TenantAwareAdminSite(name="admin")
+admin_site = TenantAwareAdminSite(name="tenant-admin")

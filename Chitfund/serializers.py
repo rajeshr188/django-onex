@@ -2,20 +2,6 @@ from . import models
 
 from rest_framework import serializers
 
-
-class ContactSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Contact
-        fields = (
-            'slug', 
-            'name', 
-            'created', 
-            'last_updated', 
-            'phoneno', 
-        )
-
-
 class ChitSerializer(serializers.ModelSerializer):
 
     class Meta:

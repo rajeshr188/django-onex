@@ -136,9 +136,9 @@ class ProductVariantListView(LoginRequiredMixin,FilterView):
 
 @login_required
 def variant_create(request, pk):
-    track_inventory = True
+
     product = get_object_or_404(Product.objects.all(), pk=pk)
-    variant = ProductVariant(product=product, track_inventory=track_inventory)
+    variant = ProductVariant(product=product)
     form = ProductVariantForm(
         request.POST or None,
         instance=variant)

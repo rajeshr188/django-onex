@@ -51,7 +51,7 @@ class ProductType(models.Model):
 
     class Meta:
         app_label = 'product'
-        ordering=('name',)
+        ordering=('id',)
 
     def __str__(self):
         return self.name

@@ -27,7 +27,7 @@ class InvoiceTable(tables.Table):
 
         attrs = {"class": "table table-sm table-striped table-bordered"}
         empty_text = "No Invoices Found matching your search..."
-
+        template_name = 'django_tables2/bootstrap4.html'
 
 class ReceiptTable(tables.Table):
     id = tables.Column(linkify = True)
@@ -49,3 +49,4 @@ class ReceiptTable(tables.Table):
         fields = ('id','created','customer','type','total','description','status')
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "No Receipts Found matching your search..."
+        template_name = 'django_tables2/bootstrap4.html'

@@ -2,6 +2,9 @@ from .models import Loan, LoanStatement,Release,Adjustment
 from contact.models import Customer
 import django_filters
 from django_select2.forms import Select2Widget
+from django.utils import timezone
+from datetime import datetime,timedelta
+from dateutil.relativedelta import relativedelta
 
 class LoanFilter(django_filters.FilterSet):
     loanid=django_filters.CharFilter(lookup_expr='icontains')
@@ -10,12 +13,19 @@ class LoanFilter(django_filters.FilterSet):
                     queryset = Customer.objects.filter(type='Re',active = True),
                     widget=Select2Widget)
     Status = django_filters.BooleanFilter(field_name='release', method='filter_status')
+    before = django_filters.NumberFilter(
+        field_name='created', method='get_past_n_hours', label="Loans Before")
+
+    def get_past_n_hours(self, queryset, field_name, value):
+        time_threshold = timezone.now() - relativedelta(years=int(value))
+        # date = datetime.strptime(value, '%d/%m/%y')
+        return queryset.filter(created__lte=time_threshold)
 
     def filter_status(self,queryset,name,value):
         return queryset.filter(release__isnull=value)
     class Meta:
         model=Loan
-        fields=['loanid','series','customer','itemtype','itemweight','itemdesc','loanamount']
+        fields=['loanid','series','customer','itemtype','itemdesc','loanamount']
 
 class LoanStatementFilter(django_filters.FilterSet):
     loan = django_filters.ModelChoiceFilter(

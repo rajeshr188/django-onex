@@ -76,7 +76,7 @@ def home(request):
 
 def generalledger(request):
     context = {}
-    context['lt'] = LedgerTransaction.objects.all().order_by('-created').select_related('journal')
+    context['lt'] = LedgerTransaction.objects.all().order_by('-created').select_related('journal','ledgerno','ledgerno_dr')
     return render(request,'dea/gl.html',{'data':context})
 
 def daybook(request):
@@ -138,6 +138,7 @@ def audit_ledger(request):
     
 class JournalListView(ListView):
     queryset = Journal.objects.all().select_related('content_type')
+    paginate_by = 10
 
 class JournalDetailView(DetailView):
     model = Journal
@@ -232,6 +233,9 @@ class LedgerStatementListView(ListView):
 
 class LedgerTransactionListView(ListView):
     model=LedgerTransaction
+    queryset = LedgerTransaction.objects.select_related('ledgerno','ledgerno_dr','journal')
+    template_name = 'dea/gl.html'
+    paginate_by = 20
 
 from openpyxl import load_workbook
 from moneyed import Money

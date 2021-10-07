@@ -6,6 +6,10 @@ from import_export.widgets import ForeignKeyWidget
 from .models import License, Loan, Release, Series, Adjustment
 from contact.models import Customer
 from utils.tenant_admin import admin_site
+from utils.render import Render
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LicenseAdminForm(forms.ModelForm):
 
@@ -70,6 +74,7 @@ class LoanResource(resources.ModelResource):
 class LoanAdminForm(forms.ModelForm):
     date_heirarchy = 'created'
     list_filter = ('customer','series','itemtype')
+
     class Meta:
         model = Loan
         fields = '__all__'
@@ -80,6 +85,13 @@ class LoanAdmin(ImportExportModelAdmin):
     list_display = ['id','lid','loanid','customer','series','created', 
                         'updated', 'itemtype', 'itemdesc', 'itemweight',
                          'itemvalue', 'loanamount', 'interestrate', 'interest']
+    actions = ['print_notice']
+
+    def print_notice(self, request, queryset):
+    
+        params = {'loans': queryset}
+        return Render.render('girvi/noticepdf.html', params)
+    print_notice.short_description = 'Print Notice'
 
     def has_add_permission(self, request):
         return True

@@ -1,18 +1,13 @@
 from django import forms
-from .models import Contact, Chit, Collection, Allotment
-from django.forms.widgets import CheckboxSelectMultiple
-from datetime import datetime
-from django.utils import timezone
+from .models import Chit, Collection, Allotment
+from contact.models import Customer
 from django_select2.forms import Select2MultipleWidget
-class ContactForm(forms.ModelForm):
-    class Meta:
-        model = Contact
-        fields = ['name', 'phoneno']
 
 class ChitForm(forms.ModelForm):
     members=forms.ModelMultipleChoiceField(
         widget=Select2MultipleWidget,
-        queryset=Contact.objects.all())
+        queryset=Customer.objects.all())
+        
     class Meta:
         model = Chit
         fields = ['name', 'type', 'amount', 'commission', 'member_limit', 'date_to_allot', 'owner', 'members']

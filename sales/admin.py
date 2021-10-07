@@ -70,7 +70,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ['weight', 'touch', 'total', 'is_return', 'quantity']
     readonly_fields = ['weight', 'touch', 'total', 'is_return', 'quantity']
 
-admin.site.register(InvoiceItem, InvoiceItemAdmin)
+admin_site.register(InvoiceItem, InvoiceItemAdmin)
 
 
 class ReceiptAdminForm(forms.ModelForm):

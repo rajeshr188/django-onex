@@ -20,7 +20,7 @@
                 <a href="{% url 'dea_ledger_detail' node.id%}">
                     {{ node.name }}
                 </a>
-                {{node.current_balance_wrt_descendants}}
+                <!-- {{node.current_balance_wrt_descendants}} -->
                 {% if not node.is_leaf_node %}
                 <ul class="children">
                     {{ children }}
@@ -40,7 +40,9 @@
                 <div class="card-body">
                     <a class="btn btn-outline-primary" data-toggle="collapse" href="#multiCollapseExample{{node.id}}"
                         role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
-                        {{ node.name }} {{node.current_balance}}#({{node.get_descendant_count}})
+                        {{ node.name }}
+                         <!-- {{node.current_balance}} -->
+                         #({{node.get_descendant_count}})
                     </a>
                     <div class="row">
                         <div class="col">

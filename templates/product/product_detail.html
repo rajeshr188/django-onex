@@ -8,6 +8,12 @@
 <tr><td>Category</td><td>{{ object.category }}</td></tr>
 <tr><td>Product Type</td><td>{{object.product_type}}</td></tr>
 <tr><td>Description</td><td>{{object.description}}</td></tr>
+<tr><td>Attributes</td><td>{{object.attributes}}</td></tr>
+<tr>
+  <td>jAttributes</td>
+  <td>{{object.jattributes}}</td>
+</tr>
+
 </table>
 
 <a class="btn btn-primary" href="{% url 'product_productvariant_create' pk=object.id %}">Create variant </a>

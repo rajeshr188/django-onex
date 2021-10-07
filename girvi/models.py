@@ -12,6 +12,7 @@ import qrcode.image.svg
 from qrcode.image.pure import PymagingImage
 from io import BytesIO
 from moneyed import Money
+from dea.models import Ledger
 # class Month(Func):
 #     function = 'EXTRACT'
 #     template = '%(function)s(MONTH from %(expressions)s)'
@@ -236,12 +237,12 @@ class Loan(models.Model):
     def get_previous(self):
         return Loan.objects.filter(series = self.series,lid__lt = self.lid).order_by('lid').last()
 
+    def get_txns(self):
+      return
+
     @transaction.atomic()
     def post(self):
-        # get contact.Account
-        from dea.models import Ledger
         ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
-
         try:
             self.customer.account
         except:
@@ -277,7 +278,7 @@ class Loan(models.Model):
 
     @transaction.atomic()
     def unpost(self):
-        # delete journals if accounts and ledger not closed
+        
         last_jrnl = self.journals.latest()
         if self.customer.type == 'Su':
             l_jrnl = Journal.objects.create(
@@ -286,7 +287,7 @@ class Loan(models.Model):
             l_jrnl = Journal.objects.create(
                 content_object=self,desc='Loan Given Revert')
         l_jrnl.untransact(last_jrnl)
-        # i_jrnl.untransact()
+    
         self.posted = False
         self.save(update_fields = ['posted'])
     
@@ -365,28 +366,30 @@ class Release(models.Model):
     def post(self):
         amount = Money(self.loan.loanamount, 'INR')
         interest = Money(self.interestpaid, 'INR')
-        if self.customer.type == 'Su':
+        from dea.models import Ledger
+        ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+        if self.loan.customer.type == 'Su':
             jrnl = Journal.objects.create(
                 content_object=self, desc='Loan Repaid')
-            lt = [{'ledgerno': 'Cash', 'ledgerno_dr': 'Loans',
+            lt = [{'ledgerno': ledgers['Cash'], 'ledgerno_dr': ledgers['Loans'],
                      'amount': amount},
-                    {'ledgerno': 'Cash', 'ledgerno_dr': 'Interest Paid',
-                     'amount': amount}, ]
-            at = [{'ledgerno': 'Loans', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LP',
-                     'account': self.customer.account, 'amount': amount},
-                    {'ledgerno': 'Interest Payable', 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
-                     'account': self.customer.account, 'amount': amount}]  
+                    {'ledgerno': ledgers['Cash'], 'ledgerno_dr': ledgers['Interest Paid'],
+                     'amount': interest}, ]
+            at = [{'ledgerno': ledgers['Loans'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LP',
+                     'account': self.customer.account.id, 'amount': amount},
+                    {'ledgerno': ledgers['Interest Payable'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'IP',
+                     'account': self.customer.account.id, 'amount': interest}]  
         else:
             jrnl = Journal.objects.create(
                 content_object=self, desc='Loan Released')
-            lt = [{'ledgerno': 'Loans & Advances', 'ledgerno_dr': 'Cash',
+            lt = [{'ledgerno': ledgers['Loans & Advances'], 'ledgerno_dr': ledgers['Cash'],
                      'amount': amount},
-                  {'ledgerno': 'Interest Received', 'ledgerno_dr': 'Cash',
-                      'amount': amount}, ]
-            at = [{'ledgerno': 'Loans & Advances', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'LR',
-                    'account': self.customer.account, 'amount': amount},
-                  {'ledgerno': 'Interest Received', 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
-                   'account': self.customer.account, 'amount': interest}]
+                  {'ledgerno': ledgers['Interest Received'], 'ledgerno_dr': ledgers['Cash'],
+                      'amount': interest}, ]
+            at = [{'ledgerno': ledgers['Loans & Advances'], 'xacttypecode': 'Dr', 'xacttypecode_ext': 'LR',
+                    'account': self.loan.customer.account.id, 'amount': amount},
+                  {'ledgerno': ledgers['Interest Received'], 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
+                   'account': self.loan.customer.account.id, 'amount': interest}]
         jrnl.transact(lt, at)
         
         self.posted = True
@@ -394,12 +397,13 @@ class Release(models.Model):
 
     def unpost(self):
         last_jrnl = self.journals.latest()
-        if self.loan.customer.type == 'Su':
-            jrnl = Journal.objects.create(
-                content_object=self,desc='Loan Repaid Revert')
-        else:
-            jrnl = Journal.objects.create(
-                content_object=self,desc='Loan Released Revert')
-        jrnl.untransact(last_jrnl)
+        if last_jrnl:
+            if self.loan.customer.type == 'Su':
+                jrnl = Journal.objects.create(
+                    content_object=self,desc='Loan Repaid Revert')
+            else:
+                jrnl = Journal.objects.create(
+                    content_object=self,desc='Loan Released Revert')
+            jrnl.untransact(last_jrnl)
         self.posted = False
-        self.save(update_fields='posted')
+        self.save(update_fields=['posted'])

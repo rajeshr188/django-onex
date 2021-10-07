@@ -2,6 +2,25 @@
 
 from django.db import migrations, models
 
+terms_l = [
+    [1, 'Net monthly account, Payment due on last day of the month following the one in which the invoice is dated', 30, 0, 0.00],
+    [2, 'Net 7, Payment seven days after invoice', 7, 0, 0.00],
+    [3, 'Net 10, Payment ten days after invoice', 10, 0, 0.00],
+    [4, 'Net 30, Payment 30 days after invoice', 30, 0, 0.00],
+    [5, 'Net 60, Payment 60 days after invoice', 60, 0, 0.00],
+    [6, 'Net 90, Payment 90 days after invoice', 90, 0, 0.00],
+    [7, 'EOM, End of month', 0, 0, 0.00],
+    [8, 'Due on receipt, Payment is due upon receipt of the invoice', 0, 0, 0.00],
+    [9, 'COD, Cash on delivery', 0, 0, 0.00],
+    [10, 'CND, Cash  On Next Delivery', 0, 0, 0.00],
+    [11, 'CIA, Cash In Advance', 0, 0, 0.00]]
+
+def insertData(apps,schema_editor):
+    terms = apps.get_model('invoice','PaymentTerm')
+    ts = []
+    for i in  terms_l:
+        ts.append(terms(id = i[0],description = i[1],due_days = i[2],discount_days = i[3],discount = i[4]))
+    terms.objects.bulk_create(ts)
 
 class Migration(migrations.Migration):
 
@@ -31,4 +50,5 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
             ],
         ),
+        migrations.RunPython(insertData),
     ]

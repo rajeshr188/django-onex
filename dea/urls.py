@@ -40,7 +40,7 @@ urlpatterns = [
     path('ledger/statement/', views.LedgerStatementListView.as_view(),
          name='dea_ledgerstatement_list'),
     path('ledger/transaction/', views.LedgerTransactionListView.as_view(),
-         name='dea_ledgerTransaction_list'),
+         name='dea_ledgertransaction_list'),
     path('journal/', views.JournalListView.as_view(),
          name='dea_journals_list'),
     path('journal/<int:pk>/detail',views.JournalDetailView.as_view(),

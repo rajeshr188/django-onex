@@ -4,6 +4,7 @@ from django import forms
 from import_export import fields,resources
 from import_export.admin import ImportExportModelAdmin, ImportExportActionModelAdmin
 from import_export.widgets import ForeignKeyWidget
+from utils.tenant_admin import admin_site
 
 # Register your models here.
 
@@ -36,6 +37,6 @@ class drsAdmin(admin.ModelAdmin):
     form = drsAdminForm
     list_display = ['period','account','cb']
 
-admin.site.register(Account,AccountAdmin)
-admin.site.register(Transaction,TransactionAdmin)
-admin.site.register(drs,drsAdmin)
+admin_site.register(Account,AccountAdmin)
+admin_site.register(Transaction,TransactionAdmin)
+admin_site.register(drs,drsAdmin)

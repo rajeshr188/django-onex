@@ -212,9 +212,9 @@ def post_all_purchase(request):
             inv = ledgers["Non-GST INV"]
             amount = money
 
-        lt.append(LedgerTransaction(ledgerno = ledgers['Sundry Creditors'],ledgerno_dr = inv,amount =money))
-        lt.append(LedgerTransaction(ledgerno = ledgers['Sundry Creditors'],ledgerno_dr = ledgers['Input Igst'], amount = tax))
-        at.append(AccountTransaction(ledgerno = ledgers['Sundry Creditors'],XactTypeCode_id = Dr,XactTypeCode_ext_id = 'CRPU',
+        lt.append(LedgerTransaction(journal = j,ledgerno_id = ledgers['Sundry Creditors'],ledgerno_dr_id = inv,amount =money))
+        lt.append(LedgerTransaction(journal = j,ledgerno_id = ledgers['Sundry Creditors'],ledgerno_dr_id = ledgers['Input Igst'], amount = tax))
+        at.append(AccountTransaction(journal = j,ledgerno_id = ledgers['Sundry Creditors'],XactTypeCode_id = 'Dr',XactTypeCode_ext_id = 'CRPU',
                     Account_id = purc.supplier.account.id,amount = amount))
     
     LedgerTransaction.objects.bulk_create(lt)
@@ -232,29 +232,30 @@ def unpost_all_purchase(request):
     atl = []
     for purc in all_purchases:
         last_jrnl = purc.journals.latest()
-        jrnl = Journal.objects.create(content_object=purc,
+        if last_jrnl.exists():
+            jrnl = Journal.objects.create(content_object=purc,
                                       desc='purchase-revert')
-        purc_items = purc.purchaseitems
-        if purc_items.exists():
-            for i in purc_items.all():
-                i.unpost(jrnl)
-        ltxns = last_jrnl.ltxns.all()
-        atxns = last_jrnl.atxns.all()
-        for i in ltxns:
-            ltl.append(LedgerTransaction(journal=jrnl, ledgerno_id=i.ledgerno_dr_id,
-                                         ledgerno_dr_id=i.ledgerno_id, amount=i.amount))
+            purc_items = purc.purchaseitems
+            if purc_items.exists():
+                for i in purc_items.all():
+                    i.unpost(jrnl)
+            ltxns = last_jrnl.ltxns.all()
+            atxns = last_jrnl.atxns.all()
+            for i in ltxns:
+                ltl.append(LedgerTransaction(journal=jrnl, ledgerno_id=i.ledgerno_dr_id,
+                                            ledgerno_dr_id=i.ledgerno_id, amount=i.amount))
 
-        for i in atxns:
-            if i.XactTypeCode_id == 'Cr':  # 1
-                atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Dr',  # 2
-                                              XactTypeCode_ext_id='AC', Account_id=i.Account_id, amount=i.amount))  # 1
-            else:
-                atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Cr',  # 1
-                                              XactTypeCode_ext_id='AD', Account_id=i.Account_id, amount=i.amount))  # 2
+            for i in atxns:
+                if i.XactTypeCode_id == 'Cr':  # 1
+                    atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Dr',  # 2
+                                                XactTypeCode_ext_id='AC', Account_id=i.Account_id, amount=i.amount))  # 1
+                else:
+                    atl.append(AccountTransaction(journal=jrnl, ledgerno_id=i.ledgerno_id, XactTypeCode_id='Cr',  # 1
+                                                XactTypeCode_ext_id='AD', Account_id=i.Account_id, amount=i.amount))  # 2
 
-    logger.warning('bulk creating lt and at')
-    LedgerTransaction.objects.bulk_create(ltl)
-    AccountTransaction.objects.bulk_create(atl)
+        logger.warning('bulk creating lt and at')
+        LedgerTransaction.objects.bulk_create(ltl)
+        AccountTransaction.objects.bulk_create(atl)
     all_purchases.update(posted = False)
 
     return HttpResponseRedirect(reverse('purchase_invoice_list'))

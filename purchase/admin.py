@@ -69,7 +69,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemAdminForm
     list_display = ['weight', 'touch', 'total', 'is_return', 'quantity']
 
-admin.site.register(InvoiceItem, InvoiceItemAdmin)
+admin_site.register(InvoiceItem, InvoiceItemAdmin)
 
 class PaymentAdminForm(forms.ModelForm):
 

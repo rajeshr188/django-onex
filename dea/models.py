@@ -125,6 +125,7 @@ class Account(models.Model):
                              ClosingBalance = self.current_balance().monies(),
                              TotalCredit = credit_t,
                              TotalDebit = debit_t)
+
     def latest_stmt(self):
         try:
             return self.accountstatements.latest()
@@ -351,7 +352,7 @@ class Journal(models.Model):
         get_latest_by = ('id')
 
     def __str__(self):
-        return self.desc
+        return f"{self.id}:{self.desc}"
 
     def get_url_string(self):
         if self.content_type:
@@ -501,10 +502,23 @@ class Accountbalance(models.Model):
         managed = False
         db_table = 'account_balance'
     
+    @property
     def get_cb(self):
         return Balance(self.ClosingBalance)
+    @property
+    def get_tc(self):
+        return Balance(self.TotalCredit)
+    @property
+    def get_td(self):
+        return Balance(self.TotalDebit)
+    
+    def get_dr(self):
+        return Balance(self.dr)
+
+    def get_cr(self):
+        return Balance(self.cr)
 
     def get_currbal(self):
-        return Balance(self.ClosingBalance) + Balance(self.dr)  - Balance(self.cr) 
+        return Balance(self.ClosingBalance) + (Balance(self.dr)  - Balance(self.cr) )
     
 # write a manager method for both acc and ledger that gets txns after self.statement.latest.created

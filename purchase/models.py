@@ -161,16 +161,41 @@ class Invoice(models.Model):
     def get_gst(self):
         return (self.balance *3)/100 if self.is_gst else 0
         
+    def get_txns(self,jrnl = None):
+        if not jrnl:
+            jrnl = Journal.objects.create(type=JournalTypes.PJ,
+                        content_object=self, desc='purchase')
+        txns = {}
+        from dea.models import Ledger
+        ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+        money = Money(self.balance, self.balancetype)
+        try:
+            self.supplier.account
+        except:
+            self.supplier.save()
+        if self.is_gst:
+            inv = ledgers["GST INV"]
+            tax = Money(self.get_gst(), 'INR')
+            amount = money + tax
+        else:
+            inv = ledgers["Non-GST INV"]
+            amount = money
+            tax = Money(0,'INR')
+
+        lt = [{'ledgerno': ledgers['Sundry Creditors'],'ledgerno_dr':inv,'amount':money},
+                  {'ledgerno': ledgers['Sundry Creditors'], 'ledgerno_dr': ledgers['Input IGST'], 'amount': tax}, ]
+        at = [{'ledgerno': ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'CRPU',
+                    'account':self.supplier.account.id, 'amount':amount}]
+        txns['lt'] = lt
+        txns['at'] = at
+        return txns
+    
+    def get_st(self):
+        return []
+
     @transaction.atomic()
     def post(self):
         if not self.posted:
-            from dea.models import Ledger
-            ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
-
-            try:
-                self.supplier.account
-            except:
-                self.supplier.save()
  
             jrnl = Journal.objects.create(type = JournalTypes.PJ,
                     content_object=self,desc='purchase')
@@ -178,22 +203,9 @@ class Invoice(models.Model):
             for i in self.purchaseitems.all():
                 i.post(jrnl)
 
-            money = Money(self.balance,self.balancetype)
-            
-            if self.is_gst:
-                inv = ledgers["GST INV"]
-                tax = Money(self.get_gst(), 'INR')
-                amount = money + tax
-            else:
-                inv = ledgers["Non-GST INV"]
-                amount = money
+            txns = self.get_txns()
 
-            lt = [{'ledgerno':ledgers['Sundry Creditors'],'ledgerno_dr':inv,'amount':money},
-                  {'ledgerno':ledgers['Sundry Creditors'], 'ledgerno_dr': ledgers['Input Igst'], 'amount': tax}, ]
-            at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'CRPU',
-                    'account':self.supplier.account,'amount':amount}]
-
-            jrnl.transact(lt,at)
+            jrnl.transact(txns['lt'],txns['at'])
  
             self.posted = True
             self.save(update_fields=['posted'])
@@ -376,7 +388,7 @@ class Payment(models.Model):
             
             money = Money(self.total, self.type)
             lt = [{'ledgerno':ledgers['Cash'],'ledgerno_dr':ledgers['Sundry Creditors'],'amount':money}]
-            at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'PYT',
+            at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Cr','xacttypecode_ext':'PYT',
                     'account':self.supplier.account.id,'amount':money}]
             jrnl.transact(lt,at)
             self.posted = True

@@ -18,9 +18,7 @@ urlpatterns = (
 urlpatterns +=(
     path('',views.home,name='girvi-home'),
 )
-urlpatterns +=(
-    path('multirelease/',views.multirelease,name='girvi-multirelease'),
-)
+
 urlpatterns +=(
     path('loan_archive/',
          ArchiveIndexView.as_view(model=Loan, date_field="created"),

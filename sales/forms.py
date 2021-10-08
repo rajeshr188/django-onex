@@ -9,7 +9,6 @@ from product.models import Stock
 from django.forms.models import inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
-from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
 class RandomSalesForm(forms.Form):
@@ -46,11 +45,11 @@ class InvoiceForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_tag = True
         self.helper.form_class = 'form-group'
-        self.helper.label_class = 'col-md-6 form-label'
+        self.helper.label_class = 'col-md-12 form-label'
         self.helper.field_class = 'col-md-12'
         self.helper.layout = Layout(
             Row(
-                Column(FloatingField('created', css_class='form-control'),
+                Column(Field('created', css_class='form-control'),
                        css_class='form-group col-md-3 mb-0'),
                 Column(Field('customer', css_class='form-control'),
                        css_class='form-group col-md-3 mb-0'),
@@ -61,8 +60,8 @@ class InvoiceForm(forms.ModelForm):
                 Column('metaltype', css_class='form-group col-md-3 mb-0'),
                 Column('rate', css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'),
-            Row(Column(Field('approval',css_class='form-control')),
-            css_class='form-row'),
+            Row(Column(Field('approval', css_class='form-group col-md-3 mb-0')),
+                css_class='form-row'),
             Fieldset('Add items',
                      Formset('items')),
             Row(

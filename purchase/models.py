@@ -231,7 +231,7 @@ class InvoiceItem(models.Model):
     net_wt = models.DecimalField( max_digits=10, decimal_places=3,default = 0)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=3)
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,verbose_name='mc')
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant,on_delete=models.CASCADE,

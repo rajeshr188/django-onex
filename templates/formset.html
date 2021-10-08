@@ -1,19 +1,22 @@
 {%load crispy_forms_tags%}
 {%load static%}
+
+<div class = "table-responsive">
+    <table class="table table-sm table-striped " style = "max-height: 300px;">
+        {{ formset.management_form |crispy}}
+        {% for form in formset.forms %}
+        <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}} form-group">
+            {% for field in form.visible_fields %}
+            <td class="{{field.name}} form-control-sm">
+                {{ field.errors.as_ul }}
+                {{ field|as_crispy_field}}
+            </td>
+            {% endfor %}
+        </tr>
+        {%endfor%}
+    </table>
+</div>
 <script src="{% static 'js/jquery.formset.js' %}"></script>
-<table class="table table-responsive table-striped ">
-    {{ formset.management_form |crispy}}
-    {% for form in formset.forms %}
-    <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}}">
-        {% for field in form.visible_fields %}
-        <td class="{{field.name}}">
-            {{ field.errors.as_ul }}
-            {{ field|as_crispy_field}}
-        </td>
-        {% endfor %}
-    </tr>
-    {%endfor%}
-</table>
 <script type="text/javascript">
 
     function update_amounts() {
@@ -75,13 +78,13 @@
     });
 
     $(".inline.{{ formset.prefix }}").formset({
-        addText: 'add another',
+        addText: 'add',
         deleteText: 'remove',
         prefix: "{{ formset.prefix }}",
         
         added: function ($row) {
             update_amounts();
-            $row.find('.product select').select2();
+            
             $row.find('.delete-row').addClass('btn-sm btn-danger');
 
         },
@@ -91,8 +94,7 @@
         },
 
     });
-
-    $('.product select').select2();
+    $('.product select').select2()
     $('.add-row').addClass('btn-sm btn-success');
     $('.delete-row').addClass('btn-sm btn-danger');
 </script>

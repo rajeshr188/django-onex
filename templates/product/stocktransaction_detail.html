@@ -7,9 +7,9 @@
 <tr><td>Updated</td><td>{{ object.updated }}</td></tr>
 <tr><td>Product</td><td><a href = "{% url 'product_stock_detail' object.stock.id%}" >{{ object.stock }}</a></td></tr>
 <tr><td>Quantity</td><td>{{ object.quantity }}</td></tr>
-<tr><td>type</td><td>{{ object.type }}</td></tr>
+<tr><td>Journal</td><td>{{ object.journal.type }}</td></tr>
 <tr><td>Weight</td><td>{{ object.weight }}</td></tr>
-<tr><td>object</td><td>{{ object.content_object }}</td></tr>
+
 </table>
 <a class="btn btn-primary" href="{{object.get_update_url}}">Edit StockTransaction</a>
 

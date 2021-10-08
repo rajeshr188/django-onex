@@ -319,3 +319,7 @@ def audit_stock(request):
     for i in stocks:
         i.audit()
     return reverse_lazy('product_stock_list')
+
+def stock_home(request):
+    
+    return render(request,'product/stock_home.html',context = {})

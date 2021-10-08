@@ -34,8 +34,9 @@ class InvoiceForm(forms.ModelForm):
         super(InvoiceForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = True
+        
         self.helper.form_class = 'form-group'
-        self.helper.label_class = 'col-md-6 create-label'
+        self.helper.label_class = 'col-md-12 create-label'
         self.helper.field_class = 'col-md-12'
         self.helper.layout = Layout(
             Row(

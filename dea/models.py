@@ -334,6 +334,7 @@ class JournalTypes(models.TextChoices):
     PJ = "Purchase", "Purchase"
     PR = "Purchase Return", "Purchase Return"
     PY = "Payment", "Payment"
+    ST = "Stock","Stock"
 
 class Journal(models.Model):
 

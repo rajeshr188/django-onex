@@ -237,7 +237,6 @@ class LedgerTransactionListView(ListView):
     template_name = 'dea/gl.html'
     paginate_by = 20
 
-from openpyxl import load_workbook
 from moneyed import Money
 from .utils.currency import Balance
 from decimal import Decimal
@@ -260,3 +259,6 @@ def import_acc_opbal(request):
                 TotalCredit = Balance().monies(),TotalDebit = Balance().monies())            
         
     return render(request, 'sales/simpleupload.html')
+
+class JournalCreateView(CreateView):
+    model = Journal

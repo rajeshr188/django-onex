@@ -8,7 +8,8 @@ from django.db.models import Q
 from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
+from crispy_forms.bootstrap import FormActions
+from crispy_forms.layout import Button, Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
 # from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
@@ -61,7 +62,11 @@ class InvoiceForm(forms.ModelForm):
                 Column('balance', css_class='form-group col-md-3 mb-0'),
                 Column('status', css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'),
-            ButtonHolder(Submit('submit', 'save'))      
+            # ButtonHolder(Submit('submit', 'save')) 
+            FormActions(
+                Submit('save','Save Changes'),
+                Button('cancel','Clear')
+            )     
         )
 
 class InvoiceUpdateForm(InvoiceForm):
@@ -71,7 +76,7 @@ class InvoiceUpdateForm(InvoiceForm):
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(
                 queryset=ProductVariant.objects.all(),
-                widget=Select2Widget)
+        widget=Select2Widget)
     class Meta:
         model = InvoiceItem
         fields = ['weight', 'touch', 'total', 'is_return','huid', 'quantity', 'product', 'invoice','makingcharge','net_wt']

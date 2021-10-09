@@ -2,7 +2,7 @@
 {%load static%}
 
 <div class = "table-responsive">
-    <table class="table table-sm table-striped " style = "max-height: 300px;">
+    <table class="table table-sm table-striped ">
         {{ formset.management_form |crispy}}
         {% for form in formset.forms %}
         <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}} form-group">
@@ -85,6 +85,7 @@
         added: function ($row) {
             update_amounts();
             
+            $row.find('.django-select2').select2({ width: "100%" });
             $row.find('.delete-row').addClass('btn-sm btn-danger');
 
         },
@@ -94,7 +95,7 @@
         },
 
     });
-    $('.product select').select2()
+    
     $('.add-row').addClass('btn-sm btn-success');
     $('.delete-row').addClass('btn-sm btn-danger');
 </script>

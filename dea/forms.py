@@ -1,5 +1,5 @@
 from django import forms
-from .models import Ledger, Account, LedgerStatement, AccountStatement
+from .models import Journal, Ledger, Account, LedgerStatement, AccountStatement
 
 
 class AccountForm(forms.ModelForm):
@@ -25,5 +25,9 @@ class LedgerStatementForm(forms.ModelForm):
         model = LedgerStatement
         fields = ('ledgerno', 'ClosingBalance')
 
+class JournalForm(forms.ModelForm):
+    class Meta:
+        model = Journal
+        fields = ('type','desc')
 
 # op bal foormset for ledger and acc

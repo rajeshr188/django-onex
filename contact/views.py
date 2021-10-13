@@ -231,6 +231,18 @@ class CustomerCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        op_bal = form.cleaned_data['Opening_balance']
+        self.object = form.save()
+        from dea.utils.currency import Balance
+        bal = op_bal.split(',')
+        obl = []
+        for i in bal:
+            b = i.split(' ')
+            obl.append(int(b[0]))
+            obl.append(b[1])
+        
+        ob = Balance(*obl)
+        self.object.account.set_opening_balance(ob)
         return super().form_valid(form)
 
 def reallot_receipts(request,pk):

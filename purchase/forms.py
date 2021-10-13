@@ -37,30 +37,30 @@ class InvoiceForm(forms.ModelForm):
         self.helper.form_tag = True
         
         self.helper.form_class = 'form-group'
-        self.helper.label_class = 'col-md-12 create-label'
-        self.helper.field_class = 'col-md-12'
+        self.helper.label_class = 'col-md create-label'
+        self.helper.field_class = 'col-md'
         self.helper.layout = Layout(
             Row(
-                Column(Field('created',css_class ='form-control'), css_class='form-group col-md-3 mb-0'),
-                Column(Field('supplier',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
-                Column(Field('is_gst'), css_class='form-group col-md-3 mb-0'),
+                Column('created', css_class=' col-md-3 mb-0'),
+                Column('supplier', css_class=' col-md-3 mb-0'),
+                Column('is_gst', css_class=' col-md-3 mb-0'),
                 css_class='form-row'),
             Row(
-                Column('balancetype', css_class='form-group col-md-3 mb-0'),
-                Column('metaltype', css_class='form-group col-md-3 mb-0'),
-                Column('rate', css_class='form-group col-md-3 mb-0'),
+                Column('balancetype', css_class='col-md-3 mb-0'),
+                Column('metaltype', css_class='col-md-3 mb-0'),
+                Column('rate', css_class='col-md-3 mb-0'),
                 css_class='form-row'),
             Fieldset('Add items',
                              Formset('items')),
             Row(
-                Column(Field('gross_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
-                Column(Field('net_wt',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
-                Column(Field('total',css_class='form-control'), css_class='form-group col-md-3 mb-0'),
+                Column('gross_wt', css_class='col-md-3 mb-0'),
+                Column('net_wt', css_class='col-md-3 mb-0'),
+                Column('total', css_class='col-md-3 mb-0'),
                 css_class='form-row'),
             Row(
-                Column('term', css_class='form-group col-md-3 mb-0'),
-                Column('balance', css_class='form-group col-md-3 mb-0'),
-                Column('status', css_class='form-group col-md-3 mb-0'),
+                Column('term', css_class='col-md-3 mb-0'),
+                Column('balance', css_class='col-md-3 mb-0'),
+                Column('status', css_class='col-md-3 mb-0'),
                 css_class='form-row'),
             # ButtonHolder(Submit('submit', 'save')) 
             FormActions(

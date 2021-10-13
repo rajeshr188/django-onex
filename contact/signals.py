@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save
 from .models import Customer
 from django.dispatch import receiver
-from dea.models import Account,AccountStatement, AccountType_Ext, EntityType
-from moneyed import Money
+from dea.models import Account,AccountType_Ext, EntityType
+
 @receiver(post_save, sender=Customer)
 def add_account(sender, instance, created,**kwargs):
     acct_c = AccountType_Ext.objects.get(description = 'Creditor')

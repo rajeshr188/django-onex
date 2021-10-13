@@ -30,6 +30,7 @@ from utils.render import Render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from openpyxl import load_workbook
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -100,15 +101,15 @@ def home(request):
 
     loan=dict()
     loans = Loan.objects
-    released =Loan.released
-    unreleased = Loan.unreleased
+    released =loans.released()
+    unreleased = loans.unreleased()
 
     customer=dict()
     c=Customer.objects
-    
     customer['maxloans']=c.filter(loan__release__isnull=True).annotate(
         num_loans=Count('loan'),sum_loans=Sum('loan__loanamount'),tint = Sum('loan__interest')).values(
             'name','num_loans','sum_loans','tint').order_by('-num_loans','sum_loans','tint')[:10]
+
     license =dict()
     l=License.objects.all()
     license['count']=l.count()
@@ -125,24 +126,28 @@ def home(request):
 
     l=unreleased
     loan['count']=l.count()
-    
-    loan['amount']=l.aggregate(t=Coalesce(Sum('loanamount'),0))
-    loan['amount_words']=num2words(loan['amount']['t'],lang='en_IN')
-    loan['gold_amount']=l.filter(itemtype='Gold').aggregate(t=Sum('loanamount'))
-    loan['gold_weight']=l.filter(itemtype='Gold').aggregate(t=Sum('itemweight'))
-    loan['gavg']=math.ceil(loan['gold_amount']['t']/loan['gold_weight']['t'])
-    loan['silver_amount']=l.filter(itemtype='Silver').aggregate(t=Sum('loanamount'))
-    loan['silver_weight']=l.filter(itemtype='Silver').aggregate(t=Sum('itemweight'))
-    loan['savg']=math.ceil(loan['silver_amount']['t']/loan['silver_weight']['t'])
+
+
+    total = l.total()
+
+    loan['amount'] = total['total']
+    loan['amount_words'] = num2words(total['total'], lang='en_IN') if total['total'] else 'None'
+
+    loan['gold_amount']=total['gold']
+    loan['gold_weight']=total['gold_weight']
+
+    loan['gavg']=total['gold']/total['gold_weight'] if total['gold'] and total['gold_weight'] else 0
+
+    loan['silver_amount']=total['silver']
+    loan['silver_weight']=total['silver_weight']
+
+    loan['savg'] = total['silver'] / \
+        total['silveR_weight'] if total['silver'] and total['silver_weight'] else 0
+
     loan['interestdue']= l.aggregate(t=Sum('interest'))
 
+    loan['sumbyitem']=[total['gold'],total['silver'],total['bronze']]
 
-    sumbyitem=(l.aggregate(gold=Sum('loanamount',filter=Q(itemtype="Gold")),silver=Sum('loanamount',filter=Q(itemtype="Silver")),bronze=Sum('loanamount',filter=Q(itemtype="Bronze"))))
-    fixed = []
-    fixed.append(sumbyitem['gold'])
-    fixed.append(sumbyitem['silver'])
-    fixed.append(sumbyitem['bronze'])
-    loan['sumbyitem']=fixed
     datetimel = loans.annotate(year=ExtractYear('created')
                     ).values('year').annotate(l = Sum('loanamount')
                     ).order_by('year').values_list('year','l',named=True)
@@ -167,7 +172,7 @@ def home(request):
     lastyear = loans.filter(created__year =today.year -1).annotate(month=ExtractMonth('created'))\
                 .values('month').order_by('month').annotate(t=Sum('loanamount')).values_list('month','t',named='True')
    
-    loan['status'] = [loans.count(),released.count()]
+    loan['status'] = [loan['count'],released.count()]
     
     loan['datechart']=datetimel
     loan['datechart1']=datetime2
@@ -175,6 +180,7 @@ def home(request):
     loan['lastmonth']=lastmonth
     loan['thisyear']=thisyear
     loan['lastyear']=lastyear
+
     release=dict()
     r=Release.objects
     release['count']=r.count()
@@ -287,18 +293,18 @@ def physical_list(request):
     return render(request,'girvi/physicallist.html',{'filter':filter})
 
 class LoanYearArchiveView(LoginRequiredMixin,YearArchiveView):
-    queryset = Loan.unreleased.all()
+    queryset = Loan.objects.unreleased()
     date_field = "created"
     make_object_list = True
     allow_future = True
 
 class LoanMonthArchiveView(LoginRequiredMixin,MonthArchiveView):
-    queryset = Loan.unreleased.all()
+    queryset = Loan.objects.unreleased()
     date_field = "created"
     allow_future = True
 
 class LoanWeekArchiveView(LoginRequiredMixin,WeekArchiveView):
-    queryset = Loan.unreleased.all()
+    queryset = Loan.objects.unreleased()
     date_field = "created"
     week_format = "%W"
     allow_future = True
@@ -464,7 +470,7 @@ class AdjustmentCreateView(LoginRequiredMixin,CreateView):
 
     def get_initial(self):
         if self.kwargs:
-            loan=Loan.objects.get(id=self.kwargs['pk'])
+            loan=Loan.objects.unreleased.get(id=self.kwargs['pk'])
             return {'loan':loan,}
 
     def form_valid(self, form):
@@ -492,7 +498,7 @@ class ReleaseCreateView(LoginRequiredMixin,CreateView):
 
     def get_initial(self):
         if self.kwargs:
-            loan=Loan.objects.get(id=self.kwargs['pk'])
+            loan=Loan.objects.unreleased.get(id=self.kwargs['pk'])
             return{'releaseid':increlid,'loan':loan,'interestpaid':loan.interestdue,}
     
     def form_valid(self, form):

@@ -21,11 +21,11 @@ urlpatterns = [
     path('purchase/',include('purchase.urls')),
     path('daybook/',include('daybook.urls')),
     path('dea/',include('dea.urls')),
-    path('sea/',include('sea.urls')),
+    # path('sea/',include('sea.urls')),
     path('select2/', include('django_select2.urls')),
     
     path('api-auth/',include('rest_framework.urls')),
-    path('activity/',include('actstream.urls')),
+    # path('activity/',include('actstream.urls')),
     
 
 ]

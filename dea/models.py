@@ -112,7 +112,13 @@ class Account(models.Model):
 
     def adjust(self,amount,xacttypecode):
         pass
-
+    
+    def set_opening_balance(self,balance):
+        return AccountStatement.objects.create(AccountNo=self,
+                                               ClosingBalance=balance.monies(),
+                                               TotalCredit = [],
+                                               TotalDebit = []
+                                               )
     def audit(self): 
         ls = self.latest_stmt() 
         if ls is None:

@@ -40,24 +40,21 @@ class LoanQuerySet(models.QuerySet):
     def total(self):
         return self.aggregate(
             total=Sum('loanamount'),
+
             gold=Sum('loanamount', filter=Q(itemtype='Gold')),
+            gold_weight =Sum('itemweight',filter=Q(itemtype='Gold')), 
             silver=Sum('loanamount', filter=Q(itemtype='Silver')),
-            bronze=Sum('loanamount', filter=Q(itemtype='Bronze'))
+            silver_weight = Sum('itemweight',filter=Q(itemtype='Silver')),
+            bronze=Sum('loanamount', filter=Q(itemtype='Bronze')),
+            bronze_weight = Sum('itemweight',filter=Q(itemtype='Bronze'))
         )
+    
     def interestdue(self):
         return self.aggregate(t = Sum('interest'))
 
 class LoanManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related('series', 'release', 'customer')
-
-class ReleasedManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(release__isnull=False)
-
-class UnReleasedManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(release__isnull=True)
 
 class ReleaseManager(models.Manager):
     def get_queryset(self):
@@ -165,10 +162,8 @@ class Loan(models.Model):
     journals = GenericRelation(Journal,related_query_name='loan_doc')
 
     # Managers
-    objects = LoanManager()
-    released = ReleasedManager()
-    unreleased = UnReleasedManager()
-    lqs = LoanQuerySet.as_manager()
+    objects = LoanManager.from_queryset(LoanQuerySet)()
+    # lqs = LoanQuerySet.as_manager()
 
     class Meta:
         ordering = ('series','lid')

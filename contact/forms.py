@@ -4,6 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
 
 class CustomerForm(forms.ModelForm):
+    Opening_balance = forms.CharField()
     class Meta:
         model = Customer
         fields = ['type','name','pic','relatedas','relatedto','phonenumber','Address', 'area']
@@ -28,8 +29,11 @@ class CustomerForm(forms.ModelForm):
             Row(
                 Column('Address', css_class='form-group col-md-3 mb-0'),
                 Column('area', css_class='form-group col-md-3 mb-0'),
+                Column('Opening_balance', css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'
             ),
             
             Submit('submit', 'Submit')
         )
+
+

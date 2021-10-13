@@ -126,7 +126,8 @@ class BulkReleaseForm(forms.Form):
     )
     loans = forms.ModelMultipleChoiceField(
         widget=Select2MultipleWidget,
-        queryset=Loan.unreleased.all())
+        queryset=Loan.objects.unreleased()
+        )
 
 class PhysicalStockForm(forms.Form):
     date = forms.DateTimeField(
@@ -165,10 +166,10 @@ class AdjustmentForm(forms.ModelForm):
         ),
     )
 
-    loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),
+    loan = forms.ModelChoiceField(queryset=Loan.objects.unreleased(),
                                     widget=ModelSelect2Widget(
                                     model=Loan,
-                                    queryset = Loan.unreleased.all(),
+                                    queryset = Loan.objects.unreleased(),
                                     search_fields=['loanid_icontains'],
                                     # dependent_fields={'customer':'customer'}
         ))

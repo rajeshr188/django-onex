@@ -32,8 +32,8 @@ def home(request):
     total = dict()
     total['total']=qs_posted.total_with_ratecut()
     if total['total']['cash']:
-        total['total']['gmap'] = round(avgrate['gold'],2)
-        total['total']['smap'] = round(avgrate['silver'],2)
+        total['total']['gmap'] = round(avgrate['gold'],2) if avgrate['gold'] else 0
+        total['total']['smap'] = round(avgrate['silver'],2) if avgrate['silver'] else 0
         
     else:
         total['total']['gmap']=0
@@ -42,8 +42,10 @@ def home(request):
     gst_avgrate = qs_posted.gst().avg_rate()
     total['gst'] = qs_posted.gst().total_with_ratecut()
     if total['gst']['cash']: 
-        total['gst']['gmap'] = round(gst_avgrate['gold'], 2)
-        total['gst']['smap'] = round(gst_avgrate['silver'], 2)
+        total['gst']['gmap'] = round(
+            gst_avgrate['gold'], 2)if avgrate['gold'] else 0
+        total['gst']['smap'] = round(
+            gst_avgrate['silver'], 2)if avgrate['silver'] else 0
        
     else:
         total['gst']['gmap']=0
@@ -52,8 +54,10 @@ def home(request):
     total['nongst'] = qs_posted.non_gst().total_with_ratecut()
     nongst_avgrate = qs_posted.non_gst().avg_rate()
     if total['nongst']['cash']:
-        total['nongst']['gmap'] = round(nongst_avgrate['gold'], 2)
-        total['nongst']['smap'] = round(nongst_avgrate['silver'], 2)
+        total['nongst']['gmap'] = round(
+            nongst_avgrate['gold'],2)if avgrate['gold'] else 0
+        total['nongst']['smap'] = round(
+            nongst_avgrate['silver'],2)if avgrate['silver'] else 0
        
     else:
         total['nongst']['gmap']=0

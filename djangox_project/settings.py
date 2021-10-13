@@ -21,12 +21,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
-
+# SECRET_KEY = '43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY','secretknox')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG',True)
 
-ALLOWED_HOSTS = ["*","localhost","127.0.0.1"]
+# ALLOWED_HOSTS = ["*","localhost","127.0.0.1"]
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Application definition
 
@@ -47,8 +49,8 @@ SHARED_APPS = [
 ]
 TENANT_APPS =[
     'django.contrib.contenttypes',
-    'actstream',
-    # 'django.contrib.messages',
+    'django.contrib.messages',
+    # 'actstream',
     'contact','girvi',
     'Chitfund','daybook',
     'product','approval','dea',
@@ -69,19 +71,22 @@ INSTALLED_APPS = [
 
     # Third-party
     'allauth','allauth.account',  # new
-    'crispy_forms', "crispy_bootstrap5", 'bootstrap4', 
+    'crispy_forms', "crispy_bootstrap5",
     'import_export', 'versatileimagefield',  # new
     'rest_framework', 'corsheaders', 'mptt', 'django_tables2', 'django_filters',
     'djmoney', 'phonenumber_field',
-     'actstream',
-    'widget_tweaks', 'tempus_dominus',
-    'debug_toolbar','django_extensions',# 'controlcenter',
+    # 'actstream','controlcenter',
+    'bootstrap4',
+    'widget_tweaks',
+    'tempus_dominus',
+    'debug_toolbar','django_extensions',# 
     
     # Local
     'users','company','pages',
     'contact','product','girvi',
     'invoice','sales','purchase','approval',
-    'Chitfund','daybook','dea','sea'
+    'Chitfund','daybook','dea',
+    # 'sea'
 ]
 TENANT_MODEL = "company.Company"
 PUBLIC_SCHEMA_NAME = 'public'
@@ -161,14 +166,27 @@ WSGI_APPLICATION = 'djangox_project.wsgi.application'
 #         }
 # }
 # multitenant
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'tenant_schemas.postgresql_backend',
+#         'NAME': 'onex_multi-tenant',
+#         'USER': 'postgres',
+#         'PASSWORD': 'kanchan188',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'tenant_schemas.postgresql_backend',
-        'NAME': 'onex_multi-tenant',
-        'USER': 'postgres',
-        'PASSWORD': 'kanchan188',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DATABASE_NAME', 'onex_multi-tenant'),
+        'USER': os.getenv('DATABASE_USERNAME', 'postgres'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'kanchan188'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', 5432),
+        # 'OPTIONS': json.loads(
+        #     os.getenv('DATABASE_OPTIONS', '{}')
+        # ),
     }
 }
 DATABASE_ROUTERS = (
@@ -252,9 +270,10 @@ ACCOUNT_UNIQUE_EMAIL = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
-# CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 # CRISPY_TEMPLATE_PACK = "bootstrap5"
 # CACHES = {
 #     'default': {

@@ -4,7 +4,7 @@ from contact.models import Customer
 from product.models import ProductVariant
 from django.utils import timezone
 from datetime import timedelta,date
-from django.db.models import Sum,Q,F
+from django.db.models import Sum,Q,Avg
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.fields import GenericRelation
 from product.models import Stock,StockTransaction,Attribute
@@ -51,9 +51,22 @@ class PurchaseQueryset(models.QuerySet):
             silver=Sum('balance', filter=Q(balancetype='AUD')),
         )
 
+    def today(self):
+        return self.filter(created__date=date.today())
+    
+    def avg_rate(self):
+        return self.aggregate(gold=Avg('rate', filter=Q(balancetype='INR', metaltype='Gold')),
+                                silver=Avg('rate', filter=Q(balancetype='INR', metaltype='Silver')))
+
+    def cur_month(self):
+        return self.filter(created__month=date.today().month,
+                           created__year=date.today().year)
+
+
 class InvoiceManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related('supplier','term')
+
 class Invoice(models.Model):
 
     # Fields
@@ -109,7 +122,6 @@ class Invoice(models.Model):
         blank=True, null=True)
     journals = GenericRelation(Journal,related_query_name ='purchase_doc')
     
-    # objects = PurchaseQueryset.as_manager()
     objects = InvoiceManager.from_queryset(PurchaseQueryset)()
     class Meta:
         ordering = ('id','created',)

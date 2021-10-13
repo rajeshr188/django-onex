@@ -9,10 +9,9 @@
         <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
             <div class="col p-4 d-flex flex-column position-static">
                 <strong class="d-inline-block mb-2 text-primary"></strong>
-                <h3 class="mb-0">{{object}}</h3>
+                <h3 class="mb-0">{{object.contact.name}}</h3>
                 <div class="mb-1 text-muted">Nov 12</div>
-                <p class="card-text mb-auto">This is a wider card with supporting text below as a natural lead-in to
-                    additional content.</p>
+                <p class="card-text mb-auto">{{object.contact.Address}} | {{object.contact.phonenumber}}</p>
                 
             </div>
             <div class="col-auto d-none d-lg-block">
@@ -28,13 +27,13 @@
    
 </div>
 
-<div class="card">
+<!-- <div class="card">
     <div class="card-body">
         Opening Bal: {{ object.accountstatements.latest.get_cb}} | {{object.accountstatements.latest.created}}
         <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
 
     </div>
-</div>
+</div> -->
 <!-- <div class="row">
     <div class="col-sm">
         <div class="card">
@@ -67,21 +66,22 @@
         </div>
     </div>
 </div> -->
-<div class="card text-right">
+<!-- <div class="card text-right">
     <div class="card-body">
         Closing Bal: {{object.current_balance}}
         <a class="btn btn-info" href="{% url 'dea_account_audit' object.id%}">Audit</a>
     </div>
-</div>
+</div> -->
 
-<table class="table">
+<div class="table-responsive">
+<table class="table table-sm table-striped table-bordered">
     <thead>
         <tr>
             <th>Date</th>
             <th>Voucher</th>
-            <th>Desc</th>
-            <th>Dr</th>
-            <th>Cr</th>
+            <th>Description</th>
+            <th>Debit</th>
+            <th>Credit</th>
             <th>Balance</th>
 
         </tr>
@@ -116,4 +116,5 @@
         </tr>
     </tbody>
 </table>
+</div>
 {% endblock %}

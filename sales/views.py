@@ -1,6 +1,7 @@
+from django.db.models import FloatField
 from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
-from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month,Year
+from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month
 from contact.models import Customer
 from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,
                     ReceiptLineForm,ReceiptItemFormSet,RandomSalesForm)
@@ -28,40 +29,23 @@ def home(request):
     context = {}
     qs = Invoice.objects
     qs_posted = qs.posted()
-    avgrate = qs_posted.avg_rate()
+
     total = dict()
-    total['total']=qs_posted.total_with_ratecut()
-    if total['total']['cash']:
-        total['total']['gmap'] = round(avgrate['gold'],2) if avgrate['gold'] else 0
-        total['total']['smap'] = round(avgrate['silver'],2) if avgrate['silver'] else 0
-        
-    else:
-        total['total']['gmap']=0
-        total['total']['smap'] = 0
-    
-    gst_avgrate = qs_posted.gst().avg_rate()
-    total['gst'] = qs_posted.gst().total_with_ratecut()
-    if total['gst']['cash']: 
-        total['gst']['gmap'] = round(
-            gst_avgrate['gold'], 2)if avgrate['gold'] else 0
-        total['gst']['smap'] = round(
-            gst_avgrate['silver'], 2)if avgrate['silver'] else 0
-       
-    else:
-        total['gst']['gmap']=0
-        total['gst']['smap']=0
-    
+    total['total']=qs_posted.total_with_ratecut() 
+    total['gst'] = qs_posted.gst().total_with_ratecut() 
     total['nongst'] = qs_posted.non_gst().total_with_ratecut()
-    nongst_avgrate = qs_posted.non_gst().avg_rate()
-    if total['nongst']['cash']:
-        total['nongst']['gmap'] = round(
-            nongst_avgrate['gold'],2)if avgrate['gold'] else 0
-        total['nongst']['smap'] = round(
-            nongst_avgrate['silver'],2)if avgrate['silver'] else 0
-       
-    else:
-        total['nongst']['gmap']=0
-        total['nongst']['smap']=0
+    for i in total:
+        if total[i]['cash']:
+            if total[i]['cash_g']:
+                total[i]['gmap'] = round(total[i]['cash_g'] /
+                                         total[i]['cash_g_nwt'], 3)
+            else:
+                total[i]['gmap'] = 0
+            if total[i]['cash_s']:
+                total[i]['smap'] = round(total[i]['cash_s'] /
+                                         total[i]['cash_s_nwt'], 3)
+            else:
+                total[i]['smap'] = 0
     context['total']=total
     return render(request,'sales/home.html',context)
 
@@ -88,43 +72,50 @@ def print_invoice(request,pk):
 def print_receipt(request,pk):
     receipt=Receipt.objects.get(id=pk)
     params={'receipt':receipt,'inwords':num2words(receipt.total,lang='en_IN')}
-    return Render.render('sales/receipt.html',params)
+    return Render.render('sales/receipt.html', params)
 
+from django.db.models import FloatField
 def list_balance(request):
 
     receipts=Receipt.objects.filter(customer=OuterRef('pk')).order_by().values('customer')
-    grec=receipts.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
-    crec=receipts.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
+
+    grec=receipts.annotate(grec=Sum('total',filter=Q(type='USD'))).values('grec')
+    crec=receipts.annotate(crec=Sum('total',filter=Q(type='INR'))).values('crec')
 
     invoices=Invoice.objects.filter(customer=OuterRef('pk')).\
                 order_by().values('customer')
+
     gbal=invoices.annotate(gbal=Sum('balance',
-            filter=Q(balancetype='Gold'))).values('gbal')
+            filter=Q(balancetype='USD'))).values('gbal')
     cbal=invoices.annotate(cbal=Sum('balance',
-            filter=Q(balancetype='Cash'))).values('cbal')
+            filter=Q(balancetype='INR'))).values('cbal')
 
     balance=Customer.objects.filter(type='Wh').values('id','name').\
                 annotate(gbal=Subquery(gbal),grec=Subquery(grec),gold=F('gbal')-F('grec'),
                         cbal=Subquery(cbal),crec=Subquery(crec),cash=F('cbal')-F('crec')).\
                         order_by('name')
 
-    balance_total = balance.aggregate(gbal_total = Coalesce(Sum(F('gbal')),0),
-                    grec_total = Coalesce(Sum(F('grec')),0),
-                    cbal_total = Coalesce(Sum(F('cbal')),0),
-                    crec_total = Coalesce(Sum(F('crec')),0))
+    balance_total = balance.aggregate(gbal_total=Coalesce(
+                                        Sum(F('gbal'), output_field=FloatField()), 0.0),
+                                      grec_total=Coalesce(
+                                          Sum(F('grec'), output_field=FloatField()), 0.0),
+                                      cbal_total=Coalesce(
+                                          Sum(F('cbal'), output_field=FloatField()), 0.0),
+                                      crec_total=Coalesce(
+                                          Sum(F('crec'), output_field=FloatField()), 0.0))
 
-    balance_nett_gold = balance_total['gbal_total']  - balance_total['grec_total']
-    balance_nett_cash = balance_total['cbal_total']-balance_total['crec_total']
+    balance_nett_gold = balance_total['gbal_total'] - balance_total['grec_total']
+    balance_nett_cash = balance_total['cbal_total'] - balance_total['crec_total']
 
     balance_by_month = Invoice.objects.annotate(month = Month('created')).\
                         values('month').order_by('month').\
-                        annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Metal')))
+                        annotate(tc = Sum('balance',filter = Q(balancetype='INR')),tm = Sum('balance',filter = Q(balancetype = 'USD')))
 
-    context={'balance':balance,'balance_total':balance_total,
-                'balance_nett_gold':balance_nett_gold,
-                'balance_nett_cash':balance_nett_cash,
-                'balance_by_month':balance_by_month,
-
+    context={
+        'balance':balance,'balance_total':balance_total,
+        'balance_nett_gold':balance_nett_gold,
+        'balance_nett_cash':balance_nett_cash,
+        'balance_by_month':balance_by_month,
     }
     return render(request,'sales/balance_list.html',context)
 

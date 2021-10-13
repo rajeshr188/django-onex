@@ -112,7 +112,7 @@ class Invoice(models.Model):
         max_length=30,choices = metal_choices,default="Gold")
     due_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    # objects = SalesQueryset.as_manager()
+    
     objects = InvoiceManager.from_queryset(SalesQueryset)()
     # Relationship Fields
     customer = models.ForeignKey(
@@ -251,7 +251,6 @@ class Invoice(models.Model):
             self.posted = True
             self.save(update_fields = ['posted'])
         
-    
     def unpost(self):
         if self.posted: 
             last_jrnl = self.journals.latest()

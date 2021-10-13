@@ -13,13 +13,11 @@
       <li class="nav-item">
         <a class="nav-link "  href="{% url 'girvi_loan_create' customer.id %}">Add Loan</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link "  href="{% url 'sales_invoice_create'  %}">Add Invoice</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link "  href="{% url 'sales_receipt_create' %}">Add Receipt</a>
-      </li>
+     
       {%if customer.account%}
+      <li class="nav-item">
+        <a href="{% url 'dea_account_detail' customer.account.id%}" class="nav-link">Account</a>
+      </li>
       <li class="nav-item">
         <a class="nav-link " href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
       </li>

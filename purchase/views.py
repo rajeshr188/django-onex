@@ -26,36 +26,28 @@ import logging
 
 logger = logging.getLogger(__name__)
 def home(request):
+
     context = {}
     qs = Invoice.objects
     qs_posted = qs.posted()
     
     total = dict()
     total['total']=qs_posted.total_with_ratecut()
-    if total['total']['cash']:
-        total['total']['gmap'] = round(total['total']['cash_g'] / \
-            total['total']['cash_g_nwt'],3)
-        total['total']['smap'] = round(total['total']['cash_s'] / \
-            total['total']['cash_s_nwt'],3)
-    else:
-        total['total']['gmap']=0
-        total['total']['smap'] = 0
-    
     total['gst'] = qs_posted.gst().total_with_ratecut()
-    if total['gst']['cash']: 
-        total['gst']['gmap'] = round(total['gst']['cash_g']/total['gst']['cash_g_nwt'],3)
-        total['gst']['smap'] = round(total['gst']['cash_s']/total['gst']['cash_s_nwt'],3)
-    else:
-        total['gst']['gmap']=0
-        total['gst']['smap']=0
-    
     total['nongst'] = qs_posted.non_gst().total_with_ratecut()
-    if total['nongst']['cash']:
-        total['nongst']['gmap'] = round(total['nongst']['cash_g']/total['nongst']['cash_g_nwt'],3)
-        total['nongst']['smap'] = round(total['nongst']['cash_s']/total['nongst']['cash_s_nwt'],3)
-    else:
-        total['nongst']['gmap']=0
-        total['nongst']['smap']=0
+    logger.warning(total)
+    for i in total:
+        if total[i]['cash']:
+            if total[i]['cash_g']:
+                total[i]['gmap'] = round(total[i]['cash_g'] /
+                                            total[i]['cash_g_nwt'], 3)
+            else:
+                total[i]['gmap'] = 0
+            if total[i]['cash_s']:
+                total[i]['smap'] = round(total[i]['cash_s'] /
+                                            total[i]['cash_s_nwt'], 3)
+            else:
+                total[i]['smap'] = 0
    
     context['total'] = total
     
@@ -72,22 +64,35 @@ def print_payment(pk):
     return Render.render('purchase/payment.html',params)
     
 def list_balance(request):
-    acs = AccountStatement.objects.filter(AccountNo__contact = OuterRef('supplier')).order_by('-created')[:1]
+    acs = AccountStatement.objects.filter(
+                    AccountNo__contact = OuterRef('supplier')
+                    ).order_by('-created')[:1]
     acs_cb = AccountStatement.objects.filter(
-        AccountNo__contact=OuterRef('pk')).order_by('-created')[:1]
-    payments=Payment.objects.filter(
-        posted = True,
-        supplier=OuterRef('pk'),
-        created__gte = Subquery(acs.values('created'))
-        ).order_by().values('supplier')
-    grec=payments.annotate(grec=Sum('total',filter=Q(type='Gold'))).values('grec')
-    crec=payments.annotate(crec=Sum('total',filter=Q(type='Cash'))).values('crec')
+                    AccountNo__contact=OuterRef('pk')
+                    ).order_by('-created')[:1]
+    
+    payments = Payment.objects.filter(
+                posted = True,
+                supplier=OuterRef('pk'),
+                created__gte = Subquery(acs.values('created'))
+                ).order_by().values('supplier')
+    grec=payments.annotate(
+                grec=Sum('total',filter=Q(type='USD'))
+                ).values('grec')
+    crec=payments.annotate(
+                crec=Sum('total',filter=Q(type='INR'))
+                ).values('crec')
+
     invoices = Invoice.objects.posted().filter(
-        supplier=OuterRef('pk'),
-        created__gte=Subquery(acs.values('created'))
-        ).order_by().values('supplier')
-    gbal=invoices.annotate(gbal=Sum('balance',filter=Q(balancetype='Gold'))).values('gbal')
-    cbal=invoices.annotate(cbal=Sum('balance',filter=Q(balancetype='Cash'))).values('cbal')
+                supplier=OuterRef('pk'),
+                created__gte=Subquery(acs.values('created'))
+                ).order_by().values('supplier')
+    gbal=invoices.annotate(
+                gbal=Sum('balance',filter=Q(balancetype='USD'))
+                ).values('gbal')
+    cbal=invoices.annotate(
+                cbal=Sum('balance',filter=Q(balancetype='INR'))
+                ).values('cbal')
 
     balance=Customer.objects.filter(type="Su").annotate(
                                     cb = Subquery(acs_cb.values('ClosingBalance')),

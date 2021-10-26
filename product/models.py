@@ -281,7 +281,12 @@ class VariantImage(models.Model):
 
 class StockManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().select_related()
+        return super().get_queryset().select_related().annotate(
+            qty=F('stockbalance__Closing_qty') +
+            F('stockbalance__in_qty') - F('stockbalance__out_qty'),
+            wt=F('stockbalance__Closing_wt') +
+            F('stockbalance__in_wt') - F('stockbalance__out_wt')
+        )
     def with_bal(self):
         return self.annotate(
             qty = F('stockbalance__Closing_qty') + F('stockbalance__in_qty') - F('stockbalance__out_qty'),
@@ -318,8 +323,9 @@ class Stock(models.Model):
         ordering=('-created',)
         
     def __str__(self):
-        cb = self.current_balance()
-        return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
+        # cb = self.current_balance()
+        # return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
+        return f"{self.variant} {self.barcode} w:{self.wt} q:{self.qty}"
 
     def get_absolute_url(self):
         return reverse('product_stock_detail', args=(self.pk,))

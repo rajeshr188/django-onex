@@ -83,7 +83,7 @@ class InvoiceForm(forms.ModelForm):
 class InvoiceItemForm(forms.ModelForm):
     # TODO add filter to show only stock with qty and wt >0
     product = forms.ModelChoiceField(
-                        queryset = Stock.objects.with_bal(),
+                        queryset = Stock.objects.filter(Q(wt__gt = 0)&Q(qty__gt = 0)),
                         widget = Select2Widget)
     class Meta:
         model = InvoiceItem

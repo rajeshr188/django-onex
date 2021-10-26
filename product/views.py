@@ -1,12 +1,7 @@
 from django.views.generic import DetailView, ListView, UpdateView, CreateView, DeleteView
 from django.views.generic.base import TemplateView
-from .models import (Category, ProductType, Product, ProductVariant, Attribute,
-                    AttributeValue, ProductImage, StockStatement, VariantImage,Stock,
-                    StockTransaction)
-from .forms import (CategoryForm, ProductTypeForm, ProductForm,
-                    ProductVariantForm,AttributeForm, AttributeValueForm,
-                     ProductImageForm, stockstatement_formset, VariantImageForm,StockForm,UniqueForm,
-                     StockTransactionForm)
+from .models import *
+from .forms import *
 from .filters import ProductFilter,ProductVariantFilter,StockFilter
 from django.shortcuts import get_object_or_404,redirect, render
 from django.urls import reverse_lazy
@@ -242,26 +237,29 @@ def merge_lot(request,pk):
 
 def stock_list(request):
     context = {}
-    st = Stock.objects.all()
+    st = StockBalance.objects.all()
     stock_filter = StockFilter(request.GET,queryset = st)
-    stock = []
-    for i in stock_filter.qs:
-        bal ={}
-        try:
-            ls = i.stockstatement_set.latest()
-            cwt = ls.Closing_wt
-            cqty = ls.Closing_qty
-        except StockStatement.DoesNotExist:
-            ls = None
-            cwt = 0
-            cqty=0
-        in_txns = i.stock_in_txns(ls)
-        out_txns = i.stock_out_txns(ls)
-        bal['wt'] = cwt + (in_txns['wt'] - out_txns['wt'])
-        bal['qty'] = cqty + (in_txns['qty'] - out_txns['qty'])
-        stock.append([i,bal])
-    context['stock']=stock
-    return render(request,'product/stock_list.html',{'filter':stock_filter,'data':context})
+    # stock = []
+    # for i in stock_filter.qs:
+    #     bal ={}
+    #     try:
+    #         ls = i.stockstatement_set.latest()
+    #         cwt = ls.Closing_wt
+    #         cqty = ls.Closing_qty
+    #     except StockStatement.DoesNotExist:
+    #         ls = None
+    #         cwt = 0
+    #         cqty=0
+    #     in_txns = i.stock_in_txns(ls)
+    #     out_txns = i.stock_out_txns(ls)
+    #     bal['wt'] = cwt + (in_txns['wt'] - out_txns['wt'])
+    #     bal['qty'] = cqty + (in_txns['qty'] - out_txns['qty'])
+    #     stock.append([i,bal])
+    # context['stock']=stock
+    return render(request,'product/stock_list.html',{'filter':stock_filter,
+    # 'data':context
+    }
+    )
 
 class StockCreateView(CreateView):
     model=Stock
@@ -314,12 +312,18 @@ class StockStatementView(TemplateView):
 
         return self.render_to_response({'stockstatement_formset': formset})
 
+class StockBatchListView(ListView):
+    model = StockBatch
+class StockBatchDetailView(DetailView):
+    model = StockBatch
 def audit_stock(request):
     stocks = Stock.objects.all()
     for i in stocks:
         i.audit()
-    return reverse_lazy('product_stock_list')
+    return redirect('product_stock_list')
 
-def stock_home(request):
+def inventory(request):
+    inv = {}
     
-    return render(request,'product/stock_home.html',context = {})
+    
+    return render(request,'product/inventory.html',context = {})

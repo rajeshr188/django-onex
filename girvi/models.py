@@ -265,7 +265,7 @@ class Loan(models.Model):
             at = [{'ledgerno': ledgers['Loans & Advances'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'LG',
                     'account':self.customer.account.id,'amount':amount},
                     {'ledgerno': ledgers['Interest Received'], 'xacttypecode': 'Dr', 'xacttypecode_ext': 'IR',
-                    'account': self.customer.account.id, 'amount': interest}]
+                    'account': self.customer.account.id, 'amount': interest}]     
         jrnl.transact(lt,at)
          
         self.posted = True

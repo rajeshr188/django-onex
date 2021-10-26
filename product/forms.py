@@ -136,7 +136,7 @@ class ProductForm(forms.ModelForm, AttributesMixin):
     model_attributes_field = 'attributes'
     class Meta:
         model = Product
-        exclude = ['attributes','product_type','name']
+        exclude = ['attributes','jattributes','product_type','name']
 
     def __init__(self,*args,**kwargs):
         super(ProductForm,self).__init__(*args,**kwargs)

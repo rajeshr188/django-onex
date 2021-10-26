@@ -36,7 +36,6 @@ urlpatterns += (
     path('producttype/delete/<int:pk>/', views.ProductTypeDeleteView.as_view(),name='product_producttype_delete'),
 )
 
-
 urlpatterns += (
     # urls for Product
     path('product/', views.ProductListView.as_view(), name='product_product_list'),
@@ -98,6 +97,7 @@ urlpatterns += (
     path('stock/merge/<int:pk>', views.merge_lot,
          name='product_stock_merge'),
     path('stock/audit/',views.audit_stock,name = "product_stock_audit"),
+    path('stock/inventory/',views.inventory,name="product_stock_inventory"),
 )
 urlpatterns +=(
     #urls for Stocktransaction
@@ -109,4 +109,8 @@ urlpatterns +=(
 urlpatterns +=(
     path('stockstatement/',views.StockStatementListView.as_view(),name = 'product_stockstatement_list'),
     path('stockstatment/add_physical/',views.StockStatementView.as_view(),name='product_stockstatement_add'),
+)
+urlpatterns +=(
+    path('stock/<int:pk>/stockbatch/',views.StockBatchListView.as_view(),name='product_stockbatch_list'),
+    path('stock/stockbatch/<int:pk>/detail/',views.StockBatchDetailView.as_view(),name='product_stockbatch_detail')
 )

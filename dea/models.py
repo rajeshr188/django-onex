@@ -186,8 +186,8 @@ class Account(models.Model):
                         
         debit_bal =  Balance(
                         [Money(r["total"], r["amount_currency"]) for r in debit])
-        bal = (cb +(credit_bal - debit_bal))
-
+        # bal = (cb +(credit_bal - debit_bal))
+        bal = (cb -(debit_bal - credit_bal))
         return bal
         
 # account statement for ext account
@@ -467,8 +467,13 @@ class Ledgerbalance(models.Model):
     AccountType = models.CharField(max_length=20)
     created = models.DateTimeField()
     ClosingBalance = ArrayField(MoneyValueField(null = True,blank = True))
-    cr =ArrayField(MoneyValueField(null = True,blank = True))
-    dr = ArrayField(MoneyValueField(null=True, blank=True))
+    cr  = ArrayField(MoneyValueField())
+    dr = ArrayField(MoneyValueField())
+    # ll_cr =ArrayField(MoneyValueField(null = True,blank = True))
+    # ll_dr = ArrayField(MoneyValueField(null=True, blank=True))
+    # la_cr =ArrayField(MoneyValueField(null = True,blank = True))
+    # la_dr = ArrayField(MoneyValueField(null=True, blank=True))
+
 
     class Meta:
         managed = False
@@ -487,10 +492,12 @@ class Ledgerbalance(models.Model):
                 )
 
     def get_dr(self):
-        return Balance(self.dr)
+        # return Balance(self.ll_dr) + Balance(self.la_dr)
+        return Balance(self.cr)
 
     def get_cr(self):
-        return Balance(self.cr)
+        # return Balance(self.ll_cr) + Balance(self.la_cr)
+        return Balance(self.dr)
 
 class Accountbalance(models.Model):
     entity = models.CharField(max_length=30)

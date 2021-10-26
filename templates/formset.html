@@ -63,7 +63,7 @@
 
             var nettwt = (wt * touch) / 100
             var total = 0
-            if ($('#id_balancetype').val() == 'Cash')
+            if ($('#id_balancetype').val() == 'INR')
                 total = Number(nettwt) * Number(rate) + Number(mc);
             else {
                 total = Number(nettwt) + Number(mc);

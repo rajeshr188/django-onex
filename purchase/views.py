@@ -128,8 +128,11 @@ class InvoiceCreateView(CreateView):
             form.instance.created_by = self.request.user
             self.object = form.save()
             if items.is_valid():
+                logger.warning('items are valid')
                 items.instance = self.object
                 items.save()
+            else:
+                pass
         return super(InvoiceCreateView,self).form_valid(form)
        
     def get_success_url(self) -> str:

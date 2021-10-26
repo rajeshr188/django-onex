@@ -37,8 +37,10 @@
                 <th>Ledger</th>
                 <th> statement Date</th>
                 <th> Prev Balance</th>
-                <th> Debit </th>
-                <th> Credit </th>
+                <th> ll-Debit </th>
+                <th> ll-Credit </th>
+                <th> la-Debit</th>
+                <th> la-credit</th>
                 <th> Curr Bal </th>
             </thead>
             <tbody>
@@ -48,8 +50,12 @@
                     <td><a href="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
                     <td>{{i.created}}</td>
                     <td>{{i.get_cb}}</td>
-                    <td>{{i.get_dr}}</td>
                     <td>{{i.get_cr}}</td>
+                    <td>{{i.get_dr}}</td>
+                    <!-- <td>{{i.ll_dr}}</td>
+                    <td>{{i.ll_cr}}</td>
+                    <td>{{i.la_dr}}</td>
+                    <td>{{i.la_cr}}</td> -->
                     <td>{{i.get_currbal}}</td>
                 </tr>
                 {%endfor%}

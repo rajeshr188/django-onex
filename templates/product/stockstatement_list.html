@@ -1,12 +1,17 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
+<p>
+    <h1>
+        Stock Statement
+    </h1>
+    <a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a></p>
 <table class="table table-sm table-bordered">
     <tr>
         <td>Created</td>
         <td>ID</td>
         <td>Stock</td>
+        <td>Type</td>
         <td>Closing</td>
         <td>total In</td>
         <td>Total Out</td>
@@ -17,6 +22,7 @@
         <td>{{object.created}}</td>
         <td><a href="{{object.get_absolute_url}}">{{object.pk}}</a></td>
         <td><a href="{% url 'product_stock_detail' object.stock.id%}">{{ object.stock }}</a></td>
+        <td><a href="{% url 'product_stockbatch_list' object.stock.id%}">{{object.sstype}}</a> </td>
         <td>qty:{{object.Closing_qty}} wt:{{object.Closing_wt}}</td>
         <td>qty:{{object.total_qty_in}} wt:{{object.total_wt_in}}</td>
         <td>qty:{{object.total_qty_out}} wt:{{object.total_wt_out}}</td>

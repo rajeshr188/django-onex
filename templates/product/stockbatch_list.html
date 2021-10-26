@@ -1,0 +1,33 @@
+{% extends "_base.html" %}
+{%block content%}
+<p>
+    <h1>Stock Batch</h1>
+    <h3> of Stock {{lot}}</h3>
+</p>
+<div class="table-responsive">
+    <table class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Created</th>
+                <th>Stock</th>
+                <th>Initial Qty</th>
+                <th>Initial Wt</th>
+                <th>Current bal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in object_list %}
+            <tr>
+                <td><a href="{% url 'product_stockbatch_detail' i.id%}">{{i.id}}</a> </td>
+                <td>{{i.created}}</td>
+                <td><a href="{%url 'product_stock_detail' i.stock_id%}">{{i.stock}}</a> </td>
+                <td>{{i.quantity}}</td>
+                <td>{{i.weight}}</td>
+                <td>{{i.current_bal}}</td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+</div>
+{%endblock%}

@@ -14,6 +14,7 @@
   <th>product type</th>
   <th>description</th>
   <th>attributes</th>
+  <th>jattributes</th>
   <th>Action</th>
 </tr>
 </thead>
@@ -24,7 +25,8 @@
     <td>{{object.category}}</td>
     <td>{{object.product_type}}</td>
     <td>{{ object.description }}</td>
-    <td>{{object.get_attributes}}</td>
+    <td>{{object.attributes}}</td>
+    <td>{{object.jattributes}}</td>
     <td><a class="btn btn-danger" href="{% url 'product_product_delete' object.id%}">Delete</a></td>
 </tr>
 {% endfor %}

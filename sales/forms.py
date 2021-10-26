@@ -10,7 +10,7 @@ from django.forms.models import inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
 from utils.custom_layout_object import *
-
+from django.db.models import Q
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
 
@@ -81,8 +81,9 @@ class InvoiceForm(forms.ModelForm):
         )
 
 class InvoiceItemForm(forms.ModelForm):
+    # TODO add filter to show only stock with qty and wt >0
     product = forms.ModelChoiceField(
-                        queryset = Stock.objects.all(),
+                        queryset = Stock.objects.with_bal(),
                         widget = Select2Widget)
     class Meta:
         model = InvoiceItem

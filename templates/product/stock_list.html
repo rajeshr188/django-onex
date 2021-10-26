@@ -21,7 +21,7 @@
                 <td>updated_on</td>
                 <td>Status</td>
             </tr>
-            {% for object,bal in data.stock %}
+            <!-- {% for object,bal in data.stock %}
             <tr>
                 <td>{{object.created|date}}</td>
                 <td><a href="{{object.get_absolute_url}}">{{object.barcode}}</a></td>
@@ -34,7 +34,21 @@
                 <td>{{object.updated_on}}</td>
                 <td>{{object.status}}</td>
             </tr>
-            {% endfor %}
+            {% endfor %} -->
+            {% for i in filter.qs%}
+            <tr>
+                <td>{{i.stock.created|date}}</td>
+                <td><a href="{{i.stock.get_absolute_url}}">{{i.stock.barcode}}</a></td>
+                <td>{{i.stock..huid}}</td>
+                <td>{{i.stock.variant.product_code}}</td>
+                <td><a href="{% url 'product_productvariant_detail' i.stock.variant.id%}">{{i.stock.variant.name}}</a></td>
+                <td>{{i.stock.tracking_type}}</td>
+                <td>{{i.get_wt_bal}}</td>
+                <td>{{i.get_qty_bal}}</td>
+                <td>{{i.stock.updated_on}}</td>
+                <td>{{i.stock.status}}</td>
+            </tr>
+            {%endfor%}
         </table>
     </div>
     <div class="col-3">

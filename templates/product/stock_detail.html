@@ -87,10 +87,10 @@
             {%for i in object.stocktransaction_set.all %}
             <tr>
               <td>{{i.id}}</td>
-              <td>{{i.activity_type}}</td>
+              <td>{{i.movement_type_id}}</td>
               <td>
                 <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object%}">
-                  {{i.activity_type}}:{{i.journal}}</a>
+                  {{i.movement_type.name}}:{{i.journal}}</a>
               </td>
               <td>{{i.weight}}</td>
               <td>{{i.quantity}}</td>
@@ -109,15 +109,18 @@
         {%if object.stockstatement_set%}
         <ul class="list-group list-group-flush">
           {%for i in object.stockstatement_set.all%}
+          {%if i.sstype  == 'Stock'%}
           <li class="list-group-item">
             {{i.created}} wt:{{i.Closing_wt}} qty:{{i.Closing_qty}}
           </li>
+          {%endif%}
         </ul>
         {%endfor%}
         {%endif%}
       </div>
     </div>
   </div>
+ 
 </div>
 
 {% endblock %}

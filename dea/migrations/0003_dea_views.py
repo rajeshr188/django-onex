@@ -44,6 +44,49 @@ class Migration(migrations.Migration):
         FROM ls ls(id, created, "ClosingBalance", ledgerno_id, id_1, name, lft, rght, tree_id, level, "AccountType_id", parent_id)
             JOIN dea_accounttype at ON at.id = ls."AccountType_id";
     """
+    ledger_balance_with_lt_and_at_sql ="""
+        create VIEW ledger_balance AS
+        WITH ls AS (
+            SELECT DISTINCT ON (dea_ledgerstatement.ledgerno_id) dea_ledgerstatement.id,
+                dea_ledgerstatement.created,
+                dea_ledgerstatement."ClosingBalance",
+                dea_ledgerstatement.ledgerno_id,
+                dl.id,
+                dl.name,
+                dl.lft,
+                dl.rght,
+                dl.tree_id,
+                dl.level,
+                dl."AccountType_id",
+                dl.parent_id
+            FROM dea_ledgerstatement
+                JOIN dea_ledger dl ON dl.id = dea_ledgerstatement.ledgerno_id
+            ORDER BY dea_ledgerstatement.ledgerno_id, dea_ledgerstatement.created DESC
+            )
+        SELECT ls.ledgerno_id,
+            ls.created,
+            ls.name,
+            at."AccountType",
+            ls."ClosingBalance",
+            ARRAY( SELECT ROW(sum(dea_ledgertransaction.amount)::numeric(14,0), dea_ledgertransaction.amount_currency)::money_value AS "row"
+                FROM dea_ledgertransaction
+                WHERE dea_ledgertransaction.ledgerno_id = ls.ledgerno_id AND dea_ledgertransaction.created >= ls.created
+                GROUP BY dea_ledgertransaction.amount_currency) AS ll_cr,
+            ARRAY( SELECT ROW(sum(dea_ledgertransaction.amount)::numeric(14,0), dea_ledgertransaction.amount_currency)::money_value AS "row"
+                FROM dea_ledgertransaction
+                WHERE dea_ledgertransaction.ledgerno_dr_id = ls.ledgerno_id AND dea_ledgertransaction.created >= ls.created
+                GROUP BY dea_ledgertransaction.amount_currency) AS ll_dr,
+            ARRAY( SELECT ROW(sum(dea_accounttransaction.amount)::numeric(14,0), dea_accounttransaction.amount_currency)::money_value AS "row"
+                FROM dea_accounttransaction
+                WHERE dea_accounttransaction.ledgerno_id = ls.ledgerno_id AND dea_accounttransaction."XactTypeCode_id"::text = 'Dr'::text 
+                GROUP BY dea_accounttransaction.amount_currency) AS la_cr,
+            ARRAY( SELECT ROW(sum(dea_accounttransaction.amount)::numeric(14,0), dea_accounttransaction.amount_currency)::money_value AS "row"
+                FROM dea_accounttransaction
+                WHERE dea_accounttransaction.ledgerno_id = ls.ledgerno_id AND dea_accounttransaction."XactTypeCode_id"::text = 'Cr'::text 
+                GROUP BY dea_accounttransaction.amount_currency) AS la_dr
+        FROM ls ls(id, created, "ClosingBalance", ledgerno_id, id_1, name, lft, rght, tree_id, level, "AccountType_id", parent_id)
+            JOIN dea_accounttype at ON at.id = ls."AccountType_id";
+    """
     account_balance_sql = """
         create VIEW account_balance AS
          WITH astmt AS (
@@ -85,6 +128,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL('DROP VIEW IF EXISTS ledger_balance;'),
         migrations.RunSQL(ledger_balance_sql),
-        migrations.RunSQL('DROP VIEW IF EXISTS account_baalnce;'),
+        migrations.RunSQL('DROP VIEW IF EXISTS account_balance;'),
         migrations.RunSQL(account_balance_sql),
     ]

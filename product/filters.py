@@ -1,19 +1,19 @@
 from .models import (Category,ProductType,Product,
-                        Stock,StockTransaction,ProductVariant,
+                        Stock,StockBalance,StockTransaction,ProductVariant,
                         Attribute,AttributeValue)
 import django_filters
 from django_select2.forms import Select2Widget,Select2MultipleWidget
 
 class StockFilter(django_filters.FilterSet):
 
-    variant = django_filters.ModelChoiceFilter(
+    stock__variant = django_filters.ModelChoiceFilter(
                     queryset = ProductVariant.objects.all(),
                     widget = Select2Widget
     )
 
     class Meta:
-        model = Stock
-        fields = ['variant','barcode','huid']
+        model = StockBalance
+        fields = ['stock__variant','stock__barcode','stock__huid']
 
 class StockTransactionFilter(django_filters.FilterSet):
     class Meta:

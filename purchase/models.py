@@ -243,7 +243,7 @@ class InvoiceItem(models.Model):
     net_wt = models.DecimalField( max_digits=10, decimal_places=3,default = 0)
     total = models.DecimalField(max_digits=10,decimal_places=3)
     is_return = models.BooleanField(default=False,verbose_name='Return')
-    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,verbose_name='mc')
+    makingcharge=models.DecimalField(max_digits=10,decimal_places=3,blank = True,verbose_name='mc')
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant,on_delete=models.CASCADE,
@@ -272,7 +272,7 @@ class InvoiceItem(models.Model):
         if not self.is_return:
             stock,created = Stock.objects.get_or_create(
                     variant=self.product, tracking_type='Lot')
-            if created:
+            if created :
                 stock.huid = self.huid
                 attributes = get_product_attributes_data(
                               self.product.product)
@@ -282,7 +282,9 @@ class InvoiceItem(models.Model):
                 stock.touch = stock.cost+2
                 stock.wastage = 10
                 stock.save()
-            stock.add(journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
+            lot = stock.create_batch(self.weight,self.quantity)
+            #stock.add(stockbatch = lot,journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
+            lot.add(journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
         else:
             stock = Stock.objects.get(name=self.product.name,
                         tracking_type="Lot")
@@ -291,13 +293,14 @@ class InvoiceItem(models.Model):
     @transaction.atomic()
     def unpost(self,journal):
         if self.is_return:
-            # add lot back to stock
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
             stock.add(journal = journal,weight = self.weight,quantity = self.quantity,activity_type = 'P')
         else:
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
+            # delete lot
+            # stock.remove_batch(journal)
             stock.remove(journal = journal,weight = self.weight,quantity = self.quantity,activity_type ='PR')
             
 class Payment(models.Model):

@@ -237,7 +237,7 @@ def merge_lot(request,pk):
 
 def stock_list(request):
     context = {}
-    st = StockBalance.objects.all()
+    st = StockBalance.objects.all().select_related('stock','stock__variant')
     stock_filter = StockFilter(request.GET,queryset = st)
     # stock = []
     # for i in stock_filter.qs:

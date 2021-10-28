@@ -11,10 +11,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('product', '0001_initial'),
-        ('contact', '0002_initial'),
+        ('contact', '0001_initial'),
         ('sales', '0001_initial'),
         ('invoice', '0001_initial'),
-        ('approval', '0002_initial'),
+        ('approval', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

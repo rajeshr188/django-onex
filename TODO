@@ -1,3 +1,14 @@
 raise error when posting sales with empty stock ,because stock transaction doesnot occur if stock is empty
 raise error when there is error in sales items form
-delete stockbatches whose purchase was unposted
+delete stockbatches whose purchase was unposted i.e stockbatches with no transaction
+stock reports:
+    total by product:
+    total by melting
+    total by cost:
+    total by purity:
+    total:
+    best selling:
+    least selling:
+    products mst sold by weight:
+    customer who bought most:
+    

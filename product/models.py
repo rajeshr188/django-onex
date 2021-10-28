@@ -1,3 +1,4 @@
+from logging import exception
 from dea.models import Journal
 from decimal import Decimal
 from product.attributes import get_product_attributes_data
@@ -439,6 +440,10 @@ class Stock(models.Model):
             ).filter(
                 Q(qty = 0) & Q(wt = 0)
                 )
+            if empty_stbt.exists():
+                pass
+            else:
+                raise Exception
             w = weight
             q = quantity
             for i in empty_stbt:
@@ -485,6 +490,10 @@ class Stock(models.Model):
                 Q(qty__gt = 0)& Q(wt__gt = 0)
             )
             print(f"stbs : {stbs}")
+            if stbs.exists:
+                pass
+            else:
+                raise Exception
             wt = weight
             qty  = quantity
             print(f"weight:{weight} qty:{quantity}")

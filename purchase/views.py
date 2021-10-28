@@ -111,7 +111,7 @@ class InvoiceListView(ExportMixin,SingleTableMixin,FilterView):
 class InvoiceCreateView(CreateView):
     model = Invoice
     form_class = InvoiceForm
-    success_url = None
+    
 
     def get_context_data(self,**kwargs):
         data = super(InvoiceCreateView,self).get_context_data(**kwargs)
@@ -126,13 +126,17 @@ class InvoiceCreateView(CreateView):
         items = context['items']
         with transaction.atomic():
             form.instance.created_by = self.request.user
-            self.object = form.save()
+            
             if items.is_valid():
+                self.object = form.save()
                 logger.warning('items are valid')
                 items.instance = self.object
                 items.save()
             else:
-                pass
+                # If any subform or subformset is invalid, re-render the form showing errors
+                context.update({'form': form})
+                context.update({'formset': items})
+                return self.render_to_response(context)
         return super(InvoiceCreateView,self).form_valid(form)
        
     def get_success_url(self) -> str:
@@ -170,10 +174,16 @@ class InvoiceUpdateView(UpdateView):
         context = self.get_context_data()
         items = context['items']
         with transaction.atomic():
-            self.object = form.save()
+            
             if items.is_valid():
+                self.object = form.save()
                 items.instance = self.object
                 items.save()
+            # else:
+            #     # If any subform or subformset is invalid, re-render the form showing errors
+            #     context.update({'form': form})
+            #     context.update({'formset': items})
+            #     return self.render_to_response(context)
         return super(InvoiceUpdateView,self).form_valid(form)  
         
     def get_success_url(self) -> str:

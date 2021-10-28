@@ -117,9 +117,9 @@ class Invoice(models.Model):
         related_name="purchases"
     )
     term = models.ForeignKey(
-        PaymentTerm, on_delete=models.SET_NULL,
+        PaymentTerm, on_delete=models.CASCADE,
         related_name = 'purchase_term',
-        blank=True, null=True)
+        )
     journals = GenericRelation(Journal,related_query_name ='purchase_doc')
     
     objects = InvoiceManager.from_queryset(PurchaseQueryset)()
@@ -299,8 +299,6 @@ class InvoiceItem(models.Model):
         else:
             stock = Stock.objects.get(
                 variant=self.product, tracking_type='Lot')
-            # delete lot
-            # stock.remove_batch(journal)
             stock.remove(journal = journal,weight = self.weight,quantity = self.quantity,activity_type ='PR')
             
 class Payment(models.Model):

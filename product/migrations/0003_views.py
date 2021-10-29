@@ -2,6 +2,32 @@
 
 from django.db import migrations
 
+from django.db.migrations.operations.base import Operation
+
+
+class CreateView(Operation):
+
+    reversible = True
+
+    def __init__(self, name,sql):
+        self.name = name
+        self.sql = sql
+
+    def state_forwards(self, app_label, state):
+        pass
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        schema_editor.execute(f"CREATE VIEW {self.name} AS {self.sql}")
+
+    def database_backwards(self, app_label, schema_editor, from_state, to_state):
+        schema_editor.execute(F"DROP VIEW IF EXISTS {self.name};")
+
+    def describe(self):
+        return "Creates VIEW %s" % self.name
+
+    @property
+    def migration_name_fragment(self):
+        return "create_view_%s" % self.name
 
 class Migration(migrations.Migration):
 
@@ -21,7 +47,7 @@ class Migration(migrations.Migration):
                 product_stockstatement.total_qty_in,
                 product_stockstatement.total_qty_out,
                 product_stockstatement.stock_id
-            FROM testp.product_stockstatement
+            FROM product_stockstatement
             WHERE product_stockstatement.sstype::text = 'Stock'::text
             ORDER BY product_stockstatement.stock_id, product_stockstatement.created DESC
             )
@@ -29,16 +55,16 @@ class Migration(migrations.Migration):
             ss."Closing_wt",
             ss."Closing_qty",
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_id = ss.stock_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_id = ss.stock_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_id = ss.stock_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_wt,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_id = ss.stock_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_wt
         FROM ss;
     """
@@ -56,7 +82,7 @@ class Migration(migrations.Migration):
             product_stockstatement.total_qty_out,
             product_stockstatement.stock_id,
             product_stockstatement.stock_batch_id
-           FROM testp.product_stockstatement
+           FROM product_stockstatement
           WHERE product_stockstatement.sstype::text = 'Stockbatch'::text
           ORDER BY product_stockstatement.stock_batch_id, product_stockstatement.created DESC
         )
@@ -65,22 +91,21 @@ class Migration(migrations.Migration):
             ss."Closing_wt",
             ss."Closing_qty",
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_batch_id = ss.stock_batch_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_batch_id = ss.stock_batch_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_batch_id = ss.stock_batch_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_wt,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
-                FROM testp.product_stocktransaction
+                FROM product_stocktransaction
                 WHERE product_stocktransaction.stock_batch_id = ss.stock_batch_id AND product_stocktransaction.created >= ss.created AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_wt
         FROM ss;
     """
     operations = [
-        migrations.RunSQL('DROP VIEW IF EXISTS ledger_balance;'),
-        migrations.RunSQL(stock_balance_sql),
-        migrations.RunSQL('DROP VIEW IF EXISTS account_balance;'),
-        migrations.RunSQL(stockbatch_balance_sql),
+        CreateView('stock_balance',stock_balance_sql),
+        CreateView('stockbatch_balance',stockbatch_balance_sql)
+        
     ]

@@ -3,6 +3,30 @@
 from django.db import migrations
 
 
+class CreateView(Operation):
+
+    reversible = True
+
+    def __init__(self, name, sql):
+        self.name = name
+        self.sql = sql
+
+    def state_forwards(self, app_label, state):
+        pass
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        schema_editor.execute(f"CREATE VIEW {self.name} AS {self.sql}")
+
+    def database_backwards(self, app_label, schema_editor, from_state, to_state):
+        schema_editor.execute(F"DROP VIEW IF EXISTS {self.name};")
+
+    def describe(self):
+        return "Creates VIEW %s" % self.name
+
+    @property
+    def migration_name_fragment(self):
+        return "create_view_%s" % self.name
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,7 +34,6 @@ class Migration(migrations.Migration):
     ]
 
     ledger_balance_sql = """
-        create VIEW ledger_balance AS
          WITH ls AS (
          SELECT DISTINCT ON (dea_ledgerstatement.ledgerno_id) dea_ledgerstatement.id,
             dea_ledgerstatement.created,
@@ -45,7 +68,7 @@ class Migration(migrations.Migration):
             JOIN dea_accounttype at ON at.id = ls."AccountType_id";
     """
     ledger_balance_with_lt_and_at_sql ="""
-        create VIEW ledger_balance AS
+
         WITH ls AS (
             SELECT DISTINCT ON (dea_ledgerstatement.ledgerno_id) dea_ledgerstatement.id,
                 dea_ledgerstatement.created,
@@ -88,7 +111,7 @@ class Migration(migrations.Migration):
             JOIN dea_accounttype at ON at.id = ls."AccountType_id";
     """
     account_balance_sql = """
-        create VIEW account_balance AS
+    
          WITH astmt AS (
          SELECT DISTINCT ON (dea_accountstatement."AccountNo_id") et.name AS entity,
             acte.description AS acc_type,
@@ -126,8 +149,6 @@ class Migration(migrations.Migration):
         FROM astmt;
     """
     operations = [
-        migrations.RunSQL('DROP VIEW IF EXISTS ledger_balance;'),
-        migrations.RunSQL(ledger_balance_sql),
-        migrations.RunSQL('DROP VIEW IF EXISTS account_balance;'),
-        migrations.RunSQL(account_balance_sql),
+        CreateView('ledger_balance',ledger_balance_sql),
+        CreateView('account_balance',account_balance_sql)
     ]

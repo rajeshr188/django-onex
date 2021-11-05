@@ -13,7 +13,9 @@
                 <th>Stock</th>
                 <th>Initial Qty</th>
                 <th>Initial Wt</th>
+                <th>Cost</th>
                 <th>Current bal</th>
+                <th>Split</th>
             </tr>
         </thead>
         <tbody>
@@ -21,10 +23,12 @@
             <tr>
                 <td><a href="{% url 'product_stockbatch_detail' i.id%}">{{i.id}}</a> </td>
                 <td>{{i.created}}</td>
-                <td><a href="{%url 'product_stock_detail' i.stock_id%}">{{i.stock}}</a> </td>
+                <td><a href="{%url 'product_stock_detail' i.stock_id%}">{{i.stock.variant.name}}</a> </td>
                 <td>{{i.quantity}}</td>
                 <td>{{i.weight}}</td>
-                <td>{{i.current_bal}}</td>
+                <td>{{i.cost}}</td>
+                <td>{{i.current_balance}}</td>
+                <td><a class="btn btn-primary" href="{% url 'product_stock_split' i.id%}">Split</a></td>
             </tr>
             {%endfor%}
         </tbody>

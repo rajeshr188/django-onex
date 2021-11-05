@@ -282,7 +282,7 @@ class InvoiceItem(models.Model):
                 stock.touch = stock.cost+2
                 stock.wastage = 10
                 stock.save()
-            lot = stock.create_batch(self.weight,self.quantity)
+            lot = stock.create_batch(self.weight,self.quantity,self.touch)
             #stock.add(stockbatch = lot,journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
             lot.add(journal = journal,weight = self.weight,quantity =  self.quantity,activity_type = 'P')
         else:

@@ -1,8 +1,11 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a></p>
+<p>
+  <a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a>
+  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a>
+  <a href="{% url 'product_stockbatch_list' object.id %}" class="btn btn-primary">Lots</a>
+</p>
 <div class="row">
   <div class="col-4">
     <div class="card">
@@ -57,9 +60,7 @@
             </tr>
             <tr>
               <td>Action</td>
-              {%if object.tracking_type == "Lot"%}
-              <td><a class="btn btn-primary" href="{% url 'product_stock_split' object.id%}">Split</a></td>
-              {%else%}
+              {%if object.tracking_type == "Unique"%}
               <td><a class="btn btn-primary" href="{% url 'product_stock_merge' object.id%}">Merge</a></td>
               {%endif%}
             </tr>
@@ -89,8 +90,13 @@
               <td>{{i.id}}</td>
               <td>{{i.movement_type_id}}</td>
               <td>
+                {%if i.journal.content_object%}
                 <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object%}">
-                  {{i.movement_type.name}}:{{i.journal}}</a>
+                  {{i.movement_type.name}}:{{i.journal}}
+                </a>
+                {%else%}
+                {{i.movement_type.name}}:{{i.journal}}
+                {%endif%}
               </td>
               <td>{{i.weight}}</td>
               <td>{{i.quantity}}</td>

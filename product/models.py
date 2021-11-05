@@ -1,5 +1,5 @@
 from logging import exception
-from dea.models import Journal
+from dea.models import Journal,JournalTypes
 from decimal import Decimal
 from product.attributes import get_product_attributes_data
 from django_extensions.db.fields import AutoSlugField
@@ -18,6 +18,7 @@ from versatileimagefield.fields import PPOIField, VersatileImageField
 from .weight import WeightUnits, zero_weight
 from .managers import StockManager
 from utils.friendlyid import encode
+from django.http import Http404
 
 class Category(MPTTModel):
     # gold ,silver ,other
@@ -324,9 +325,9 @@ class Stock(models.Model):
         ordering=('-created',)
         
     def __str__(self):
-        # cb = self.current_balance()
-        # return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
-        return f"{self.variant} {self.barcode} w:{self.wt} q:{self.qty}"
+        cb = self.current_balance()
+        return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
+        # return f"{self.variant} {self.barcode} w:{self.stockbalance.get_wt_bal()} q:{self.stockbalance.get_qty_bal()}"
 
     def get_absolute_url(self):
         return reverse('product_stock_detail', args=(self.pk,))
@@ -428,10 +429,21 @@ class Stock(models.Model):
             # else timedelta between today and date created
 
     def add(self,weight,quantity,journal,activity_type,stockbatch= None):
+
         if self.tracking_type =='Unique' or stockbatch:
-             StockTransaction.objects.create(journal = journal,
-                stock = self,stock_batch = stockbatch,weight = weight,quantity = quantity,
+            StockTransaction.objects.create(journal = journal,
+                stock = self,stock_batch = stockbatch,
+                weight = weight,quantity = quantity,
                 movement_type_id=activity_type)
+
+        elif self.tracking_type=='Lot' and stockbatch:
+            if weight <= stockbatch.weight and quantity <= stockbatch.quantity:
+                StockTransaction.objects.create(journal = journal,
+                    stock = self,stock_batch = stockbatch,
+                    weight = weight,quantity = quantity,
+                    movement_type_id=activity_type)
+            else:
+                raise Http404
         else:
             #fillup given quantity to latest empty batches
             empty_stbt = self.stockbatchbalance_set.order_by('-stock_batch__created').annotate(
@@ -441,36 +453,36 @@ class Stock(models.Model):
                 Q(qty = 0) & Q(wt = 0)
                 )
             if empty_stbt.exists():
-                pass
-            else:
-                raise Exception
-            w = weight
-            q = quantity
-            for i in empty_stbt:
-                qty = i.get_qty_bal()
-                wt = i.get_wt_bal()
-                
-                if w ==0 and q == 0:break
-                elif qty <= q and wt <= w:
-                    StockTransaction.objects.create(
-                        journal = journal,
-                        stock = self,
-                        stock_batch = i.stock_batch,
-                        weight = w,quantity = q,
-                        movement_type_id = activity_type
-                    )
-                    break
-                else:
-                    StockTransaction.objects.create(
-                        journal = journal,
-                        stock = self,
-                        stock_batch = i.stock_batch,
-                        weight = wt,quantity = qty,
-                        movement_type_id = activity_type
-                    )
-                    w = w - wt
-                    q = q-qty
+                w = weight
+                q = quantity
+                for i in empty_stbt:
+                    qty = i.get_qty_bal()
+                    wt = i.get_wt_bal()
 
+                    if w == 0 and q == 0:
+                        break
+                    elif qty <= q and wt <= w:
+                        StockTransaction.objects.create(
+                            journal=journal,
+                            stock=self,
+                            stock_batch=i.stock_batch,
+                            weight=w, quantity=q,
+                            movement_type_id=activity_type
+                        )
+                        break
+                    else:
+                        StockTransaction.objects.create(
+                            journal=journal,
+                            stock=self,
+                            stock_batch=i.stock_batch,
+                            weight=wt, quantity=qty,
+                            movement_type_id=activity_type
+                        )
+                        w = w - wt
+                        q = q-qty
+            else:
+                raise Http404
+            
         self.update_status()
     
     def remove(self,weight,quantity,journal,activity_type):
@@ -483,52 +495,62 @@ class Stock(models.Model):
             self.update_status()
         else:
             # get batches in lifo 
-            stbs = self.stockbatchbalance_set.order_by('stock_batch__created').annotate(
-                qty = F('Closing_qty') + F('in_qty') - F('out_qty'),
-                wt = F('Closing_wt') + F('in_wt') - F('out_wt')
-            ).filter(
-                Q(qty__gt = 0)& Q(wt__gt = 0)
-            )
+            # stbs = self.stockbatchbalance_set.order_by('stock_batch__created').annotate(
+            #     qty = F('Closing_qty') + F('in_qty') - F('out_qty'),
+            #     wt = F('Closing_wt') + F('in_wt') - F('out_wt')
+            # ).filter(
+            #     Q(qty__gt = 0)& Q(wt__gt = 0)
+            # )
+            stbs = self.stockbatch_set.order_by('created')
             print(f"stbs : {stbs}")
             if stbs.exists:
-                pass
-            else:
-                raise Exception
-            wt = weight
-            qty  = quantity
-            print(f"weight:{weight} qty:{quantity}")
-            for i in stbs:
-                print(f"i of stbs: {i}")
-                q = i.get_qty_bal()
-                w = Decimal(i.get_wt_bal())
-                print(f"w:{w} q:{q}")
-                if wt <=0.0 and qty <=0:break
-                else:
-                    if q >= qty and w >= wt:
-                        print("creating stock transaction with wt:{wt} qty:{qty}")
-                        StockTransaction.objects.create(
-                            journal = journal,
-                            stock=self,
-                            stock_batch = i.stock_batch,
-                            weight=wt,quantity=qty,
-                            movement_type_id =activity_type
-                        )
+                wt = weight
+                qty = quantity
+
+                for i in stbs:
+
+                    # q = i.get_qty_bal()
+                    # w = Decimal(i.get_wt_bal())
+                    cb = i.current_balance()
+                    if cb['wt']>0 and cb['qty']>0:
+                        q = cb['qty']
+                        w = cb['wt']
+                    else:
+                        break
+
+                    if wt <= 0.0 and qty <= 0:
                         break
                     else:
-                        print("creating stock transaction with wt:{w} qty:{q}")
+                        if q >= qty and w >= wt:
+                            print(
+                                "creating stock transaction with wt:{wt} qty:{qty}")
+                            StockTransaction.objects.create(
+                                journal=journal,
+                                stock=self,
+                                stock_batch=i,
+                                weight=wt, quantity=qty,
+                                movement_type_id=activity_type
+                            )
+                            break
+                        else:
+                            print("creating stock transaction with wt:{w} qty:{q}")
 
-                        StockTransaction.objects.create(
-                            journal=journal,
-                            stock=self,
-                            stock_batch=i.stock_batch,
-                            weight=w, quantity=q,
-                            movement_type_id =activity_type
-                        )
-                        wt = wt - w
-                        qty = qty - q
+                            StockTransaction.objects.create(
+                                journal=journal,
+                                stock=self,
+                                stock_batch=i,
+                                weight=w, quantity=q,
+                                movement_type_id=activity_type
+                            )
+                            wt = wt - w
+                            qty = qty - q
+            else:
+                raise Exception
+        self.update_status()
+            
 
-    def create_batch(self,weight,quantity):
-        return StockBatch.objects.create(stock = self,weight=weight,quantity=quantity)
+    def create_batch(self,weight,quantity,cost):
+        return StockBatch.objects.create(stock = self,weight=weight,quantity=quantity,cost = cost)
 
     def split(self,weight):
         # split from stock:tracking_type::lot to unique
@@ -542,18 +564,20 @@ class Stock(models.Model):
             uniq_stock.cost = self.cost
             uniq_stock.touch = self.touch
             uniq_stock.wastage = self.wastage
-            uniq_stock.add(weight,1,
-                            None,'AD')
+            uniq_stock.add(weight,1,None,'AD')
             self.remove(weight,1,None,at = 'RM')
         else:
             print('unique nodes cant be split.hint:merge to lot and then split')
 
+    
     def merge(self):
         # merge stock:tracking_type:unique to lot
         if self.tracking_type == "Unique":
-            lot = Stock.objects.get(variant = self.variant,tracking_type = "Lot")
-            cb=self.current_balance()
-            lot.add(cb['wt'],cb['qty'],None,'AD')
+            stock = Stock.objects.get(variant = self.variant,tracking_type = "Lot")
+            cb = self.current_balance()
+            stock_lot = stock.create_batch(cb['wt'],cb['qty'],self.touch)
+            stock_lot.add(weight = cb['wt'],quantity =  cb['qty'], journal = None,activity_type = 'AD')
+            # stock.add(cb['wt'],cb['qty'],None,'AD')
             self.remove(cb['wt'],cb['qty'],None,at = "RM")      
         else:
             print('lot cant be merged further')
@@ -578,8 +602,8 @@ class Stock(models.Model):
 class StockBatch(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     quantity = models.IntegerField(default =0)
-    weight = models.DecimalField(max_digits=10,decimal_places=3)
-
+    weight = models.DecimalField(max_digits=14,decimal_places=3)
+    cost = models.DecimalField(max_digits=14,decimal_places=3,default=100)
     stock = models.ForeignKey(Stock,on_delete=models.CASCADE)
 
     def __str__(self):
@@ -673,6 +697,26 @@ class StockBatch(models.Model):
         bal['wt'] = Closing_wt + (in_txns['wt'] - out_txns['wt'])
         bal['qty'] = Closing_qty + (in_txns['qty'] - out_txns['qty'])
         return bal
+
+    def split_batch(self, weight):
+        # takes in stockbatch and splits given wt from batch to unique
+        batch_cb = self.current_balance()
+        if batch_cb['qty'] >= 1 and batch_cb['wt'] >= weight:
+            uniq_stock = Stock.objects.create(variant=self.stock.variant,
+                                              tracking_type='Unique')
+            uniq_stock.barcode = 'je' + str(uniq_stock.id)
+
+            uniq_stock.melting = self.stock.melting
+            uniq_stock.cost = self.cost
+            uniq_stock.touch = self.stock.touch
+            uniq_stock.wastage = self.stock.wastage
+            sj = Journal.objects.create(type=JournalTypes.SJ,
+                                               content_object=None, desc='stock Journal')
+            uniq_stock.add(weight = weight, quantity = 1,journal =  sj,activity_type = 'AD')
+            self.remove(weight = weight,quantity = 1, journal = sj, activity_type='RM')
+        else:
+            print('unique nodes cant be split.hint:merge to lot and then split')
+
 
 class Movement(models.Model):
     id = models.CharField(max_length = 3,primary_key=True)

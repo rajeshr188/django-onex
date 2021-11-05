@@ -216,15 +216,15 @@ class VariantImageUpdateView(LoginRequiredMixin,UpdateView):
     form_class = VariantImageForm
 
 def split_lot(request,pk):
-    stock = get_object_or_404(Stock,pk = pk)
+    stockbatch = get_object_or_404(StockBatch,pk = pk)
     if request.method == 'POST':
         form = UniqueForm(request.POST or None)
         if form.is_valid():
             weight = form.cleaned_data['weight']
-            stock.split(weight)
-            return reverse_lazy('product_stock_list')
+            stockbatch.split_batch(weight)
+            return redirect('product_stock_list')
     else:
-        form = UniqueForm(initial = {"stock":stock})
+        form = UniqueForm(initial = {"stock":stockbatch})
     context = {'form': form,}
 
     return render(request, 'product/split_lot.html', context)

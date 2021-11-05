@@ -65,6 +65,19 @@ def insertData(apps, schema_editor):
             attribute(name='Weight', slug='weight'),
             attribute(name='Initial', slug='initial')
         ])
+    movement_type = apps.get_model('product','movement')
+    movement_type.objects.bulk_create(
+        [
+            movement_type(id = 'P',name='Purchase', direction='+'),
+            movement_type(id = 'PR',name='Purchase Return', direction='-'),
+            movement_type(id = 'S',name='Sales', direction='-'),
+            movement_type(id = 'SR',name='Sales Return', direction='+'),
+            movement_type(id = 'A',name='Approval', direction='-'),
+            movement_type(id='AR',name='Approval Return', direction='+'),
+            movement_type(id = 'AD',name='Add', direction='+'),
+            movement_type(nid = "R",ame='Remove', direcction='-')
+        ]
+    )
     attrvalue = apps.get_model('product', 'AttributeValue')
     attrvalue.objects.bulk_create(
         [

@@ -341,6 +341,8 @@ class JournalTypes(models.TextChoices):
     PR = "Purchase Return", "Purchase Return"
     PY = "Payment", "Payment"
     ST = "Stock","Stock"
+    AJ = "Approval","Approval"
+    AR = "Approval Return","Approval Return"
 
 class Journal(models.Model):
 

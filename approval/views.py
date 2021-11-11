@@ -8,7 +8,7 @@ from .filters import ApprovalLineFilter
 from django.forms import modelformset_factory
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponseRedirect
-
+from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -21,14 +21,20 @@ logger = logging.getLogger(__name__)
 @login_required
 def post_approval(request,pk):
     approval = get_object_or_404(Approval,pk=pk)
-    approval.post()
+    try:
+        approval.post()
+    except:
+        raise Exception('Error in posting')
     return redirect(approval)
 
 @transaction.atomic
 @login_required
 def unpost_approval(request,pk):
     approval = get_object_or_404(Approval, pk=pk)
-    approval.unpost()
+    try:
+        approval.unpost()
+    except:
+        raise Exception('Error in unposting')
     return redirect(approval)
 
 @transaction.atomic
@@ -168,29 +174,33 @@ class ApprovalDeleteView(LoginRequiredMixin,DeleteView):
 
 def ApprovalLineReturnView(request):
 
-    approvalline_list = ApprovalLine.objects.filter(status = 'Pending')
+    approvalline_list = ApprovalLine.objects.filter(Q(status = 'Pending')&Q(approval__posted = True))
     approvalline_filter = ApprovalLineFilter(request.GET, queryset=approvalline_list)
 
     approvallinereturn_formset = modelformset_factory(ApprovalLineReturn,
-                                        fields = ('line','quantity','weight'),
+                                        fields = (
+                                            'line','quantity','weight'),
                                         extra = approvalline_filter.qs.count(),
-                                        max_num = approvalline_filter.qs.count())
+                                        max_num = approvalline_filter.qs.count()
+                                        )
     if request.method == 'POST':
         formset = approvallinereturn_formset(request.POST)
         # stocktranx from approval to available
         for form in formset:
             result = form.save()
-            if not result.posted:
+            try:
                 result.post()
-                result.posted = True
-                result.save(update_fields=['posted'])
-               
+            except:
+                raise Exception('Error in Posting')
+            result.line.update_status()
     elif request.method == 'GET':
         contact = request.GET.get('approval__contact',False)
         if contact:
             formset = approvallinereturn_formset(
-                        initial = approvalline_filter.qs.values(
-                            'product','quantity','weight'))
+                        # initial = approvalline_filter.qs.values(
+                        #     'product','quantity','weight')
+                        queryset = ApprovalLineReturn.objects.none()
+                            )
 
             for form in formset:
                 form.fields['line'].queryset = ApprovalLine.objects.filter(

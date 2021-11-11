@@ -13,7 +13,7 @@ from .render import Render
 from num2words import num2words
 from django.db.models import  Sum,Q,F,OuterRef,Subquery
 from django.db.models.functions import Coalesce,TruncMonth,TruncYear
-from django.shortcuts import render,redirect
+from django.shortcuts import get_object_or_404, render,redirect
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import InvoiceTable,ReceiptTable
@@ -293,13 +293,13 @@ class InvoiceUpdateView(UpdateView):
                                   
 @transaction.atomic()
 def post_sales(request,pk):
-    sales_inv = Invoice.objects.get(id = pk)
+    sales_inv = get_object_or_404(Invoice,id = pk)
     sales_inv.post()
     return redirect(sales_inv)
 
 @transaction.atomic()
 def unpost_sales(request,pk):
-    sales_inv = Invoice.objects.get(id = pk)
+    sales_inv = get_object_or_404(Invoice,id = pk)
     sales_inv.unpost()
     return redirect(sales_inv)
 

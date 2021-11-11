@@ -314,8 +314,10 @@ class StockStatementView(TemplateView):
 
 class StockBatchListView(ListView):
     model = StockBatch
+
 class StockBatchDetailView(DetailView):
     model = StockBatch
+    
 def audit_stock(request):
     stocks = Stock.objects.all()
     for i in stocks:
@@ -323,7 +325,10 @@ def audit_stock(request):
     return redirect('product_stock_list')
 
 def inventory(request):
+
     inv = {}
-    
-    
     return render(request,'product/inventory.html',context = {})
+
+def stock_stockbatch(request,pk):
+    object_list = StockBatch.objects.filter(stock=pk)
+    return render(request,'product/stockbatch_list.html',context = {'object_list':object_list})

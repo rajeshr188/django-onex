@@ -428,6 +428,7 @@ class Stock(models.Model):
             # check if sold then timedelta between created and last sales transaction
             # else timedelta between today and date created
 
+      
     def add(self,weight,quantity,journal,activity_type,stockbatch= None):
 
         if self.tracking_type =='Unique' or stockbatch:
@@ -443,25 +444,30 @@ class Stock(models.Model):
                     weight = weight,quantity = quantity,
                     movement_type_id=activity_type)
             else:
-                raise Http404
+                raise Exception('Weight or Quantity is greater than batch weight or quantity')
         else:
             #fillup given quantity to latest empty batches
+
             empty_stbt = self.stockbatchbalance_set.order_by('-stock_batch__created').annotate(
                 qty = F('Closing_qty') + F('in_qty') - F('out_qty'),
                 wt = F('Closing_wt') + F('in_wt') - F('out_wt')
             ).filter(
-                Q(qty = 0) & Q(wt = 0)
+                Q(qty__lt= F('stock_batch__quantity')) & Q(wt__lt= F('stock_batch__weight'))
                 )
             if empty_stbt.exists():
                 w = weight
                 q = quantity
                 for i in empty_stbt:
-                    qty = i.get_qty_bal()
-                    wt = i.get_wt_bal()
+                    # qty = i.get_qty_bal()
+                    # wt = i.get_wt_bal()
+                    qty = i.stock_batch.quantity - i.get_qty_bal()
+                    wt = i.stock_batch.weight - i.get_wt_bal()
 
                     if w == 0 and q == 0:
+                        # if weight and quantity required to be added is zero then break
                         break
-                    elif qty <= q and wt <= w:
+                    elif q <= qty and w <= wt:
+                        # if weight and quantity required to be added is less than batch balance then add and break
                         StockTransaction.objects.create(
                             journal=journal,
                             stock=self,
@@ -471,6 +477,7 @@ class Stock(models.Model):
                         )
                         break
                     else:
+                        # if weight and quantity required to be added is greater than batch balance then add partial and continue
                         StockTransaction.objects.create(
                             journal=journal,
                             stock=self,
@@ -481,7 +488,7 @@ class Stock(models.Model):
                         w = w - wt
                         q = q-qty
             else:
-                raise Http404
+                raise Exception('No empty batches')
             
         self.update_status()
     
@@ -495,57 +502,52 @@ class Stock(models.Model):
             self.update_status()
         else:
             # get batches in lifo 
-            # stbs = self.stockbatchbalance_set.order_by('stock_batch__created').annotate(
-            #     qty = F('Closing_qty') + F('in_qty') - F('out_qty'),
-            #     wt = F('Closing_wt') + F('in_wt') - F('out_wt')
-            # ).filter(
-            #     Q(qty__gt = 0)& Q(wt__gt = 0)
-            # )
-            stbs = self.stockbatch_set.order_by('created')
-            print(f"stbs : {stbs}")
-            if stbs.exists:
+            stbs = self.stockbatchbalance_set.order_by('stock_batch__created').annotate(
+                qty = F('Closing_qty') + F('in_qty') - F('out_qty'),
+                wt = F('Closing_wt') + F('in_wt') - F('out_wt')
+            ).filter(
+                Q(qty__gt = 0)& Q(wt__gt = 0)
+            )
+            
+            if stbs.exists():
                 wt = weight
                 qty = quantity
 
                 for i in stbs:
 
-                    # q = i.get_qty_bal()
-                    # w = Decimal(i.get_wt_bal())
-                    cb = i.current_balance()
-                    if cb['wt']>0 and cb['qty']>0:
-                        q = cb['qty']
-                        w = cb['wt']
-                    else:
-                        break
+                    q = i.get_qty_bal()
+                    w = Decimal(i.get_wt_bal())
 
                     if wt <= 0.0 and qty <= 0:
+                        # nothing to allocate hence
                         break
                     else:
+                        # if available is more than required just get required
                         if q >= qty and w >= wt:
-                            print(
-                                "creating stock transaction with wt:{wt} qty:{qty}")
+                            
                             StockTransaction.objects.create(
                                 journal=journal,
                                 stock=self,
-                                stock_batch=i,
+                                stock_batch_id=i.stock_batch_id,
                                 weight=wt, quantity=qty,
                                 movement_type_id=activity_type
                             )
                             break
                         else:
-                            print("creating stock transaction with wt:{w} qty:{q}")
+                            # if available is less than required then allocate all
+                            # and remove allocated from required and continue
 
                             StockTransaction.objects.create(
                                 journal=journal,
                                 stock=self,
-                                stock_batch=i,
+                                stock_batch_id=i.stock_batch_id,
                                 weight=w, quantity=q,
                                 movement_type_id=activity_type
                             )
                             wt = wt - w
                             qty = qty - q
             else:
-                raise Exception
+                raise Exception('No Available batches')
         self.update_status()
             
 
@@ -567,7 +569,7 @@ class Stock(models.Model):
             uniq_stock.add(weight,1,None,'AD')
             self.remove(weight,1,None,at = 'RM')
         else:
-            print('unique nodes cant be split.hint:merge to lot and then split')
+            raise Exception('Cannot split:unique nodes cant be split.hint: merge to lot and then split')
 
     
     def merge(self):
@@ -580,7 +582,7 @@ class Stock(models.Model):
             # stock.add(cb['wt'],cb['qty'],None,'AD')
             self.remove(cb['wt'],cb['qty'],None,at = "RM")      
         else:
-            print('lot cant be merged further')
+            raise Exception('Cannot merge:lot nodes cant be merged.hint: split to unique and then merge')
     
     def transfer():
         pass
@@ -740,7 +742,7 @@ class StockTransaction(models.Model):
                                     on_delete=models.CASCADE)
     
     journal = models.ForeignKey(Journal, on_delete=models.CASCADE, 
-                related_name='stxns')
+                related_name='stxns',null = True,blank = True)
 
     class Meta:
         ordering=('-created',)
@@ -823,4 +825,3 @@ class StockBatchBalance(models.Model):
 
     def get_wt_bal(self):
         return self.Closing_wt + self.in_wt  - self.out_wt 
-

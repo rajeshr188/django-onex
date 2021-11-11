@@ -53,9 +53,7 @@ class Approval(models.Model):
             self.save(update_fields=['posted'])
 
     def update_status(self):
-        print('in approval update_Status')
-        for i in self.items.all():
-            print(f"{i}-{i.status} ")
+    
         if any(i.status == 'Pending' for i in self.items.all()):
             self.status ='Pending'
         else:
@@ -70,11 +68,9 @@ class ApprovalLine(models.Model):
                     decimal_places=3,default = 0.0)
     touch = models.DecimalField(max_digits=10,
                     decimal_places=3,default = 0.0)
-
     approval = models.ForeignKey(Approval,
                     on_delete = models.CASCADE,
                     related_name='items')
-    
     status = models.CharField(max_length =30,
                     choices = (
                         ('Pending','Pending'),
@@ -89,6 +85,12 @@ class ApprovalLine(models.Model):
     def __str__(self):
         return f"{self.id}"
 
+    def returned(self):
+        return self.approvallinereturn_set.filter(
+                posted = True
+                ).aggregate(
+                    wt = Sum('weight'),qty = Sum('quantity')
+                )
     def balance(self):
         return (self.weight - self.approvallinereturn_set.filter(posted = True).\
             aggregate(t = Sum('weight'))['t'])
@@ -130,7 +132,7 @@ class ApprovalLineReturn(models.Model):
         ordering = ('id',)
 
     def __str__(self):
-        return f"{self.line.product}"
+        return f"{self.quantity}:{self.weight}"
 
     def post(self):
         if not self.posted:
@@ -138,6 +140,7 @@ class ApprovalLineReturn(models.Model):
             self.posted = True
             self.save(update_fields=['posted'])
             self.line.update_status()
+            
     def unpost(self):
         if self.posted:
             self.line.product.remove(self.weight, self.quantity, None, 'A')

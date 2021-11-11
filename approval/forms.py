@@ -21,6 +21,6 @@ class ApprovalLineForm(forms.ModelForm):
 
 Approval_formset = inlineformset_factory(Approval,ApprovalLine,
                     fields = ('approval','product','quantity','weight','touch'),
-                    form = ApprovalLineForm,extra=1,can_delete=True)
+                    form = ApprovalLineForm,extra=2,can_delete=True)
 
 approvallinereturn_formset = modelformset_factory(ApprovalLineReturn,fields=('line','quantity','weight'))

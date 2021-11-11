@@ -111,6 +111,7 @@ urlpatterns +=(
     path('stockstatment/add_physical/',views.StockStatementView.as_view(),name='product_stockstatement_add'),
 )
 urlpatterns +=(
-    path('stock/<int:pk>/stockbatch/',views.StockBatchListView.as_view(),name='product_stockbatch_list'),
+    path('stock/stockbatch/',views.StockBatchListView.as_view(),name='product_stockbatch_list'),
+    path('stock/<int:pk>/stockbatch/',views.stock_stockbatch,name = 'product_stock_stockbatch'),
     path('stock/stockbatch/<int:pk>/detail/',views.StockBatchDetailView.as_view(),name='product_stockbatch_detail')
 )

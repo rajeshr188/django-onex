@@ -4,7 +4,7 @@
 <p>
   <a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a>
   <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Stock</a>
-  <a href="{% url 'product_stockbatch_list' object.id %}" class="btn btn-primary">Lots</a>
+  <a href="{% url 'product_stock_stockbatch' object.id %}" class="btn btn-primary">Lots</a>
 </p>
 <div class="row">
   <div class="col-4">

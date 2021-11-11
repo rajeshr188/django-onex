@@ -215,7 +215,7 @@ class Invoice(models.Model):
             for i in self.purchaseitems.all():
                 i.post(jrnl)
 
-            txns = self.get_txns()
+            txns = self.get_txns(jrnl)
 
             jrnl.transact(txns['lt'],txns['at'])
  
@@ -225,12 +225,13 @@ class Invoice(models.Model):
     @transaction.atomic()
     def unpost(self):
         if self.posted:  
-            last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(
-                    content_object=self,desc='purchase revert')
-            jrnl.untransact(last_jrnl)
-            for i in self.purchaseitems.all():
-                i.unpost(jrnl)
+            if self.journals.exists():
+                last_jrnl = self.journals.latest()
+                jrnl = Journal.objects.create(
+                        content_object=self,desc='purchase revert')
+                jrnl.untransact(last_jrnl)
+                for i in self.purchaseitems.all():
+                    i.unpost(jrnl)
             self.posted = False
             self.save(update_fields=['posted'])
         

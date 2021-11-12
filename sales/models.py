@@ -206,7 +206,14 @@ class Invoice(models.Model):
             return (self.balance * 3)/100
         return 0
 
-   
+    def get_cogs_total(self):
+
+        cogs = sum([i.product.get_cost() for i in self.saleitems.all()])
+        if self.balancetype == self.BType.CASH:
+            return self.rate * cogs
+        else:
+            return cogs
+
     def post(self):
         if not self.posted:
             ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
@@ -227,6 +234,7 @@ class Invoice(models.Model):
                     i.post(jrnl)
             
             money = Money(self.balance, self.balancetype)
+            cogs_money = Money(self.get_cogs_total(),self.balancetype)
             
             if self.is_gst:
                 inv = ledgers["GST INV"]
@@ -240,9 +248,10 @@ class Invoice(models.Model):
                 amount = money
                 gst = Money(0,'INR')
             
-            lt = [{'ledgerno': ledgers['Sales'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': money},
-                  {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': money},
-                  {'ledgerno': ledgers['Output IGST'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': gst}]
+            lt = [
+                    {'ledgerno': ledgers['Sales'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': money},
+                    {'ledgerno': inv, 'ledgerno_dr': cogs, 'amount': cogs_money},
+                    {'ledgerno': ledgers['Output IGST'], 'ledgerno_dr': ledgers['Sundry Debtors'], 'amount': gst}]
             at = [{'ledgerno': ledgers['Sales'], 'xacttypecode': 'Cr', 'xacttypecode_ext': 'CRSL',
                    'account': self.customer.account.id, 'amount': amount}]
 
@@ -325,6 +334,9 @@ class InvoiceItem(models.Model):
             return self.get_nettwt() * self.invoice.rate
         else:
             return self.get_nettwt()
+    
+    def get_cogs(self):
+        return self.weight * self.product.get_cogs()
 
     def save(self,*args,**kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)

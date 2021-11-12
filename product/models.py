@@ -1,4 +1,6 @@
 from logging import exception
+
+from django.db.models.aggregates import Avg
 from dea.models import Journal,JournalTypes
 from decimal import Decimal
 from product.attributes import get_product_attributes_data
@@ -285,9 +287,9 @@ class StockManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related().annotate(
             qty=F('stockbalance__Closing_qty') +
-            F('stockbalance__in_qty') - F('stockbalance__out_qty'),
+                F('stockbalance__in_qty') - F('stockbalance__out_qty'),
             wt=F('stockbalance__Closing_wt') +
-            F('stockbalance__in_wt') - F('stockbalance__out_wt')
+                F('stockbalance__in_wt') - F('stockbalance__out_wt')
         )
     def with_bal(self):
         return self.annotate(
@@ -427,8 +429,10 @@ class Stock(models.Model):
         # else:
             # check if sold then timedelta between created and last sales transaction
             # else timedelta between today and date created
+    
+    def get_cost(self):
+        return self.stockbatch_set.aggregate(avg = Avg(F('cost')*F('weight')/100))['avg']
 
-      
     def add(self,weight,quantity,journal,activity_type,stockbatch= None):
 
         if self.tracking_type =='Unique' or stockbatch:

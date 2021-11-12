@@ -1,6 +1,5 @@
-raise error when posting sales with empty stock ,because stock transaction doesnot occur if stock is empty
-raise error when there is error in sales items form
-delete stockbatches whose purchase was unposted i.e stockbatches with no transaction
+inline formsets wont update get your shit together and leave
+delete stockbatches whose purchase was unposted i.e stockbatches with no transaction(currently manually)
 stock reports:
     total by product:
     total by melting

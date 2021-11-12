@@ -83,19 +83,19 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     # TODO add filter to show only stock with qty and wt >0
-    product = forms.ModelChoiceField(
-                        queryset = Stock.objects.filter(Q(wt__gt = 0)&Q(qty__gt = 0)),
-                        widget = Select2Widget)
+    # product = forms.ModelChoiceField(
+    #                     queryset = Stock.objects.filter(Q(wt__gt = 0)&Q(qty__gt = 0)),
+    #                     widget = Select2Widget)
     class Meta:
         model = InvoiceItem
         fields = ['invoice','is_return','product','quantity','weight', 'less_stone',
         'net_wt','touch','wastage','makingcharge','total',]
 
 InvoiceItemFormSet = inlineformset_factory(
-    Invoice, InvoiceItem, form=InvoiceItemForm,
+    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1, can_delete=True,
     fields=('is_return','product','quantity',
     'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),
-    extra=1,can_delete=True)
+    )
 
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)

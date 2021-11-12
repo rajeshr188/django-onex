@@ -6,9 +6,12 @@
   overflow-y: auto;
 ">
     <table class="table table-sm table-striped ">
+        {{formset.non_form_errors}}
         {{ formset.management_form |crispy}}
         {% for form in formset.forms %}
-        <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}} form-group">
+        {{form.errors}}
+        {{form.id}}
+        <tr class="inline {{formset.prefix}} form-group">
             {% for field in form.visible_fields %}
             <td class="{{field.name}} form-control-sm">
                 {{ field|as_crispy_field}}
@@ -55,6 +58,7 @@
     function update_row() {
         var rate = $('#id_rate').val();
         $('.inline').each(function () {
+
             var wt = $(this).find('.weight input').val();
             var touch = $(this).find('.touch input').val();
             var ret = $(this).find('.is_return input').is(':checked');
@@ -80,16 +84,14 @@
     });
 
     $(".inline.{{ formset.prefix }}").formset({
-        addText: 'add',
-        deleteText: 'remove',
-        prefix: "{{ formset.prefix }}",
         
+        prefix: "{{ formset.prefix }}",
+        addCssClass: "btn btn-primary bordered inline-form-add", // CSS class applied to the add link
+        deleteCssClass: "btn btn-danger bordered", // CSS class applied to the delete link
+        formCssClass:'inline-form',
         added: function ($row) {
             update_amounts();
-            
-            $row.find('.django-select2').select2({ width: "100%" });
-            $row.find('.delete-row').addClass('btn-sm btn-danger');
-
+            $row.find('.product select').select2({ width: "200px" });
         },
         removed: function ($row) {
             update_row();
@@ -98,6 +100,6 @@
 
     });
     
-    $('.add-row').addClass('btn-sm btn-success');
-    $('.delete-row').addClass('btn-sm btn-danger');
+    $('.product select').select2({ width: "200px" });
+
 </script>

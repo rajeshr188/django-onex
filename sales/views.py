@@ -227,20 +227,17 @@ class InvoiceCreateView(CreateView):
         return data
 
     def form_valid(self,form):
-        context = self.get_context_data()
+        context = self.get_context_data(form =form)
         items = context['items']
         with transaction.atomic():
             form.instance.created_by = self.request.user
-            
+            self.object = form.save()
             if items.is_valid():
-                self.object = form.save()
                 items.instance = self.object
                 items.save()
             else:
-                # If any subform or subformset is invalid, re-render the form showing errors
-                context.update({'form': form})
-                context.update({'formset': items})
-                return self.render_to_response(context)
+                return super().form_invalid(form)
+            
         return super(InvoiceCreateView, self).form_valid(form)
 
     def get_success_url(self) -> str:
@@ -266,26 +263,23 @@ class InvoiceUpdateView(UpdateView):
             raise Http404
         if self.request.POST:
             data['items'] = InvoiceItemFormSet(self.request.POST,instance = self.object)
+
         else:
             data['items'] = InvoiceItemFormSet(instance = self.object)
         return data
 
     @transaction.atomic()
     def form_valid(self, form):
-        context = self.get_context_data()
+        context = self.get_context_data(form = form)
         items = context['items']
 
         with transaction.atomic():
-            
+            self.object = form.save()
             if items.is_valid():
-                self.object = form.save()
                 items.instance = self.object
                 items.save()
             else:
-                # If any subform or subformset is invalid, re-render the form showing errors
-                context.update({'form': form})
-                context.update({'formset': items})
-                return self.render_to_response(context)
+                return super().form_invalid(form)
         return super(InvoiceUpdateView, self).form_valid(form)
 
     def get_success_url(self) -> str:

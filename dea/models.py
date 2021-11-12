@@ -495,11 +495,11 @@ class Ledgerbalance(models.Model):
 
     def get_dr(self):
         # return Balance(self.ll_dr) + Balance(self.la_dr)
-        return Balance(self.cr)
+        return Balance(self.dr)
 
     def get_cr(self):
         # return Balance(self.ll_cr) + Balance(self.la_cr)
-        return Balance(self.dr)
+        return Balance(self.cr)
 
 class Accountbalance(models.Model):
     entity = models.CharField(max_length=30)

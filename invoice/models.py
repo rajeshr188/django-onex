@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class PaymentTerm(models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=100)
     description = models.TextField()
     due_days = models.PositiveSmallIntegerField()
     discount_days = models.PositiveSmallIntegerField()

@@ -231,7 +231,12 @@
   {% block javascript %}
   <!-- Bootstrap JavaScript -->
   <script src="{% static 'bootstrap/js/bootstrap.js' %}" ></script>
- 
+  <script src="https://unpkg.com/htmx.org@1.6.0"></script>
+  <script>
+    document.body.addEventListener('htmx:configRequest', (event) => {
+      event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+    })
+  </script>
   {% endblock javascript %}
 
 </body>

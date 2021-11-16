@@ -20,6 +20,7 @@
                 <td>Quantity</td>
                 <td>updated_on</td>
                 <td>Status</td>
+                <td>cost</td>
             </tr>
             <!-- {% for object,bal in data.stock %}
             <tr>
@@ -47,6 +48,7 @@
                 <td>{{i.get_qty_bal}}</td>
                 <td>{{i.stock.updated_on}}</td>
                 <td>{{i.stock.status}}</td>
+                <td>{{i.stock.get_cost}}</td>
             </tr>
             {%endfor%}
         </table>

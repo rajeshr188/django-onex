@@ -64,7 +64,7 @@ class InvoiceForm(forms.ModelForm):
                 css_class='form-row'),
             # ButtonHolder(Submit('submit', 'save')) 
             FormActions(
-                Submit('save','Save Changes'),
+                Submit('save','Save'),
                 Button('cancel','Clear')
             )     
         )
@@ -72,7 +72,8 @@ class InvoiceForm(forms.ModelForm):
 class InvoiceUpdateForm(InvoiceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.helper.layout.fields[-1].value = "Save Changes"
+        self.helper.layout.fields[-1].value = "Update Changes"
+        
 class InvoiceItemForm(forms.ModelForm):
     product=forms.ModelChoiceField(
                 queryset=ProductVariant.objects.all(),

@@ -3,7 +3,7 @@ from django.http.response import Http404
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,Month
 from contact.models import Customer
-from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet,ReceiptForm,
+from .forms import (InvoiceForm, InvoiceItemForm, InvoiceItemFormSet, InvoiceUpdateForm,ReceiptForm,
                     ReceiptLineForm,ReceiptItemFormSet,RandomSalesForm)
 from django.http import HttpResponseRedirect
 from django.urls import reverse,reverse_lazy
@@ -254,7 +254,7 @@ class InvoiceDetailView(DetailView):
 
 class InvoiceUpdateView(UpdateView):
     model = Invoice
-    form_class = InvoiceForm
+    form_class = InvoiceUpdateForm
 
     def get_context_data(self,*args,**kwargs):
         data = super(InvoiceUpdateView,self).get_context_data(**kwargs)

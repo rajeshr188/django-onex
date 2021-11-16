@@ -9,9 +9,9 @@
         {{formset.non_form_errors}}
         {{ formset.management_form |crispy}}
         {% for form in formset.forms %}
-        {{form.errors}}
+        {{form.non_form_errors}}
         {{form.id}}
-        <tr class="inline {{formset.prefix}} form-group">
+        <tr class="inline {{formset.prefix}}">
             {% for field in form.visible_fields %}
             <td class="{{field.name}} form-control-sm">
                 {{ field|as_crispy_field}}
@@ -20,6 +20,7 @@
         </tr>
         {%endfor%}
     </table>
+    
 </div>
 <script src="{% static 'js/jquery.formset.js' %}"></script>
 <script type="text/javascript">
@@ -91,7 +92,7 @@
         formCssClass:'inline-form',
         added: function ($row) {
             update_amounts();
-            $row.find('.product select').select2({ width: "200px" });
+            $row.find('.product select').select2({ width: "100px" });
         },
         removed: function ($row) {
             update_row();
@@ -100,6 +101,6 @@
 
     });
     
-    $('.product select').select2({ width: "200px" });
+    $('.product select').select2({ width: "100px" });
 
 </script>

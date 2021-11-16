@@ -12,6 +12,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
 from utils.custom_layout_object import *
 from django.db.models import Q
+
 class RandomSalesForm(forms.Form):
     month = forms.IntegerField(required = True)
 
@@ -46,8 +47,8 @@ class InvoiceForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_tag = True
         self.helper.form_class = 'form-group'
-        self.helper.label_class = 'col-md-12 form-label'
-        self.helper.field_class = 'col-md-12'
+        self.helper.label_class = 'col-md form-label'
+        self.helper.field_class = 'col-md'
         self.helper.layout = Layout(
             Row(
                 Column(Field('created', css_class='form-control'),
@@ -81,18 +82,27 @@ class InvoiceForm(forms.ModelForm):
             ButtonHolder(Submit('submit', 'save'))
         )
 
+
+class InvoiceUpdateForm(InvoiceForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout.fields[-1].value = "Update Changes"
+        
 class InvoiceItemForm(forms.ModelForm):
     # TODO add filter to show only stock with qty and wt >0
-    # product = forms.ModelChoiceField(
-    #                     queryset = Stock.objects.filter(Q(wt__gt = 0)&Q(qty__gt = 0)),
-    #                     widget = Select2Widget)
+    product = forms.ModelChoiceField(
+                        queryset = Stock.objects.filter(Q(wt__gt = 0)&Q(qty__gt = 0)),
+                        widget = Select2Widget)
+
     class Meta:
         model = InvoiceItem
         fields = ['invoice','is_return','product','quantity','weight', 'less_stone',
         'net_wt','touch','wastage','makingcharge','total',]
+    
+    
 
 InvoiceItemFormSet = inlineformset_factory(
-    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1, can_delete=True,
+    Invoice, InvoiceItem, extra=1, can_delete=True,
     fields=('is_return','product','quantity',
     'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),
     )

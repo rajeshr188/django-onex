@@ -134,33 +134,20 @@ class ProductVariant(models.Model):
     def get_attributes(self):
         return get_product_attributes_data(self.product)
 
+    
     def get_bal(self):
         st = StockBalance.objects.get(stock__variant_id = self.id)
         total = {
             'wt':st.Closing_wt + st.in_wt -st.out_wt,
             'qty':st.Closing_qty + st.in_qty - st.out_qty
         }
-        # st = StockTransaction.objects.filter(stock__variant_id = self.id)
-        # ins = st.filter(movement_type_id__in=['P','SR','AR'])
-        # i={}
-        # o={}
-        # if ins.exists():
-        #     i = ins.aggregate(
-        #     wt = Sum('weight'),qty=Sum('quantity'))
-           
-        # else:
-        #     i['wt']=0
-        #     i['qty']=0
-        # out = st.filter(movement_type__id__in=['S', 'PR', 'A'])
-        # if out.exists():
-        #     o = out.aggregate(
-        #     wt=Sum('weight'), qty=Sum('quantity'))
-        # else:
-        #     o['wt']=0
-        #     o['qty']=0
-
-        # total = {'wt':i['wt']-o['wt'],'qty':i['qty']-o['qty']}
         return total
+    
+    def get_cost(self):
+        stocks_bal = self.get_bal()
+        stocks_cost = [i.get_cost() for i in self.stock_set.all()]
+        print(stocks_cost,stocks_bal)
+        return sum(stocks_cost)/stocks_bal['wt']
                 
     def get_absolute_url(self):
         return reverse('product_productvariant_detail', args=(self.pk,))
@@ -320,7 +307,8 @@ class Stock(models.Model):
     status = models.CharField(max_length=10,choices = (
                 ('Empty','Empty'),('Available','Available'),('Sold','Sold'),
                 ('Approval','Approval'),('Return','Return'),('Merged','Merged'),
-                ),default = 'Empty')
+                ),
+                default = 'Empty')
     objects = StockManager()
     
     class Meta:
@@ -345,6 +333,13 @@ class Stock(models.Model):
         bal = self.current_balance()
         return bal['wt']*self.cost
 
+    def get_cost(self):
+        if self.tracking_type == 'Lot':
+            return sum([i.get_cost() for i in self.stockbatch_set.all()])
+            # self.stockbatch_set.aggregate(avg=Sum(F('cost')*F('weight')/100))['avg']
+
+        else:
+            return self.current_balance()['wt']*self.cost
     def audit(self):
         
         if self.tracking_type == 'Lot':
@@ -429,9 +424,6 @@ class Stock(models.Model):
         # else:
             # check if sold then timedelta between created and last sales transaction
             # else timedelta between today and date created
-    
-    def get_cost(self):
-        return self.stockbatch_set.aggregate(avg = Avg(F('cost')*F('weight')/100))['avg']
 
     def add(self,weight,quantity,journal,activity_type,stockbatch= None):
 
@@ -723,6 +715,8 @@ class StockBatch(models.Model):
         else:
             print('unique nodes cant be split.hint:merge to lot and then split')
 
+    def get_cost(self):
+        return self.stockbatchbalance.get_wt_bal() * self.cost
 
 class Movement(models.Model):
     id = models.CharField(max_length = 3,primary_key=True)

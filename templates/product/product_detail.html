@@ -8,7 +8,6 @@
 <tr><td>Category</td><td>{{ object.category }}</td></tr>
 <tr><td>Product Type</td><td>{{object.product_type}}</td></tr>
 <tr><td>Description</td><td>{{object.description}}</td></tr>
-<tr><td>Attributes</td><td>{{object.attributes}}</td></tr>
 <tr>
   <td>jAttributes</td>
   <td>{{object.jattributes}}</td>
@@ -24,9 +23,7 @@
       <th> Name</th>
       <th> Variant Of</th>
       <th> Attributes</th>
-      <th> Previously Qih</th>
-      <th> Current Qih</th>
-      <th> Tracked </th>
+      <th> Current bal</th>
       <th> Cost </th>
       <th> Sell @</th>
   </thead>
@@ -34,13 +31,11 @@
 {% for v in variants %}
   <tr>
     <td>{{v.sku}}</td>
-    <td>{{v.name}} </td>
+    <td><a href="{% url 'product_productvariant_detail' v.id%}">{{v.name}}</a> </td>
     <td>{{v.product}}</td>
-    <td>{{v.attributes}} </td>
-    <td>{{v.quantity}} </td>
-    <td>{{v.stock.Qih}}</td>
-    <td>{{v.track_inventory}}</td>
-    <td>{{v.cost_price}}</td>
+    <td>{{v.jattributes}} </td>
+    <td>{{v.get_bal}}</td>
+    <td>{{v.get_cost}}</td>
     <td>{{v.selling_price}}</td>
   </tr>
 

@@ -537,6 +537,7 @@ class StockTransaction(models.Model):
     #                                 on_delete=models.CASCADE)
     
     journal = models.ForeignKey(Journal, on_delete=models.CASCADE, 
+                null=True,blank = True,
                 related_name='stxns')
 
     class Meta:

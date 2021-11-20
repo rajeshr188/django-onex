@@ -7,7 +7,7 @@
     {{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}} rank:{{customer.rank}}
     {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.phonenumber}} {{customer.type}}</p>
     <ul class="nav justify-content-end">
-      <li class="nav-item">
+      <li class="nav-item update">
         <a class="nav-link active" href="{% url 'contact_customer_update' object.pk%}">Edit Customer</a>
       </li>
       <li class="nav-item">

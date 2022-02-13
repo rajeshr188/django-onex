@@ -1,0 +1,32 @@
+{%load django_tables2%}
+{%block content%}
+
+<div id="customer-content">
+  <div id="head" >
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+      <h1 class="h2">Customers</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+          <a class="btn btn-primary mr-2" hx-get="{% url 'contact_customer_create' %}" hx-push-url="true"
+              hx-target='#main-content' hx-swap="innerHTML" role="button">New Customer</a>
+          <a class="btn btn-primary mr-2" hx-get="{% url 'contact_customer_list' %}" hx-push-url="true"
+              hx-target='#customer-content' hx-swap="innerHTML" role="button">Customer List</a>
+          <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" id="main-content">
+    <div class="col-sm-3" id="filter">
+        {%include "contact/partials/filter.html"%}
+    </div>
+    <div class="col-sm-9" id = "table">
+      <p>
+        Results :{{page_obj.paginator.count}}
+      </p>
+        {%include "table1.html"%}
+    </div>
+</div>
+</div>
+            
+{%endblock%}

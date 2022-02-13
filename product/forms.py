@@ -2,7 +2,6 @@ from django import forms
 from mptt.forms import TreeNodeChoiceField
 from django.utils.translation import pgettext_lazy
 from .models import *
-from django.utils.encoding import smart_text
 from .attributes import *
 from django.utils.text import slugify
 from django_select2.forms import Select2Widget,Select2MultipleWidget
@@ -123,9 +122,9 @@ class AttributesMixin:
                     value = AttributeValue(
                         attribute_id=attr.pk, name=value, slug=slugify(value))
                     value.save()
-                attributes[smart_text(attr.pk)] = smart_text(value.pk)
+                attributes[attr.pk] = value.pk
                 
-                ja[smart_text(attr.name)] = smart_text(value.value)
+                ja[attr.name] = value.value
         data['attributes'] = attributes
         data['ja']=ja
         return data

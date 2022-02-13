@@ -211,7 +211,7 @@ class Invoice(models.Model):
                 self.approval.is_billed = True
                 self.approval.save()
                 self.approval.update_status()
-            
+
             jrnl = Journal.objects.create(type = JournalTypes.SJ,
                     content_object = self, desc = 'sale')
 

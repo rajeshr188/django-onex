@@ -2,13 +2,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import DetailView, ListView, UpdateView, CreateView,DeleteView
 from django.views.generic.dates import YearArchiveView,MonthArchiveView,WeekArchiveView
 from django.urls import reverse,reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.shortcuts import render,redirect,get_object_or_404
 from django.db.models import Count,Sum,Q,Prefetch,F,Max
 from django.db.models.functions import Coalesce,ExtractYear,ExtractMonth
-
+from django.contrib import messages
 from .models import *
+from crispy_forms.templatetags.crispy_forms_filters import as_crispy_field
+
 from .forms import (LicenseForm, LoanForm, ReleaseForm,
                     Loan_formset,AdjustmentForm,LoanRenewForm,BulkReleaseForm,
                     PhysicalStockForm,SeriesForm)
@@ -19,6 +21,7 @@ from contact.models import Customer
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from django_filters.views import FilterView
+from django.views.decorators.http import require_http_methods  # new
 
 from num2words import num2words
 import math
@@ -51,7 +54,7 @@ def print_notice(request,pk):
 def notice(request):
     qyr = request.GET.get('qyr',0)
     # qcust = request.GET.GET('qcust',None)
-    a_yr_ago = timezone.now() - relativedelta.relativedelta(years=int(qyr))
+    a_yr_ago = timezone.now() -relativedelta(years=int(qyr))
 
     cust = Customer.objects.filter(type="Re",loan__created__lt=a_yr_ago,
                                         loan__release__isnull=True).\
@@ -94,26 +97,6 @@ def multirelease(request,id=None):
 
     return HttpResponseRedirect(reverse('girvi_loan_list'))
 
-@login_required
-def manage_loans(request):
-
-    formset = Loan_formset(queryset=Loan.objects.none())
-
-    if request.method == 'POST':
-        formset = formset(request.POST)
-        if formset.is_valid():
-            # do something with the formset.cleaned_data
-            print("saving formset")
-            instances=formset.save()
-            return redirect(reverse('girvi_loan_list'))
-        else :
-            print('formset invalid')
-            return redirect(reverse('manage_loans',kwargs = {'formset': formset}))
-    else:
-        formset = Loan_formset(queryset=Loan.objects.none())
-
-
-    return render(request, 'girvi/manage_loans.html', {'formset': formset})
 
 def activate_series(request,pk):
     s = get_object_or_404(Series,pk = pk)
@@ -240,6 +223,7 @@ def check_girvi(request):
 
 from django.db import IntegrityError
 def bulk_release(request):
+
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -248,8 +232,7 @@ def bulk_release(request):
         if form.is_valid():
             date = form.cleaned_data['date']
             loans = form.cleaned_data['loans']
-            success = []
-            failed = []
+            
             if not date:
                 date = timezone.now().date()
 
@@ -264,29 +247,19 @@ def bulk_release(request):
                     releaseid = Release.objects.order_by('-id')[0]
                     releaseid = str(int(releaseid.releaseid)+1)
                     r = Release.objects.create(
-                                            releaseid=releaseid,
-                                            loan=l,
-                                            created = date,#datetime.now(timezone.utc),
-                                            interestpaid =  l.interestdue(date),
-                                            created_by = request.user
-                                            )
-                    success.append(l)
+                            releaseid=releaseid,loan=l,
+                            created = date,#datetime.now(timezone.utc),
+                            interestpaid =  l.interestdue(date),
+                            created_by = request.user)
                 except IntegrityError:
                     # raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
-                    failed.append(l)
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            return render(request,'girvi/bulk_release_detail.html',{'success':success,'failed':failed})
-
+                    print(f"Failed creating Release as {l} is already Released with {l.release}")
     # if a GET (or any other method) we'll create a blank form
     else:
         form = BulkReleaseForm()
 
-    return render(request, 'girvi/bulk_release.html', {'form': form})
+    return render(request, 'girvi/bulk_release.html', {'form': form, 'success': success, 'failed': failed})
 
-def bulk_release_detail(request):
-    return render(request,'girvi/bulk_release_detail.html')
 
 def physical_stock(request):
     if request.method == 'POST':
@@ -355,6 +328,7 @@ class SeriesCreateView(LoginRequiredMixin,CreateView):
     model = Series
     form_class = SeriesForm
 
+
 class SeriesDetailView(LoginRequiredMixin,DetailView):
     model = Series
 
@@ -366,6 +340,12 @@ class LicenseSeriesDeleteView(LoginRequiredMixin,DeleteView):
     model=License
     success_url=reverse_lazy('girvi_license_list')
 
+class LoanListFilterView(SingleTableMixin, FilterView):
+    filterset_class = LoanFilter
+    table_class = LoanTable
+    template_name = 'table1.html'
+    paginate_by = 25
+
 class LoanListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class=LoanTable
     model = Loan
@@ -373,58 +353,69 @@ class LoanListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     filterset_class=LoanFilter
     paginate_by=20
 
+    def get(self, request, *args, **kwargs):
+        if request.META.get('HTTP_HX_REQUEST'):
+            self.template_name = 'girvi/partials/loan_list_view.html'
+        return super().get(request, *args, **kwargs)
+
 def increlid():
     last=Release.objects.all().order_by('id').last()
     if not last:
         return '1'
-    # splitl=re.split('(\d+)',last.loanid)
-    # billno=splitl[0] + str(int(splitl[1])+1)
     return str(int(last.releaseid)+1)
 
 def ld():
-    last=Loan.objects.all().order_by('id').last()
+    last=Loan.objects.order_by('id').last()
     if not last:
-        return datetime.date.today()
-    return last.created
+        return datetime.date.today().isoformat()
+    return last.created.isoformat()
 
-class LoanCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
+def next_loanid(request):
+    series = request.GET['series']
+    s = get_object_or_404(Series,pk=series)
+    lid =  Loan.objects.filter(series =s.id).last().lid+1
+    form = LoanForm(initial={'lid':lid})
+    form.instance.lid = lid
+    context = {
+        'field': as_crispy_field(form['lid']),
+    }
+    return render(request, 'girvi/partials/field.html', context)
+
+
+@login_required
+def create_loan(request,pk=None):
+
+    if pk:
+        customer = get_object_or_404(Customer,pk = pk)
     
-    model = Loan
-    form_class = LoanForm
-    success_url=reverse_lazy('girvi_loan_create')
-    success_message = "%(calculated_field)s was created successfully"
-
-    def get_success_message(self, cleaned_data):
-        return self.success_message % dict(
-            cleaned_data,
-            calculated_field=self.object,
-        )
-
-    def get_context_data(self,**kwargs):
-        context = super().get_context_data(**kwargs)
-        try:
-            series ={s.id:list(s.loan_set.values_list('lid').latest('lid')) 
-                        for s in Series.objects.filter(is_active = True)}
-            context['series']= series
-        except Loan.DoesNotExist:
-            context['series']=None
-        return context
-
-    def get_initial(self):
-        if self.kwargs:
-            customer=Customer.objects.get(id=self.kwargs['pk'])
-            return{
-                'customer':customer,
-                'created':ld,
-            }
+    if request.method == 'POST':
+        form = LoanForm(request.POST or None)
+        # check whether it's valid:
+        if form.is_valid():
+            l = form.save(commit=False)
+            l.created_by = request.user
+            last_loan = l.save()
+            
+            messages.success(request, f"last loan id is {last_loan.lid}")  
+            return render(request,'girvi/partials/loan_info.html',
+                {
+                    'object':last_loan,
+                    'previous':last_loan.get_previous(),
+                    'next':last_loan.get_next(),})
         else:
-            return{
-                'created':ld,
-            }
+            messages.warning(request, 'Please correct the error below.')
+    else:
+        if pk:
+            form = LoanForm(initial={'customer':customer,'created':ld})
+        else:
+            form = LoanForm(initial={'created':ld})
+            
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request,'form.html',{'form':form})
+    return render(request,'girvi/loan_form.html',{
+                    'form':form,
+                    })
 
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super().form_valid(form)
 
 def post_loan(pk):
     loan = get_object_or_404(Loan, pk=pk)
@@ -448,13 +439,19 @@ class LoanDetailView(LoginRequiredMixin,DetailView):
         context['next'] = self.object.get_next()
         return context
 
+
+def loan_info(request,pk):
+    loan = get_object_or_404(Loan, pk=pk)
+    return render(request,'girvi/partials/loan_info.html',{'object':loan,'next':loan.get_next(),'previous':loan.get_previous()})
+
 class LoanUpdateView(LoginRequiredMixin,UpdateView):
     model = Loan
     form_class = LoanForm
 
-class LoanDeleteView(LoginRequiredMixin,DeleteView):
-    model=Loan
-    success_url=reverse_lazy('girvi_loan_list')
+@require_http_methods(['POST','DELETE'])
+def delete_loan(request, pk):
+    Loan.objects.filter(id=pk).delete()
+    return HttpResponse("")
 
 def loan_renew(request,pk):
     loan = get_object_or_404(Loan,pk = pk)

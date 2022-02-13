@@ -1,6 +1,7 @@
 import django_tables2 as tables
 from django_tables2.utils import A
 from .models import Loan,Release
+from django.utils.html import format_html
 
 class CheckBoxColumnWithName(tables.CheckBoxColumn):
     @property
@@ -12,6 +13,10 @@ class LoanTable(tables.Table):
     loanid=tables.Column(linkify = True)
     # release = tables.LinkColumn('girvi_release_create', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
+    remove = tables.Column(orderable=False, empty_values=())
+
+    def render_remove(self,record):
+        return format_html('<a hx-post="/girvi/girvi/loan/{}/delete/" class="btn btn-outline-danger" role="button">Delete</a>', record.pk)
 
     def render_created(self,value):
         return value.date

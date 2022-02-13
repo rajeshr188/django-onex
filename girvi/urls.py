@@ -50,8 +50,9 @@ urlpatterns += (
 urlpatterns += (
     path('girvi/check/',views.check_girvi,name='check_girvi'),
     path('girvi/bulk_release/',views.bulk_release,name='bulk_release'),
-    path('girvi/bulk_release_detail/',views.bulk_release_detail,name='bulk_release_detail'),
+    # path('girvi/bulk_release_detail/',views.bulk_release_detail,name='bulk_release_detail'),
     path('girvi/series/<int:pk>/activate',views.activate_series,name='girvi_activate_series'),
+    path('girvi/series/next-loanid/',views.next_loanid,name='girvi_series_next_loanid'),
 )
 urlpatterns += (
     # urls for License
@@ -62,21 +63,27 @@ urlpatterns += (
     path('girvi/license/<int:pk>/delete/',views.LicenseDeleteView.as_view(), name='girvi_license_delete'),
 )
 
+urlpatterns +=(
+    path('license/series/create/', views.SeriesCreateView.as_view(), name='girvi_series_create'),
+)
 urlpatterns += (
     # urls for Loan
     path('girvi/loan/', views.LoanListView.as_view(), name='girvi_loan_list'),
-    path('girvi/loan/manage/',views.manage_loans,name='manage_loans'),
     path('girvi/loan/renew/<int:pk>/',views.loan_renew, name = 'girvi_loan_renew'),
-    path('girvi/loan/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
-    path('girvi/loan/<int:pk>/create/', views.LoanCreateView.as_view(), name='girvi_loan_create'),
+    path('girvi/loan/create/', views.create_loan, name='girvi_loan_create'),
+    path('girvi/loan/create/<int:pk>', views.create_loan, name='girvi_loan_create'),
+
     path('girvi/loan/detail/<int:pk>/', views.LoanDetailView.as_view(), name='girvi_loan_detail'),
+    path('girvi/loan/info/<int:pk>/', views.loan_info, name='girvi_loan_info'),
     path('girvi/loan/detail/<int:pk>/pdf', views.print_loanpledge, name='loan_pdf'),
     path('girvi/loan/update/<int:pk>/', views.LoanUpdateView.as_view(), name='girvi_loan_update'),
-    path('girvi/loan/<int:pk>/delete/',views.LoanDeleteView.as_view(),name='girvi_loan_delete'),
+    path('girvi/loan/<int:pk>/delete/',views.delete_loan,name='girvi_loan_delete'),
     path('girvi/loan/<int:pk>/post/',views.post_loan,name = 'girvi_loan_post'),
     path('girvi/loan/<int:pk>/unpost/', views.unpost_loan, name='girvi_loan_unpost'),
     path('girvi/loan/take_physicalstock/',views.physical_stock,name="girvi_physicalstock_add"),
     path('girvi/loan/physicalstock/',views.physical_list,name="girvi_physicalstock_list"),
+    path('filter/', views.LoanListFilterView.as_view(), name='girvi_loan_filter'),
+
 
 )
 urlpatterns += (

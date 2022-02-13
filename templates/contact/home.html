@@ -1,21 +1,7 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<div class="card-columns">
-  <div class="card" style="width: 15rem;">
-    <div class="card-header">
-      Contacts
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item">Customers : <span class="shadow-lg ">{{data.customercount}}</span></li>
-      <li class="list-group-item">Retail : <span class="shadow-lg ">{{data.retailcount}}</span></li>
-      <li class="list-group-item">with loan : <span class="shadow-lg ">{{data.wl}}</span></li>
-      <li class="list-group-item">without loan : <span class="shadow-lg ">{{data.wol}}</span></li>
-      <li class="list-group-item">Wholesale : <span class="shadow-lg ">{{data.whcount}}</span></li>
-      <li class="list-group-item">With phoneno : <span class="shadow-lg ">{{data.withph}} %</span></li>
-      <li class="list-group-item">Religionwise : {{data.religionwise}}</li>
-    </ul>
-  </div>
-</div>
+
+{%include "contact/partials/customer_list_withfilter.html"%}
 
 {% endblock %}

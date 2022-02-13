@@ -1,10 +1,9 @@
-{% extends "_base.html" %}
-{% load crispy_forms_tags %}
-{% block content %}
-<p><a class="btn btn-secondary" href="{% url 'contact_customer_list' %}">Customer Listing</a></p>
-<div class="card">
-  <div class="card-body" style="background-color: #eee;">
-    {% crispy form %}
-  </div>
+{% extends '_base.html'%}
+{%load static%}
+{%block content%}
+
+<div id="customer-content">
+    <h1>Create customer</h1>
+    {%include "form.html"%}
 </div>
-{% endblock %}
+{%endblock%}

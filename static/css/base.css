@@ -8,6 +8,28 @@ body {
   vertical-align: text-bottom;
 }
 
+.loader {
+  --n:5;    /* control the number of stripes */
+  --s:30px; /* control the width of stripes */
+  --g:5px;  /* control the gap between stripes */
+  
+  width:calc(var(--n)*(var(--s) + var(--g)) - var(--g));
+  height:30px;
+  padding:var(--g);
+  margin:5px auto;
+  border:1px solid;
+  background:
+    repeating-linear-gradient(90deg,
+      currentColor  0 var(--s),
+      #0000 0 calc(var(--s) + var(--g))
+    ) left / calc((var(--n) + 1)*(var(--s) + var(--g))) 100% 
+    no-repeat content-box;
+  animation: load 1.5s steps(calc(var(--n) + 1)) infinite;
+}
+@keyframes load {
+  0% {background-size: 0% 100%}
+}
+
 /*
  * Sidebar
  */

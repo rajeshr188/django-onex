@@ -1,34 +1,6 @@
-{% extends "_base.html" %}
+{%extends "_base.html"%}
 {% load static %}
-{%load django_tables2%}
-{%load bootstrap4%}
 {% block content %}
-{{ filter.form.media }}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-  <h1 class="h2">Loan</h1>
-  <div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group mr-2">
-     <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" role="button">New Loan</a>
-     <a class="btn btn-secondary" href="{%url 'manage_loans' %}" role ="button">Bulk Create </a>
-     <a class="btn btn-primary" href="{% url 'girvi_loan_list' %}" role="button">Loan List</a>
-     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
-    </div>
-  </div>
-</div>
-<div>
-  <form class="form-inline" action="{% url 'girvi-multirelease'%}" method="POST">
-    {% csrf_token %}
-    <div class="input-group mb-2 mr-sm-2">
-      <label class="form-check-label" for="inlineFormCheck">Action : </label>
-      <select class="form-control ml-2" name="action">
-        <option value="edit">Edit</option>
-        <option value="delete">Delete</option>
-        <option value="release">Release</option>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary mb-2">Go</button>
-  </form>
-</div>
-{% include 'table.html'%}
+{% include "girvi/partials/loan_list_view.html"%}
 
 {% endblock %}

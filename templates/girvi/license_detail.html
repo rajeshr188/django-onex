@@ -1,8 +1,12 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'girvi_license_list' %}">License Listing</a>
-<a class="btn btn-primary" href="{{object.get_update_url}}">Edit License</a></p>
+<p>
+  <a class="btn btn-default" href="{% url 'girvi_license_list' %}">License Listing</a>
+  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit License</a>
+  <a class="btn btn-danger" href="{% url 'girvi_license_delete' object.id%}">Delete License</a>
+  <a class="btn btn-success" href="{% url 'girvi_series_create' %}">Add series</a>
+</p>
 
   <div class="row">
     <div class="col-sm">

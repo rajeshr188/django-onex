@@ -1,6 +1,5 @@
 from django import forms
 import datetime
-from tempus_dominus.widgets import DateTimePicker
 from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,ReceiptItem
 from django_select2.forms import Select2Widget
 from contact.models import Customer
@@ -17,20 +16,9 @@ class RandomSalesForm(forms.Form):
 
 class InvoiceForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'defaultDate': (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
-                'minDate': '2009-01-20',# 'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
-                'useCurrent': True,
-                'collapse': False,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
     )
+
     customer=forms.ModelChoiceField(queryset=Customer.objects.all(),
                 widget = Select2Widget)
     approval = forms.ModelChoiceField(queryset = Approval.objects.all(),
@@ -99,16 +87,7 @@ InvoiceItemFormSet = inlineformset_factory(
 class ReceiptForm(forms.ModelForm):
     customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'defaultDate': (datetime.date.today()).strftime('%Y-%m-%d'),
-                'minDate': '2013-02-07',#(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
-                'useCurrent': True,
-                'collapse': False},
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True}),)
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
     class Meta:
         model = Receipt
         fields = ['created','customer','type', 

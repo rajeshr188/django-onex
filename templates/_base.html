@@ -13,8 +13,10 @@
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
 <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+<link rel="stylesheet" href="{% static 'css/base.css'%}">
 {% endblock %}
 <script src="{% static 'js/jquery.js' %}"></script>
+<script src="https://unpkg.com/htmx.org@1.1.0"></script>
 
 {% block extra_js %}
 {% endblock%}
@@ -46,20 +48,13 @@
             </div> 
           </div>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                          aria-expanded="false">Company</a>
-            <div class="dropdown-menu">
-              <a href="{% url 'company_owned_list' %}" class="dropdown-item">Company List</a>
-              <div class="dropdown-divider"></div>
-              <a href="{% url 'membership_list' %}" class="dropdown-item">membership List</a>
-            </div>
-          </li>
-          <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="{% url 'contact_home' %}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Contact</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="{% url 'contact_home' %}">Contact</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'contact_customer_list' %}">Customer List</a>
+              <a class="dropdown-item" hx-get="{% url 'contact_customer_list' %}"
+                  hx-target="#content"
+                  hx-push-url="true">Customer List</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -83,9 +78,9 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="{% url 'girvi-home'%}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Girvi</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
-              <a class="dropdown-item" href="{% url 'girvi-home'%}">Home</a>
+              <a class="dropdown-item" hx-get="{% url 'girvi-home'%}" hx-target="#content" hx-push-url="true" hx-swap="innerHTML">Home</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="{% url 'girvi_loan_list'%}">Loan</a>
+              <a class="dropdown-item" hx-get="{% url 'girvi_loan_list'%}" hx-target="#content" hx-push-url="true">Loan</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="{% url 'girvi_release_list'%}">Release</a>
               <div class="dropdown-divider"></div>
@@ -204,9 +199,10 @@
       </div>
     </nav>
 
-  <div class="container-lg">
-    {% include 'partials/messages.html'%}
+  <div class="container-lg" id="content">
+    
     {% block content %}
+    {% include 'partials/messages.html'%}
       <p>Default content...</p>
     {% endblock content %}
   </div>
@@ -215,7 +211,7 @@
   <div class="row">
     <div class="col-12 col-md">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-block mb-2"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
-      <small class="d-block mb-3 text-muted">&copy; 2017-2021 rajeshrathodh </small>
+      <small class="d-block mb-3 text-muted">&copy; 2017-2022 rajeshrathodh </small>
     </div>
   </div>
   </footer>
@@ -223,7 +219,14 @@
   {% block javascript %}
   <!-- Bootstrap JavaScript -->
   <script src="{% static 'bootstrap/js/bootstrap.js' %}" ></script>
- 
+  <script src="{% static 'js/chart.js' %}"></script>
+
+  <script>
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+  })
+  </script>
+  
   {% endblock javascript %}
 
 </body>

@@ -1,3 +1,4 @@
+from contact.forms import CustomerWidget
 from .models import Loan, LoanStatement,Release,Adjustment
 from contact.models import Customer
 import django_filters
@@ -7,8 +8,8 @@ class LoanFilter(django_filters.FilterSet):
     loanid=django_filters.CharFilter(lookup_expr='icontains')
     itemdesc=django_filters.CharFilter(lookup_expr='icontains')
     customer=django_filters.ModelChoiceFilter(
-                    queryset = Customer.objects.filter(type='Re',active = True),
-                    widget=Select2Widget)
+                    queryset = Customer.objects.filter(type='Re'),
+                    widget=CustomerWidget)
     Status = django_filters.BooleanFilter(field_name='release', method='filter_status')
 
     def filter_status(self,queryset,name,value):

@@ -19,27 +19,10 @@ class CustomerAdminForm(forms.ModelForm):
 class CustomerAdmin(ImportExportActionModelAdmin):
     form = CustomerAdminForm
     resource_class=CustomerResource
+    search_fields = ['name','relatedto', 'Address', 'phonenumber']
     list_display = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address','area', 'type', 'relatedas', 'relatedto']
     readonly_fields = ['name', 'id', 'created', 'updated', 'phonenumber', 'Address', 'area','type', 'relatedas', 'relatedto']
 
 admin.site.register(Customer, CustomerAdmin)
 
-# class SupplierResource(resources.ModelResource):
-#
-#     class Meta:
-#         model = Supplier
-#
-# class SupplierAdminForm(forms.ModelForm):
-#
-#     class Meta:
-#         model = Supplier
-#         fields = '__all__'
-#
-#
-# class SupplierAdmin(ImportExportActionModelAdmin):
-#     form = SupplierAdminForm
-#     resource_class = SupplierResource
-#     list_display = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
-#     readonly_fields = ['name', 'id', 'created', 'last_updated', 'organisation', 'phonenumber', 'initial']
-#
-# admin.site.register(Supplier, SupplierAdmin)
+

@@ -10,37 +10,7 @@ from itertools import tee, islice, chain
 from dateutil import relativedelta
 from django.utils import timezone
 
-# class Contacts(models.Model):
-#     created = models.DateTimeField(default = timezone.now)
-#     updated = models.DateTimeField(auto_now = True)
-#     name = models.CharField(max_length = 30)
-#     phoneno = models.CharField(max_length = 12)
-#     address = models.TextField()
-#     ras=(('S/o','S/o'),('D/o','D/o'),('W/o','W/o'),('R/o','R/o'))
-#     relatedas = models.CharField(max_length=5,choices=ras,default='S/o')
-#     relatedto = models.CharField(max_length=30,blank=True)
-#     area = models.CharField(max_length=50,blank=True)
-#
-#     def __str__(self):
-#         return self.name
-#
-# class Firm(models.Model):
-#     name = models.CharField(max_length = 30)
-#     GSTNO = models.CharField(max_length = 30)
-#     contact = models.OneToOneField(Contacts,on_delete=models.CASCADE)
-#
-#     def __str__(self):
-#         return self.name
-#
-# class Customer(Contacts):
-#     choices = (('Retail','Retail'),
-#                 ('Wholesale','Wholesale'))
-#     customer_type = models.CharField(max_length=10,choices=choices,default='Retail')
-#
-# class Supplier(Contacts):
-#     initial = models.CharField(max_length = 10)
 
-# use proxy here
 class Customer(models.Model):
 
     # Fields

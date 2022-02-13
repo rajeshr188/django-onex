@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
-from django.utils.encoding import smart_text
+# from django.utils.encoding import smart_text
 from django.utils.text import slugify
 # from django_measurement.models import MeasurementField
 # from measurement.measures import Weight
@@ -170,7 +170,7 @@ class ProductVariant(models.Model):
         product_display = (
             '%s (%s)' % (product, variant_display)
             if variant_display else str(product))
-        return smart_text(product_display)
+        return product_display
 
     def get_first_image(self):
         images = list(self.images.all())

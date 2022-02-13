@@ -10,7 +10,6 @@ urlpatterns = [
     path('users/', include('django.contrib.auth.urls')),
     path('accounts/', include('allauth.urls')),
     path('', include('pages.urls')),
-    path('company/',include('company.urls')),
     path('approval/',include('approval.urls')),
     path('contact/',include('contact.urls')),
     path('product/',include('product.urls')),
@@ -21,10 +20,9 @@ urlpatterns = [
     path('daybook/',include('daybook.urls')),
     path('dea/',include('dea.urls')),
     path('sea/',include('sea.urls')),
-    path('select2/', include('django_select2.urls')),
-    
+    path('select2/', include('django_select2.urls')), 
     path('api-auth/',include('rest_framework.urls')),
-    path('activity/',include('actstream.urls')),
+
     
 
 ]

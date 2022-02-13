@@ -9,19 +9,9 @@ from django.db.models import Sum,Q
 from django.contrib.contenttypes.fields import GenericRelation
 import qrcode
 import qrcode.image.svg
-from qrcode.image.pure import PymagingImage
+# from qrcode.image.pure import PyImagingImage
 from io import BytesIO
 from moneyed import Money
-# class Month(Func):
-#     function = 'EXTRACT'
-#     template = '%(function)s(MONTH from %(expressions)s)'
-#     output_field = models.IntegerField()
-
-# class Year(Func):
-#     function = 'EXTRACT'
-#     template = '%(function)s(YEAR from %(expressions)s)'
-#     output_field = models.IntegerField()
-
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -294,7 +284,29 @@ class Loan(models.Model):
         self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
         super().save(*args,**kwargs)
+        return self
         
+class LoanItem(models.Model):
+    loan = models.ForeignKey(Loan,on_delete=models.CASCADE)
+    class Itemtype(models.TextChoices):
+        G = "Gold"
+        S = "Silver"
+        B = "Bronze"
+    itemtype = models.CharField(max_length=20,choices=Itemtype.choices,default=Itemtype.G)
+    item = models.CharField(max_length=20)
+    qty = models.PositiveIntegerField()
+    weight = models.DecimalField(max_digits=10,decimal_places=3)
+    purity = models.DecimalField(max_digits=10,decimal_places=3)
+    itemvalue = models.DecimalField(max_digits=10,decimal_places=3)
+    rate = models.DecimalField(max_digits=10,decimal_places=2)
+    loanamount = models.DecimalField(max_digits=10,decimal_places=2)
+    interestrate = models.DecimalField(max_digits=10,decimal_places=2)
+    interest = models.DecimalField(max_digits=10,decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.item} - {self.qty}" 
+
+
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     created_by = models.ForeignKey(

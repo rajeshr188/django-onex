@@ -5,7 +5,6 @@ from contact.models import Customer
 from product.models import ProductVariant
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
-from tempus_dominus.widgets import DateTimePicker
 from datetime import datetime
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
@@ -16,14 +15,7 @@ class InvoiceForm(forms.ModelForm):
     supplier=forms.ModelChoiceField(queryset=Customer.objects.exclude(type='Re'),
                     widget=Select2Widget)
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'useCurrent': True,
-                'collapse': False,},
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,}),)
+        widget=forms.DateTimeInput(attrs={'class': 'form-control datetimepicker-input','type':'datetime-local'}))
     class Meta:
         model = Invoice
         fields = ['created','rate','is_gst','balancetype','metaltype',
@@ -81,19 +73,7 @@ InvoiceItemFormSet = inlineformset_factory(Invoice, InvoiceItem,form=InvoiceItem
 
 class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'defaultDate': (datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
-                'minDate': '2009-01-20',# 'minDate': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),  # Tomorrow
-                'useCurrent': True,
-                'collapse': False,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'})
     )
     supplier=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
     class Meta:

@@ -5,6 +5,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
 from .models import License, Loan, Release, Series, Adjustment
 from contact.models import Customer
+from .forms import LoanForm
 
 class LicenseAdminForm(forms.ModelForm):
 
@@ -47,7 +48,8 @@ class LoanAdmin(ImportExportModelAdmin):
     form = LoanAdminForm
     resource_class=LoanResource
     list_display = ['id','loanid','customer','series','created', 'updated', 'itemtype', 'itemdesc', 'itemweight', 'itemvalue', 'loanamount', 'interestrate', 'interest']
-
+    search_fields = ['customer__name', 'series']
+    autocomplete_fields = ['customer']
 admin.site.register(Loan, LoanAdmin)
 
 class ReleaseResource(resources.ModelResource):

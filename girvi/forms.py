@@ -1,9 +1,11 @@
+from re import template
 from django import forms
-from django.forms import modelformset_factory
-from datetime import datetime
-from tempus_dominus.widgets import DateTimePicker
+from django.forms import DateTimeInput, modelformset_factory
+from django.urls import reverse_lazy
+
+from contact.forms import CustomerForm, CustomerWidget
 from .models import License, Loan, Release, Adjustment,Series
-from django_select2.forms import Select2Widget,ModelSelect2Widget,Select2MultipleWidget
+from django_select2.forms import ModelSelect2Widget,Select2MultipleWidget
 from contact.models import Customer
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
@@ -19,31 +21,36 @@ class SeriesForm(forms.ModelForm):
         fields = ['name','license']
 
 class LoanForm(forms.ModelForm):
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget=Select2Widget)
+    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),widget = CustomerWidget())
     series = forms.ModelChoiceField(queryset = Series.objects.exclude(is_active=False),
                     # widget = Select2Widget
+                     widget=forms.Select(attrs={
+            'hx-get': reverse_lazy('girvi_series_next_loanid'),
+            'hx-target': '#div_id_lid',
+            'hx-trigger': 'change',
+            'hx-swap': 'innerHTML'
+            
+        })
                     )
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'useCurrent': True,
-                'collapse': False,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=DateTimeInput(attrs={'type': 'datetime-local'}),
     )
-
+    itemdesc = forms.CharField(widget=forms.Textarea,)
     class Meta:
         model = Loan
         fields = [ 'series', 'customer','lid','created', 'itemtype', 'itemdesc', 'itemweight','loanamount', 'interestrate']
+        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_action = reverse_lazy('girvi_loan_create')
+        self.helper.attrs = {
+            'hx-post': reverse_lazy('girvi_loan_create'),
+            'hx-target': '#loancontent',
+            'hx-swap': 'innerHTML',
+            'hx-push-url':'true',
+        }
         self.helper.layout = Layout(
             Row(
                 Column('series', css_class='form-group col-md-3 mb-0'),
@@ -74,18 +81,7 @@ class LoanRenewForm(forms.Form):
 
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'minDate': '2010-01-01',
-                'useCurrent': True,
-                'collapse': True,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=DateTimeInput(attrs={'type': 'datetime-local'}),
     )
 
     class Meta:
@@ -111,18 +107,7 @@ class ReleaseForm(forms.ModelForm):
 
 class BulkReleaseForm(forms.Form):
     date = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'minDate': '2010-01-01',
-                'useCurrent': True,
-                'collapse': True,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=DateTimeInput(attrs={'type': 'datetime-local'})
     )
     loans = forms.ModelMultipleChoiceField(
         widget=Select2MultipleWidget,
@@ -130,18 +115,7 @@ class BulkReleaseForm(forms.Form):
 
 class PhysicalStockForm(forms.Form):
     date = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'minDate': '2010-01-01',
-                'useCurrent': True,
-                'collapse': True,
-            },
-            attrs={
-                'append': 'fa fa-calendar',
-                'input_toggle': False,
-                'icon_toggle': True,
-            }
-        ),
+        widget=DateTimeInput(attrs={'type': 'datetime-local'})
     )
     loans = forms.ModelMultipleChoiceField(
         widget=Select2MultipleWidget,
@@ -150,19 +124,7 @@ class PhysicalStockForm(forms.Form):
 
 class AdjustmentForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimePicker(
-            options={
-                'defaultDate': (datetime.now()).strftime("%m/%d/%Y, %H:%M:%S"),
-                'minDate': '2010-01-01',
-                'useCurrent': True,
-                'collapse': True,
-            },
-            attrs={
-               'append': 'fa fa-calendar',
-               'input_toggle': False,
-               'icon_toggle': True,
-            }
-        ),
+        widget=DateTimeInput(attrs={'type': 'datetime-local'})
     )
 
     loan = forms.ModelChoiceField(queryset=Loan.unreleased.all(),

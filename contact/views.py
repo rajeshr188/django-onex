@@ -1,4 +1,4 @@
-from django.views.generic import DetailView, UpdateView, CreateView,DeleteView
+from django.views.generic import DetailView
 from django_tables2.views import SingleTableMixin
 from django_tables2.export.views import ExportMixin
 from .tables import CustomerTable
@@ -7,14 +7,17 @@ from .filters import CustomerFilter
 from .models import Customer
 from .forms import CustomerForm
 from django.urls import reverse_lazy
-from django.shortcuts import render,redirect
+from django.shortcuts import get_object_or_404, render,redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from sales.models import Month
 from django.db.models import  Sum,Q,Count
 from datetime import datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.contrib.messages.views import SuccessMessageMixin
+from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods  # new
+from django.urls import reverse
+from django.contrib import messages
 
 @login_required
 def home(request):
@@ -32,28 +35,56 @@ def home(request):
 
     return render(request,'contact/home.html',context={'data':data},)
 
+class CustomerListFilterView(SingleTableMixin, FilterView):
+    filterset_class = CustomerFilter
+    table_class = CustomerTable
+    template_name = 'table1.html'
+    paginate_by = 25
+
+    
 class CustomerListView(LoginRequiredMixin,ExportMixin,SingleTableMixin,FilterView):
     table_class = CustomerTable
     model = Customer
     template_name = 'contact/customer_list.html'
     filterset_class = CustomerFilter
-    paginate_by = 25
+    paginate_by =10
 
-class CustomerCreateView(LoginRequiredMixin,SuccessMessageMixin,CreateView):
-    model = Customer
-    form_class = CustomerForm
-    success_url=reverse_lazy('contact_customer_list')
-    success_message = "%(calculated_field)s was created successfully"
+    def get(self, request, *args, **kwargs):
+        if request.META.get('HTTP_HX_REQUEST'):
+            self.template_name = 'contact/partials/customer_list_view.html'
+        return super().get(request, *args, **kwargs)
 
-    def get_success_message(self, cleaned_data):
-        return self.success_message % dict(
-            cleaned_data,
-            calculated_field=self.object,
-        )
+@require_http_methods(['POST'])
+def delete_customer(request, pk):
+    Customer.objects.filter(id=pk).delete()
+    return HttpResponse("")
+
+@login_required
+def create_customer(request):
+
+    if request.method == 'POST':
+   
+        form = CustomerForm(request.POST or None)
+        if form.is_valid():
+            f = form.save(commit = False)
+            f.created_by = request.user
+            f.save()
+            messages.success(request, f"created customer {f}")
+            table = CustomerTable(data = Customer.objects.all())
+            table.paginate(page=request.GET.get("page", 1), per_page=10)
+            context = {'filter':CustomerFilter,'table': table}
+            return render(request, 'contact/partials/customer_list_view.html', context)
+        else:
+            messages.error(request, f"Error creating customer")
+            return render(request, 'form.html', {'form': form})
+
+    else:
+        form = CustomerForm()
+        if request.META.get('HTTP_HX_REQUEST'):
+            return render(request,'form.html',{'form':form})
+
+        return render(request, 'contact/customer_form.html', {'form': form})
     
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super().form_valid(form)
 
 def reallot_receipts(request,pk):
     customer = Customer.objects.get(pk = pk)
@@ -67,6 +98,12 @@ def reallot_payments(request, pk):
     
 class CustomerDetailView(LoginRequiredMixin,DetailView):
     model = Customer
+    
+    def get(self, request, *args, **kwargs):
+        if request.META.get('HTTP_HX_REQUEST'):
+            self.template_name = 'contact/partials/detail.html'
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
@@ -80,10 +117,18 @@ class CustomerDetailView(LoginRequiredMixin,DetailView):
         context['monthwiserev'] = data.annotate(month = Month('created')).values('month').order_by('month').annotate(tc = Sum('balance',filter = Q(balancetype='Cash')),tm = Sum('balance',filter = Q(balancetype = 'Gold'))).values('month','tm','tc')
         return context
 
-class CustomerUpdateView(LoginRequiredMixin,UpdateView):
-    model = Customer
-    form_class = CustomerForm
+def edit_customer(request,pk):
+    customer = get_object_or_404(Customer,pk=pk)
+    form = CustomerForm(request.POST or None,instance = customer)
+    
+    if form.is_valid():
+        f = form.save(commit = False)
+        f.created_by = request.user
+        f.save()
+        messages.success(request, f"updated customer {f}")
+        return redirect(f.get_absolute_url())
+    
+    return render(request,'contact/customer_form.html',{'form':form,'customer':customer})
 
-class CustomerDelete(LoginRequiredMixin,DeleteView):
-    model=Customer
-    success_url = reverse_lazy('contact_customer_list')
+
+

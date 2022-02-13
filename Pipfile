@@ -4,10 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
+django = "==4.0.0"
 django-allauth = "*"
 django-crispy-forms = "*"
-django-select2 = "*"
 psycopg2 = "*"
 django-import-export = "*"
 django-rest-framework = "*"
@@ -35,14 +34,15 @@ django-bootstrap4 = "*"
 celery = "==5.0.5"
 django-money = "*"
 qrcode = "*"
-pymaging = {editable = true, git = "git://github.com/ojii/pymaging.git"}
-pymaging-png = {editable = true, git = "git://github.com/ojii/pymaging-png.git"}
 crispy-bootstrap5 = "*"
 django-guardian = "*"
+python-magic-bin = "==0.4.14"
+django-autocomplete-light = "*"
+django-select2 = "*"
 
 [dev-packages]
 "autopep8" = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.9.5"
+python_version = "3.10"

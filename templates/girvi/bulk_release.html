@@ -3,23 +3,37 @@
 {% load bootstrap4 %}
 {% block content %}
 {{form.media}}
-<form method="post" class="form">
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <div class="form-row">
+<div class="form" >
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-row">
 
-      <div class="form-group col-md-4">
-        {{ form.date.errors }}
-        {% bootstrap_field form.date %}
-      </div>
-      <div class="form-group col-md-4">
-        {{ form.loans.errors }}
-        {% bootstrap_field form.loans size="large" %}
-      </div>
+        <div class="form-group col-md-4">
+          {{ form.date.errors }}
+          {% bootstrap_field form.date %}
+        </div>
+        <div class="form-group col-md-4">
+          {{ form.loans.errors }}
+          {% bootstrap_field form.loans size="large" %}
+        </div>
 
-  </div>
+    </div>
 
-  <button class="btn btn-primary" type="submit">Release all</button>
-</form>
+    <button class="btn btn-primary" type="submit">Release all</button>
+  </form>
+  {% if success %}
+    <h3>Released Successfully</h3>
+    {%for i in success %}
+    {{i}}
+    {%endfor%}
+  {%endif%}
+  {%if failed%}
+    <h3>Failed to Release</h3>
+    {%for i in failed %}
+    {{i}}
+    {%endfor%}
+  {%endif%}
+</div>
 
 {% endblock %}

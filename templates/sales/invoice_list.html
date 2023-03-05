@@ -1,23 +1,7 @@
-{% extends "_base.html" %}
-{% load static %}
-{% load humanize %}
-{%load django_tables2%}
-{%load bootstrap4%}
+{%extends '_base.html'%}
 {% block content %}
-{{ filter.form.media }}
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-  <h1 class="h2">Sales Invoice</h1>
-  <div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group mr-2">
-     <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_create' %}" role="button">Add Sale</a>
-     <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_list' %}" role="button">Sales List</a>
-     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
-
-    </div>
-  </div>
+<div class="container">
+  <h1 class="h2">Sales</h1>
+  {% include 'sales/partials/list.html'%}
 </div>
-
-{% include 'table.html'%}
-
 {% endblock %}

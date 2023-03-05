@@ -1,45 +1,56 @@
-{% extends "_base.html" %}
-{%load humanize%}
-{% load static %}
-{% block content %}
+{%extends "_base.html"%}
+{%load static%}
+{%block content%}
+<form class="row row-cols-lg-auto g-3 align-items-center" method=""GET>
+  <div class="col-12">
+    <label class="visually-hidden" for="inlineFormInputGroupUsername">Years Back</label>
+    <div class="input-group">
+      <div class="input-group-text"></div>
+      <input type="text" name="qyr" class="form-control" id="inlineFormInputGroupUsername" placeholder="Years Back">
+    </div>
+  </div>
 
-<div class="d-flex justify-content-center mb-5">
-  <form class="form-inline" method="GET">
-  <!-- <label class="sr-only" for="inlineFormInputName2">Customer</label>
-  <input type="text" name='qcust' class="form-control mr-2" id="inlineFormInputName2" placeholder="Customer Name"> -->
-  <label class="sr-only" for="inlineFormInputName2">Years Back</label>
-  <input type="text" name='qyr' class="form-control mr-2" id="inlineFormInputName2" placeholder="years old">
-  <button type="submit" class="btn btn-primary ">Submit</button>
+  <div class="col-12">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="inlineFormCheck">
+      <label class="form-check-label" for="inlineFormCheck">
+        is_worth
+      </label>
+    </div>
+  </div>
 
-  </form>
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>
 
-</div>
 <div class = "card mb-3">
-<ul class="list-group">
-  <li class="list-group-item">Total customers with outdated Loans : {{data.cust.count}}</li>
-  <li class="list-group-item">Total outdated Loans : {{data.totalamount.loancount}}</li>
-  <li class="list-group-item">Total Loan Amount : {{data.totalamount.t}}</li>
-<ul>
-</div>
-<div class="card-columns">
+  <ul class="list-group">
+    <li class="list-group-item">Total customers with outdated Loans : {{data.cust.count}}</li>
+    <li class="list-group-item">Total outdated Loans : {{data.loancount}}</li>
+    <li class="list-group-item">Total Loan Amount : {{data.total}}</li>
+    <li class="list-group-item">Total Interest Due: {{data.interest}}</li>
+  <ul>
+  </div>
+<div class="row" data-masonry='{"percentPosition": true }'>
   {%for i in data.cust%}
-  <div class="card border-danger">
-    <div class="card-body">
-      <h5 class="card-title">{{i}}</h5>
-      <p class="card-text">
-        No of loans :{{i.loan_set.count}}
-        Total Amount :{{i.t}}
-        <ul class="list-group">
-          {%for l in i.loan_set.all%}
-          <li class="list-group-item">{{l}}</li>
-          {%endfor%}
-        </ul>
-      </p>
+  <div class="col-sm-6 col-lg-4 mb-4">
+    <div class="card text-center border-danger">
+      <div class="card-body">
+        <h5 class="card-title">{{i}}</h5>
+        <p class="card-text">No of loans :{{i.loan_set.count}}
+          Total Amount :{{i.t}}
+          <ul class="list-group">
+            {%for l in i.loan_set.all%}
+            <li class="list-group-item">{{l}} </li>
+            {%endfor%}
+          </ul></p>
+        <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+      </div>
     </div>
   </div>
   {%endfor%}
 </div>
 
 
-
-{% endblock%}
+{%endblock%}

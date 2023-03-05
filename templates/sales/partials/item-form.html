@@ -1,0 +1,8 @@
+{%load crispy_forms_tags%}
+{{form.media}}
+<form action='.' method="POST" hx-post='{% if url %}{{ url }}{% else %}.{% endif%}' hx-swap='outerHTML'>
+    {% csrf_token %}
+   {{ form|crispy }}
+    <div class='htmx-indicator'>Loading...</div>
+    <button class='btn btn-success htmx-inverted-indicator' style='margin-top:10px;' type='submit' ><i class="fa fa-save"></i></button>
+</form>

@@ -1,6 +1,86 @@
 {%extends "_base.html"%}
 {% load static %}
-{% block content %}
-{% include "girvi/partials/loan_list_view.html"%}
+{%load django_tables2%}
 
+{% block content %}
+<div id="loan-content">
+  <div id="head">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+      <h1 class="h2">Loan</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+          <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" 
+                                     role="button">New Loan</a>
+          <a class="btn btn-primary" href="{% url 'bulk_release' %}" 
+          role="button">Bulk Release</a>
+          
+          <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="main">
+    <div class="row">
+      <div class="col-sm-3" id="filter">
+        {% include "filter.html"%}
+      </div>
+      <div class="col-sm-9" id="results">
+        
+        <div hx-include="#checked-items" hx-target="#content">
+        
+          <a class="btn btn-danger" hx-post="{% url 'girvi_loan_deletemultiple'%}"
+          hx-confirm = "sure?"
+              >Delete</a>
+          <a class="btn btn-info" hx-get="{% url 'bulk_release'%}" hx-include="[name='selection']">Release</a>
+          <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>
+        </div>
+       
+       
+        
+        
+        <form class="form-inline" id = "checked-items" method ="post" action="{% url 'girvi_create_notice'%}?{{request.GET.urlencode}}" >
+          {% csrf_token %}
+          <div class="form-check">
+            
+            <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
+            <label class="form-check-label" for="flexCheckDefault">
+              Select All
+            </label>
+          
+          </div>
+          <div id="table" class = "table-responsive">
+            
+            {% render_table table %}
+
+          </div>
+          <input type="submit" value="Submit">
+        </form>
+       
+      </div>
+  </div>
+  </div>
+</div>
+
+<script language="JavaScript">
+  $('input[type=checkbox]').change(function() { 
+    var all = document.getElementById("selectall");
+    if (all.checked) {
+      $('#text').text({{table.paginator.count}}) 
+    }
+    else{
+      $('#text').text($('input[name=selection]:checked').length)
+    }
+    
+  });
+ 
+  
+  function toggle(source) {
+      checkboxes = document.getElementsByName('selection');
+      for(var i in checkboxes)
+          checkboxes[i].checked = source.checked;      
+      
+  }
+  </script>
+  
 {% endblock %}
+

@@ -1,0 +1,346 @@
+{{form.media}}
+
+<div class="container">
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" hx-get="{% url 'girvi_loan_list'%}"
+          hx-swap = "innerHTML"
+          hx-target = "#girvi-content"
+          hx-push-url = "true">Loan</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" hx-get="{% url 'girvi_release_list'%}" 
+        hx-swap = "innerHTML"
+        hx-target = "#girvi-content">Release</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" hx-get="{% url 'girvi_license_list'%}" 
+        hx-swap = "innerHTML"
+        hx-target = "#girvi-content">License</a>
+    </li>
+    
+    <li class="nav-item">
+        <a hx-get="{%url 'loan_archive' %}" class="nav-link" 
+          hx-swap = "innerHTML"
+          hx-target = "#girvi-content">Archive</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{%url 'notice' %}" class="nav-link" 
+          hx-swap = "innerHTML"
+          hx-target = "#girvi-content">Outdated</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{%url 'girvi_physicalstock_add'%}" class="nav-link" 
+          hx-swap = "innerHTML"
+          hx-target = "#girvi-content">Take Stock</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{%url 'girvi_physicalstock_list'%}" class="nav-link" 
+          hx-swap = "innerHTML"
+          hx-target = "#girvi-content">StockList</a>
+    </li>
+    
+  </ul>
+
+  <div id="girvi-content">
+    <div class="tab-pane fade show active " id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+        <div class="row row-cols-1 row-cols-md-2">
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="licChart" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">Loans by License(Series)</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="loansbyyear" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">Loans By Year</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="loanbyitems" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">By Items</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="thismonthChart" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">Loans This Month</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="thisyearChart" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">Loans this Year</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-4">
+            <div class="card">
+              <canvas id="loanstatuschart" width="300" height="200"></canvas>
+              <div class="card-body">
+                <h5 class="card-title">Loans Status</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-columns">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Loans</h5>
+              <ul class="list-group list-group-flush">
+                <li>License Total :{% for c in data.license.totalloans %} {{c.id}}:{{c.t}}</li>{%endfor%}
+                <li class="list-group-item">Count :{{data.loans.unreleased.count}}</li>
+                <li class="list-group-item">Amount :{{data.loan.amount.t}} </li>
+                <li class="list-group-item">{{data.loan.amount_words}}</li>
+  
+              </ul>
+            </div>
+          </div>
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Average</h5>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">Gold Loan Avg :{{data.loan.gold_amount.t}}/{{data.loan.gold_weight.t}}={{data.loan.gavg}}</li>
+                <li class="list-group-item">Silver Loan Avg :{{data.loan.silver_amount.t}}/{{data.loan.silver_weight.t}}={{data.loan.savg}}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Interest Due</h5>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">{{data.loan.interestdue.t}}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-group">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Loans</h5>
+            <p class="card-text">Total : {{data.loan.total_loans}}</p>
+            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Released</h5>
+            <p class="card-text">Total : {{data.loan.released_loans}}</p>
+            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+          </div>
+        </div>
+        <div class="card">
+
+          <div class="card-body">
+            <h5 class="card-title">Unreleased</h5>
+            <p class="card-text">Total : {{data.loan.unreleased_loans}}
+                                </p>
+            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+          </div>
+        </div>
+      </div>
+  <script type = "text/javascript">
+  
+    var loanstatus_data = {
+      label: 'Loan Status',
+      borderColor: 'red',
+      data: {{data.loan.status}}
+    };
+    var lsc = document.getElementById('loanstatuschart').getContext('2d');
+    var lschart = new Chart(lsc,{
+      type:'pie',
+      data: {
+        labels: ['released','Unreleased'],
+        datasets: [loanstatus_data]},
+        borderColor: [
+            'rgba(255,99,132,1)',
+            'rgba(54, 162, 235, 1)',
+            ],
+        borderWidth: 1
+            });
+  
+    var s1 = {
+    label: 'loan by year',
+    borderColor: 'red',
+    data: [{% for i in data.loan.datechart %} {{i.l}},{% endfor %}]
+    };
+    var ds2 = {
+    label: 'unreleased loan by year',
+    borderColor: 'green',
+    data: [0,0,0,{% for i in data.loan.datechart1 %} {{i.l}},{% endfor %}]
+    };
+  
+    var ctx1 = document.getElementById('loansbyyear').getContext('2d');
+    var chart = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels:[{% for i in data.loan.datechart %}{{i.year}},{%endfor%}],
+        datasets: [s1,ds2] },
+    });
+  
+    var s2 = {
+    label: 'This month loan',
+    borderColor: 'red',
+    backgroundColor: 'red',
+    data: [{% for i in data.loan.thismonth %} {{i.t}},{% endfor %}]
+      };
+    var lasts2 = {
+    label: 'last month loan',
+    borderColor: 'blue',
+    backgroundColor: 'blue',
+    data: [{% for i in data.loan.lastmonth %} {{i.t}},{% endfor %}]
+      };
+  
+    var ctx2 = document.getElementById('thismonthChart').getContext('2d');
+    var chart = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels:[{% for i in data.loan.thismonth %}'{{i.date_only}}',{%endfor%}],
+        datasets: [s2,lasts2] },
+      });
+  
+      var syear = {
+      label: 'This year loan',
+      borderColor: 'red',
+      data: [{% for i in data.loan.thisyear %} {x:'{{i.month}}',y:{{i.t}}},{% endfor %}]
+        };
+  
+      var lastyear = {
+      label: 'last year loan',
+      borderColor: 'blue',
+  
+      data: [{% for i in data.loan.lastyear %} {x:'{{i.month}}',y:{{i.t}}},{% endfor %}]
+        };
+  
+      var ctxyear = document.getElementById('thisyearChart').getContext('2d');
+      var chart = new Chart(ctxyear, {
+        type: 'line',
+        data: {
+          labels:[{% for i in data.loan.thisyear %}'{{i.month}}',{%endfor%}],
+          datasets: [syear,lastyear] },
+        });
+  
+    var ctx3 = document.getElementById("loanbyitems");
+    var myChart = new Chart(ctx3, {
+        type: 'pie',
+        data: {
+        labels: ["Gold", "Silver", "Bronze"],
+        datasets: [{
+  
+            data:{{data.loan.sumbyitem}},
+            backgroundColor: [
+              "#F7464A",
+              "#46BFBD",
+              "#FDB45C",
+              "#949FB1",
+              "#4D5360",
+              ],
+  
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+      },
+    options : {
+      tooltips: {
+      callbacks: {
+      label: function(tooltipItem, data) {
+        var dataset = data.datasets[tooltipItem.datasetIndex];
+        var meta = dataset._meta[Object.keys(dataset._meta)[0]];
+        var total = meta.total;
+        var currentValue = dataset.data[tooltipItem.index];
+        var percentage = parseFloat((currentValue/total*100).toFixed(1));
+        return currentValue + ' (' + percentage + '%)';
+      },
+      title: function(tooltipItem, data) {
+        return data.labels[tooltipItem[0].index];
+      }
+      }
+    }
+    },
+  });
+  
+  var ctx = document.getElementById("licChart");
+  var myChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+          labels: [{%for i in data.license.licchart%}'{{i.name|slugify}}',{%endfor%}],
+          datasets: [{
+                      data:[{% for i in data.license.licchart%}{{i.t}},{%endfor%}],
+                      backgroundColor: [
+                                         "#F7464A",
+                                         "#46BFBD",
+                                         "#FDB45C",
+                                         "#949FB1",
+                                         "#4D5360",
+                                       ],
+                      backgroundColor: [
+                          'rgba(255, 99, 132, 0.2)',
+                          'rgba(54, 162, 235, 0.2)',
+                          'rgba(255, 206, 86, 0.2)',
+                          'rgba(75, 192, 192, 0.2)',
+                          'rgba(153, 102, 255, 0.2)',
+                          'rgba(255, 159, 64, 0.2)'
+                      ],
+                      borderColor: [
+                          'rgba(255,99,132,1)',
+                          'rgba(54, 162, 235, 1)',
+                          'rgba(255, 206, 86, 1)',
+                          'rgba(75, 192, 192, 1)',
+                          'rgba(153, 102, 255, 1)',
+                          'rgba(255, 159, 64, 1)'
+                      ],
+                      borderWidth: 1
+          }]
+      },
+      options : {
+        tooltips: {
+        callbacks: {
+        label: function(tooltipItem, data) {
+          var dataset = data.datasets[tooltipItem.datasetIndex];
+          var meta = dataset._meta[Object.keys(dataset._meta)[0]];
+          var total = meta.total;
+          var currentValue = dataset.data[tooltipItem.index];
+          var percentage = parseFloat((currentValue/total*100).toFixed(1));
+          return currentValue + ' (' + percentage + '%)';
+        },
+        title: function(tooltipItem, data) {
+          return data.labels[tooltipItem[0].index];
+        }
+      }
+    }
+    },
+  });
+  </script>
+  </div>
+
+</div>
+
+  
+ 
+  {%block javascript%}
+  <script>
+      htmx.onLoad(function(e){
+       $('.django-select2').djangoSelect2();
+      });
+    </script>
+  {%endblock%}
+  

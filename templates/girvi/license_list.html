@@ -1,6 +1,6 @@
-{% extends "_base.html" %}
-{% load static %}
-{% block content %}
+{%extends "_base.html"%}
+{%load static%}
+{%block content%}
 <p>
     <a class="btn btn-default" href="{% url 'girvi_license_list' %}">License Listing</a>
     <a class="btn btn-success" href="{% url 'girvi_license_create' %}">Add New License</a>
@@ -40,4 +40,4 @@
 
 </div>
 <a class="btn btn-primary" href="{% url 'girvi_license_create' %}">Create new License</a>
-{% endblock %}
+{%endblock%}

@@ -1,95 +1,84 @@
-from . import models
-
 from rest_framework import serializers
+
+from . import models
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.Category
         fields = (
-            'slug',
-            'name',
-            'description',
+            "slug",
+            "name",
+            "description",
         )
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.ProductType
         fields = (
-            'pk',
-            'name',
-            'has_variants',
+            "pk",
+            "name",
+            "has_variants",
         )
 
 
 class ProductSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.Product
         fields = (
-            'pk',
-            'name',
-            'description',
-
+            "pk",
+            "name",
+            "description",
         )
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.ProductVariant
         fields = (
-            'pk',
-            'sku',
-            'name',
-            'track_inventory',
-            'quantity',
-            'melting',
-            'cost',
-            'touch',
-            'wastage',
+            "pk",
+            "sku",
+            "name",
+            "track_inventory",
+            "quantity",
+            "melting",
+            "cost",
+            "touch",
+            "wastage",
         )
 
 
 class AttributeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.Attribute
         fields = (
-            'slug',
-            'name',
+            "slug",
+            "name",
         )
 
 
 class AttributeValueSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.AttributeValue
         fields = (
-            'slug',
-            'name',
-            'value',
+            "slug",
+            "name",
+            "value",
         )
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.ProductImage
         fields = (
-            'pk',
-            'ppoi',
-            'alt',
+            "pk",
+            "ppoi",
+            "alt",
         )
 
 
 class VariantImageSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.VariantImage
-        fields = (
-            'pk',
-        )
+        fields = ("pk",)

@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% load crispy_forms_tags%}
+
+{% block content %}
+
+{{form.media}}
+<p><a class="btn btn-secondary" href="{% url 'girvi_noticegroup_list' %}">NoticeGroup Listing</a></p>
+<div class="card" id="form">
+  <div class="card-body" style="background-color: #eee;">
+    <form action="." method="post">
+        {%csrf_token%}
+        {{form|crispy}}
+        <input class = "btn btn-success"type="submit" value="Submit">
+    </form>
+  </div>
+</div>
+
+{% endblock %}

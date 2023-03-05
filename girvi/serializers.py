@@ -1,21 +1,21 @@
-from . import models
 from rest_framework import serializers
+
+from . import models
 
 
 class LicenseSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.License
         fields = (
-            'id',
-            'name',
-            'created',
-            'last_updated',
-            'type',
-            'shopname',
-            'address',
-            'phonenumber',
-            'propreitor',
+            "id",
+            "name",
+            "created",
+            "last_updated",
+            "type",
+            "shopname",
+            "address",
+            "phonenumber",
+            "propreitor",
         )
 
 
@@ -24,19 +24,19 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Loan
         fields = (
-            'id',
-            'loanid',
-            'customer',
-            'created',
-            'license',
-            'last_updated',
-            'itemtype',
-            'itemdesc',
-            'itemweight',
-            'itemvalue',
-            'loanamount',
-            'interestrate',
-            'interest',
+            "id",
+            "loanid",
+            "customer",
+            "created",
+            "license",
+            "last_updated",
+            "itemtype",
+            "itemdesc",
+            "itemweight",
+            "itemvalue",
+            "loanamount",
+            "interestrate",
+            "interest",
         )
 
 
@@ -45,11 +45,11 @@ class ReleaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Release
         fields = (
-            'id',
-            'releaseid',
-            'loan',
+            "id",
+            "releaseid",
+            "loan",
             # 'customer',
-            'created',
-            'last_updated',
-            'interestpaid',
+            "created",
+            "last_updated",
+            "interestpaid",
         )

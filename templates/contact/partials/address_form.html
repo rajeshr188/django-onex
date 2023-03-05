@@ -1,0 +1,9 @@
+{% load crispy_forms_tags %}
+    <div class="card" hx-target="this" hx-swap="outerHTML">
+        <div class="card-body" style="background-color: #eee;">
+            <form method="post" hx-post="{% url 'customer_address_form' customer.id%}">
+                {{form|crispy}}
+            <button type="submit" class="btn btn-success" >Save</button>
+            </form> 
+        </div>
+    </div>

@@ -1,9 +1,15 @@
-{% extends "_base.html" %}
+{%extends "_base.html"%}
 {% load static %}
-{% block content %}
-  {% for y in date_list %}
-    <p> <a href = "{% url 'loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}}</a></p>
-  {% endfor %}
-
-
+{%block content%}
+<p>{{latest.count}}</p>
+<ul class="list-group list-group-flush">
+  
+    {% for y in date_list %}
+    <li class = "list-group-item"></li>
+    <a href = "{% url 'loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}} </a>
+  </li>
+    {% endfor %}
+  
+</ul>
+  
 {%endblock%}

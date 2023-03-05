@@ -4,31 +4,54 @@
 
 {% block content %}
 <h1>Chart Of Accounts</h1>
-<!-- <p>
-    {% for i in data.ledger_bal%}
-    <li>{{i.name}} {{i.cr_usd}} {{i.cr_inr}} {{i.dr_usd}} {{i.dr_inr}} {{i.bal_usd}} {{i.bal_inr}}</li>
-    {%endfor%}
-</p> -->
+<ul class="nav navtabs">
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_home' %}" class="nav-link">Home</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_ledger_list' %}" class="nav-link">Ledgers</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="% url 'dea_general_ledger' %}" class="nav-link">General Ledger</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_ledgerstatement_list'%}" class="nav-link">Ledger Statement</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_account_list' %}" class="nav-link">Accounts</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_accountstatement_list' %}" class="nav-link">Account Statement</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_journals_list' %}" class="nav-link">Journals</a>
+    </li>
+    <li class="nav-item">
+        <a hx-get="{% url 'dea_daybook' %}" class="nav-link">Daybook</a>
+    </li>
+</ul>
+<div class="" id="dea-content"></div>
+
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="internal-tab" data-toggle="tab" href="#internal" role="tab" aria-controls="Internal"
+        <a class="nav-link active" id="internal-tab" data-toggle="tab" hx-get="#internal" role="tab" aria-controls="Internal"
             aria-selected="true">Ledgers</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" id="external-tab" data-toggle="tab" href="#external" role="tab" aria-controls="External"
+        <a class="nav-link" id="external-tab" data-toggle="tab" hx-get="#external" role="tab" aria-controls="External"
             aria-selected="false">Balancesheet</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" id="journal-tab" data-toggle="tab" href="#journal" role="tab" aria-controls="Journal"
+        <a class="nav-link" id="journal-tab" data-toggle="tab" hx-get="#journal" role="tab" aria-controls="Journal"
             aria-selected="false">Profit and loss</a>
     </li>
 </ul>
 <div class="tab-content p-3" id="myTabContent">
     <div class="tab-pane fade show active" id="internal" role="tabpanel" aria-labelledby="home-internal">
         <div class="btn-group" role="group" aria-label="Basic outlined example">
-            <button type="button" class="btn btn-outline-success" href="{% url 'dea_ledger_create' %}">Add Ledger</button>
-            <button type="button" class="btn btn-outline-primary" href="{% url 'dea_account_create' %}">Add txn</button>
-            <a  class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
+            <button type="button" class="btn btn-outline-success" hx-get="{% url 'dea_ledger_create' %}">Add Ledger</button>
+            <button type="button" class="btn btn-outline-primary" hx-get="{% url 'dea_account_create' %}">Add txn</button>
+            <a  class="btn btn-outline-info" hx-get="{% url 'dea_ledger_audit' %}">Audit</a>
         </div>
       
         <table class = "table table-sm table-hover">
@@ -45,7 +68,7 @@
                 {%for i in data.ledger%}
                 <tr>
                     <td>{{i.AccountType}}</td>
-                    <td><a href="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
+                    <td><a hx-get="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
                     <td>{{i.created}}</td>
                     <td>{{i.get_cb}}</td>
                     <td>{{i.get_dr}}</td>

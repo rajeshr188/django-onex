@@ -1,6 +1,6 @@
-from . import models
-from . import serializers
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
+
+from . import models, serializers
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
@@ -25,5 +25,3 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     queryset = models.Receipt.objects.all()
     serializer_class = serializers.ReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-

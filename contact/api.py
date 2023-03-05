@@ -1,7 +1,7 @@
-from . import models
-from . import serializers
+from rest_framework import permissions, viewsets
+
+from . import models, serializers
 from .filters import CustomerFilter
-from rest_framework import viewsets, permissions
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -10,5 +10,5 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = models.Customer.objects.all()
     serializer_class = serializers.CustomerSerializer
     filterset_class = CustomerFilter
-    search_fields = ['name','relatedas','relatedto','phonenumber']
+    search_fields = ["name", "relatedas", "relatedto"]
     # permission_classes = [permissions.IsAuthenticatedOrReadOnly]

@@ -1,1 +1,6 @@
-{{field}}
+
+{% load widget_tweaks%}
+<div class="form-floating mb-3">
+    {%render_field field|add_class:"form-control"%}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  </div>

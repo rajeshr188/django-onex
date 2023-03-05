@@ -1,6 +1,6 @@
-from . import models
-from . import serializers
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
+
+from . import models, serializers
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -33,5 +33,3 @@ class AllotmentViewSet(viewsets.ModelViewSet):
     queryset = models.Allotment.objects.all()
     serializer_class = serializers.AllotmentSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-

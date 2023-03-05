@@ -1,10 +1,11 @@
 from datetime import datetime
+
 from actstream.managers import ActionManager, stream
+
 
 class MyActionManager(ActionManager):
     @stream
-    def mystream(self, obj, verb='posted', time=None):
+    def mystream(self, obj, verb="posted", time=None):
         if time is None:
             time = datetime.now()
-        return obj.actor_actions.filter(verb = verb, timestamp__lte = time)
-
+        return obj.actor_actions.filter(verb=verb, timestamp__lte=time)

@@ -1,5 +1,6 @@
 from django.db.models import signals
 from django.dispatch import receiver
+
 from sales.models import ReceiptLine
 
 # @receiver(signals.pre_delete,sender=ReceiptLine)
@@ -18,14 +19,15 @@ from sales.models import ReceiptLine
 #     rec.total -= instance.amount
 #     rec.save()
 
-@receiver(signals.post_delete,sender=ReceiptLine)
-def delete_status(sender,instance,*args,**kwargs):
-    print ('deleting invoice status')
-    inv=instance.invoice
+
+@receiver(signals.post_delete, sender=ReceiptLine)
+def delete_status(sender, instance, *args, **kwargs):
+    print("deleting invoice status")
+    inv = instance.invoice
     print(f"in bal :{inv.get_balance()}")
     if inv.get_balance() == inv.balance:
         inv.status = "Unpaid"
-    else :
+    else:
         inv.status = "PartialPaid"
     inv.save()
     # print('updating receipt Amount')
@@ -36,6 +38,7 @@ def delete_status(sender,instance,*args,**kwargs):
     # these following lines must go since these eat up receipt amount on delete
     # a=instance.receipt.total-instance.amount
     # Receipt.objects.filter(id=instance.receipt.id).update(total=a)
+
 
 # decoupling receipt allotment
 # @receiver(signals.post_save,sender=Receipt)

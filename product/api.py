@@ -1,6 +1,6 @@
-from . import models
-from . import serializers
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
+
+from . import models, serializers
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

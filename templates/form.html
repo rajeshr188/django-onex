@@ -1,7 +1,7 @@
-
 {% load crispy_forms_tags %}
-    <div class="card">
+    <div class="card" hx-target="this" hx-swap="outerHTML">
         <div class="card-body" style="background-color: #eee;">
             {% crispy form %}
+            <button type="submit" class="btn btn-success">Save</button>
         </div>
     </div>

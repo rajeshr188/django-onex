@@ -1,12 +1,28 @@
 {% extends "_base.html"%}
 {% load static %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags%}
 {{form.media}}
 {% block content %}
-{% if last_loan%}
-{{last_loan}}
-{%endif%}
-{%include "form.html"%}
+<div id="loan-content">
+    {% if last_loan%}
+    {{last_loan}}
+    {%endif%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Create Loan</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <a class="btn btn-primary" href="{% url 'girvi_loan_list' %}"
+            role="button">Loan List</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="form">
+        <form method="post" action=".">
+          {% crispy form%}
+      </form>
+      </div>
+</div>
 
 {% endblock %}
 

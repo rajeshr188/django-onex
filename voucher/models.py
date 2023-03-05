@@ -1,11 +1,14 @@
-from product.models import StockTransaction
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 
+from product.models import StockTransaction
+
+
 # Create your models here.
 class VoucherType(models.Model):
     name = models.CharField()
+
 
 class Voucher(models.Model):
     voucher_type = models.ForeignKey(VoucherType)
@@ -15,12 +18,11 @@ class Voucher(models.Model):
     amount = models.DecimalField()
     posted = models.BooleanField()
 
-    def transact(self,revert = False):
+    def transact(self, revert=False):
         # do self.ledgertransactions
         # do self.acc tranxn
         # do self.stock trxn
         return NotImplementedError
-
 
 
 class InvoiceVoucher(Voucher):
@@ -34,6 +36,7 @@ class InvoiceVoucher(Voucher):
     total = models.DecimalField()
     is_gst = models.BooleanField()
     status = models.CharField()
+
 
 class PaymentVoucher(Voucher):
     acc = models.ForeignKey()
@@ -62,6 +65,3 @@ class PaymentVoucher(Voucher):
             i.unpost()
 
         self.posted = False
-
-
-

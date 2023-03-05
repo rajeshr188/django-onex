@@ -1,11 +1,13 @@
 import unittest
-from django.urls import reverse
-from django.test import Client
-from .models import Contact, Chit, Collection, Allotment
-from users.models import CustomUser
-from django.contrib.auth.models import User
-from django.contrib.auth.models import Group
+
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
+from django.test import Client
+from django.urls import reverse
+
+from users.models import CustomUser
+
+from .models import Allotment, Chit, Collection, Contact
 
 
 def create_django_contrib_auth_models_user(**kwargs):
@@ -76,19 +78,20 @@ def create_contact(**kwargs):
 #
 #
 class ContactViewTest(unittest.TestCase):
-    '''
+    """
     Tests for Contact
-    '''
+    """
+
     def setUp(self):
         self.client = Client()
 
     def test_list_contact(self):
-        url = reverse('contact_list')
+        url = reverse("contact_list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_create_contact(self):
-        url = reverse('contact_create')
+        url = reverse("contact_create")
         data = {
             "name": "rajesh",
             "phoneno": "7598260045",
@@ -98,7 +101,12 @@ class ContactViewTest(unittest.TestCase):
 
     def test_detail_contact(self):
         contact = create_contact()
-        url = reverse('contact_detail', args=[contact.slug,])
+        url = reverse(
+            "contact_detail",
+            args=[
+                contact.slug,
+            ],
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 

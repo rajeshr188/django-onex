@@ -3,16 +3,18 @@
 <script src="{% static 'js/jquery.formset.js' %}"></script>
 <table class="table table-responsive table-striped ">
     {{ formset.management_form |crispy}}
-    {% for form in formset.forms %}
-    <tr class="{% cycle 'row1' 'row2' %} inline {{formset.prefix}}">
+    <tbody>
+        {% for form in formset.forms %}
+    <tr class="inline {{formset.prefix}}">
         {% for field in form.visible_fields %}
-        <td class="{{field.name}} colspan=2">
-            {{ field.errors.as_ul }}
+        <td class="{{field.name}}">
             {{ field|as_crispy_field}}
         </td>
         {% endfor %}
     </tr>
     {%endfor%}
+    </tbody>
+    
 </table>
 <script type="text/javascript">
 
@@ -92,7 +94,7 @@
 
     });
 
-    $('.product select').select2();
+    $('select').djangoSelect2();
     $('.add-row').addClass('btn-sm btn-success');
     $('.delete-row').addClass('btn-sm btn-danger');
 </script>

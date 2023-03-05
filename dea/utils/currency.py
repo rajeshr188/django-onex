@@ -1,17 +1,17 @@
-from moneyed import Money
+import copy
 from decimal import Decimal
 
 import babel.numbers
 import six
-import copy
-from .import defaults
-from .exceptions import (
-    LossyCalculationError,
+from moneyed import Money
+
+from . import defaults
+from .exceptions import (  # TradingAccountRequiredError,; InvalidFeeCurrency,
     BalanceComparisonError,
-    # TradingAccountRequiredError,
-    # InvalidFeeCurrency,
     CannotSimplifyError,
+    LossyCalculationError,
 )
+
 
 class Balance(object):
     """An account balance
@@ -45,7 +45,9 @@ class Balance(object):
 
     def __str__(self):
         def fmt(money):
-            return babel.numbers.format_currency(money.amount, currency=money.currency.code)
+            return babel.numbers.format_currency(
+                money.amount, currency=money.currency.code
+            )
 
         return ", ".join(map(fmt, self._money_obs)) or "No values"
 
@@ -57,7 +59,8 @@ class Balance(object):
             currency = currency.code
         elif not isinstance(currency, six.string_types) or len(currency) != 3:
             raise ValueError(
-                "Currencies must be a string of length three, not {}".format(currency))
+                "Currencies must be a string of length three, not {}".format(currency)
+            )
 
         try:
             return self._by_currency[currency]
@@ -68,7 +71,8 @@ class Balance(object):
         if not isinstance(other, Balance):
             raise TypeError(
                 "Can only add/subtract Balance instances, not Balance and {}.".format(
-                    type(other))
+                    type(other)
+                )
             )
         by_currency = copy.deepcopy(self._by_currency)
         for other_currency, other_money in other._by_currency.items():
@@ -152,8 +156,7 @@ class Balance(object):
             return self._money_obs[0] < other._money_obs[0]
         else:
             money = self.normalise(defaults.INTERNAL_CURRENCY)._money_obs[0]
-            other_money = other.normalise(
-                defaults.INTERNAL_CURRENCY)._money_obs[0]
+            other_money = other.normalise(defaults.INTERNAL_CURRENCY)._money_obs[0]
             return money < other_money
 
     def __gt__(self, other):

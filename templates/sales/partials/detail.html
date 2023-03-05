@@ -1,0 +1,41 @@
+
+<div class='row'>
+    <div class='col-12 col-md-6'>
+        <h1>{{ object.id }}</h1>
+        {% if object.get_update_url %}
+        <p><a class="btn btn-default" href="{% url 'sales_invoice_list' %}">Invoice Listing</a>
+            {%if not object.posted%}
+            <a class="btn btn-primary" href='{{ object.get_update_url }}'>Edit</a> 
+            <a class="btn btn-danger" href='{{ object.get_delete_url }}' hx-post='{{ object.get_delete_url }}' hx-confirm='Are you sure you want to delete {{ object.id }}?' hx-trigger='click'
+            >Delete</a>
+            {%endif%}
+            <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Invoice</a>
+            <a class="btn btn-secondary" href="{% url 'sales_invoicepdf'  object.id %}">Print</a>
+          </p>
+
+
+        {% endif %}
+        <div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+            {%if previous%}
+            <a href="{% url 'sales_invoice_detail' previous.pk %}" type="button" class="btn btn-primary mr-2">Previous
+              {{previous.id}}</a>
+            {%endif%}
+            {%if next %}
+            <a href="{% url 'sales_invoice_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.id}}</a>
+            {%endif%}
+          </div>
+        <p>{{ object.balance }}</p>
+        <p>{{ object.total }}</p>
+
+
+    </div>
+    <div class='col-12 col-md-6'>
+
+        {% for item in object.get_invoiceitem_children %}
+        {% include 'sales/partials/item-inline.html' with object=item %}
+
+        {% endfor %}
+
+        </div>
+    </div>
+    

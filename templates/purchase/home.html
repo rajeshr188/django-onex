@@ -1,6 +1,26 @@
-{% extends "_base.html" %}
-{% load static %}
+
 {% block content %}
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" aria-current="page" 
+      hx-get="{% url 'purchase_invoice_list' %}"
+      hx-target="#purchase-content"
+      hx-swap="innerHTML">Purchases</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" hx-get="{% url 'purchase_payment_list' %}"
+      hx-target="#purchase-content"
+      hx-swap="innerHTML">Payments</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" hx-get="{% url 'purchase_balance' %}"
+      hx-target="#purchase-content"
+      hx-swap="innerHTML">Balance</a>
+  </li>
+</ul>
+<div id="purchase-content">
+
+</div>
 <div class="card-columns">
   <div class="card">
     <div class="card-body">

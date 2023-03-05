@@ -35,10 +35,10 @@ from . import AttributeInputType
 
 if TYPE_CHECKING:
     # flake8: noqa
+    from django.db.models import OrderBy
     from prices import Money
 
     from ..account.models import User
-    from django.db.models import OrderBy
 
 
 class Category(MPTTModel, ModelWithMetadata, SeoModel):
@@ -60,11 +60,11 @@ class Category(MPTTModel, ModelWithMetadata, SeoModel):
     def __str__(self) -> str:
         return self.name
 
+
 class ProductType(ModelWithMetadata):
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
     has_variants = models.BooleanField(default=True)
-   
 
     class Meta:
         ordering = ("slug",)
@@ -233,13 +233,13 @@ class Product(SeoModel, ModelWithMetadata, PublishableModel):
             (ProductPermissions.MANAGE_PRODUCTS.codename, "Manage products."),
         )
 
-
     def __str__(self) -> str:
         return self.name
 
     @staticmethod
     def sort_by_attribute_fields() -> list:
         return ["concatenated_values_order", "concatenated_values", "name"]
+
 
 class ProductVariantQueryset(models.QuerySet):
     def create(self, **kwargs):
@@ -353,8 +353,6 @@ class ProductVariant(ModelWithMetadata):
     def get_first_image(self) -> "ProductImage":
         images = list(self.images.all())
         return images[0] if images else self.product.get_first_image()
-
-
 
 
 class BaseAttributeQuerySet(models.QuerySet):
@@ -553,8 +551,6 @@ class Attribute(ModelWithMetadata):
         return self.values.exists()
 
 
-
-
 class AttributeValue(SortableModel):
     name = models.CharField(max_length=250)
     value = models.CharField(max_length=100, blank=True, default="")
@@ -578,8 +574,3 @@ class AttributeValue(SortableModel):
 
     def get_ordering_queryset(self):
         return self.attribute.values.all()
-
-
-
-
-

@@ -1,5 +1,37 @@
 {% extends "_base.html" %}
 {% load static %}
-{% block content %}
-  {% include 'contact/partials/customer_list_view.html'%}
-{% endblock %}
+{%load django_tables2%}
+
+
+{%block content%}
+
+<div id="customer-content" class="container">
+ 
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Customers</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="btn-group mr-2">
+        <a class="btn btn-primary mr-2" 
+            href="{% url 'contact_customer_create' %}" 
+            
+            
+            role="button">New Customer</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row" id="main-content">
+    <div class="col-sm-3" id="filter">
+        {%include "filter.html"%}
+    </div>
+    {%block table%}
+    <div class="col-sm-9 table-responsive" id = "table">
+      
+      {% render_table table %}
+      
+    </div>
+    {%endblock%}
+</div>
+</div>
+            
+{%endblock%}

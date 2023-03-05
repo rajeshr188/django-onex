@@ -1,0 +1,13 @@
+{%extends "_base.html"%}
+{%load static%}
+{%block content%}
+<div class="" id="noticegroup_list">
+    <h2>NoticeGroup List</h2><br/>
+    <a href="{% url 'girvi_noticegroup_create'%}">Create New</a>
+    <ul class="list-group">
+        {%for i in objects%}
+            <li class="list-group-item"><a href="{% url 'girvi_noticegroup_detail' i.id%}">{{i}}</a> <button>Edit</button><button>Delete</button></li>
+        {%endfor%}
+    </ul>
+</div>
+{%endblock%}

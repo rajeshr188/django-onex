@@ -1,5 +1,4 @@
-{% extends "_base.html" %}
-{% load static %}
+
 {% block content %}
 <p><a class="btn btn-default" href="{% url 'product_product_list' %}">Product Listing</a>
   <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Product</a></p>

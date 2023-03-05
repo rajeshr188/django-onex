@@ -1,0 +1,10 @@
+
+
+    {{i.get_contact_type_display}}: {{i.number}}
+    <a hx-get="{%url 'customer_contact_update' i.id%}"  class="btn fa-solid fa-pen-to-square" role="button"></a>
+    <a hx-delete="{% url 'customer_contact_delete' i.id %}"  class="btn fa-solid fa-trash" role="button"></a>
+
+   
+
+
+

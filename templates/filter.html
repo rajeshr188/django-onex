@@ -1,0 +1,40 @@
+{%load crispy_forms_tags%}
+{%load crispy_forms_filters%}
+{% load widget_tweaks %}
+{{filter.form.media}}
+
+<div class="position-relative h-20" id ="filter">
+    {% if filter %}
+    <div class="card  bg-light text-center">
+        <div class="card-header">
+            Filter
+        </div>
+        <div class="card-body">
+            <form hx-trigger="keyup,change delay:100ms" 
+                    hx-get="."
+                    hx-select="#results" 
+                    hx-target="#results"
+                    hx-swap = "outerHTML"
+                    class = "form-inline">
+                
+                    
+                {%for field in filter.form%}
+                
+                <div class="form-floating mb-3">
+                    {%render_field field|add_class:"form-control"%}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+                
+                {%endfor%}
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+
+
+
+
+

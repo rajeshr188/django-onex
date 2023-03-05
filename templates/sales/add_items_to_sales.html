@@ -1,0 +1,113 @@
+{% extends '_base.html'%}
+{% load static%}
+{% block content %}
+{{form.media}}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <ul class="list-unstyled">
+                <li>ID: {{ sale.id }}</li>
+                <li>Customer: <a href="{% url 'contact_customer_detail' sale.customer.id %}">{{ sale.customer }}</a></li>
+                <li>Created: {{ sale.created }}</li>
+                <li>Updated: {{ sale.last_updated }}</li>
+                <li>Rate: {{ sale.rate }}</li>
+              </ul>
+            </div>
+            <div class="col-5">
+              <ul class="list-unstyled">
+                <li>Gross: {{sale.gross_wt}}</li>
+                <li>Net: {{sale.net_wt}}</li>
+                {% if sale.approval %}
+                <li>
+                  Approval Id: <a href="{% url 'approval_approval_detail' sale.approval %}">{{sale.approval}}</a>
+                </li>
+                {% endif %}
+                <li>Balance: {{ sale.balance }}</li>
+                <li>BalanceType : {{ sale.balancetype }}</li>
+                <li>GST: {{sale.is_gst}}</li>
+                <li>Total: {{sale.total}}</li>
+                <li>Status:{{ sale.status }}</li>
+                <li>{%if sale.posted%}
+                  <a class="btn btn-primary" href="{% url 'sales_invoice_unpost' sale.pk%}">Unpost</a>
+                  {%else%}
+                  <a class="btn btn-primary" href="{% url 'sales_invoice_post' sale.pk%}">Post</a>
+                  {%endif%}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover" >
+            <thead>
+                <th>Return</th>
+                <th>Product</th>
+                <th>quantity</th>
+                <th>Weight</th>
+                <th>less_wt</th>
+                <th>touch</th>
+                <th>wastage</th>
+                <th>Mc</th>
+                <th>Net_wt</th>
+                <th>total</th>
+                <th>Action</th>
+            </thead>
+            <tbody class="vh-25" id="items">
+                {%for i in items%}
+                <tr hx-target="this" >
+                    <td>{{i.is_return}}</td>
+                    <td>{{i.product}}</td>
+                    <td>{{i.quantity}}</td>
+                    <td>{{i.weight}}</td>
+                    <td>{{i.less_stone}}</td>
+                    <td>{{i.touch}}</td>
+                    <td>{{i.wastage}}</td>
+                    <td>{{i.makingcharge}}</td>
+                    <td>{{i.net_wt}}</td>
+                    <td>{{i.total}}</td>
+                    <td>
+                        <button class="btn btn-info" 
+                            hx-get="{% url 'sales_invoiceitem_update' i.pk%}" 
+                            hx-swap="outerHTML">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger"
+                            hx-delete="{% url 'sales_invoiceitem_delete' i.id%}"
+                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
+                            hx-confirm="sure to delete?">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {%endfor%}   
+            </tbody>  
+        </table>
+       
+        <button class="btn btn-primary" 
+          hx-get="{% url 'sales_invoiceitem_create' %}" 
+          hx-target = "#items" 
+          hx-swap="beforeend">
+          <i class="fa fa-add">
+            
+          </i></button> 
+    </div>
+   
+</div>
+<script>
+  
+  htmx.onLoad(function(){
+    
+    $('.django-select2').djangoSelect2();
+  
+   });  
+
+  </script>
+<script>
+      $('table').on('click', '.delbtn', function(e){
+     $(this).closest('tr').remove()
+  })
+</script>
+{%endblock%}

@@ -1,5 +1,4 @@
-{% extends "_base.html" %}
-{% load static %}
+{%extends '_base.html'%}
 {%load django_tables2%}
 {%load bootstrap4%}
 {% block content %}
@@ -10,12 +9,12 @@
     <div class="btn-group mr-2">
      <a class="btn btn-primary mr-2" href="{% url 'sales_receipt_create' %}" role="button">Add Receipt</a>
      <a class="btn btn-primary mr-2" href="{% url 'sales_receipt_list' %}" role="button">Receipt List</a>
-     <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
+     <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
 
     </div>
   </div>
 </div>
 
-{% include 'table.html'%}
+{% include 'table1.html'%}
 
 {% endblock %}

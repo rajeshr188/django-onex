@@ -1,0 +1,57 @@
+{% extends "_base.html" %}
+{% load crispy_forms_tags%}
+{% block content %}
+
+<style>
+    .ingredient-form {
+        border-bottom: 1px solid black;
+    }
+    .hidden {
+        display: none
+    }
+</style>
+<div class="container">
+    <div class='row'>
+        <div class='{% if object.id %}col-12 col-md-6 {% else %} col-md-6 mx-auto {% endif %}'>
+            {% if not object.id %}
+                <h1>Create Sale</h1>
+            {%else%}
+                <h1>Update Sale</h1>
+                <a class="btn btn-danger" href='{{ object.get_delete_url }}'>Delete</a> </p>
+
+            {% endif %}
+
+
+            {% include 'sales/partials/forms.html' %}
+        </div>
+
+        <div class='{% if object.id %}col-12 col-md-6 {% else %} d-none {% endif %}'>
+            <h3>Items</h3>
+         
+            <ul id="items-list" class="list-group list-group-flush">
+                {% for item in object.get_invoiceitem_children %}
+                {% include 'sales/partials/item-inline.html' with object=item %}
+                {% endfor %}
+                
+              </ul>
+            
+            {% if new_item_url %}
+                          
+            <button class=" btn btn-success" hx-get="{{ new_item_url }}" hx-trigger='click'
+                hx-target='#items-list' hx-swap='beforeend'>Add item</button>
+
+            {% endif %}
+        </div>
+</div>
+</div>
+<script>
+
+  htmx.onLoad(function(elt){
+
+    $('.django-select2').djangoSelect2();
+  
+   });  
+ 
+</script>
+
+{% endblock content %}

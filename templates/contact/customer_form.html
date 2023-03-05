@@ -1,9 +1,73 @@
 {% extends '_base.html'%}
 {%load static%}
-{%block content%}
+{% load crispy_forms_tags%}
 
+
+{%block extra_js%}
+<link rel="stylesheet" href="{% static 'css/camera.css' %}" type="text/css" media="all">
+<script src="{% static 'js/webcapture.js' %}"></script>
+{%endblock%}
+{%block content%}
 <div id="customer-content">
-    <h1>Create customer</h1>
-    {%include "form.html"%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+      {% if customer%}
+        <h1 class="h2">Update Customer</h1>
+      {%else%}
+        <h1 class="h2">Create Customer</h1>
+      {%endif%}
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <a class="btn btn-primary mr-2" hx-get="{% url 'contact_customer_list' %}" hx-push-url="true"
+                hx-target='#customer-content' hx-swap="innerHTML" role="button">Customer List</a>
+          </div>
+        </div>
+      </div>
+    <div id="form">
+      {{ form|as_crispy_errors }}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-4">
+            {{form.name|as_crispy_field}}
+          </div>
+          <div class="col-md-4">
+            {{form.relatedas|as_crispy_field}}
+          </div>
+          <div class="col-md-4">
+            {{form.relatedto|as_crispy_field}}
+          </div>
+          <div class="col-md-4">
+            {{form.Address|as_crispy_field}}
+          </div>
+         
+          <div class="col-md-4">
+            {{form.type|as_crispy_field}}
+          </div>
+          <div class="col-md-4">
+            {{form.area|as_crispy_field}}
+          </div>
+          
+          <input type="hidden" id="image-data" name="image_data">
+          <div class="col-md-4">
+            <div class="camera">
+              <video id="video">Video stream not available.</video>
+              <button id="startbutton">Take photo</button>
+            </div>
+            <canvas id="canvas"> </canvas>
+            
+          </div>
+          <div class="col-md-4">
+            <div class="output">
+              <img id="photo" alt="The screen capture will appear in this box." />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">Add</button>
+          </div>
+        </div>
+      </form>
+      
+    </div>
+
 </div>
 {%endblock%}

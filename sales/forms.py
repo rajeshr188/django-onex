@@ -1,112 +1,162 @@
-from django import forms
-import datetime
-from .models import Invoice, InvoiceItem, Receipt,ReceiptLine,ReceiptItem
-from django_select2.forms import Select2Widget
-from contact.models import Customer
-from approval.models import Approval
-from product.models import Stock
-from django.forms.models import inlineformset_factory
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset,Row,Column,ButtonHolder, Submit
-from crispy_bootstrap5.bootstrap5 import FloatingField
+from crispy_forms.layout import ButtonHolder, Column, Field, Layout, Row, Submit
+from django import forms
+from django.forms.models import inlineformset_factory
+from django_select2.forms import Select2Widget
+from django_tables2 import Column
+
+from approval.models import Approval
+from contact.models import Customer
+from product.forms import StockWidget
+from product.models import Stock
 from utils.custom_layout_object import *
 
-class RandomSalesForm(forms.Form):
-    month = forms.IntegerField(required = True)
+from .models import Invoice, InvoiceItem, Receipt, ReceiptItem, ReceiptLine
+
+
+class DateTimeLocalInput(forms.DateTimeInput):
+    input_type = "datetime-local"
+
+
+class DateTimeLocalField(forms.DateTimeField):
+    # Set DATETIME_INPUT_FORMATS here because, if USE_L10N
+    # is True, the locale-dictated format will be applied
+    # instead of settings.DATETIME_INPUT_FORMATS.
+    # See also:
+    # https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats
+
+    input_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M"]
+    widget = DateTimeLocalInput(format="%Y-%m-%dT%H:%M")
+
 
 class InvoiceForm(forms.ModelForm):
-    created = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+    created = DateTimeLocalField()
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.all(), widget=Select2Widget
+    )
+    approval = forms.ModelChoiceField(
+        queryset=Approval.objects.filter(status="Pending"),
+        widget=Select2Widget,
+        required=False,
     )
 
-    customer=forms.ModelChoiceField(queryset=Customer.objects.all(),
-                widget = Select2Widget)
-    approval = forms.ModelChoiceField(queryset = Approval.objects.all(),
-                widget = Select2Widget,required = False)
     class Meta:
         model = Invoice
-        fields = ['created','approval','rate','is_gst', 'balancetype',
-                    'metaltype','gross_wt','net_wt','balance','term',
-                     'customer','status','posted']
+        fields = [
+            "created",
+            "approval",
+            "rate",
+            "is_gst",
+            "balancetype",
+            "metaltype",
+            "term",
+            "customer",
+        ]
 
     def __init__(self, *args, **kwargs):
         super(InvoiceForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_tag = True
-        self.helper.form_class = 'form-group'
-        self.helper.label_class = 'col-md-6 form-label'
-        self.helper.field_class = 'col-md-12'
+        # self.helper.form_show_labels = False
+        self.helper.form_tag = False
+        self.helper.form_class = "form-group"
+        self.helper.label_class = "col-md-6 form-label"
+        self.helper.field_class = "col-md-12"
+
         self.helper.layout = Layout(
             Row(
-                Column(FloatingField('created', css_class='form-control'),
-                       css_class='form-group col-md-3 mb-0'),
-                Column(Field('customer', css_class='form-control'),
-                       css_class='form-group col-md-3 mb-0'),
-                Column(Field('is_gst'), css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'),
+                Column(Field("created", css_class="form-control ")),
+                Column(Field("customer", css_class="form-control ")),
+                css_class="form-row",
+            ),
             Row(
-                Column('balancetype', css_class='form-group col-md-3 mb-0'),
-                Column('metaltype', css_class='form-group col-md-3 mb-0'),
-                Column('rate', css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'),
-            Row(Column(Field('approval',css_class='form-control')),
-            css_class='form-row'),
-            Fieldset('Add items',
-                     Formset('items')),
+                Column(Field("balancetype", css_class="form-control ")),
+                Column(Field("metaltype", css_class="form-control ")),
+                Column(Field("rate", css_class="form-control ")),
+                css_class="form-row",
+            ),
             Row(
-                Column(Field('gross_wt', css_class='form-control'),
-                       css_class='form-group col-md-3 mb-0'),
-                Column(Field('net_wt', css_class='form-control'),
-                       css_class='form-group col-md-3 mb-0'),
-                Column(Field('total', css_class='form-control'),
-                       css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'),
-            Row(
-                Column('term', css_class='form-group col-md-3 mb-0'),
-                Column('balance', css_class='form-group col-md-3 mb-0'),
-                Column('status', css_class='form-group col-md-3 mb-0'),
-                css_class='form-row'),
-            ButtonHolder(Submit('submit', 'save'))
+                Column(Field("approval", css_class="form-control")),
+                Column(Field("term", css_class="form-control ")),
+                css_class="form-row",
+            ),
+            Field("is_gst"),
+            ButtonHolder(Submit("submit", "save")),
         )
+
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-                        queryset = Stock.objects.all(),
-                        widget = Select2Widget)
+        queryset=Stock.objects.all(),
+        widget=StockWidget,
+        # widget = forms.Select(attrs={'class':'tomselect'})
+    )
+
     class Meta:
         model = InvoiceItem
-        fields = ['invoice','is_return','product','quantity','weight', 'less_stone',
-        'net_wt','touch','wastage','makingcharge','total',]
+        fields = [
+            "is_return",
+            "product",
+            "quantity",
+            "weight",
+            "less_stone",
+            "net_wt",
+            "touch",
+            "wastage",
+            "makingcharge",
+            "total",
+        ]
 
-InvoiceItemFormSet = inlineformset_factory(
-    Invoice, InvoiceItem, form=InvoiceItemForm,
-    fields=('is_return','product','quantity',
-    'weight','less_stone', 'touch', 'wastage','makingcharge','net_wt','total', 'invoice'),
-    extra=1,can_delete=True)
 
 class ReceiptForm(forms.ModelForm):
-    customer=forms.ModelChoiceField(queryset=Customer.objects.filter(type='Wh'),widget=Select2Widget)
-    created = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.filter(type="Wh"), widget=Select2Widget
+    )
+    created = DateTimeLocalInput()
+
     class Meta:
         model = Receipt
-        fields = ['created','customer','type', 
-                    'rate','total', 'description','status']
+        fields = [
+            "created",
+            "customer",
+            "type",
+            "rate",
+            "total",
+            "description",
+            "status",
+        ]
+
 
 class ReceiptLineForm(forms.ModelForm):
-    invoice=forms.ModelChoiceField(queryset=Invoice.objects.all(),
-                                    widget=Select2Widget)
-    class Meta:
-        model=ReceiptLine
-        fields=['invoice','amount']
+    invoice = forms.ModelChoiceField(
+        queryset=Invoice.objects.all(), widget=Select2Widget
+    )
 
-ReceiptLineFormSet=inlineformset_factory(Receipt,ReceiptLine,
-    fields=('invoice','amount','receipt'),extra=0,can_delete=True,form=ReceiptLineForm)
+    class Meta:
+        model = ReceiptLine
+        fields = ["invoice", "amount"]
+
+
+ReceiptLineFormSet = inlineformset_factory(
+    Receipt,
+    ReceiptLine,
+    fields=("invoice", "amount", "receipt"),
+    extra=0,
+    can_delete=True,
+    form=ReceiptLineForm,
+)
+
 
 class ReceiptItemForm(forms.ModelForm):
     class Meta:
         models = ReceiptItem
-        fields = '__all__'
+        fields = "__all__"
 
-ReceiptItemFormSet = inlineformset_factory(Receipt, ReceiptItem,
-    fields=('weight','touch','nettwt', 'amount','receipt'), extra=1, can_delete=True, form=ReceiptItemForm)
+
+ReceiptItemFormSet = inlineformset_factory(
+    Receipt,
+    ReceiptItem,
+    fields=("weight", "touch", "nettwt", "amount", "receipt"),
+    extra=1,
+    can_delete=True,
+    form=ReceiptItemForm,
+)

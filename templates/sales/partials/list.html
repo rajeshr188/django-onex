@@ -1,0 +1,23 @@
+{%load django_tables2%}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+        <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_create' %}" role="button">Add Sale</a>
+        <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_list' %}" role="button">Sales List</a>
+        <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
+        <a class="btn btn-primary" href="{% url 'sales_home'%}" role="button">export</a>
+        
+        </div>
+    </div>
+</div>
+  <div class="sales-content mb-2">
+      <div class="row">
+          <div class="col-sm-3" id="filter">
+              {%include 'filter.html'%}
+          </div>
+          <div class="col-sm-9 table-responsive" id="table">
+              {%include 'table1.html'%}
+          </div>
+      </div>
+  </div>

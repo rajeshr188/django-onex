@@ -1,48 +1,78 @@
 import django_tables2 as tables
-from django_tables2.utils import A
-from .models import Loan,Release
 from django.utils.html import format_html
+from django_tables2.utils import A
+
+from .models import Loan, Release
+
 
 class CheckBoxColumnWithName(tables.CheckBoxColumn):
     @property
     def header(self):
         return self.verbose_name
 
+
 class LoanTable(tables.Table):
+    loanid = tables.Column(linkify=True)
+    interest = tables.Column(linkify=False)
+    # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
+    selection = tables.CheckBoxColumn(
+        accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
+    )
+    notified = tables.Column(accessor = 'last_notified')
+    def render_notified(self,value,record):
+        
+        return record.created
+    # remove = tables.Column(orderable=False, empty_values=())
 
-    loanid=tables.Column(linkify = True)
-    # release = tables.LinkColumn('girvi_release_create', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
-    cbox = CheckBoxColumnWithName(verbose_name="*", accessor='pk')
-    remove = tables.Column(orderable=False, empty_values=())
+    # def render_remove(self, record):
+    #     return format_html(
+    #         '<a hx-post="/girvi/girvi/loan/{}/delete/" class="btn btn-outline-danger" role="button">Delete</a>',
+    #         record.pk,
+    #     )
+    def render_interest(self, value, record):
+        return record.interestdue
 
-    def render_remove(self,record):
-        return format_html('<a hx-post="/girvi/girvi/loan/{}/delete/" class="btn btn-outline-danger" role="button">Delete</a>', record.pk)
-
-    def render_created(self,value):
+    def render_created(self, value):
         return value.date
 
-    def render_id(self, value, column,record):
-
+    def render_id(self, value, column, record):
         if record.is_released:
-            column.attrs = {'td': {'bgcolor': 'lightgreen'}}
+            column.attrs = {"td": {"bgcolor": "lightgreen"}}
         else:
-            column.attrs = {'td': {}}
+            column.attrs = {"td": {}}
         return value
 
     class Meta:
         model = Loan
-        # row_attrs = {'b':lambda record:'#eee' if record.is_released else '#ddd'}
-        fields = ('id','cbox','loanid','created','customer','itemdesc','itemweight','loanamount')
-        attrs = {"class":"table table-sm table-striped table-bordered table-hover"}
-        empty_text = "There are no customers matching the search criteria..."
-        template_name = 'django_tables2/bootstrap4.html'
+        fields = (
+            "selection",
+            "id",
+            "loanid",
+            "created",
+            "customer",
+            "itemdesc",
+            "itemweight",
+            "loanamount",
+            "itemvalue",
+            
+        )
+        # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
+        row_attrs = {
+            "data-released": lambda record: record.is_released,
+            "data-notworth": lambda record: record.is_worth,
+        }
+        # or row_attrs = { "style": lambda record: "background-color: #8B0000;" if record['Warning'] else "background-color: #000000;" }
+        attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
+        empty_text = "There are no loans matching the search criteria..."
+        template_name = "table_htmx.html"
+
 
 class ReleaseTable(tables.Table):
-    releaseid = tables.Column(linkify = True)
+    releaseid = tables.Column(linkify=True)
 
     class Meta:
         model = Release
-        fields=('id','releaseid','created','loan','interestpaid')
-        attrs={"class":"table table-sm table-striped table-bordered table-hover"}
-        empty_text = "There are no customers matching the search criteria..."
-        # template_name = 'django_tables2/bootstrap4.html'
+        fields = ("id", "releaseid", "created", "loan", "interestpaid")
+        attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
+        empty_text = "There are no release matching the search criteria..."
+        template_name = "django_tables2/bootstrap4.html"

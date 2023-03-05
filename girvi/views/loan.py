@@ -32,8 +32,8 @@ from utils.render import Render
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
-from ..forms import Loan_formset, LoanForm, LoanRenewForm, PhysicalStockForm,NoticeGroupForm
-from ..models import License, Loan, LoanStatement, Release, Series,Notification,NoticeGroup
+from ..forms import Loan_formset, LoanForm, LoanRenewForm, PhysicalStockForm
+from ..models import License, Loan, LoanStatement, Release, Series
 from ..tables import LoanTable
 
 
@@ -468,7 +468,7 @@ def home(request):
     data["customer"] = customer
     data["license"] = license
     data["loan"] = loan
-
+    data['interestdue'] = Loan.objects.unreleased().with_interest()
     data["release"] = release
     if request.META.get("HTTP_HX_REQUEST"):
         return render(
@@ -541,21 +541,3 @@ def physical_list(request):
     filter = LoanStatementFilter(request.GET, queryset=physically_available)
 
     return render(request, "girvi/physicallist.html", {"filter": filter})
-
-def  noticegroup_list(request):
-    ng = NoticeGroup.objects.all()
-    return render(request,'girvi/noticegroup_list.html',context={'objects':ng})
-
-def noticegroup_create(request):
-    form = NoticeGroupForm(request.POST or None)
-    if request.method == 'POST':
-        if form.is_valid():
-            object = form.save()
-            return render(request,'girvi/noticegroup_detail.html',context={'object':object})
-    return render(request,'girvi/noticegroup_form.html',context={'form':form})
-
-def noticegroup_detail(request,pk):
-    ng = get_object_or_404(NoticeGroup,pk = pk)
-    loans = Loan.objects.unreleased().filter(created__gt = ng.date_range.lower,created__lt = ng.date_range.upper)
-
-    return render(request,'girvi/noticegroup_detail.html',context={'object':ng,'loans':loans})

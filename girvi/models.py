@@ -63,7 +63,7 @@ class LoanQuerySet(models.QuerySet):
 
     def with_interest(self):
         today = datetime.date.today()
-        # Get the total interest for all loans for this customer
+        
         return self.annotate(
             no_of_months=ExpressionWrapper(
                 today.month
@@ -585,94 +585,6 @@ class Release(models.Model):
         self.posted = False
         self.save(update_fields="posted")
 
-class NoticeGroup(models.Model):
-    name = models.CharField(max_length=30,unique =True)
-    date_range = DateRangeField()
-    
-
-    class Meta:
-        pass
-
-    def __str__(self):
-        return f"{self.id} {self.name}"
-    
-    def get_absolute_url(self):
-        return reverse("girvi_groupnotice_detail", args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse("girvi_groupnotice_update", args=(self.pk,))
-
-    def items_count(self):
-        return self.notice_items.count()
-
-    def create_notice(self):
-        pass
-    def delete_all_notice(self):
-        pass
-    def delete_notice(self):
-        pass
-    def print_notice(self):
-        pass
-
-class Notification(models.Model):
-
-    # relationships
-    group = models.ForeignKey("girvi.NoticeGroup",
-                    null = True, blank = True,
-                    on_delete = models.CASCADE,
-                    related_name = "notice_items")
-    loan = models.ForeignKey("girvi.Loan", 
-                    on_delete=models.CASCADE,
-                    related_name="notifications")
-
-    # fields
-    
-    class MediumType(models.TextChoices):
-        Post = "P", "Post"
-        Whatsapp = "W", "Whatsapp"
-
-    medium_type = models.CharField(
-        max_length=1, choices=MediumType.choices, default=MediumType.Post
-    )
-
-    class NoticeType(models.TextChoices):
-        First_Reminder = "FR","First Reminder"
-        Second_Reminder = "SR","Second Reminder"
-        Final_Notice = "FN","Final Notice"
-
-    notice_type = models.CharField(
-        max_length=2, choices=NoticeType.choices, default=NoticeType.First_Reminder
-    )
-
-    class StatusType(models.TextChoices):
-        Draft = "D", "Draft"
-        Sent = "S", "Sent"
-        Acknowledged = "A", "Acknowledged"
-        Responded = "R", "Responded"
-
-    status = models.CharField(
-        max_length=1, choices=StatusType.choices, default=StatusType.Draft
-    )
-
-    last_updated = models.DateTimeField(auto_now=True, editable=False)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-
-    class Meta:
-        unique_together = ('loan', 'notice_type',)
-
-    def __str__(self):
-        return str(self.pk)
-
-    def get_absolute_url(self):
-        return reverse("girvi_Notification_detail", args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse("girvi_Notification_update", args=(self.pk,))
-
-    def create(self):
-        pass
-    def update_status(self):
-        pass
 
 
 

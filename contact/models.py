@@ -38,10 +38,21 @@ class Customer(models.Model):
     pic = models.ImageField(upload_to="customer_pics/", null=True, blank=True)
 
     Address = models.TextField(max_length=100, blank=True)
-    ctype = (("Wh", "Wholesale"), ("Re", "Retail"), ("Su", "Supplier"))
-    type = models.CharField(max_length=30, choices=ctype, default="Re")
-    ras = (("S/o", "S/o"), ("D/o", "D/o"), ("W/o", "W/o"), ("R/o", "R/o"))
-    relatedas = models.CharField(max_length=5, choices=ras, default="S/o")
+    
+    class CustomerType(models.TextChoices):
+        Retail = "R", "Retail"
+        Wholesale = "W", "Wholesale"
+        Supplier = "S", "Supplier"
+    
+    customer_type = models.CharField(max_length=30, choices=CustomerType.choices, default=CustomerType.Retail)
+
+    class RelationType(models.TextChoices):
+        Son = "s", "S/o"
+        Daughter = "d", "D/o"
+        Wife = "w", "W/o"
+        Relation = "r","R/o"
+    
+    relatedas = models.CharField(max_length=5, choices=RelationType.choices, default=RelationType.Son)
     relatedto = models.CharField(max_length=30, blank=True)
     area = models.CharField(max_length=50, blank=True)
     active = models.BooleanField(blank=True, default=True)
@@ -52,7 +63,7 @@ class Customer(models.Model):
         unique_together = ("name", "relatedas", "relatedto")
 
     def __str__(self):
-        return f"{self.name} {self.relatedas} {self.relatedto} {self.type}"
+        return f"{self.name} {self.relatedas} {self.relatedto} {self.customer_type}"
 
     def get_absolute_url(self):
         return reverse("contact_customer_detail", args=(self.pk,))

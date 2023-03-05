@@ -50,7 +50,7 @@ urlpatterns = [
     path(
         "ledger/transaction/",
         views.LedgerTransactionListView.as_view(),
-        name="dea_ledgerTransaction_list",
+        name="dea_ledgertransaction_list",
     ),
     path("journal/", views.JournalListView.as_view(), name="dea_journals_list"),
     path(

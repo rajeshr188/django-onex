@@ -4,54 +4,20 @@
 
 {% block content %}
 <h1>Chart Of Accounts</h1>
-<ul class="nav navtabs">
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_home' %}" class="nav-link">Home</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_ledger_list' %}" class="nav-link">Ledgers</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="% url 'dea_general_ledger' %}" class="nav-link">General Ledger</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_ledgerstatement_list'%}" class="nav-link">Ledger Statement</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_account_list' %}" class="nav-link">Accounts</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_accountstatement_list' %}" class="nav-link">Account Statement</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_journals_list' %}" class="nav-link">Journals</a>
-    </li>
-    <li class="nav-item">
-        <a hx-get="{% url 'dea_daybook' %}" class="nav-link">Daybook</a>
-    </li>
-</ul>
 <div class="" id="dea-content"></div>
-
-<ul class="nav nav-tabs" id="myTab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="internal-tab" data-toggle="tab" hx-get="#internal" role="tab" aria-controls="Internal"
-            aria-selected="true">Ledgers</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" id="external-tab" data-toggle="tab" hx-get="#external" role="tab" aria-controls="External"
-            aria-selected="false">Balancesheet</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" id="journal-tab" data-toggle="tab" hx-get="#journal" role="tab" aria-controls="Journal"
-            aria-selected="false">Profit and loss</a>
-    </li>
-</ul>
-<div class="tab-content p-3" id="myTabContent">
-    <div class="tab-pane fade show active" id="internal" role="tabpanel" aria-labelledby="home-internal">
+<nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Ledgers</button>
+    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Balancesheet</button>
+    <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Profit & loss</button>
+    </div>
+</nav>
+  <div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
         <div class="btn-group" role="group" aria-label="Basic outlined example">
-            <button type="button" class="btn btn-outline-success" hx-get="{% url 'dea_ledger_create' %}">Add Ledger</button>
-            <button type="button" class="btn btn-outline-primary" hx-get="{% url 'dea_account_create' %}">Add txn</button>
-            <a  class="btn btn-outline-info" hx-get="{% url 'dea_ledger_audit' %}">Audit</a>
+            <button type="button" class="btn btn-outline-success" href="{% url 'dea_ledger_create' %}">Add Ledger</button>
+            <button type="button" class="btn btn-outline-primary" href="{% url 'dea_account_create' %}">Add txn</button>
+            <a  class="btn btn-outline-info" href="{% url 'dea_ledger_audit' %}">Audit</a>
         </div>
       
         <table class = "table table-sm table-hover">
@@ -78,42 +44,40 @@
                 {%endfor%}
             </tbody>
         </table>
-            
     </div>
-    <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="profile-external">
-       <div class="row">
-           <div class="col-6">
-                <ul class="list-group list-group-flush">
-                    {%for i in data.balancesheet.assets%}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{i.name}} 
-                        <span>{{i.get_currbal}}</span>
-                    </li>
-                    {%endfor%}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Total :<span>{{data.ta}}</span>
-                    </li>
-                </ul>
-                
-           </div>
-           <div class="col-6">
-                <ul class="list-group list-group-flush">
-                {%for i in data.balancesheet.liabilities%}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {{i.name}} 
-                    <span>{{i.get_currbal}}</span>
-                </li>
-                {%endfor%} 
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Total :<span>{{data.tl}}</span>
-                </li>
-                </ul>
-                
-           </div>
-       </div>
-        
+    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+        <div class="row">
+            <div class="col-6">
+                 <ul class="list-group list-group-flush">
+                     {%for i in data.balancesheet.assets%}
+                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                         {{i.name}} 
+                         <span>{{i.get_currbal}}</span>
+                     </li>
+                     {%endfor%}
+                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                         Total :<span>{{data.ta}}</span>
+                     </li>
+                 </ul>
+                 
+            </div>
+            <div class="col-6">
+                 <ul class="list-group list-group-flush">
+                 {%for i in data.balancesheet.liabilities%}
+                 <li class="list-group-item d-flex justify-content-between align-items-center">
+                     {{i.name}} 
+                     <span>{{i.get_currbal}}</span>
+                 </li>
+                 {%endfor%} 
+                 <li class="list-group-item d-flex justify-content-between align-items-center">
+                     Total :<span>{{data.tl}}</span>
+                 </li>
+                 </ul>
+                 
+            </div>
+        </div>
     </div>
-    <div class="tab-pane fade" id="journal" role ="tabpanel" aria-labelledby="journal">
+    <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
         <div class="row">
             <div class="col-6">
                 <ul class="list-group list-group-flush">
@@ -143,5 +107,7 @@
             </div>
         </div>
     </div>
+  </div>
+
 </div>
 {% endblock content %}

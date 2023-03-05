@@ -109,7 +109,7 @@ class InvoiceItemForm(forms.ModelForm):
 
 class ReceiptForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
-        queryset=Customer.objects.filter(type="Wh"), widget=Select2Widget
+        queryset=Customer.objects.filter(customer_type="Wh"), widget=Select2Widget
     )
     created = DateTimeLocalInput()
 

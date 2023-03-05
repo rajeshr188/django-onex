@@ -11,7 +11,7 @@ class LoanFilter(django_filters.FilterSet):
     loanid = django_filters.CharFilter(lookup_expr="icontains")
     itemdesc = django_filters.CharFilter(lookup_expr="icontains")
     customer = django_filters.ModelChoiceFilter(
-        queryset=Customer.objects.filter(type="Re"), widget=CustomerWidget
+        queryset=Customer.objects.filter(customer_type="Re"), widget=CustomerWidget
     )
     Status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")

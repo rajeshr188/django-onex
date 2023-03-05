@@ -11,4 +11,4 @@ class CustomerFilter(django_filters.FilterSet):
 
     class Meta:
         model = Customer
-        fields = ["id", "name", "relatedto", "type", "active"]
+        fields = ["id", "name", "relatedto", "customer_type", "active"]

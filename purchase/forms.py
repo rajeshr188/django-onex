@@ -26,7 +26,7 @@ from .models import Invoice, InvoiceItem, Payment, PaymentItem, PaymentLine
 
 class InvoiceForm(forms.ModelForm):
     supplier = forms.ModelChoiceField(
-        queryset=Customer.objects.exclude(type="Re"), widget=Select2Widget
+        queryset=Customer.objects.exclude(customer_type="Re"), widget=Select2Widget
     )
     created = forms.DateTimeField(
         widget=forms.DateTimeInput(

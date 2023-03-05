@@ -554,7 +554,8 @@ class Ledgerbalance(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ledger_balance"
+        # db_table = "ledger_balance"
+        db_table = "ledger_balance_plain"
 
     def get_currbal(self):
         return self.get_cb() + self.get_dr() - self.get_cr()

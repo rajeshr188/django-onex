@@ -1,5 +1,3 @@
-from re import template
-
 from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
@@ -13,7 +11,7 @@ from django_select2.forms import ModelSelect2Widget, Select2MultipleWidget
 from contact.forms import CustomerWidget
 from contact.models import Customer
 
-from .models import Adjustment, License, Loan, Release, Series,NoticeGroup
+from .models import Adjustment, License, Loan, Release, Series
 
 
 class LoansWidget(s2forms.ModelSelect2Widget):
@@ -216,7 +214,4 @@ Release_formset = modelformset_factory(
     Release, ReleaseForm, fields=("releaseid", "loan", "interestpaid")
 )
 
-class NoticeGroupForm(forms.ModelForm):
-    class Meta:
-        model = NoticeGroup
-        fields = '__all__'
+

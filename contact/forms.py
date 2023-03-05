@@ -13,7 +13,7 @@ class CustomerWidget(s2forms.ModelSelect2Widget):
         "name__icontains",
         "relatedas__icontains",
         "relatedto__icontains",
-        # "phonenumber__icontains",
+        
     ]
 
 
@@ -23,12 +23,12 @@ class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            "type",
+            "customer_type",
             "name",
             "pic",
             "relatedas",
             "relatedto",
-            # "phonenumber",
+            
             "Address",
             "area",
         ]

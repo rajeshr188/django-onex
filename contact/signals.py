@@ -16,7 +16,7 @@ def add_account(sender, instance, created, **kwargs):
         acc = None
     if created or acc is None:
         entity_t = EntityType.objects.get(name="Person")
-        if instance.type == "Wh" or instance.type == "Re":
+        if instance.customer_type == "Wh" or instance.customer_type == "Re":
             Account.objects.create(
                 contact=instance, entity=entity_t, AccountType_Ext=acct_d
             )
@@ -25,7 +25,7 @@ def add_account(sender, instance, created, **kwargs):
                 contact=instance, entity=entity_t, AccountType_Ext=acct_c
             )
     else:
-        if instance.type == "Wh" or instance.type == "Re":
+        if instance.customer_type == "Wh" or instance.customer_type == "Re":
             instance.account.AccountType_Ext = acct_d
         else:
             instance.account.AccountType_Ext = acct_c

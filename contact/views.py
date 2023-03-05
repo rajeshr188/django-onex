@@ -44,7 +44,7 @@ def home(request):
 @login_required
 def customer_list(request):
     context = {}
-    f = CustomerFilter(request.GET, queryset=Customer.objects.all())
+    f = CustomerFilter(request.GET, queryset=Customer.objects.all().prefetch_related('contactno'))
     table = CustomerTable(f.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     context["filter"] = f

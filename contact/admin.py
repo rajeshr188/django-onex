@@ -29,7 +29,7 @@ class CustomerAdmin(ImportExportActionModelAdmin):
         "updated",
         "Address",
         "area",
-        "type",
+        "customer_type",
         "relatedas",
         "relatedto",
     ]
@@ -40,7 +40,7 @@ class CustomerAdmin(ImportExportActionModelAdmin):
         "updated",
         "Address",
         "area",
-        "type",
+        "customer_type",
         "relatedas",
         "relatedto",
     ]

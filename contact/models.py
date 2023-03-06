@@ -90,6 +90,14 @@ class Customer(models.Model):
         for i in loans:
             i.customer = self
             i.save()
+        # transfer contacts to original
+        contacts = dup.contactno.all()
+        for i in contacts:
+            i.customer = self
+            i.save()
+        
+        # finally delete duplicate customer
+        dup.delete()
 
     def get_score(self):
         return self.contactscore_set.aggregate(t=Sum("score"))["t"]

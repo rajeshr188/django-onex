@@ -38,9 +38,7 @@ class Notification(models.Model):
                     null = True, blank = True,
                     on_delete = models.CASCADE,
                     related_name = "notice_items")
-    loan = models.ForeignKey("girvi.Loan", 
-                    on_delete=models.CASCADE,
-                    related_name="notifications")
+    
 
     # fields
     
@@ -48,6 +46,7 @@ class Notification(models.Model):
         Post = "P", "Post"
         Whatsapp = "W", "Whatsapp"
         SMS = "S", "SMS"
+        Letter = "L","Letter"
 
     medium_type = models.CharField(
         max_length=1, choices=MediumType.choices, default=MediumType.Post
@@ -73,12 +72,15 @@ class Notification(models.Model):
     status = models.CharField(
         max_length=1, choices=StatusType.choices, default=StatusType.Draft
     )
+    message = models.TextField()
+    is_printed = models.BooleanField(default=False)
 
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:
-        unique_together = ('loan', 'notice_type',)
+        # unique_together = ('loan', 'notice_type',)
+        pass
 
     def __str__(self):
         return str(self.pk)
@@ -93,3 +95,20 @@ class Notification(models.Model):
         pass
     def update_status(self):
         pass
+
+    def print_letter(self):
+        # implementation for printing a letter
+        pass
+
+    def send_sms(self):
+        # implementation for sending an SMS
+        pass
+
+    def send_notification(self):
+        if self.notification_type == 'Letter':
+            self.print_letter()
+        elif self.notification_type == 'SMS':
+            self.send_sms()
+        elif self.notification_type == 'WhatsApp':
+            # implementation for sending a WhatsApp message
+            pass

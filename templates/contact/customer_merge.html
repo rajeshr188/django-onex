@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% load static %}
+{%load crispy_forms_tags%}
+
+{%block content%}
+{{form.media}}
+<h1>Merge Customers</h1>
+
+<div class="form">
+    <form method="post" action=".">
+        
+        {% csrf_token %}
+        {{form|crispy}}
+        <input type="submit" value="Merge">
+    </form>
+    
+</div>
+{%endblock%}

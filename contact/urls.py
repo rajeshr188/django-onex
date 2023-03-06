@@ -72,5 +72,7 @@ urlpatterns += (
         "customer/address/<int:pk>/delete/",
         views.address_delete,
         name="customer_address_delete"),
+    path("customer/merge/",views.customer_merge,
+        name="contact_customer_merge"),
    
 )

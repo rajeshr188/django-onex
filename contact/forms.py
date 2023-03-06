@@ -4,7 +4,7 @@ from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
 from django.urls import reverse_lazy, reverse
 from django_select2 import forms as s2forms
-
+from django_select2.forms import ModelSelect2Widget,Select2Widget
 from .models import Customer, Contact, Address, Proof
 
 
@@ -12,7 +12,7 @@ class CustomerWidget(s2forms.ModelSelect2Widget):
     search_fields = [
         "name__icontains",
         "relatedas__icontains",
-        "relatedto__icontains",
+        "relatedto__icontains","contactno__number__icontains"
         
     ]
 
@@ -115,3 +115,16 @@ class ProofForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProofForm, self).__init__(*args, **kwargs)
         self.fields["Customer"].queryset = Customer.objects.all()
+
+class CustomerMergeForm(forms.Form):
+    original = forms.ModelChoiceField(
+        queryset=Customer.objects.all(), widget=CustomerWidget()
+    )
+    duplicate = forms.ModelChoiceField(
+        queryset=Customer.objects.all(), widget=CustomerWidget()
+    )
+    class Meta:
+        widgets = {
+            'original':CustomerWidget,
+            'duplicate':CustomerWidget
+        }

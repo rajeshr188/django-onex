@@ -25,7 +25,7 @@ from moneyed import Money
 
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
-
+from notify.models import Notification
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -225,7 +225,7 @@ class Loan(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     posted = models.BooleanField(default=False)
     journals = GenericRelation(Journal, related_query_name="loan_doc")
-
+    notifications = models.ManyToManyField(Notification)
     # Managers
     # objects = LoanManager.from_queryset(LoanQuerySet)()
     objects = LoanManager()

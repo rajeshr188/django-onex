@@ -16,7 +16,7 @@ from django.views.decorators.http import require_http_methods  # new
 from sales.models import Month
 
 from .filters import CustomerFilter
-from .forms import CustomerForm,ContactForm,AddressForm
+from .forms import CustomerForm,ContactForm,AddressForm,CustomerMergeForm
 from .models import Customer,Contact,Address,Proof
 from .tables import CustomerTable
 
@@ -109,6 +109,18 @@ def customer_create(request):
 
         return render(request, "contact/customer_form.html", {"form": form})
 
+def customer_merge(request):
+    form = CustomerMergeForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            # merge logic
+            original = form.cleaned_data['original']
+            duplicate = form.cleaned_data['duplicate']
+            print(f"original:{original}")
+            print(f"duplicate:{duplicate}")
+            original.merge(duplicate)
+            return redirect('contact_customer_list')
+    return render(request,'contact/customer_merge.html',context={'form':form})
 
 @login_required
 def customer_detail(request, pk=None):

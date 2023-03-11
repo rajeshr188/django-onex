@@ -6,55 +6,126 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
             ],
         ),
         migrations.CreateModel(
-            name='Book',
+            name="Book",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=20)),
-                ('daterange', django.contrib.postgres.fields.ranges.DateRangeField()),
-                ('book_type', models.CharField(choices=[('Daily', 'Daily'), ('Monthly', 'Monthly'), ('Yearly', 'Yearly')], max_length=10)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=20)),
+                ("daterange", django.contrib.postgres.fields.ranges.DateRangeField()),
+                (
+                    "book_type",
+                    models.CharField(
+                        choices=[
+                            ("Daily", "Daily"),
+                            ("Monthly", "Monthly"),
+                            ("Yearly", "Yearly"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Transaction',
+            name="Transaction",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(db_index=True)),
-                ('txn_type', models.CharField(choices=[('Cr', 'Credit'), ('Dr', 'Debit')], max_length=2)),
-                ('amount', models.DecimalField(decimal_places=3, max_digits=14)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sea.account')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(db_index=True)),
+                (
+                    "txn_type",
+                    models.CharField(
+                        choices=[("Cr", "Credit"), ("Dr", "Debit")], max_length=2
+                    ),
+                ),
+                ("amount", models.DecimalField(decimal_places=3, max_digits=14)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="sea.account"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Statement',
+            name="Statement",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateField()),
-                ('closing_balance', models.DecimalField(decimal_places=3, max_digits=14)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sea.account')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateField()),
+                (
+                    "closing_balance",
+                    models.DecimalField(decimal_places=3, max_digits=14),
+                ),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="sea.account"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='drs',
+            name="drs",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('period', django.contrib.postgres.fields.ranges.DateTimeRangeField()),
-                ('cb', models.DecimalField(decimal_places=3, max_digits=14)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sea.account')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("period", django.contrib.postgres.fields.ranges.DateTimeRangeField()),
+                ("cb", models.DecimalField(decimal_places=3, max_digits=14)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="sea.account"
+                    ),
+                ),
             ],
         ),
     ]

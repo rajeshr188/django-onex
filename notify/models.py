@@ -1,18 +1,19 @@
 from django.db import models
 from django.contrib.postgres.fields import DateRangeField
+from girvi.models import Loan
+
 
 # Create your models here.
 class NoticeGroup(models.Model):
-    name = models.CharField(max_length=30,unique =True)
-    date_range = DateRangeField()
-    
+    name = models.CharField(max_length=30, unique=True)
+    description = models.TextField(blank=True, null=True)
 
     class Meta:
         pass
 
     def __str__(self):
         return f"{self.id} {self.name}"
-    
+
     def get_absolute_url(self):
         return reverse("notify_groupnotice_detail", args=(self.pk,))
 
@@ -22,41 +23,38 @@ class NoticeGroup(models.Model):
     def items_count(self):
         return self.notice_items.count()
 
-    def create_notice(self):
-        pass
-    def delete_all_notice(self):
-        pass
-    def delete_notice(self):
-        pass
     def print_notice(self):
         pass
 
-class Notification(models.Model):
 
+class Notification(models.Model):
     # relationships
-    group = models.ForeignKey("notify.NoticeGroup",
-                    null = True, blank = True,
-                    on_delete = models.CASCADE,
-                    related_name = "notice_items")
-    
+    group = models.ForeignKey(
+        "notify.NoticeGroup",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
+    customer = models.ForeignKey("contact.Customer", on_delete=models.CASCADE)
+    loans = models.ManyToManyField(Loan)
 
     # fields
-    
+
     class MediumType(models.TextChoices):
         Post = "P", "Post"
         Whatsapp = "W", "Whatsapp"
         SMS = "S", "SMS"
-        Letter = "L","Letter"
+        Letter = "L", "Letter"
 
     medium_type = models.CharField(
         max_length=1, choices=MediumType.choices, default=MediumType.Post
     )
 
     class NoticeType(models.TextChoices):
-        First_Reminder = "FR","First Reminder"
-        Second_Reminder = "SR","Second Reminder"
-        Final_Notice = "FN","Final Notice"
-        Loan_created = "LN","Loan Created"
+        First_Reminder = "FR", "First Reminder"
+        Second_Reminder = "SR", "Second Reminder"
+        Final_Notice = "FN", "Final Notice"
+        Loan_created = "LN", "Loan Created"
 
     notice_type = models.CharField(
         max_length=2, choices=NoticeType.choices, default=NoticeType.First_Reminder
@@ -65,7 +63,7 @@ class Notification(models.Model):
     class StatusType(models.TextChoices):
         Draft = "D", "Draft"
         Sent = "S", "Sent"
-        Delivered = "Z","Delivered"
+        Delivered = "Z", "Delivered"
         Acknowledged = "A", "Acknowledged"
         Responded = "R", "Responded"
 
@@ -91,13 +89,10 @@ class Notification(models.Model):
     def get_update_url(self):
         return reverse("notify_Notification_update", args=(self.pk,))
 
-    def create(self):
-        pass
     def update_status(self):
         pass
 
     def print_letter(self):
-        # implementation for printing a letter
         pass
 
     def send_sms(self):
@@ -105,10 +100,10 @@ class Notification(models.Model):
         pass
 
     def send_notification(self):
-        if self.notification_type == 'Letter':
+        if self.notification_type == "Letter":
             self.print_letter()
-        elif self.notification_type == 'SMS':
+        elif self.notification_type == "SMS":
             self.send_sms()
-        elif self.notification_type == 'WhatsApp':
+        elif self.notification_type == "WhatsApp":
             # implementation for sending a WhatsApp message
             pass

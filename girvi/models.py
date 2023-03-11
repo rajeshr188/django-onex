@@ -25,7 +25,9 @@ from moneyed import Money
 
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
-from notify.models import Notification
+
+# from notify.models import Notification
+
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -63,7 +65,7 @@ class LoanQuerySet(models.QuerySet):
 
     def with_interest(self):
         today = datetime.date.today()
-        
+
         return self.annotate(
             no_of_months=ExpressionWrapper(
                 today.month
@@ -225,7 +227,7 @@ class Loan(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     posted = models.BooleanField(default=False)
     journals = GenericRelation(Journal, related_query_name="loan_doc")
-    notifications = models.ManyToManyField(Notification)
+    # notifications = models.ManyToManyField(Notification)
     # Managers
     # objects = LoanManager.from_queryset(LoanQuerySet)()
     objects = LoanManager()
@@ -408,8 +410,6 @@ class Loan(models.Model):
         notice = self.notification_set.last()
         return notice
 
-    
-
 
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
@@ -427,20 +427,19 @@ class LoanItem(models.Model):
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     purity = models.DecimalField(max_digits=10, decimal_places=3)
     itemvalue = models.DecimalField(max_digits=10, decimal_places=3)
-    
+
     loanamount = models.DecimalField(max_digits=10, decimal_places=2)
     interestrate = models.DecimalField(max_digits=10, decimal_places=2)
     interest = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.item} - {self.qty}"
-    
+
     def get_absolute_url(self):
         return reverse("girvi_loanitem_detail", args=(self.pk,))
 
     def get_update_url(self):
         return reverse("girvi_loanitem_update", args=(self.pk,))
-
 
 
 class Adjustment(models.Model):
@@ -584,8 +583,3 @@ class Release(models.Model):
         jrnl.untransact(last_jrnl)
         self.posted = False
         self.save(update_fields="posted")
-
-
-
-
-    

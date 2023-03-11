@@ -201,5 +201,4 @@ urlpatterns += (
     # Example: /2012/week/23/
     path("girvi/notice/", views.notice, name="notice"),
     path("girvi/outdatedloans/notify/", views.notify_print, name="girvi_create_notice"),
-
 )

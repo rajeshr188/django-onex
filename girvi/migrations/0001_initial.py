@@ -7,112 +7,255 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contact', '0001_initial'),
+        ("contact", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='License',
+            name="License",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(choices=[('PBL', 'Pawn Brokers License'), ('GST', 'Goods & Service Tax')], default='PBL', max_length=30)),
-                ('shopname', models.CharField(max_length=30)),
-                ('address', models.TextField(max_length=100)),
-                ('phonenumber', models.CharField(max_length=30)),
-                ('propreitor', models.CharField(max_length=30)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("PBL", "Pawn Brokers License"),
+                            ("GST", "Goods & Service Tax"),
+                        ],
+                        default="PBL",
+                        max_length=30,
+                    ),
+                ),
+                ("shopname", models.CharField(max_length=30)),
+                ("address", models.TextField(max_length=100)),
+                ("phonenumber", models.CharField(max_length=30)),
+                ("propreitor", models.CharField(max_length=30)),
             ],
             options={
-                'ordering': ('-created',),
+                "ordering": ("-created",),
             },
         ),
         migrations.CreateModel(
-            name='Loan',
+            name="Loan",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(default=django.utils.timezone.now)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('lid', models.IntegerField(blank=True, null=True)),
-                ('loanid', models.CharField(max_length=255, unique=True)),
-                ('itemtype', models.CharField(choices=[('Gold', 'Gold'), ('Silver', 'Silver'), ('Bronze', 'Bronze')], default='Gold', max_length=30)),
-                ('itemdesc', models.TextField(max_length=100)),
-                ('itemweight', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('itemvalue', models.DecimalField(decimal_places=2, max_digits=10, null=True)),
-                ('loanamount', models.PositiveIntegerField()),
-                ('interestrate', models.PositiveSmallIntegerField(default=2)),
-                ('interest', models.PositiveIntegerField()),
-                ('posted', models.BooleanField(default=False)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contact.customer')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(default=django.utils.timezone.now)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("lid", models.IntegerField(blank=True, null=True)),
+                ("loanid", models.CharField(max_length=255, unique=True)),
+                (
+                    "itemtype",
+                    models.CharField(
+                        choices=[
+                            ("Gold", "Gold"),
+                            ("Silver", "Silver"),
+                            ("Bronze", "Bronze"),
+                        ],
+                        default="Gold",
+                        max_length=30,
+                    ),
+                ),
+                ("itemdesc", models.TextField(max_length=100)),
+                ("itemweight", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "itemvalue",
+                    models.DecimalField(decimal_places=2, max_digits=10, null=True),
+                ),
+                ("loanamount", models.PositiveIntegerField()),
+                ("interestrate", models.PositiveSmallIntegerField(default=2)),
+                ("interest", models.PositiveIntegerField()),
+                ("posted", models.BooleanField(default=False)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contact.customer",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('series', 'lid'),
+                "ordering": ("series", "lid"),
             },
         ),
         migrations.CreateModel(
-            name='Series',
+            name="Series",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, default='', max_length=30, unique=True)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('last_updated', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('license', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='girvi.license')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        blank=True, default="", max_length=30, unique=True
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("last_updated", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "license",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="girvi.license"
+                    ),
+                ),
             ],
             options={
-                'ordering': ('created',),
-                'unique_together': {('license', 'name')},
+                "ordering": ("created",),
+                "unique_together": {("license", "name")},
             },
         ),
         migrations.CreateModel(
-            name='Release',
+            name="Release",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(default=django.utils.timezone.now)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('releaseid', models.CharField(max_length=255, unique=True)),
-                ('interestpaid', models.IntegerField(default=0)),
-                ('posted', models.BooleanField(default=False)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('loan', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='release', to='girvi.loan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(default=django.utils.timezone.now)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("releaseid", models.CharField(max_length=255, unique=True)),
+                ("interestpaid", models.IntegerField(default=0)),
+                ("posted", models.BooleanField(default=False)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "loan",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="release",
+                        to="girvi.loan",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-id',),
+                "ordering": ("-id",),
             },
         ),
         migrations.CreateModel(
-            name='LoanStatement',
+            name="LoanStatement",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('loan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='girvi.loan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "loan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="girvi.loan"
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='loan',
-            name='series',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='girvi.series'),
+            model_name="loan",
+            name="series",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="girvi.series",
+            ),
         ),
         migrations.CreateModel(
-            name='Adjustment',
+            name="Adjustment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('amount_received', models.IntegerField(default=0)),
-                ('as_interest', models.BooleanField(default=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('loan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='adjustments', to='girvi.loan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("amount_received", models.IntegerField(default=0)),
+                ("as_interest", models.BooleanField(default=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "loan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="adjustments",
+                        to="girvi.loan",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('created',),
+                "ordering": ("created",),
             },
         ),
     ]

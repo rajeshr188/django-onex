@@ -12,7 +12,8 @@
     <div class="btn-toolbar mb-2 mb-md-0">
       <div class="btn-group mr-2">
         <a class="btn btn-primary mr-2" 
-            href="{% url 'contact_customer_create' %}" 
+            hx-get="{% url 'contact_customer_create' %}" 
+            hx-target="#dialog" hx-swap="innerHTML"
             role="button">New Customer</a>
             <a class="btn btn-primary mr-2" 
             href="{% url 'contact_customer_merge' %}" 
@@ -25,14 +26,20 @@
     <div class="col-sm-3" id="filter">
         {%include "filter.html"%}
     </div>
+
+    <div id="modal" class="modal fade" tabindex="-1">
+      <div id="dialog" class="modal-dialog" hx-target="this"></div>
+    </div>
+ 
     {%block table%}
     <div class="col-sm-9 table-responsive" id = "table">
       
+      <p>Results :{{table.paginator.count}}</p>
       {% render_table table %}
       
     </div>
     {%endblock%}
 </div>
 </div>
-            
+
 {%endblock%}

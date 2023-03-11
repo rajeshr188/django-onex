@@ -70,7 +70,8 @@ INSTALLED_APPS = [
     "Chitfund",
     "daybook",
     "dea",
-    "sea","notify",
+    "sea",
+    "notify",
 ]
 
 MIDDLEWARE = [
@@ -236,3 +237,5 @@ MESSAGE_TAGS = {
     messages.WARNING: "alert-warning",
     messages.ERROR: "alert-danger",
 }
+
+PHONENUMBER_DEFAULT_REGION = "IN"

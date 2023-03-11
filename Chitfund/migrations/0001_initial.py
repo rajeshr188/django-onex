@@ -7,83 +7,164 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Allotment',
+            name="Allotment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('amount', models.PositiveIntegerField()),
-                ('installment', models.PositiveIntegerField()),
-                ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='to_member')),
-                ('created', models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("amount", models.PositiveIntegerField()),
+                ("installment", models.PositiveIntegerField()),
+                (
+                    "slug",
+                    django_extensions.db.fields.AutoSlugField(
+                        blank=True, editable=False, populate_from="to_member"
+                    ),
+                ),
+                ("created", models.DateTimeField(default=django.utils.timezone.now)),
             ],
             options={
-                'ordering': ('-created',),
+                "ordering": ("-created",),
             },
         ),
         migrations.CreateModel(
-            name='Contact',
+            name="Contact",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True)),
-                ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='name')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('last_updated', models.DateTimeField(auto_now=True)),
-                ('phoneno', models.CharField(max_length=10)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255, unique=True)),
+                (
+                    "slug",
+                    django_extensions.db.fields.AutoSlugField(
+                        blank=True, editable=False, populate_from="name"
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("last_updated", models.DateTimeField(auto_now=True)),
+                ("phoneno", models.CharField(max_length=10)),
             ],
             options={
-                'ordering': ('-created',),
+                "ordering": ("-created",),
             },
         ),
         migrations.CreateModel(
-            name='Collection',
+            name="Collection",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='member')),
-                ('date_collected', models.DateTimeField(default=django.utils.timezone.now)),
-                ('amount', models.PositiveIntegerField()),
-                ('allotment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Chitfund.allotment')),
-                ('member', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Chitfund.contact')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "slug",
+                    django_extensions.db.fields.AutoSlugField(
+                        blank=True, editable=False, populate_from="member"
+                    ),
+                ),
+                (
+                    "date_collected",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                ("amount", models.PositiveIntegerField()),
+                (
+                    "allotment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="Chitfund.allotment",
+                    ),
+                ),
+                (
+                    "member",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="Chitfund.contact",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-pk',),
+                "ordering": ("-pk",),
             },
         ),
         migrations.CreateModel(
-            name='Chit',
+            name="Chit",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='name')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('last_updated', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(max_length=30)),
-                ('amount', models.PositiveIntegerField()),
-                ('commission', models.PositiveIntegerField()),
-                ('member_limit', models.PositiveSmallIntegerField()),
-                ('date_to_allot', models.DateField()),
-                ('members', models.ManyToManyField(related_name='members', to='Chitfund.Contact')),
-                ('owner', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='owner', to='Chitfund.contact')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "slug",
+                    django_extensions.db.fields.AutoSlugField(
+                        blank=True, editable=False, populate_from="name"
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("last_updated", models.DateTimeField(auto_now=True)),
+                ("type", models.CharField(max_length=30)),
+                ("amount", models.PositiveIntegerField()),
+                ("commission", models.PositiveIntegerField()),
+                ("member_limit", models.PositiveSmallIntegerField()),
+                ("date_to_allot", models.DateField()),
+                (
+                    "members",
+                    models.ManyToManyField(
+                        related_name="members", to="Chitfund.Contact"
+                    ),
+                ),
+                (
+                    "owner",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="owner",
+                        to="Chitfund.contact",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-created',),
+                "ordering": ("-created",),
             },
         ),
         migrations.AddField(
-            model_name='allotment',
-            name='chit',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Chitfund.chit'),
+            model_name="allotment",
+            name="chit",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="Chitfund.chit"
+            ),
         ),
         migrations.AddField(
-            model_name='allotment',
-            name='to_member',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Chitfund.contact'),
+            model_name="allotment",
+            name="to_member",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="Chitfund.contact"
+            ),
         ),
     ]

@@ -20,7 +20,7 @@ urlpatterns = [
     path("daybook/", include("daybook.urls")),
     path("dea/", include("dea.urls")),
     path("sea/", include("sea.urls")),
-    path("notify",include("notify.urls")),
+    path("notify/", include("notify.urls")),
     path("select2/", include("django_select2.urls")),
     path("api-auth/", include("rest_framework.urls")),
 ]

@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,39 +14,121 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Customer',
+            name="Customer",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
-                ('firstname', models.CharField(blank=True, max_length=255)),
-                ('lastname', models.CharField(blank=True, max_length=255)),
-                ('gender', models.CharField(choices=[('M', 'M'), ('F', 'F'), ('N', 'N')], default='M', max_length=1)),
-                ('religion', models.CharField(choices=[('Hindu', 'Hindu'), ('Muslim', 'Muslim'), ('Christian', 'Christian'), ('Atheist', 'Atheist')], default='Hindu', max_length=10)),
-                ('pic', models.ImageField(blank=True, null=True, upload_to='contacts/customer/pic/')),
-                ('phonenumber', models.CharField(default='911', max_length=15, verbose_name='Phone No')),
-                ('Address', models.TextField(blank=True, max_length=100)),
-                ('type', models.CharField(choices=[('Wh', 'Wholesale'), ('Re', 'Retail'), ('Su', 'Supplier')], default='Re', max_length=30)),
-                ('relatedas', models.CharField(choices=[('S/o', 'S/o'), ('D/o', 'D/o'), ('W/o', 'W/o'), ('R/o', 'R/o')], default='S/o', max_length=5)),
-                ('relatedto', models.CharField(blank=True, max_length=30)),
-                ('area', models.CharField(blank=True, max_length=50)),
-                ('active', models.BooleanField(blank=True, default=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
+                ("firstname", models.CharField(blank=True, max_length=255)),
+                ("lastname", models.CharField(blank=True, max_length=255)),
+                (
+                    "gender",
+                    models.CharField(
+                        choices=[("M", "M"), ("F", "F"), ("N", "N")],
+                        default="M",
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "religion",
+                    models.CharField(
+                        choices=[
+                            ("Hindu", "Hindu"),
+                            ("Muslim", "Muslim"),
+                            ("Christian", "Christian"),
+                            ("Atheist", "Atheist"),
+                        ],
+                        default="Hindu",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "pic",
+                    models.ImageField(
+                        blank=True, null=True, upload_to="contacts/customer/pic/"
+                    ),
+                ),
+                (
+                    "phonenumber",
+                    models.CharField(
+                        default="911", max_length=15, verbose_name="Phone No"
+                    ),
+                ),
+                ("Address", models.TextField(blank=True, max_length=100)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("Wh", "Wholesale"),
+                            ("Re", "Retail"),
+                            ("Su", "Supplier"),
+                        ],
+                        default="Re",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "relatedas",
+                    models.CharField(
+                        choices=[
+                            ("S/o", "S/o"),
+                            ("D/o", "D/o"),
+                            ("W/o", "W/o"),
+                            ("R/o", "R/o"),
+                        ],
+                        default="S/o",
+                        max_length=5,
+                    ),
+                ),
+                ("relatedto", models.CharField(blank=True, max_length=30)),
+                ("area", models.CharField(blank=True, max_length=50)),
+                ("active", models.BooleanField(blank=True, default=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-created', 'name', 'relatedto'),
-                'unique_together': {('name', 'relatedas', 'relatedto')},
+                "ordering": ("-created", "name", "relatedto"),
+                "unique_together": {("name", "relatedas", "relatedto")},
             },
         ),
         migrations.CreateModel(
-            name='ContactScore',
+            name="ContactScore",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('score', models.FloatField(default=0)),
-                ('desc', models.TextField(verbose_name='description')),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contact.customer')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("score", models.FloatField(default=0)),
+                ("desc", models.TextField(verbose_name="description")),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contact.customer",
+                    ),
+                ),
             ],
         ),
     ]

@@ -16,7 +16,9 @@ class LoanFilter(django_filters.FilterSet):
     Status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")
     till_date = django_filters.DateFilter("created", lookup_expr="lte")
-    notice = django_filters.CharFilter(field_name="notifications__notice_type", lookup_expr="icontains")
+    notice = django_filters.CharFilter(
+        field_name="notifications__notice_type", lookup_expr="icontains"
+    )
 
     def filter_status(self, queryset, name, value):
         return queryset.filter(release__isnull=value)

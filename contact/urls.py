@@ -42,37 +42,42 @@ urlpatterns += (
     path(
         "customer/<int:pk>/contactno/add/",
         views.contact_create,
-        name="customer_contact_form"),
+        name="customer_contact_form",
+    ),
     path(
         "customer/contactno/<int:pk>/detail/",
         views.contact_detail,
-        name="customer_contact_detail"),
+        name="customer_contact_detail",
+    ),
     path(
         "customer/contactno/<int:pk>/edit/",
         views.contact_update,
-        name="customer_contact_update"),
+        name="customer_contact_update",
+    ),
     path(
         "customer/contactno/<int:pk>/delete/",
         views.contact_delete,
-        name="customer_contact_delete"),
+        name="customer_contact_delete",
+    ),
     path(
         "customer/<int:pk>/address/add/",
         views.address_create,
-        name="customer_address_form"),
-
+        name="customer_address_form",
+    ),
     path(
         "customer/address/<int:pk>/detail/",
         views.address_detail,
-        name="customer_address_detail"),
+        name="customer_address_detail",
+    ),
     path(
         "customer/address/<int:pk>/edit/",
         views.address_update,
-        name="customer_address_update"),
+        name="customer_address_update",
+    ),
     path(
         "customer/address/<int:pk>/delete/",
         views.address_delete,
-        name="customer_address_delete"),
-    path("customer/merge/",views.customer_merge,
-        name="contact_customer_merge"),
-   
+        name="customer_address_delete",
+    ),
+    path("customer/merge/", views.customer_merge, name="contact_customer_merge"),
 )

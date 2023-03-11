@@ -1,0 +1,41 @@
+{%extends "_base.html"%}
+{%load static%}
+{%block content%}
+<div class="" id="notification_list">
+    <h2>Notification List</h2><br/>
+    <a class="btn btn-secondary" href="{% url 'notify_notification_create'%}">Create New</a>
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">id</th>
+            <th scope="col">To</th>
+            <th scope="col">Loans</th>
+            <th scope="col">medium_type</th>
+            <th scope="col">Message</th>
+            <th scope="col">Printed ?</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody class="table-group-divider">
+        {%for i in objects%}
+         <tr>
+            <td><a href="{% url 'notify_notification_detail' i.id%}">{{i}}</a></td>
+            <td>{{i.customer}}</td><td>{{i.loans.count}}</td>
+            <td>{{i.medium_type}}</td><td>{{i.message}}</td>
+            <td>{{i.is_printed}}</td>
+            <td><div class="btn-group" role="group">
+              <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Notify
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Print</a></li>
+                <li><a class="dropdown-item" href="#">MSG</a></li>
+              </ul>
+            </div></td>
+         </tr> 
+         {%endfor%}
+        </tbody>
+      </table>
+    
+</div>
+{%endblock%}

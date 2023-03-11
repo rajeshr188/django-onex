@@ -18,10 +18,11 @@ class LoanTable(tables.Table):
     selection = tables.CheckBoxColumn(
         accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
     )
-    notified = tables.Column(accessor = 'last_notified')
-    def render_notified(self,value,record):
-        
+    notified = tables.Column(accessor="last_notified")
+
+    def render_notified(self, value, record):
         return record.created
+
     # remove = tables.Column(orderable=False, empty_values=())
 
     # def render_remove(self, record):
@@ -35,12 +36,12 @@ class LoanTable(tables.Table):
     def render_created(self, value):
         return value.date
 
-    def render_id(self, value, column, record):
-        if record.is_released:
-            column.attrs = {"td": {"bgcolor": "lightgreen"}}
-        else:
-            column.attrs = {"td": {}}
-        return value
+    # def render_id(self, value, column, record):
+    #     if record.is_released:
+    #         column.attrs = {"td": {"bgcolor": "lightgreen"}}
+    #     else:
+    #         column.attrs = {"td": {}}
+    #     return value
 
     class Meta:
         model = Loan
@@ -54,14 +55,12 @@ class LoanTable(tables.Table):
             "itemweight",
             "loanamount",
             "itemvalue",
-            
         )
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {
             "data-released": lambda record: record.is_released,
             "data-notworth": lambda record: record.is_worth,
         }
-        # or row_attrs = { "style": lambda record: "background-color: #8B0000;" if record['Warning'] else "background-color: #000000;" }
         attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no loans matching the search criteria..."
         template_name = "table_htmx.html"
@@ -75,4 +74,4 @@ class ReleaseTable(tables.Table):
         fields = ("id", "releaseid", "created", "loan", "interestpaid")
         attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no release matching the search criteria..."
-        template_name = "django_tables2/bootstrap4.html"
+        template_name = "django_tables2/bootstrap5.html"

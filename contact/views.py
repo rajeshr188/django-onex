@@ -16,8 +16,8 @@ from django.views.decorators.http import require_http_methods  # new
 from sales.models import Month
 
 from .filters import CustomerFilter
-from .forms import CustomerForm,ContactForm,AddressForm,CustomerMergeForm
-from .models import Customer,Contact,Address,Proof
+from .forms import CustomerForm, ContactForm, AddressForm, CustomerMergeForm
+from .models import Customer, Contact, Address, Proof
 from .tables import CustomerTable
 
 
@@ -44,7 +44,9 @@ def home(request):
 @login_required
 def customer_list(request):
     context = {}
-    f = CustomerFilter(request.GET, queryset=Customer.objects.all().prefetch_related('contactno'))
+    f = CustomerFilter(
+        request.GET, queryset=Customer.objects.all().prefetch_related("contactno")
+    )
     table = CustomerTable(f.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     context["filter"] = f
@@ -109,18 +111,20 @@ def customer_create(request):
 
         return render(request, "contact/customer_form.html", {"form": form})
 
+
 def customer_merge(request):
     form = CustomerMergeForm(request.POST or None)
-    if request.method == 'POST':
+    if request.method == "POST":
         if form.is_valid():
             # merge logic
-            original = form.cleaned_data['original']
-            duplicate = form.cleaned_data['duplicate']
+            original = form.cleaned_data["original"]
+            duplicate = form.cleaned_data["duplicate"]
             print(f"original:{original}")
             print(f"duplicate:{duplicate}")
             original.merge(duplicate)
-            return redirect('contact_customer_list')
-    return render(request,'contact/customer_merge.html',context={'form':form})
+            return redirect("contact_customer_list")
+    return render(request, "contact/customer_merge.html", context={"form": form})
+
 
 @login_required
 def customer_detail(request, pk=None):
@@ -216,86 +220,121 @@ def reallot_payments(request, pk):
 
 
 @login_required
-def contact_create(request,pk = None):
-    
-    customer= get_object_or_404(Customer,pk=pk)
+def contact_create(request, pk=None):
+    customer = get_object_or_404(Customer, pk=pk)
     form = ContactForm(request.POST or None)
 
-    if request.method == 'POST':
-        print("in post")
+    if request.method == "POST":
         if form.is_valid():
-            print("form is valid")
-            contact= form.save(commit=False)
+            contact = form.save(commit=False)
             contact.Customer = customer
-            print(f"contact:{contact}")
+
             contact.save()
-            return render(request,'contact/contact_detail.html',context={'i':contact})
+            return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
+            # return render(
+            #     request, "contact/contact_detail.html", context={"i": contact}
+            # )
         else:
-            return render(request,'contact/partials/contact_form.html',context={'form':form,'customer':customer})
-   
-    return render(request,'contact/partials/contact_form.html',context={'form':form,'customer':customer})
+            return render(
+                request,
+                "contact/partials/contact-form-model.html",
+                context={"form": form, "customer": customer},
+            )
+
+    return render(
+        request,
+        "contact/partials/contact-form-model.html",
+        context={"form": form, "customer": customer},
+    )
+
 
 @login_required
-def contact_detail(request,pk):
-    contact = get_object_or_404(Contact,pk=pk)
-    return render(request,'contact/contact_detail.html',context = {'i':contact})
+def contact_detail(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    return render(request, "contact/contact_detail.html", context={"i": contact})
+
 
 @login_required
-def contact_update(request,pk):
-    contact = get_object_or_404(Contact,pk = pk)
-    form = ContactForm(request.POST or None,instance = contact)
-    if request.method == 'POST':
+def contact_update(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    form = ContactForm(request.POST or None, instance=contact)
+    if request.method == "POST":
         if form.is_valid():
             form.save()
-            return render(request,'contact/contact_detail.html',context={'i':contact})
-    return render(request,'contact/partials/contact_update_form.html',context = {'form':form,'contact':contact})
+            return render(
+                request, "contact/contact_detail.html", context={"i": contact}
+            )
+    return render(
+        request,
+        "contact/partials/contact_update_form.html",
+        context={"form": form, "contact": contact},
+    )
+
 
 @login_required
 @require_http_methods(["DELETE"])
-def contact_delete(request,pk):
-    contact = get_object_or_404(Contact,pk=pk)
+def contact_delete(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
     contact.delete()
-    return HttpResponse('')
+    return HttpResponse("")
+
 
 @login_required
-def address_create(request,pk = None):
-    
-    customer= get_object_or_404(Customer,pk=pk)
+def address_create(request, pk=None):
+    customer = get_object_or_404(Customer, pk=pk)
     form = AddressForm(request.POST or None)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         print("in post")
         if form.is_valid():
             print("form is valid")
-            address= form.save(commit=False)
+            address = form.save(commit=False)
             address.Customer = customer
-            
+
             address.save()
-            return render(request,'contact/address_detail.html',context={'i':address})
+            return render(
+                request, "contact/address_detail.html", context={"i": address}
+            )
         else:
-            return render(request,'contact/partials/address_form.html',context={'form':form,'customer':customer})
-   
-    return render(request,'contact/partials/address_form.html',context={'form':form,'customer':customer})
+            return render(
+                request,
+                "contact/partials/address_form.html",
+                context={"form": form, "customer": customer},
+            )
+
+    return render(
+        request,
+        "contact/partials/address_form.html",
+        context={"form": form, "customer": customer},
+    )
+
 
 @login_required
-def address_detail(request,pk):
-    address = get_object_or_404(Address,pk=pk)
-    return render(request,'contact/address_detail.html',context = {'i':address})
+def address_detail(request, pk):
+    address = get_object_or_404(Address, pk=pk)
+    return render(request, "contact/address_detail.html", context={"i": address})
 
 
 @login_required
-def address_update(request,pk):
-    address = get_object_or_404(Address,pk = pk)
-    form = AddressForm(request.POST or None,instance = address)
-    if request.method == 'POST':
+def address_update(request, pk):
+    address = get_object_or_404(Address, pk=pk)
+    form = AddressForm(request.POST or None, instance=address)
+    if request.method == "POST":
         if form.is_valid():
             form.save()
-            return render(request,'contact/address_detail.html',context={'i':address})
-    return render(request,'contact/partials/address_update_form.html',context = {'form':form,'address':address})
+            return render(
+                request, "contact/address_detail.html", context={"i": address}
+            )
+    return render(
+        request,
+        "contact/partials/address_update_form.html",
+        context={"form": form, "address": address},
+    )
+
 
 @login_required
 @require_http_methods(["DELETE"])
-def address_delete(request,pk):
-    address = get_object_or_404(Address,pk=pk)
+def address_delete(request, pk):
+    address = get_object_or_404(Address, pk=pk)
     address.delete()
-    return HttpResponse('')
+    return HttpResponse("")

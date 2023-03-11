@@ -6,62 +6,159 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contact', '0001_initial'),
-        ('product', '0001_initial'),
+        ("contact", "0001_initial"),
+        ("product", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Approval',
+            name="Approval",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('total_wt', models.DecimalField(decimal_places=3, default=0, max_digits=10)),
-                ('total_qty', models.IntegerField(default=0)),
-                ('posted', models.BooleanField(default=False)),
-                ('is_billed', models.BooleanField(default=False)),
-                ('status', models.CharField(choices=[('Pending', 'Pending'), ('Complete', 'Complete')], default='Pending', max_length=10)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contact', to='contact.customer')),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "total_wt",
+                    models.DecimalField(decimal_places=3, default=0, max_digits=10),
+                ),
+                ("total_qty", models.IntegerField(default=0)),
+                ("posted", models.BooleanField(default=False)),
+                ("is_billed", models.BooleanField(default=False)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("Pending", "Pending"), ("Complete", "Complete")],
+                        default="Pending",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contact",
+                        to="contact.customer",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('created_at',),
+                "ordering": ("created_at",),
             },
         ),
         migrations.CreateModel(
-            name='ApprovalLine',
+            name="ApprovalLine",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity', models.IntegerField(default=0)),
-                ('weight', models.DecimalField(decimal_places=3, default=0.0, max_digits=10)),
-                ('touch', models.DecimalField(decimal_places=3, default=0.0, max_digits=10)),
-                ('status', models.CharField(blank=True, choices=[('Pending', 'Pending'), ('Returned', 'Returned'), ('Billed', 'Billed')], default='Pending', max_length=30)),
-                ('approval', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='approval.approval')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='product', to='product.stock')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("quantity", models.IntegerField(default=0)),
+                (
+                    "weight",
+                    models.DecimalField(decimal_places=3, default=0.0, max_digits=10),
+                ),
+                (
+                    "touch",
+                    models.DecimalField(decimal_places=3, default=0.0, max_digits=10),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("Pending", "Pending"),
+                            ("Returned", "Returned"),
+                            ("Billed", "Billed"),
+                        ],
+                        default="Pending",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "approval",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="items",
+                        to="approval.approval",
+                    ),
+                ),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="product",
+                        to="product.stock",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('approval',),
+                "ordering": ("approval",),
             },
         ),
         migrations.CreateModel(
-            name='ApprovalLineReturn',
+            name="ApprovalLineReturn",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('quantity', models.IntegerField(default=0)),
-                ('weight', models.DecimalField(decimal_places=3, default=0.0, max_digits=10)),
-                ('posted', models.BooleanField(default=False)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('line', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='approval.approvalline')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("quantity", models.IntegerField(default=0)),
+                (
+                    "weight",
+                    models.DecimalField(decimal_places=3, default=0.0, max_digits=10),
+                ),
+                ("posted", models.BooleanField(default=False)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "line",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="approval.approvalline",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('id',),
+                "ordering": ("id",),
             },
         ),
     ]

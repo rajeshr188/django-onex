@@ -3,9 +3,9 @@ from itertools import chain, islice, tee
 
 from dateutil import relativedelta
 
-# from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
-from django.db.models import Count, Sum,Q
+from django.db.models import Count, Sum, Q
 from django.db.models.expressions import OrderBy
 from django.db.models.functions import Coalesce
 from django.urls import reverse
@@ -38,21 +38,25 @@ class Customer(models.Model):
     pic = models.ImageField(upload_to="customer_pics/", null=True, blank=True)
 
     Address = models.TextField(max_length=100, blank=True)
-    
+
     class CustomerType(models.TextChoices):
         Retail = "R", "Retail"
         Wholesale = "W", "Wholesale"
         Supplier = "S", "Supplier"
-    
-    customer_type = models.CharField(max_length=30, choices=CustomerType.choices, default=CustomerType.Retail)
+
+    customer_type = models.CharField(
+        max_length=30, choices=CustomerType.choices, default=CustomerType.Retail
+    )
 
     class RelationType(models.TextChoices):
         Son = "s", "S/o"
         Daughter = "d", "D/o"
         Wife = "w", "W/o"
-        Relation = "r","R/o"
-    
-    relatedas = models.CharField(max_length=5, choices=RelationType.choices, default=RelationType.Son)
+        Relation = "r", "R/o"
+
+    relatedas = models.CharField(
+        max_length=5, choices=RelationType.choices, default=RelationType.Son
+    )
     relatedto = models.CharField(max_length=30, blank=True)
     area = models.CharField(max_length=50, blank=True)
     active = models.BooleanField(blank=True, default=True)
@@ -63,7 +67,7 @@ class Customer(models.Model):
         unique_together = ("name", "relatedas", "relatedto")
 
     def __str__(self):
-        return f"{self.name} {self.relatedas} {self.relatedto} {self.customer_type}"
+        return f"{self.name} {self.relatedas} {self.relatedto} {self.customer_type} "
 
     def get_absolute_url(self):
         return reverse("contact_customer_detail", args=(self.pk,))
@@ -95,7 +99,7 @@ class Customer(models.Model):
         for i in contacts:
             i.customer = self
             i.save()
-        
+
         # finally delete duplicate customer
         dup.delete()
 
@@ -127,8 +131,13 @@ class Customer(models.Model):
         return self.loan_set.aggregate(total=Sum("interest"))["total"]
 
     def get_weight(self):
-        wt =  self.loan_set.values('itemtype','loanamount').aggregate(gold = Sum('loanamount',filter=Q(itemtype="Gold")),silver = Sum('loanamount',filter=Q(itemtype="Silver")),bronze = Sum('loanamount',filter=Q(itemtype="Bronze")))
+        wt = self.loan_set.values("itemtype", "loanamount").aggregate(
+            gold=Sum("loanamount", filter=Q(itemtype="Gold")),
+            silver=Sum("loanamount", filter=Q(itemtype="Silver")),
+            bronze=Sum("loanamount", filter=Q(itemtype="Bronze")),
+        )
         return wt
+
     @property
     def get_release_average(self):
         no_of_months = 0
@@ -298,8 +307,8 @@ class Address(models.Model):
     zipcode = models.CharField(max_length=6)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     street = models.TextField(max_length=100)
-    city = models.CharField(max_length=30,default = "Vellore")
-    
+    city = models.CharField(max_length=30, default="Vellore")
+
     class Meta:
         ordering = ("-created",)
 
@@ -315,7 +324,7 @@ class Address(models.Model):
 
 class Contact(models.Model):
     # Relationships
-    Customer = models.ForeignKey(
+    customer = models.ForeignKey(
         "contact.Customer", on_delete=models.CASCADE, related_name="contactno"
     )
 
@@ -330,7 +339,7 @@ class Contact(models.Model):
     contact_type = models.CharField(
         max_length=1, choices=ContactType.choices, default=ContactType.Mobile
     )
-    number = models.CharField(max_length=13, unique=True)
+    phone_number = PhoneNumberField(blank=True)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:

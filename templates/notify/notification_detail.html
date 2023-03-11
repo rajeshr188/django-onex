@@ -1,0 +1,35 @@
+{%extends "_base.html"%}
+{%load static%}
+{%load django_tables2%}
+{%block content%}
+
+<div class="">
+    
+    <p>
+        <h1>Notification: {{object.id}} Details</h1>
+        <h2>Notice Group : {{object.group.name}}</h1><br/>
+        <h2>TO : {{object.customer}}</h2>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Notify
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{%url 'notify_notification_print' object.id%}">Print</a></li>
+              <li><a class="dropdown-item" href="{%url 'notify_notification_print' object.id%}">MSG</a></li>
+            </ul>
+          </div>
+        
+    </p>
+    <div class="">
+        <ul class="list-group">
+            {%for i in object.loans.all%}
+            <li class="list-group-item">
+                <input type="checkbox" name="selected" id="">{{i}} <button>Delete</button>
+            </li>
+            {%endfor%}
+        </ul>
+        <p>{{object.loans.count}} loans in this Notificatio</p>
+    </div>
+
+</div>
+{%endblock%}

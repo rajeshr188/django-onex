@@ -5,27 +5,46 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('girvi', '0001_initial'),
+        ("girvi", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LoanItem',
+            name="LoanItem",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('itemtype', models.CharField(choices=[('Gold', 'G'), ('Silver', 'S'), ('Bronze', 'B')], default='Gold', max_length=20)),
-                ('item', models.CharField(max_length=20)),
-                ('qty', models.PositiveIntegerField()),
-                ('weight', models.DecimalField(decimal_places=3, max_digits=10)),
-                ('purity', models.DecimalField(decimal_places=3, max_digits=10)),
-                ('itemvalue', models.DecimalField(decimal_places=3, max_digits=10)),
-                ('rate', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('loanamount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('interestrate', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('interest', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('loan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='girvi.loan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "itemtype",
+                    models.CharField(
+                        choices=[("Gold", "G"), ("Silver", "S"), ("Bronze", "B")],
+                        default="Gold",
+                        max_length=20,
+                    ),
+                ),
+                ("item", models.CharField(max_length=20)),
+                ("qty", models.PositiveIntegerField()),
+                ("weight", models.DecimalField(decimal_places=3, max_digits=10)),
+                ("purity", models.DecimalField(decimal_places=3, max_digits=10)),
+                ("itemvalue", models.DecimalField(decimal_places=3, max_digits=10)),
+                ("rate", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("loanamount", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("interestrate", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("interest", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "loan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="girvi.loan"
+                    ),
+                ),
             ],
         ),
     ]

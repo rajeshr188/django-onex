@@ -4,16 +4,18 @@ from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
 from django.urls import reverse_lazy, reverse
 from django_select2 import forms as s2forms
-from django_select2.forms import ModelSelect2Widget,Select2Widget
+from django_select2.forms import ModelSelect2Widget, Select2Widget
 from .models import Customer, Contact, Address, Proof
+from phonenumber_field.formfields import PhoneNumberField
+from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
 
 class CustomerWidget(s2forms.ModelSelect2Widget):
     search_fields = [
         "name__icontains",
         "relatedas__icontains",
-        "relatedto__icontains","contactno__number__icontains"
-        
+        "relatedto__icontains",
+        "contactno__number__icontains",
     ]
 
 
@@ -28,7 +30,6 @@ class CustomerForm(forms.ModelForm):
             "pic",
             "relatedas",
             "relatedto",
-            
             "Address",
             "area",
         ]
@@ -89,11 +90,12 @@ class AddressForm(forms.ModelForm):
 
 
 class ContactForm(forms.ModelForm):
+    phone_number = PhoneNumberField(region="IN")
+
     class Meta:
         model = Contact
         fields = [
             "contact_type",
-            "number",
             # "Customer",
         ]
 
@@ -116,6 +118,7 @@ class ProofForm(forms.ModelForm):
         super(ProofForm, self).__init__(*args, **kwargs)
         self.fields["Customer"].queryset = Customer.objects.all()
 
+
 class CustomerMergeForm(forms.Form):
     original = forms.ModelChoiceField(
         queryset=Customer.objects.all(), widget=CustomerWidget()
@@ -123,8 +126,6 @@ class CustomerMergeForm(forms.Form):
     duplicate = forms.ModelChoiceField(
         queryset=Customer.objects.all(), widget=CustomerWidget()
     )
+
     class Meta:
-        widgets = {
-            'original':CustomerWidget,
-            'duplicate':CustomerWidget
-        }
+        widgets = {"original": CustomerWidget, "duplicate": CustomerWidget}

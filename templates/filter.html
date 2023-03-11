@@ -10,7 +10,7 @@
             Filter
         </div>
         <div class="card-body">
-            <form hx-trigger="keyup,change delay:100ms" 
+            <form hx-trigger="keyup,change,listChanged from:body delay:100ms" 
                     hx-get="."
                     hx-select="#table" 
                     hx-target="#table"

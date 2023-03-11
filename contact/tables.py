@@ -17,7 +17,7 @@ class ImageColumn(tables.Column):
 class CustomerTable(tables.Table):
     name = tables.Column(linkify=True)
     pic = ImageColumn()
-
+    add_contact = tables.Column(orderable=False, empty_values=())
     addloan = tables.LinkColumn(
         "girvi_loan_create",
         args=[A("pk")],
@@ -62,13 +62,20 @@ class CustomerTable(tables.Table):
     #     return ""
     def render_remove(self, record):
         return format_html(
-            '<a hx-delete="/contact/customer/{}/delete/"  class="btn fa-solid fa-trash" role="button"></a>',
+            '<a hx-delete="/contact/customer/{}/delete/"  hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML swap:1s" class="btn fa-solid fa-trash" role="button"></a>',
+            record.pk,
+        )
+
+    def render_add_contact(self, record):
+        return format_html(
+            '<a hx-disinherit="hx-confirm" hx-get="/contact/customer/{}/contactno/add/"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-address-book"></a>',
             record.pk,
         )
 
     class Meta:
         model = Customer
         fields = ("id", "pic", "name", "Address")
+        # row_attrs={"class":"collapse show"}
         attrs = {
             "class": "table table-sm text-center table-hover table-striped",
         }

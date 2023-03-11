@@ -35,6 +35,7 @@ from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import Loan_formset, LoanForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanStatement, Release, Series
 from ..tables import LoanTable
+from notify.models import Notification, NoticeGroup
 
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
@@ -63,7 +64,7 @@ def loan_list(request):
     filter = LoanFilter(request.GET, queryset=Loan.objects.all())
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
-    
+
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     if request.htmx:
         response = render_block_to_string(
@@ -222,7 +223,7 @@ def print_loanpledge(request, pk):
 @login_required
 def notice(request):
     qyr = request.GET.get("qyr", 0)
-    
+
     a_yr_ago = timezone.now() - relativedelta(years=int(qyr))
 
     # get all loans with selected ids
@@ -270,41 +271,51 @@ def deleteLoan(request):
 @login_required
 def create_notice(request):
     selection = request.POST.getlist("selection")
-    all = request.POST.get('selectall')
+    all = request.POST.get("selectall")
     if all is not None:
         selected_loans = Loan.objects.unreleased.filter().order_by("customer")
     else:
-        selected_loans = Loan.objects.unreleased.filter(id__in = selection).order_by("customer")
+        selected_loans = Loan.objects.unreleased.filter(id__in=selection).order_by(
+            "customer"
+        )
 
-    return render(request,'girvi/selected_loans.html',context={'loans':selected_loans})
+    return render(
+        request, "girvi/selected_loans.html", context={"loans": selected_loans}
+    )
 
 
 @login_required
 def notify_print(request):
-    # get the selected loan ids from the request
-    selection = request.POST.getlist("selection")
     # check if user wanted all rows to be selected
-    all = request.POST.get('selectall')
-    # get query parameters if all row selected and retrive queryset 
-    filter = LoanFilter(request.GET,queryset = Loan.objects.unreleased().all())
+    all = request.POST.get("selectall")
     selected_loans = None
-    if all == 'selected':
-        selected_loans = filter.qs.order_by('customer')
-    else:
-        selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
-    
 
-    # # get all loans with selected ids
-    # selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
-   
-    # for l in selected_loans:
-    #     ni = Notification.objects.create(loan = l)
-    #     ni.save()
-    pdf = get_notice_pdf(selection=selected_loans)
-    # Create a response object
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="notice.pdf"'
-    return response
+    if all == "selected":
+        # get query parameters if all row selected and retrive queryset
+        filter = LoanFilter(request.GET, queryset=Loan.objects.unreleased().all())
+
+        selected_loans = filter.qs.order_by("customer")
+    else:
+        # get the selected loan ids from the request
+        selection = request.POST.getlist("selection")
+
+        selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
+
+    ng = NoticeGroup.objects.create(name="test")
+    customers = Customer.objects.filter(loan__in=selected_loans).distinct()
+    for customer in customers:
+        ni = Notification.objects.create(
+            group=ng,
+            customer=customer,
+        )
+        ni.loans.set(selected_loans.filter(customer=customer))
+        ni.save()
+
+    # pdf = get_notice_pdf(selection=selected_loans)
+    # # Create a response object
+    # response = HttpResponse(pdf, content_type="application/pdf")
+    # response["Content-Disposition"] = 'attachment; filename="notice.pdf"'
+    return HttpResponse(status=204)
 
 
 @login_required
@@ -468,7 +479,7 @@ def home(request):
     data["customer"] = customer
     data["license"] = license
     data["loan"] = loan
-    data['interestdue'] = Loan.objects.unreleased().with_interest()
+    data["interestdue"] = Loan.objects.unreleased().with_interest()
     data["release"] = release
     if request.META.get("HTTP_HX_REQUEST"):
         return render(

@@ -213,5 +213,3 @@ Loan_formset = modelformset_factory(
 Release_formset = modelformset_factory(
     Release, ReleaseForm, fields=("releaseid", "loan", "interestpaid")
 )
-
-

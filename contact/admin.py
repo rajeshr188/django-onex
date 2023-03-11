@@ -83,13 +83,13 @@ class ContactAdmin(admin.ModelAdmin):
     list_display = [
         "created",
         "contact_type",
-        "number",
+        "phone_number",
         "last_updated",
     ]
     readonly_fields = [
         "created",
         "contact_type",
-        "number",
+        "phone_number",
         "last_updated",
     ]
 

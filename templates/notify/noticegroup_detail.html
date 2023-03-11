@@ -1,0 +1,60 @@
+{%extends "_base.html"%}
+{%load static%}
+{%load django_tables2%}
+{%block content%}
+<div class="">
+    <p>
+        <h1>Notice Group : {{object.name}}</h1><br/>
+        <!-- <h3>Date From:{{object.date_range.lower}} To:{{object.date_range.upper}}</h3> -->
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Notify
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">Print</a></li>
+              <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">MSG</a></li>
+            </ul>
+          </div>
+        
+    </p>
+    <div class="">
+        <table class="table">
+            <thead>
+              <tr>
+                <th></th>
+                <th scope="col">Notification ID</th>
+                <th scope="col">To</th>
+                <th scope="col">Type</th>
+                <th scope="col">Loans</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            {%for i in object.notification_set.all%}
+             <tr>
+                <td><input type="checkbox" name="selected" id=""></td>
+                <td><a href="{% url 'notify_notification_detail' i.id%}">{{i.id}}</a></td>
+                <td><a href="{% url 'contact_customer_detail' i.customer.id%}">{{i.customer}}</a></td>
+                <td>{{i.medium_type}}</td>
+                <td>{{i.loans.count}}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Notify
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="{% url 'notify_notification_print' i.id%}">Print</a></li>
+                          <li><a class="dropdown-item" href="{% url 'notify_notification_print' i.id%}">MSG</a></li>
+                        </ul>
+                      </div>
+                </td>
+            </tr>
+            {%endfor%}
+            </tbody>
+          </table>
+     
+       
+    </div>
+
+</div>
+{%endblock%}

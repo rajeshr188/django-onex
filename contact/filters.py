@@ -6,7 +6,7 @@ class CustomerFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr="icontains")
     relatedto = django_filters.CharFilter(lookup_expr="icontains")
     contactno = django_filters.CharFilter(
-        field_name="contactno__number", lookup_expr="icontains"
+        field_name="contactno__phone_number", lookup_expr="icontains"
     )
 
     class Meta:

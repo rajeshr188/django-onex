@@ -340,6 +340,7 @@ class Contact(models.Model):
         max_length=1, choices=ContactType.choices, default=ContactType.Mobile
     )
     phone_number = PhoneNumberField(blank=True)
+    # is_default = models.BooleanField(default = False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:

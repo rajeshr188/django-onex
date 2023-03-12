@@ -47,7 +47,7 @@ class CustomerTable(tables.Table):
 
     def render_Address(self, record):
         if record.contactno.exists():
-            numbers = [no.number for no in record.contactno.all()]
+            numbers = [no.phone_number.national_number for no in record.contactno.all()]
             return f"{record.Address} {numbers}"
         else:
             return f"{record.Address}"

@@ -7,7 +7,6 @@ from django_select2 import forms as s2forms
 from django_select2.forms import ModelSelect2Widget, Select2Widget
 from .models import Customer, Contact, Address, Proof
 from phonenumber_field.formfields import PhoneNumberField
-from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
 
 class CustomerWidget(s2forms.ModelSelect2Widget):
@@ -15,7 +14,7 @@ class CustomerWidget(s2forms.ModelSelect2Widget):
         "name__icontains",
         "relatedas__icontains",
         "relatedto__icontains",
-        "contactno__number__icontains",
+        "contactno__phone_number__icontains",
     ]
 
 

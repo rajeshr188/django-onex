@@ -1,6 +1,7 @@
 import os
 import environ
 from django.contrib.messages import constants as messages
+from django.contrib import messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -87,6 +88,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'djangox_project.middleware.HtmxMessageMiddleware',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -239,3 +241,12 @@ MESSAGE_TAGS = {
 }
 
 PHONENUMBER_DEFAULT_REGION = "IN"
+
+
+MESSAGE_TAGS = {
+    messages.DEBUG: "bg-light",
+    messages.INFO: "text-white bg-primary",
+    messages.SUCCESS: "text-white bg-success",
+    messages.WARNING: "text-dark bg-warning",
+    messages.ERROR: "text-white bg-danger",
+}

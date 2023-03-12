@@ -86,7 +86,7 @@ def customer_create(request):
 
             f.save()
 
-            # messages.success(request, f"created customer {f}")
+            messages.success(request,messages.SUCCESS, f"created customer {f}")
             # table = CustomerTable(data=Customer.objects.all())
             # table.paginate(page=request.GET.get("page", 1), per_page=10)
             # context = {"filter": CustomerFilter, "table": table}
@@ -196,7 +196,7 @@ def customer_edit(request, pk):
             f.pic = image_file
 
         f.save()
-        messages.success(request, f"updated customer {f}")
+        messages.success(request,messages.SUCCESS, f"updated customer {f}")
 
         return redirect("contact_customer_list")
 

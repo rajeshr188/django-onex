@@ -209,7 +209,8 @@
   
 
   <div class="container" id="content"> 
-    {% include 'partials/messages.html'%}
+    <!-- {% include 'partials/messages.html'%} -->
+    {% include "toasts.html" %}
     {% block content %}
     
       <p>Default content...</p>
@@ -224,7 +225,7 @@
       </div>
     </div>
   </footer>
-
+  
   {% block javascript %}
   <!-- Bootstrap JavaScript -->
 
@@ -235,7 +236,7 @@
   <script src="https://unpkg.com/hyperscript.org@0.9.7"></script>
   <script src="https://unpkg.com/htmx.org@1.8.0" integrity="sha384-cZuAZ+ZbwkNRnrKi05G/fjBX+azI9DNOkNYysZ0I/X5ZFgsmMiBXgDZof30F5ofc" crossorigin="anonymous"></script>
   <script src="{% static 'js/dialog.js' %}"></script>       
-
+  <script src="{% static 'js/toasts.js' %}"></script>
   {% endblock javascript %}
 
 </body>

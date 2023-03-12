@@ -38,15 +38,7 @@
                 <td>{{i.medium_type}}</td>
                 <td>{{i.loans.count}}</td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                          Notify
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li><a class="dropdown-item" href="{% url 'notify_notification_print' i.id%}">Print</a></li>
-                          <li><a class="dropdown-item" href="{% url 'notify_notification_print' i.id%}">MSG</a></li>
-                        </ul>
-                      </div>
+                    <a class="btn btn-danger" href="">Delete</a>
                 </td>
             </tr>
             {%endfor%}

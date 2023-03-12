@@ -4,7 +4,7 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, F, Max, Prefetch, Q, Sum
@@ -269,22 +269,6 @@ def deleteLoan(request):
 # def notify_msg(request):
 #     pass
 @login_required
-def create_notice(request):
-    selection = request.POST.getlist("selection")
-    all = request.POST.get("selectall")
-    if all is not None:
-        selected_loans = Loan.objects.unreleased.filter().order_by("customer")
-    else:
-        selected_loans = Loan.objects.unreleased.filter(id__in=selection).order_by(
-            "customer"
-        )
-
-    return render(
-        request, "girvi/selected_loans.html", context={"loans": selected_loans}
-    )
-
-
-@login_required
 def notify_print(request):
     # check if user wanted all rows to be selected
     all = request.POST.get("selectall")
@@ -301,7 +285,7 @@ def notify_print(request):
 
         selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
 
-    ng = NoticeGroup.objects.create(name="test")
+    ng = NoticeGroup.objects.create(name=datetime.datetime.now())
     customers = Customer.objects.filter(loan__in=selected_loans).distinct()
     for customer in customers:
         ni = Notification.objects.create(
@@ -310,11 +294,6 @@ def notify_print(request):
         )
         ni.loans.set(selected_loans.filter(customer=customer))
         ni.save()
-
-    # pdf = get_notice_pdf(selection=selected_loans)
-    # # Create a response object
-    # response = HttpResponse(pdf, content_type="application/pdf")
-    # response["Content-Disposition"] = 'attachment; filename="notice.pdf"'
     return HttpResponse(status=204)
 
 
@@ -347,7 +326,7 @@ def multirelease(request, id=None):
 
     return HttpResponseRedirect(reverse("girvi_loan_list"))
 
-
+@user_passes_test(lambda user: user.is_superuser)
 @login_required
 def home(request):
     data = dict()

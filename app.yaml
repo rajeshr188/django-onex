@@ -1,4 +1,3 @@
-# [START runtime]
 runtime: python
 env: flex
 entrypoint: gunicorn -b :$PORT djangox_project.wsgi

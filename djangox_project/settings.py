@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "django_extensions",
     "tempus_dominus",
     "django_htmx",
+    'django_celery_beat',
+    'django_celery_results',
     # Local
     "users",
     "pages",
@@ -229,8 +231,18 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 #         'LOCATION': '127.0.0.1:11211',
 #     }
 # }
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+# CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_BROKER_URL = 'amqp://localhost'
+# CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BEAT_SCHEDULE = {
+    "scheduled_task":{
+        "task":"contact.tasks.add",
+        "schedule":5.0,
+        "args":(10,10),
+
+    },
+}
 
 MESSAGE_TAGS = {
     messages.DEBUG: "alert-info",

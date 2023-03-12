@@ -28,37 +28,26 @@
         {% include "filter.html"%}
       </div>
       <div class="col-sm-9" id="results">
-        
         <div hx-include="#checked-items" hx-target="#content">
-        
           <a class="btn btn-danger" hx-post="{% url 'girvi_loan_deletemultiple'%}"
-          hx-confirm = "sure?"
+                                    hx-confirm = "sure?"
               >Delete</a>
-          <a class="btn btn-info" hx-get="{% url 'bulk_release'%}" hx-include="[name='selection']">Release</a>
-          <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>
+          <a class="btn btn-info" hx-get="{% url 'bulk_release'%}" 
+                                  hx-include="[name='selection']">
+            Release</a>
+          <a class="btn btn-info" hx-post="{% url 'girvi_create_notice'%}?{{request.GET.urlencode}}"
+                                  hx-include="[name='selection'],[name='selectall']">
+            Notify</a>
         </div>
-       
-       
-        
-        
-        <form class="form-inline" id = "checked-items" method ="post" action="{% url 'girvi_create_notice'%}?{{request.GET.urlencode}}" >
-          {% csrf_token %}
-          <div class="form-check">
-            
-            <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
-            <label class="form-check-label" for="flexCheckDefault">
-              Select All
-            </label>
-          
-          </div>
-          <div id="table" class = "table-responsive">
-            
-            {% render_table table %}
-
-          </div>
-          <input type="submit" value="Submit">
-        </form>
-       
+        <div class="form-check"> 
+          <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
+          <label class="form-check-label" for="flexCheckDefault">
+            Select All
+          </label>
+        </div>
+        <div id="table" class = "table-responsive">   
+          {% render_table table %}
+        </div>
       </div>
   </div>
   </div>

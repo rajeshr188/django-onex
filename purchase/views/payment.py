@@ -6,14 +6,14 @@ from num2words import num2words
 from ..filters import PaymentFilter
 from ..forms import PaymentForm
 from ..models import Payment
-from ..render import Render
+# from ..render import Render
 from ..tables import PaymentTable
 
 
-def print_payment(pk):
-    payment = Payment.objects.get(id=pk)
-    params = {"payment": payment, "inwords": num2words(payment.total, lang="en_IN")}
-    return Render.render("purchase/payment.html", params)
+# def print_payment(pk):
+#     payment = Payment.objects.get(id=pk)
+#     params = {"payment": payment, "inwords": num2words(payment.total, lang="en_IN")}
+#     return Render.render("purchase/payment.html", params)
 
 
 class PaymentListView(ExportMixin, SingleTableMixin, FilterView):

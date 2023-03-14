@@ -28,7 +28,7 @@ from openpyxl import load_workbook
 from render_block import render_block_to_string
 
 from contact.models import Customer
-from utils.render import Render
+# from utils.render import Render
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
@@ -206,18 +206,18 @@ def loan_renew(request, pk):
     return render(request, "girvi/loan_renew.html", {"form": form, "loan": loan})
 
 
-@login_required
-def print_loanpledge(request, pk):
-    loan = Loan.objects.get(id=pk)
-    pdf = get_loan_pdf(loan)
+# @login_required
+# def print_loanpledge(request, pk):
+#     loan = Loan.objects.get(id=pk)
+#     pdf = get_loan_pdf(loan)
 
-    # params = {"loan": loan}
-    # return Render.render("girvi/loan_pdf.html", params)
+#     # params = {"loan": loan}
+#     # return Render.render("girvi/loan_pdf.html", params)
 
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="pawn_ticket.pdf"'
+#     response = HttpResponse(pdf, content_type="application/pdf")
+#     response["Content-Disposition"] = 'attachment; filename="pawn_ticket.pdf"'
 
-    return response
+#     return response
 
 
 @login_required

@@ -10,7 +10,7 @@ from django_filters.views import FilterView
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin
 
-from utils.render import Render
+# from utils.render import Render
 
 from ..filters import ReleaseFilter
 from ..forms import BulkReleaseForm, ReleaseForm
@@ -84,11 +84,11 @@ def unpost_release(request, pk):
     return redirect(release)
 
 
-@login_required
-def print_release(request, pk):
-    release = Release.objects.get(id=pk)
-    params = {"release": release}
-    return Render.render("girvi/release_pdf.html", params)
+# @login_required
+# def print_release(request, pk):
+#     release = Release.objects.get(id=pk)
+#     params = {"release": release}
+#     return Render.render("girvi/release_pdf.html", params)
 
 
 from django.db import IntegrityError

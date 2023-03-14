@@ -109,7 +109,7 @@ urlpatterns += (
         name="girvi_loan_create",
     ),
     path("girvi/loan/detail/<int:pk>/", views.loan_detail, name="girvi_loan_detail"),
-    path("girvi/loan/detail/<int:pk>/pdf", views.print_loanpledge, name="loan_pdf"),
+    # path("girvi/loan/detail/<int:pk>/pdf", views.print_loanpledge, name="loan_pdf"),
     path(
         "girvi/loan/update/<int:pk>/",
         views.LoanUpdateView.as_view(),

@@ -17,7 +17,7 @@ from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-from ..render import Render
+# from ..render import Render
 from ..tables import InvoiceTable
 
 
@@ -252,10 +252,10 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 #         return reverse_lazy('sales_invoice_detail', kwargs={'pk': self.object.pk})
 
 
-def print_invoice(request, pk):
-    invoice = Invoice.objects.get(id=pk)
-    params = {"invoice": invoice}
-    return Render.render("sales/invoice_pdf.html", params)
+# def print_invoice(request, pk):
+#     invoice = Invoice.objects.get(id=pk)
+#     params = {"invoice": invoice}
+#     return Render.render("sales/invoice_pdf.html", params)
 
 
 # def list_balance(request):

@@ -30,6 +30,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 INSTALLED_APPS = [
     "django_select2",
+    
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -38,12 +39,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",  # new
+
     # Third-party
     "allauth",
     "allauth.account",  # new
     "crispy_forms",
     "crispy_bootstrap5",
-    "bootstrap4",
     "import_export",
     "versatileimagefield",  # new
     "rest_framework",
@@ -51,15 +52,14 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "django_tables2",
     "django_filters",
-    "corsheaders",
     "djmoney",
     "widget_tweaks",
     "debug_toolbar",
-    "django_extensions",
-    "tempus_dominus",
+    "django_extensions",  
     "django_htmx",
     'django_celery_beat',
     'django_celery_results',
+
     # Local
     "users",
     "pages",
@@ -92,10 +92,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'djangox_project.middleware.HtmxMessageMiddleware',
 ]
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CORS_ORIGIN_WHITELIST = ("http://localhost:4200",)
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -231,10 +227,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 #         'LOCATION': '127.0.0.1:11211',
 #     }
 # }
-# CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_BROKER_URL = 'amqp://localhost'
-# CELERY_RESULT_BACKEND = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = "redis://localhost:6379"
+# CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+# CELERY_RESULT_BACKEND = 'django-db'
+
 CELERY_BEAT_SCHEDULE = {
     "scheduled_task":{
         "task":"contact.tasks.add",

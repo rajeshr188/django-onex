@@ -16,7 +16,7 @@ from contact.models import Customer
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-from ..render import Render
+# from ..render import Render
 from ..tables import InvoiceTable
 
 
@@ -73,7 +73,7 @@ def purchase_detail_view(request, id=None):
         "next": obj.get_next(),
     }
     if request.htmx:
-        return Render.render("purchase/partials/detail.html", context)
+        return render("purchase/partials/detail.html", context)
     return render(request, "purchase/purchase_detail.html", context)
 
 
@@ -211,10 +211,10 @@ def home(request):
     return render(request, "purchase/home.html", context)
 
 
-def print_invoice(pk):
-    invoice = Invoice.objects.get(id=pk)
-    params = {"invoice": invoice}
-    return Render.render("purchase/invoice_pdf.html", params)
+# def print_invoice(pk):
+#     invoice = Invoice.objects.get(id=pk)
+#     params = {"invoice": invoice}
+#     return Render.render("purchase/invoice_pdf.html", params)
 
 
 # def list_balance(request):

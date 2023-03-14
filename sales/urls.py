@@ -21,11 +21,11 @@ urlpatterns += (
         "sales/detail/<int:id>/", views.sales_detail_view, name="sales_invoice_detail"
     ),
     path("hx/detail/<int:id>/", views.sales_detail_hx_view, name="hx-detail"),
-    path(
-        "sales/invoice/detail/<int:pk>/pdf",
-        views.print_invoice,
-        name="sales_invoicepdf",
-    ),
+    # path(
+    #     "sales/invoice/detail/<int:pk>/pdf",
+    #     views.print_invoice,
+    #     name="sales_invoicepdf",
+    # ),
     path(
         "sales/invoice/update/<int:id>/",
         views.sale_update_view,
@@ -80,7 +80,7 @@ urlpatterns += (
         views.ReceiptDetailView.as_view(),
         name="sales_receipt_detail",
     ),
-    path("sales/receipt/detail/<int:pk>/pdf", views.print_receipt, name="receiptpdf"),
+    # path("sales/receipt/detail/<int:pk>/pdf", views.print_receipt, name="receiptpdf"),
     path(
         "sales/receipt/update/<int:pk>/",
         views.ReceiptUpdateView.as_view(),

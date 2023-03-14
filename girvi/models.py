@@ -7,17 +7,17 @@ from io import BytesIO
 import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, transaction
 from django.contrib.postgres.fields import DateRangeField
+from django.db import models, transaction
 from django.db.models import (
+    BooleanField,
+    Case,
+    DecimalField,
+    ExpressionWrapper,
+    F,
     Q,
     Sum,
-    F,
-    ExpressionWrapper,
-    DecimalField,
-    Case,
     When,
-    BooleanField,
 )
 from django.urls import reverse
 from django.utils import timezone

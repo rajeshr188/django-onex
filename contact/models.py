@@ -2,14 +2,13 @@ import decimal
 from itertools import chain, islice, tee
 
 from dateutil import relativedelta
-
-from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Q, Sum
 from django.db.models.expressions import OrderBy
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Customer(models.Model):

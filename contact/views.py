@@ -1,23 +1,23 @@
-from datetime import datetime, timedelta
 import base64
-from django.core.files.base import ContentFile
+from datetime import datetime, timedelta
 from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_http_methods  # new
 from django_tables2.config import RequestConfig
 from render_block import render_block_to_string
-from django.views.decorators.http import require_http_methods  # new
 
 from sales.models import Month
 
 from .filters import CustomerFilter
-from .forms import CustomerForm, ContactForm, AddressForm, CustomerMergeForm
-from .models import Customer, Contact, Address, Proof
+from .forms import AddressForm, ContactForm, CustomerForm, CustomerMergeForm
+from .models import Address, Contact, Customer, Proof
 from .tables import CustomerTable
 
 
@@ -86,7 +86,7 @@ def customer_create(request):
 
             f.save()
 
-            messages.success(request,messages.SUCCESS, f"created customer {f}")
+            messages.success(request, messages.SUCCESS, f"created customer {f}")
             # table = CustomerTable(data=Customer.objects.all())
             # table.paginate(page=request.GET.get("page", 1), per_page=10)
             # context = {"filter": CustomerFilter, "table": table}
@@ -196,7 +196,7 @@ def customer_edit(request, pk):
             f.pic = image_file
 
         f.save()
-        messages.success(request,messages.SUCCESS, f"updated customer {f}")
+        messages.success(request, messages.SUCCESS, f"updated customer {f}")
 
         return redirect("contact_customer_list")
 

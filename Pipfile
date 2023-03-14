@@ -34,6 +34,8 @@ twilio = "*"
 django-render-block = "*"
 reportlab = "*"
 num2words = "*"
+isort = "*"
+black = "*"
 
 [dev-packages]
 

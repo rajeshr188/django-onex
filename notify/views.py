@@ -1,9 +1,11 @@
-from django.shortcuts import render, get_object_or_404
-from .models import NoticeGroup, Notification
-from .forms import NoticeGroupForm, NotificationForm
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
+
 from girvi.models import Loan
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
-from django.http import HttpResponse
+
+from .forms import NoticeGroupForm, NotificationForm
+from .models import NoticeGroup, Notification
 
 # Create your views here.
 

@@ -2,8 +2,8 @@ from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
-from django.forms import DateTimeInput, modelformset_factory
 from django.contrib.postgres.forms import DateRangeField
+from django.forms import DateTimeInput, modelformset_factory
 from django.urls import reverse_lazy
 from django_select2 import forms as s2forms
 from django_select2.forms import ModelSelect2Widget, Select2MultipleWidget

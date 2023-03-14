@@ -1,7 +1,8 @@
 import os
+
 import environ
-from django.contrib.messages import constants as messages
 from django.contrib import messages
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +31,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 INSTALLED_APPS = [
     "django_select2",
-    
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",  # new
-
     # Third-party
     "allauth",
     "allauth.account",  # new
@@ -55,11 +54,10 @@ INSTALLED_APPS = [
     "djmoney",
     "widget_tweaks",
     "debug_toolbar",
-    "django_extensions",  
+    "django_extensions",
     "django_htmx",
-    'django_celery_beat',
-    'django_celery_results',
-
+    "django_celery_beat",
+    "django_celery_results",
     # Local
     "users",
     "pages",
@@ -90,7 +88,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'djangox_project.middleware.HtmxMessageMiddleware',
+    "djangox_project.middleware.HtmxMessageMiddleware",
 ]
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -233,11 +231,10 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379"
 # CELERY_RESULT_BACKEND = 'django-db'
 
 CELERY_BEAT_SCHEDULE = {
-    "scheduled_task":{
-        "task":"contact.tasks.add",
-        "schedule":5.0,
-        "args":(10,10),
-
+    "scheduled_task": {
+        "task": "contact.tasks.add",
+        "schedule": 5.0,
+        "args": (10, 10),
     },
 }
 

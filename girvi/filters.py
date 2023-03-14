@@ -1,9 +1,10 @@
 import django_filters
+from django_select2.forms import Select2Widget
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
 from girvi.forms import LoansWidget
-from django_select2.forms import Select2Widget
+
 from .models import Adjustment, Loan, LoanStatement, Release
 
 

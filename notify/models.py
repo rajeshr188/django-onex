@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.postgres.fields import DateRangeField
+from django.db import models
+
 from girvi.models import Loan
 
 

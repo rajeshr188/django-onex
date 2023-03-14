@@ -2,11 +2,12 @@ from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse, reverse_lazy
 from django_select2 import forms as s2forms
 from django_select2.forms import ModelSelect2Widget, Select2Widget
-from .models import Customer, Contact, Address, Proof
 from phonenumber_field.formfields import PhoneNumberField
+
+from .models import Address, Contact, Customer, Proof
 
 
 class CustomerWidget(s2forms.ModelSelect2Widget):

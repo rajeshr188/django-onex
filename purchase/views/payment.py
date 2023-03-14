@@ -6,9 +6,9 @@ from num2words import num2words
 from ..filters import PaymentFilter
 from ..forms import PaymentForm
 from ..models import Payment
+
 # from ..render import Render
 from ..tables import PaymentTable
-
 
 # def print_payment(pk):
 #     payment = Payment.objects.get(id=pk)

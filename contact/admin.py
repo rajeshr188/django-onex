@@ -4,7 +4,7 @@ from import_export import fields, resources
 from import_export.admin import ImportExportActionModelAdmin, ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
 
-from .models import Customer, Contact, Address, Proof
+from .models import Address, Contact, Customer, Proof
 
 
 class CustomerResource(resources.ModelResource):

@@ -4,7 +4,7 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required,user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, F, Max, Prefetch, Q, Sum
@@ -21,13 +21,14 @@ from django.views.generic.dates import (
     WeekArchiveView,
     YearArchiveView,
 )
-
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook
 from render_block import render_block_to_string
 
 from contact.models import Customer
+from notify.models import NoticeGroup, Notification
+
 # from utils.render import Render
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
@@ -35,7 +36,6 @@ from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import Loan_formset, LoanForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanStatement, Release, Series
 from ..tables import LoanTable
-from notify.models import Notification, NoticeGroup
 
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
@@ -325,6 +325,7 @@ def multirelease(request, id=None):
                 )
 
     return HttpResponseRedirect(reverse("girvi_loan_list"))
+
 
 @user_passes_test(lambda user: user.is_superuser)
 @login_required

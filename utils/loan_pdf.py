@@ -1,35 +1,32 @@
-from reportlab.lib.pagesizes import letter, landscape, A4, mm
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+import io
+from io import BytesIO
+
+from num2words import num2words
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.lib.pagesizes import A4, landscape, letter, mm
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch, mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (
     Flowable,
     Frame,
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
     Image,
-    TableStyle,
     ListFlowable,
     ListItem,
     PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
 )
-from reportlab.lib import colors
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-import io
-from num2words import num2words
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
-from girvi.models import Loan
+
 from contact.models import Customer
-
-from io import BytesIO
-from reportlab.platypus import SimpleDocTemplate, Paragraph, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import mm, inch
-
+from girvi.models import Loan
 
 PAGESIZE = (140 * mm, 216 * mm)
 BASE_MARGIN = 5 * mm

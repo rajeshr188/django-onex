@@ -10,12 +10,12 @@ from django_filters.views import FilterView
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin
 
-# from utils.render import Render
-
 from ..filters import ReleaseFilter
 from ..forms import BulkReleaseForm, ReleaseForm
 from ..models import Loan, Release
 from ..tables import ReleaseTable
+
+# from utils.render import Render
 
 
 def increlid():

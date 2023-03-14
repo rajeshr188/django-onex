@@ -10,9 +10,9 @@ from num2words import num2words
 from ..filters import ReceiptFilter
 from ..forms import ReceiptForm, ReceiptItemFormSet, ReceiptLineForm
 from ..models import Receipt, ReceiptLine
+
 # from ..render import Render
 from ..tables import ReceiptTable
-
 
 # def print_receipt(request, pk):
 #     receipt = Receipt.objects.get(id=pk)

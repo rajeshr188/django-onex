@@ -8,7 +8,7 @@ from django.contrib.messages import constants as messages
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env()
-environ.Env.read_env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # Third-party
     "allauth",
     "allauth.account",  # new
+    "invitations",
     "crispy_forms",
     "crispy_bootstrap5",
     "import_export",
@@ -80,9 +81,9 @@ MIDDLEWARE = [
     # 'django.middleware.cache.FetchFromCacheMiddleware',
     "django_htmx.middleware.HtmxMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -169,12 +170,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
+from django.utils.translation import gettext_lazy as _
 
+LANGUAGES = (
+    ("en", _("English")),
+    ("fr", _("French")),
+    ("hi", _("Hindi")),
+)
+LOCALE_PATHS = (os.path.join(BASE_DIR, "locale/"),)
 TIME_ZONE = "Asia/Kolkata"
 
-# USE_I18N = True
+USE_I18N = True
 
-# USE_L10N = True
+USE_L10N = True
 SHORT_DATETIME_FORMAT = "d-m-Y"
 DATETIME_INPUT_FORMATS = [
     "%d/%m/%Y %I:%M %p",
@@ -202,7 +210,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SITE_ID = 1
-
+ACCOUNT_ADAPTER = "invitations.models.InvitationsAdapter"
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -225,18 +233,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 #         'LOCATION': '127.0.0.1:11211',
 #     }
 # }
-CELERY_BROKER_URL = "redis://localhost:6379"
-# CELERY_BROKER_URL = 'amqp://localhost'
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
-# CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_BROKER_URL = "amqp://localhost"
+# CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "django-db"
 
-CELERY_BEAT_SCHEDULE = {
-    "scheduled_task": {
-        "task": "contact.tasks.add",
-        "schedule": 5.0,
-        "args": (10, 10),
-    },
-}
 
 MESSAGE_TAGS = {
     messages.DEBUG: "alert-info",
@@ -247,8 +248,7 @@ MESSAGE_TAGS = {
 }
 
 PHONENUMBER_DEFAULT_REGION = "IN"
-
-
+PHONENUMBER_DEFAULT_FORMAT = "NATIONAL"
 MESSAGE_TAGS = {
     messages.DEBUG: "bg-light",
     messages.INFO: "text-white bg-primary",
@@ -256,3 +256,28 @@ MESSAGE_TAGS = {
     messages.WARNING: "text-dark bg-warning",
     messages.ERROR: "text-white bg-danger",
 }
+
+TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN")
+TWILIO_NUMBER = env("TWILIO_NUMBER")
+
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+""" crontab() Execute every minute.
+crontab(minute=0, hour=0) Execute daily at midnight.
+crontab(minute=0, hour='*/3') Execute every three hours: midnight, 3am, 6am, 9am, noon, 3pm, 6pm, 9pm.
+crontab(minute=0, hour='0,3,6,9,12,15,18,21') Same as previous.
+crontab(minute='*/15') Execute every 15 minutes.
+crontab(day_of_week='sunday') Execute every minute (!) at Sundays.
+crontab(minute='*', hour='*', day_of_week='sun') Same as previous.
+crontab(minute='*/10', hour='3,17,22', day_of_week='thu,fri') Execute every ten minutes, but only between 3-4 am, 5-6 pm, and 10-11 pm on Thursdays or Fridays.
+crontab(minute=0, hour='*/2,*/3') Execute every even hour, and every hour divisible by three. This means: at every hour except: 1am, 5am, 7am, 11am, 1pm, 5pm, 7pm, 11pm
+crontab(minute=0, hour='*/5') Execute hour divisible by 5. This means that it is triggered at 3pm, not 5pm (since 3pm equals the 24-hour clock value of “15”, which is divisible by 5).
+crontab(minute=0, hour='*/3,8-17') Execute every hour divisible by 3, and every hour during office hours (8am-5pm).
+crontab(0, 0, day_of_month='2') Execute on the second day of every month.
+crontab(0, 0, day_of_month='2-30/2') Execute on every even numbered day.
+crontab(0, 0, day_of_month='1-7,15-21') Execute on the first and third weeks of the month.
+crontab(0, 0, day_of_month='11', month_of_year='5') Execute on the eleventh of May every year.
+crontab(0, 0, month_of_year='*/3') Execute every day on the first month of every quarter.
+"""

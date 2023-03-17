@@ -1,11 +1,6 @@
-from crispy_bootstrap5.bootstrap5 import FloatingField
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
-from django.urls import reverse, reverse_lazy
 from django_select2 import forms as s2forms
-from django_select2.forms import ModelSelect2Widget, Select2Widget
-from phonenumber_field.formfields import PhoneNumberField
+
 
 from .models import Address, Contact, Customer, Proof
 
@@ -34,44 +29,6 @@ class CustomerForm(forms.ModelForm):
             "area",
         ]
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.helper = FormHelper()
-
-    #     self.helper.attrs = {
-    #         # "hx-post":".",
-    #         # "hx-select":'#customer-content',
-    #         # "hx-target":'#customer-content',
-    #         # "hx-swap":"innerHTML",
-
-    #     }
-    #     self.helper.layout = Layout(
-    #         Row(
-    #             Column(FloatingField("name"), css_class="form-group col-md-3 mb-0"),
-    #             Column(
-    #                 FloatingField("relatedas"), css_class="form-group col-md-3 mb-0"
-    #             ),
-    #             Column(
-    #                 FloatingField("relatedto"), css_class="form-group col-md-3 mb-0"
-    #             ),
-    #             css_class="form-row",
-    #         ),
-    #         Row(
-    #             Column(FloatingField("type"), css_class="form-group col-md-3 mb-0"),
-    #             Column(FloatingField("pic"), css_class="form-group col-md-3 mb-0"),
-    #             Column(
-    #                 FloatingField("phonenumber"), css_class="form-group col-md-3 mb-0"
-    #             ),
-    #             css_class="form-row",
-    #         ),
-    #         Row(
-    #             Column(FloatingField("Address"), css_class="form-group col-md-3 mb-0"),
-    #             Column(FloatingField("area"), css_class="form-group col-md-3 mb-0"),
-    #             css_class="form-row",
-    #         ),
-    #         Submit("submit", "Submit"),
-    #     )
-
 
 class AddressForm(forms.ModelForm):
     class Meta:
@@ -90,13 +47,14 @@ class AddressForm(forms.ModelForm):
 
 
 class ContactForm(forms.ModelForm):
-    phone_number = PhoneNumberField(region="IN")
+    # phone_number = PhoneNumberField(region="IN")
 
     class Meta:
         model = Contact
         fields = [
             "contact_type",
-            # "Customer",
+            "phone_number",
+            # "customer",
         ]
 
     # def __init__(self, *args, **kwargs):

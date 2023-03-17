@@ -28,8 +28,6 @@ from render_block import render_block_to_string
 
 from contact.models import Customer
 from notify.models import NoticeGroup, Notification
-
-# from utils.render import Render
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
@@ -80,10 +78,10 @@ class LoanCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = LoanForm
     success_url = reverse_lazy("girvi_loan_create")
 
-    # def get_template_names(self) -> List[str]:
-    #     if self.request.htmx:
-    #         self.template_name = "girvi/partials/loan_form.html"
-    #     return super().get_template_names()
+    def get_template_names(self) -> List[str]:
+        if self.request.htmx:
+            self.template_name = "contact/partials/contact-form-model.html"
+        return super().get_template_names()
 
     def get_success_message(self, cleaned_data):
         return format_html(
@@ -204,20 +202,6 @@ def loan_renew(request, pk):
     else:
         form = LoanRenewForm()
     return render(request, "girvi/loan_renew.html", {"form": form, "loan": loan})
-
-
-# @login_required
-# def print_loanpledge(request, pk):
-#     loan = Loan.objects.get(id=pk)
-#     pdf = get_loan_pdf(loan)
-
-#     # params = {"loan": loan}
-#     # return Render.render("girvi/loan_pdf.html", params)
-
-#     response = HttpResponse(pdf, content_type="application/pdf")
-#     response["Content-Disposition"] = 'attachment; filename="pawn_ticket.pdf"'
-
-#     return response
 
 
 @login_required
@@ -532,3 +516,13 @@ def physical_list(request):
     filter = LoanStatementFilter(request.GET, queryset=physically_available)
 
     return render(request, "girvi/physicallist.html", {"filter": filter})
+
+
+@login_required
+def print_loan(request, pk=None):
+    loan = get_object_or_404(Loan, pk=pk)
+    pdf = get_loan_pdf(loan=loan)
+    # Create a response object
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="notice.pdf"'
+    return response

@@ -1,7 +1,5 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
-from django.template.response import TemplateResponse
+
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import AllotmentForm, ChitForm, CollectionForm, ContactForm

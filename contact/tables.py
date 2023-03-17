@@ -18,13 +18,14 @@ class CustomerTable(tables.Table):
     name = tables.Column(linkify=True)
     pic = ImageColumn()
     add_contact = tables.Column(orderable=False, empty_values=())
-    addloan = tables.LinkColumn(
-        "girvi_loan_create",
-        args=[A("pk")],
-        attrs={"a": {"class": "btn fa-solid fa-plus", "role": "button"}},
-        orderable=False,
-        empty_values=(),
-    )
+    add_loan = tables.Column(orderable=False, empty_values=())
+    # addloan = tables.LinkColumn(
+    #     "girvi_loan_create",
+    #     args=[A("pk")],
+    #     attrs={"a": {"class": "btn fa-solid fa-plus", "role": "button"}},
+    #     orderable=False,
+    #     empty_values=(),
+    # )
     edit = tables.LinkColumn(
         "contact_customer_update",
         args=[A("pk")],
@@ -58,6 +59,7 @@ class CustomerTable(tables.Table):
     def render_edit(self):
         return ""
 
+    # never define render_delete it will delete all
     # def render_remove(self):
     #     return ""
     def render_remove(self, record):
@@ -69,6 +71,12 @@ class CustomerTable(tables.Table):
     def render_add_contact(self, record):
         return format_html(
             '<a hx-disinherit="hx-confirm" hx-get="/contact/customer/{}/contactno/add/"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-address-book"></a>',
+            record.pk,
+        )
+
+    def render_add_loan(self, record):
+        return format_html(
+            '<a hx-disinherit="hx-confirm" hx-get="/girvi/girvi/loan/create/{}"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-file"></a>',
             record.pk,
         )
 

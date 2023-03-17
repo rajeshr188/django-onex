@@ -1,15 +1,37 @@
+from decimal import Decimal
+
 import django_filters
+from django.db.models import Q
 
 from .models import Customer
-
+from django.forms.widgets import RadioSelect,CheckboxInput
 
 class CustomerFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr="icontains")
+    query = django_filters.CharFilter(method="universal_search", label="")
     relatedto = django_filters.CharFilter(lookup_expr="icontains")
-    contactno = django_filters.CharFilter(
-        field_name="contactno__phone_number", lookup_expr="icontains"
-    )
+    # contactno = django_filters.CharFilter(
+    #     field_name="contactno__phone_number", lookup_expr="icontains"
+    # )
 
     class Meta:
         model = Customer
-        fields = ["id", "name", "relatedto", "customer_type", "active"]
+        fields = [
+            "query",
+            "relatedto",
+            "customer_type",
+            "active",
+        ]
+       
+       
+    def universal_search(self, queryset, name, value):
+        # if value.replace(".", "", 1).isdigit():
+        #     value = Decimal(value)
+        #     return Customer.objects.filter(
+        #         Q(price=value) | Q(cost=value)
+        #     )
+
+        return Customer.objects.filter(
+            Q(name__icontains=value)
+            | Q(id__icontains=value)
+            | Q(contactno__phone_number__icontains=value)
+        )

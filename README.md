@@ -1,70 +1,125 @@
-# OneX
+> A batteries-included Django starter project. To learn more try the books [Django for Beginners](https://djangoforbeginners.com), [Django for APIs](https://djangoforapis.com), and [Django for Professionals](https://djangoforprofessionals.com).
 
-A framework for Business Apps
+## 🚀 Features
 
-## Features
+- Django 4.1 & Python 3.11
+- Install via [Pip](https://pypi.org/project/pip/), [Pipenv](https://pypi.org/project/pipenv/), or [Docker](https://www.docker.com/)
+- User log in/out, sign up, password reset via [django-allauth](https://github.com/pennersr/django-allauth)
+- Static files configured with [Whitenoise](http://whitenoise.evans.io/en/stable/index.html)
+- Styling with [Bootstrap v5](https://getbootstrap.com/)
+- Debugging with [django-debug-toolbar](https://github.com/jazzband/django-debug-toolbar)
+- DRY forms with [django-crispy-forms](https://github.com/django-crispy-forms/django-crispy-forms)
 
-- For Django 3.2 and Python 3.9
-- Modern virtual environments with [pipenv](https://github.com/pypa/pipenv)
-- Styling with [Bootstrap](https://github.com/twbs/bootstrap) v4.1.3
-- Custom user model
-- Email/password for log in/sign up instead of Django's default username/email/password pattern
-- Social authentication via [django-allauth](https://github.com/pennersr/django-allauth)
-- [django-debug-toolbar](https://github.com/jazzband/django-debug-toolbar)
+![Homepage](homepage_41.png)
+----
 
-## First-time setup
+## Table of Contents
+* **[Installation](#installation)**
+  * [Pip](#pip)
+  * [Pipenv](#pipenv)
+  * [Docker](#docker)
+* [Next Steps](#next-steps)
+* [Contributing](#contributing)
+* [Support](#support)
+* [License](#license)
 
-1.  Make sure Python 3.7x and Pipenv are already installed.
-2.  Clone the repo and configure the virtualenv:
+----
+
+## 📖 Installation
+DjangoX can be installed via Pip, Pipenv, or Docker. To start, clone the repo to your local computer and change into the proper directory.
 
 ```
-$ git clone https://github.com/rajeshr188/onex.git
-$ cd onex
+$ git clone https://github.com/wsvincent/djangox.git
+$ cd djangox
+```
+
+### Pip
+
+```
+$ python -m venv .venv
+
+# Windows
+$ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+$ .venv\Scripts\Activate.ps1
+
+# macOS
+$ source .venv/bin/activate
+
+(.venv) $ pip install -r requirements.txt
+(.venv) $ python manage.py migrate
+(.venv) $ python manage.py createsuperuser
+(.venv) $ python manage.py runserver
+# Load the site at http://127.0.0.1:8000
+```
+
+### Pipenv
+
+```
 $ pipenv install
 $ pipenv shell
+(.venv) $ python manage.py migrate
+(.venv) $ python manage.py createsuperuser
+(.venv) $ python manage.py runserver
+# Load the site at http://127.0.0.1:8000
 ```
 
-3.  Set up the initial migration for our custom user models in `users` and build the database.
+### Docker
+
+To use Docker with PostgreSQL as the database update the `DATABASES` section of `django_project/settings.py` to reflect the following:
+
+```python
+# django_project/settings.py
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "postgres",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "db",  # set in docker-compose.yml
+        "PORT": 5432,  # default postgres port
+    }
+}
+```
+
+The `INTERNAL_IPS` configuration in `django_project/settings.py` must be also be updated:
+
+```python
+# config/settings.py
+# django-debug-toolbar
+import socket
+hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+INTERNAL_IPS = [ip[:-1] + "1" for ip in ips]
+```
+
+And then proceed to build the Docker image, run the container, and execute the standard commands within Docker.
 
 ```
-(djangox) $ python manage.py makemigrations users
-(djangox) $ python manage.py migrate
+$ docker-compose up -d --build
+$ docker-compose exec web python manage.py migrate
+$ docker-compose exec web python manage.py createsuperuser
+# Load the site at http://127.0.0.1:8000
 ```
-
-4.  Create a superuser:
-
-```
-(djangox) $ python manage.py createsuperuser
-```
-
-5.  Confirm everything is working:
-
-```
-(djangox) $ python manage.py runserver
-```
-
-Load the site at [http://127.0.0.1:8000](http://127.0.0.1:8000).
-
-![Home](static/images/home.png)
-
-![Sign up](static/images/signup.png)
-
-<!-- ![Log in](static/images/login.png)
-
-![About](static/images/about.png)
-
-![Forget password](static/images/forgetpassword.png) -->
 
 ## Next Steps
 
-- Use [PostgreSQL locally via Docker](https://wsvincent.com/django-docker-postgresql/)
-- Use [django-environ](https://github.com/joke2k/django-environ) for environment variables
-- Update [EMAIL_BACKEND](https://docs.djangoproject.com/en/2.0/topics/email/#module-django.core.mail) to configure an SMTP backend
-- Make the [admin more secure](https://opensource.com/article/18/1/10-tips-making-django-admin-more-secure)
+- Add environment variables. There are multiple packages but I personally prefer [environs](https://pypi.org/project/environs/).
+- Add [gunicorn](https://pypi.org/project/gunicorn/) as the production web server.
+- Update the [EMAIL_BACKEND](https://docs.djangoproject.com/en/4.0/topics/email/#module-django.core.mail) and connect with a mail provider.
+- Make the [admin more secure](https://opensource.com/article/18/1/10-tips-making-django-admin-more-secure).
+- `django-allauth` supports [social authentication](https://django-allauth.readthedocs.io/en/latest/providers.html) if you need that.
 
-## Adding Social Authentication
+I cover all of these steps in my three books: [Django for Beginners](https://djangoforbeginners.com), [Django for APIs](https://djangoforapis.com), and [Django for Professionals](https://djangoforprofessionals.com).
 
-- [Configuring Google](https://wsvincent.com/django-allauth-tutorial-custom-user-model/#google-credentials)
-- [Configuring Facebook](http://www.sarahhagstrom.com/2013/09/the-missing-django-allauth-tutorial/#Create_and_configure_a_Facebook_app)
-- [Configuring Github](https://wsvincent.com/django-allauth-tutorial/)
-- `django-allauth` supports [many, many other providers in the official docs](https://django-allauth.readthedocs.io/en/latest/providers.html)
+----
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome! See [CONTRIBUTING.md](https://github.com/wsvincent/djangox/blob/master/CONTRIBUTING.md).
+
+## ⭐️ Support
+
+Give a ⭐️  if this project helped you!
+
+## License
+
+[The MIT License](LICENSE)

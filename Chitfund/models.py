@@ -1,22 +1,8 @@
-from datetime import datetime
-
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models as models
-from django.db.models import (
-    CharField,
-    DateField,
-    DateTimeField,
-    PositiveIntegerField,
-    PositiveSmallIntegerField,
-)
 from django.urls import reverse
 from django.utils import timezone
 from django_extensions.db import fields as extension_fields
-from django_extensions.db.fields import AutoSlugField
 
 
 class Contact(models.Model):

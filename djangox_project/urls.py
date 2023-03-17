@@ -23,6 +23,7 @@ urlpatterns = [
     path("notify/", include("notify.urls")),
     path("select2/", include("django_select2.urls")),
     path("api-auth/", include("rest_framework.urls")),
+    path("invitations/", include("invitations.urls", namespace="invitations")),
 ]
 
 if settings.DEBUG:

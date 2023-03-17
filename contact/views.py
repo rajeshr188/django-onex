@@ -119,8 +119,6 @@ def customer_merge(request):
             # merge logic
             original = form.cleaned_data["original"]
             duplicate = form.cleaned_data["duplicate"]
-            print(f"original:{original}")
-            print(f"duplicate:{duplicate}")
             original.merge(duplicate)
             return redirect("contact_customer_list")
     return render(request, "contact/customer_merge.html", context={"form": form})
@@ -221,20 +219,22 @@ def reallot_payments(request, pk):
 
 @login_required
 def contact_create(request, pk=None):
+    print(f"pk:{pk}")
     customer = get_object_or_404(Customer, pk=pk)
-    form = ContactForm(request.POST or None)
+    form = ContactForm(request.POST or None, initial={"customer": customer})
 
     if request.method == "POST":
         if form.is_valid():
-            contact = form.save(commit=False)
-            contact.Customer = customer
+            f = form.save(commit=False)
+            f.customer = customer
+            f.save()
 
-            contact.save()
             return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
             # return render(
             #     request, "contact/contact_detail.html", context={"i": contact}
             # )
         else:
+            print("invalid form")
             return render(
                 request,
                 "contact/partials/contact-form-model.html",

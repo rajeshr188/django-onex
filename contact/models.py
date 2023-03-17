@@ -66,7 +66,7 @@ class Customer(models.Model):
         unique_together = ("name", "relatedas", "relatedto")
 
     def __str__(self):
-        return f"{self.name} {self.relatedas} {self.relatedto} {self.customer_type} "
+        return f"{self.name} {self.relatedas} {self.relatedto} {self.get_customer_type_display()} {self.contactno.first()}"
 
     def get_absolute_url(self):
         return reverse("contact_customer_detail", args=(self.pk,))
@@ -104,6 +104,10 @@ class Customer(models.Model):
 
     def get_score(self):
         return self.contactscore_set.aggregate(t=Sum("score"))["t"]
+
+    @property
+    def get_contact(self):
+        return [no.national_number for no in self.contactno.all()]
 
     @property
     def get_loans(self):
@@ -338,7 +342,7 @@ class Contact(models.Model):
     contact_type = models.CharField(
         max_length=1, choices=ContactType.choices, default=ContactType.Mobile
     )
-    phone_number = PhoneNumberField(blank=True)
+    phone_number = PhoneNumberField(unique=True)
     # is_default = models.BooleanField(default = False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
 
@@ -346,7 +350,7 @@ class Contact(models.Model):
         ordering = ("-created",)
 
     def __str__(self):
-        return str(self.number)
+        return str(self.phone_number)
 
     def get_absolute_url(self):
         return reverse("Customer_Contact_detail", args=(self.pk,))

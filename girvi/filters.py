@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 import django_filters
+from django.db.models import Q
 from django_select2.forms import Select2Widget
 
 from contact.forms import CustomerWidget
@@ -9,8 +12,9 @@ from .models import Adjustment, Loan, LoanStatement, Release
 
 
 class LoanFilter(django_filters.FilterSet):
-    loanid = django_filters.CharFilter(lookup_expr="icontains")
-    itemdesc = django_filters.CharFilter(lookup_expr="icontains")
+    query = django_filters.CharFilter(method="universal_search", label="")
+    # loanid = django_filters.CharFilter(lookup_expr="icontains")
+    # itemdesc = django_filters.CharFilter(lookup_expr="icontains")
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.filter(customer_type="R"),
         widget=CustomerWidget,
@@ -20,9 +24,9 @@ class LoanFilter(django_filters.FilterSet):
     Status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")
     till_date = django_filters.DateFilter("created", lookup_expr="lte")
-    notice = django_filters.CharFilter(
-        field_name="notifications__notice_type", lookup_expr="icontains"
-    )
+    # notice = django_filters.CharFilter(
+    #     field_name="notifications__notice_type", lookup_expr="icontains"
+    # )
 
     def filter_status(self, queryset, name, value):
         return queryset.filter(release__isnull=value)
@@ -30,14 +34,30 @@ class LoanFilter(django_filters.FilterSet):
     class Meta:
         model = Loan
         fields = [
-            "loanid",
+            "query",
             "series",
             "customer",
             "itemtype",
-            "itemweight",
-            "itemdesc",
-            "loanamount",
+            # "itemweight",
+            # "itemdesc",
+            # "loanamount",
         ]
+
+    def universal_search(self, queryset, name, value):
+        # if value.replace(".", "", 1).isdigit():
+        #     value = Decimal(value)
+        #     return Customer.objects.filter(
+        #         Q(price=value) | Q(cost=value)
+        #     )
+
+        return Loan.objects.filter(
+            Q(id__icontains=value)
+            | Q(lid__icontains=value)
+            | Q(loanid__icontains=value)
+            | Q(itemdesc__icontains=value)
+            | Q(itemweight__icontains=value)
+            | Q(loanamount__icontains=value)
+        )
 
 
 class LoanStatementFilter(django_filters.FilterSet):

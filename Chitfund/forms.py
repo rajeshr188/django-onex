@@ -1,8 +1,4 @@
-from datetime import datetime
-
 from django import forms
-from django.forms.widgets import CheckboxSelectMultiple
-from django.utils import timezone
 from django_select2.forms import Select2MultipleWidget
 
 from .models import Allotment, Chit, Collection, Contact

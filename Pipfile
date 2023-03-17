@@ -36,6 +36,9 @@ reportlab = "*"
 num2words = "*"
 isort = "*"
 black = "*"
+django-invitations = "*"
+werkzeug = "*"
+flake8 = "*"
 
 [dev-packages]
 

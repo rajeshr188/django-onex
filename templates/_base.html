@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -34,9 +35,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
-          </li>
+          
           {% if user.is_authenticated %}
           
           <li class="nav-item active">
@@ -54,8 +53,6 @@
               <li><a class="dropdown-item" href="{% url 'girvi-home'%}">Home</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="{% url 'girvi_license_list'%}">License</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#">Series</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" hx-get="{% url 'girvi_loan_list'%}"
                 hx-target="#content" hx-swap="innerHTML" hx-push-url = "true">Loan</a></li>
@@ -106,11 +103,11 @@
               Sales
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="" hx-get="{% url 'sales_invoice_list'%}"
-                 hx-target="#content" hx-swap="innerHTML" hx-push-url = "true">Sales</a></li>
+              <li><a class="dropdown-item" href="{% url 'sales_invoice_list'%}" 
+                 >Sales</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href ='' hx-get="{% url 'sales_receipt_list'%}"
-                hx-target="#content" hx-swap="innerHTML" hx-push-url = "true">Receipt</a></li>
+              <li><a class="dropdown-item" href="{% url 'sales_receipt_list'%}"  
+                >Receipt</a></li>
             </ul>
           </li>
 

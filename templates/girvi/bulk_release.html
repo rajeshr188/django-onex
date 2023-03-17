@@ -1,27 +1,30 @@
 {% extends "_base.html" %}
 {% load static %}
-{% load bootstrap4 %}
+{% load widget_tweaks %}
 {% block content %}
 {{form.media}}
-<div class="form" >
+<div class="container">
+ 
   <form method="post" class="form">
     {% csrf_token %}
     {{ form.non_field_errors }}
     <div class="form-row">
-
         <div class="form-group col-md-4">
+          <label for="{{ field.id_for_label }}">{{ form.date.label }}</label>
           {{ form.date.errors }}
-          {% bootstrap_field form.date %}
+          {{ form.date|add_class:'form-control' }}
         </div>
         <div class="form-group col-md-4">
+          <label for="{{ field.id_for_label }}">{{ form.loans.label }}</label>
           {{ form.loans.errors }}
-          {% bootstrap_field form.loans size="large" %}
+          {{ form.loans|add_class:'form-control' }}
         </div>
-
     </div>
 
     <button class="btn btn-primary" type="submit">Release all</button>
   </form>
+</div>
+
   {% if success %}
     <h3>Released Successfully</h3>
     {%for i in success %}

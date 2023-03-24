@@ -11,6 +11,9 @@ from .models import (
     ProductType,
     ProductVariant,
     VariantImage,
+    Stock,
+    StockTransaction,
+    StockStatement,
 )
 
 
@@ -133,3 +136,39 @@ class VariantImageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(VariantImage, VariantImageAdmin)
+
+class StockAdminForm(forms.ModelForm):
+    class Meta:
+        model = Stock
+        fields = "__all__"
+
+
+class StockAdmin(admin.ModelAdmin):
+    form = StockAdminForm
+
+
+admin.site.register(Stock, StockAdmin)
+
+class StockTransactionAdminForm(forms.ModelForm):
+    class Meta:
+        model = StockTransaction
+        fields = "__all__"
+
+
+class StockTransactionAdmin(admin.ModelAdmin):
+    form = StockTransactionAdminForm
+
+
+admin.site.register(StockTransaction, StockTransactionAdmin)
+
+class StockStatementAdminForm(forms.ModelForm):
+    class Meta:
+        model = StockStatement
+        fields = "__all__"
+
+
+class StockStatementAdmin(admin.ModelAdmin):
+    form = StockStatementAdminForm
+
+
+admin.site.register(StockStatement, StockStatementAdmin)

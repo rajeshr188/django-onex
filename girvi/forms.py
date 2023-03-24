@@ -12,7 +12,8 @@ from contact.forms import CustomerWidget
 from contact.models import Customer
 
 from .models import Adjustment, License, Loan, Release, Series
-
+from django.contrib import admin
+from django.contrib.admin.widgets import AutocompleteSelect
 
 class LoansWidget(s2forms.ModelSelect2Widget):
     search_fields = ["loanid__icontains"]
@@ -36,11 +37,19 @@ class SeriesForm(forms.ModelForm):
 
 class LoanForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), widget=CustomerWidget()
+        queryset=Customer.objects.all(), 
+        widget=CustomerWidget(select2_options={'width': '100%', })
+        
     )
+    # customer = forms.ModelChoiceField(
+    #     queryset=Customer.objects.all(),
+    #     widget=AutocompleteSelect(Loan._meta.get_field('customer'), admin.site,
+    #     attrs={'data-dropdown-auto-width': 'true'}
+    #     )
+    # )
     series = forms.ModelChoiceField(
         queryset=Series.objects.exclude(is_active=False),
-        # widget = Select2Widget
+        # widget = ModelSelect2Widget(
         widget=forms.Select(
             attrs={
                 "hx-get": reverse_lazy("girvi_series_next_loanid"),
@@ -75,10 +84,13 @@ class LoanForm(forms.ModelForm):
             "loanamount",
             "interestrate",
         ]
+       
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        self.helper.form_class="modal-content"
         self.helper.form_action = reverse_lazy("girvi_loan_create")
         self.helper.attrs = {
             # "hx-post": reverse_lazy("girvi_loan_create"),

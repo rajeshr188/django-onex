@@ -1,7 +1,6 @@
 from django import forms
 from django_select2 import forms as s2forms
 
-
 from .models import Address, Contact, Customer, Proof
 
 
@@ -85,5 +84,4 @@ class CustomerMergeForm(forms.Form):
         queryset=Customer.objects.all(), widget=CustomerWidget()
     )
 
-    class Meta:
-        widgets = {"original": CustomerWidget, "duplicate": CustomerWidget}
+

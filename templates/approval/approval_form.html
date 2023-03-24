@@ -1,6 +1,6 @@
 {% extends "_base.html" %}
 {% load static %}
-{% load bootstrap4%}
+{%load widget_tweaks%}
 {% block content %}
 {{form.media}}
   <p>
@@ -13,7 +13,8 @@
   <div class="form-row">
     <div class="form-group col-md-3">
       {{ form.contact.errors }}
-      {% bootstrap_field form.contact size="small"%}
+      {{ form.contact|add_label_class:"label_class_1 label_class_2" }}
+      {% render_field form.contact class="form-control" %}
     </div>
   </div>
   {{ approvalline_form.management_form }}
@@ -37,7 +38,7 @@
             {% for field in form.visible_fields %}
             <td class="{{field.name}}" >
               <!-- {{ field.errors.as_ul }} -->
-              {% bootstrap_field field show_label=False size="small"%}
+              {% render_field field show_label=False size="small"%}
             </td>
             {% endfor %}
           </tr>

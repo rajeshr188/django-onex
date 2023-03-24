@@ -3,9 +3,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
-
+from autocomplete import HTMXAutoComplete
 # from controlcenter.views import controlcenter
 urlpatterns = [
+    
     path("admin/", admin.site.urls),
     path("users/", include("django.contrib.auth.urls")),
     path("accounts/", include("allauth.urls")),

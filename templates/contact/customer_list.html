@@ -1,13 +1,7 @@
 {% extends "_base.html" %}
-{% load static %}
 {%load django_tables2%}
-
-{%load crispy_forms_tags%}
-{%load crispy_forms_filters%}
 {% load widget_tweaks %}
 {{filter.form.media}}
-
-
 {%block content%}
 
 <div id="customer-content" class="container">
@@ -20,8 +14,11 @@
             href="{% url 'contact_customer_create' %}" 
             
             role="button">New Customer</a>
-            <a class="btn btn-primary mr-2" 
-            href="{% url 'contact_customer_merge' %}" 
+        <a class="btn btn-primary mr-2" 
+            
+            hx-get="{% url 'contact_customer_merge' %}" 
+            hx-target="#dialog" 
+            hx-swap="innerHTML"
             role="button">Merge Customer</a>
       </div>
     </div>
@@ -56,10 +53,10 @@
             </div>
         </div>
         {% endif %}
-    </div>
+      </div>
     </div>
 
-    <div id="modal" class="modal fade" tabindex="-1">
+    <div id="modal" class="modal hide fade"   tabindex="-1" role="dialog"  data-focus="false" aria-hidden="true">
       <div id="dialog" class="modal-dialog" hx-target="this"></div>
     </div>
  
@@ -74,5 +71,14 @@
     {%endblock%}
 </div>
 </div>
- 
+
+<script>
+  $('.modal').on('shown.bs.modal', function (e) {
+    
+    $(this).find('#id_customer').djangoSelect2({
+        dropdownParent: $(this).find('.modal-content')       
+    }); 
+
+})
+</script> 
 {%endblock%}

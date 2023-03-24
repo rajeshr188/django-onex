@@ -101,11 +101,11 @@ urlpatterns += (
     path("girvi/loan/", views.loan_list, name="girvi_loan_list"),
     path("girvi/loan/renew/<int:pk>/", views.loan_renew, name="girvi_loan_renew"),
     path(
-        "girvi/loan/create/", views.LoanCreateView.as_view(), name="girvi_loan_create"
+        "girvi/loan/create/", views.create_loan, name="girvi_loan_create"
     ),
     path(
         "girvi/loan/create/<int:pk>",
-        views.LoanCreateView.as_view(),
+        views.create_loan,
         name="girvi_loan_create",
     ),
     path("girvi/loan/detail/<int:pk>/", views.loan_detail, name="girvi_loan_detail"),

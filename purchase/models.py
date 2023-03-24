@@ -162,8 +162,9 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         self.due_date = self.created + timedelta(days=self.term.due_days)
-        if self.is_gst:
-            self.total += self.get_gst()
+        # if self.is_gst:
+        #     self.total += self.get_gst()
+        self.total = self.balance + self.get_gst()
 
         super(Invoice, self).save(*args, **kwargs)
 
@@ -355,10 +356,10 @@ class Payment(models.Model):
         return "%s" % self.id
 
     def get_absolute_url(self):
-        return reverse("purchase_payment_detail", args=(self.pk,))
+        return reverse("purchase:purchase_payment_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("purchase_payment_update", args=(self.pk,))
+        return reverse("purchase:purchase_payment_update", args=(self.pk,))
 
     def get_line_totals(self):
         return self.paymentline_set.aggregate(t=Sum("amount"))["t"]

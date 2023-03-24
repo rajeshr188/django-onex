@@ -32,32 +32,5 @@
     </div>
     
 </div>
-<div class="row">
-    <div class="col">
-        <ul class="list-group list-group-flush p-3">
-            {% recursetree node %}
-            <div class='card'>
-                <div class="card-body">
-                    <a class="btn btn-outline-primary" data-toggle="collapse" href="#multiCollapseExample{{node.id}}"
-                        role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
-                        {{ node.name }} {{node.current_balance}}#({{node.get_descendant_count}})
-                    </a>
-                    <div class="row">
-                        <div class="col">
-                            <div class="collapse multi-collapse " id="multiCollapseExample{{node.id}}">
-                                <ul class="children">
-                                    {%if not node.is_leaf_node%}
-                                    {{children}}
-                                    {%endif%}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endrecursetree %}
-        </ul>
-    </div>
-</div>
 
 {% endblock %}

@@ -394,7 +394,7 @@ class Journal(models.Model):
 
     def get_url_string(self):
         if self.content_type:
-            return f"{self.content_type.app_label}_{self.content_type.model}_detail"
+            return f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail"
 
     @transaction.atomic()
     def transact(self, lt=[], at=[]):

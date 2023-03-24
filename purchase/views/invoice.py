@@ -24,7 +24,7 @@ from ..tables import InvoiceTable
 @login_required
 def purchase_list(request):
     filter = InvoiceFilter(
-        request.GET, queryset=Invoice.objects.all().select_related("supplier", "term")
+        request.GET, queryset=Invoice.objects.all().select_related('supplier','term')
     )
     table = InvoiceTable(filter.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
@@ -55,14 +55,14 @@ def purchase_create(request):
 def purchase_update(request, id=None):
     obj = get_object_or_404(Invoice, pk=id)
     form = InvoiceForm(request.POST or None, instance=obj)
-    new_item_url = reverse("purchase_invoiceitem_create", kwargs={"parent__id": obj.id})
+    new_item_url = reverse("purchase:purchase_invoiceitem_create", kwargs={"parent_id": obj.id})
     context = {"object": obj, "form": form, "new_item_url": new_item_url}
     if form.is_valid():
         form.save()
         context["message"] = "Updated"
     if request.htmx:
         return render(request, "shared/partials/forms.html", context)
-    return render(request, "purchase/create_update.html", context)
+    return render(request, "sales/create_update.html", context)
 
 
 @login_required

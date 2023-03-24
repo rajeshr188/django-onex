@@ -1,0 +1,7 @@
+{% load crispy_forms_tags %}
+{{form.media}}
+
+<form method="post" action="." class="modal-content">
+    {% csrf_token %}
+    {% crispy form%}
+</form>

@@ -2,13 +2,15 @@ import django_filters
 from django_select2.forms import Select2Widget
 
 from contact.models import Customer
-
+from contact.forms import CustomerWidget
 from .models import Invoice, Receipt
 
 
 class InvoiceFilter(django_filters.FilterSet):
     customer = django_filters.ModelChoiceFilter(
-        queryset=Customer.objects.exclude(customer_type="Re"), widget=Select2Widget
+        queryset=Customer.objects.all(), 
+        # widget=Select2Widget
+        widget = CustomerWidget
     )
     due_date = django_filters.DateFilter(field_name="due_date", lookup_expr="lte")
 

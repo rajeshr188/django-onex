@@ -6,6 +6,7 @@ class LedgerManager(models.Manager):
         return (
             super()
             .get_queryset(*args, **kwargs)
+            # .select_related('accounttype','ledgertransactions')
             .prefetch_related("ledgerstatements", "credit_txns", "debit_txns")
         )
 

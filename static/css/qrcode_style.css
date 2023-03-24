@@ -19,6 +19,9 @@ img {
 
 
 
+.select2-container {
+  z-index: 99999;
+}
 tr[data-notworth='True'][data-released='False'] {
     background-color: #ef3608;
 }

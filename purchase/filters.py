@@ -2,13 +2,16 @@ import django_filters
 from django_select2.forms import Select2Widget
 
 from contact.models import Customer
+from contact.forms import CustomerWidget
 
 from .models import Invoice, Payment
 
 
 class InvoiceFilter(django_filters.FilterSet):
     supplier = django_filters.ModelChoiceFilter(
-        queryset=Customer.objects.all(), widget=Select2Widget
+        queryset=Customer.objects.all(), 
+        # widget=Select2Widget creates N=1 problem with customer contacts
+        widget = CustomerWidget
     )
     created = django_filters.DateTimeFromToRangeFilter()
     posted = django_filters.BooleanFilter(field_name="posted", lookup_expr="isnull")

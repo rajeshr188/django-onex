@@ -30,7 +30,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Application definition
 
 INSTALLED_APPS = [
-    "django_select2",
+    
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",  # new
     # Third-party
+    "django_select2",
     "allauth",
     "allauth.account",  # new
     "invitations",

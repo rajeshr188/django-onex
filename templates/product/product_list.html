@@ -1,5 +1,4 @@
-
-{% load bootstrap4 %}
+{%load crispy_forms_tags%}
 {% block content %}
 {{form.media}}
 <p><a class="btn btn-default" href="{% url 'product_product_list' %}">Product Listing</a></p>
@@ -40,8 +39,7 @@
         </div>
         <div class="card-body">
           <form action="" method="get" class="form-horizontal">
-              {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
-              {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+              {{filter.form|crispy}}
           </form>
       </div>
     </div>

@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
 django-debug-toolbar = "*"
 django-filter = "*"
 django-tables2 = "*"
@@ -39,6 +38,8 @@ black = "*"
 django-invitations = "*"
 werkzeug = "*"
 flake8 = "*"
+django-htmx-autocomplete = "*"
+django = "==4.2rc1"
 
 [dev-packages]
 

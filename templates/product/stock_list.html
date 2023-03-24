@@ -1,12 +1,14 @@
-{%load bootstrap4%}
+{%load crispy_forms_tags%}
 {% block content %}
-<p>
-    <a class="btn btn-primary" href="{% url 'product_stock_list' %}">Stock Listing</a>
-    <a class="btn btn-primary" href="{% url 'product_stock_audit' %}">Stock Audit</a>
-    <a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>
-</p>
-<div class="row">
-    <div class="col-9">
+<div class="container my-3">
+    <p>
+        <a class="btn btn-primary" href="{% url 'product_stock_list' %}">Stock Listing</a>
+        <a class="btn btn-primary" href="{% url 'product_stock_audit' %}">Stock Audit</a>
+        <a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>
+    </p>
+</div>
+<div class="row py-3">
+    <div class="col-9 py-3">
         <table class="table table-sm table-responsive">
             <tr>
                 <td>created</td>
@@ -45,8 +47,7 @@
                 </div>
                 <div class="card-body">
                     <form action="" method="get" class="form-horizontal">
-                        {% bootstrap_form filter.form field_class='mb-2 mr-sm-2' size='small' %}
-                        {% bootstrap_button 'filter' button_type="submit" button_class="btn-primary" %}
+                        {{filter.form|crispy}}
                     </form>
                 </div>
             </div>

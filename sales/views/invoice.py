@@ -67,7 +67,7 @@ def home(request):
 
 
 def sales_list(request):
-    filter = InvoiceFilter(request.GET, queryset=Invoice.objects.all())
+    filter = InvoiceFilter(request.GET, queryset=Invoice.objects.all().select_related('customer','term','approval').prefetch_related())
     table = InvoiceTable(filter.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     context = {"filter": filter, "table": table}

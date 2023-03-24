@@ -7,6 +7,7 @@
       if (e.detail.target.id === "dialog") {
         modal.show()
       }
+
     })
   
     htmx.on("htmx:beforeSwap", (e) => {
@@ -22,3 +23,5 @@
       document.getElementById("dialog").innerHTML = ""
     })
   })()
+
+  

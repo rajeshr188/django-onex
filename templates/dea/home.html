@@ -34,7 +34,7 @@
                 {%for i in data.ledger%}
                 <tr>
                     <td>{{i.AccountType}}</td>
-                    <td><a hx-get="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
+                    <td><a href="{% url 'dea_ledger_detail' i.ledgerno_id %}">{{ i.name }}</a></td>
                     <td>{{i.created}}</td>
                     <td>{{i.get_cb}}</td>
                     <td>{{i.get_dr}}</td>

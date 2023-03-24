@@ -1,14 +1,13 @@
 
 {%load django_tables2%}
-{%load bootstrap4%}
 {% block content %}
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Payments</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-     <a class="btn btn-primary mr-2" href="{% url 'purchase_payment_create' %}" role="button">Add Payment</a>
-     <a class="btn btn-primary mr-2" href="{% url 'purchase_payment_list' %}" role="button">Payment List</a>
+     <a class="btn btn-primary mr-2" href="{% url 'purchase:purchase_payment_create' %}" role="button">Add Payment</a>
+     <a class="btn btn-primary mr-2" href="{% url 'purchase:purchase_payment_list' %}" role="button">Payment List</a>
      <a class="btn btn-primary" href="{% export_url "ods" %}" role="button">export</a>
 
     </div>

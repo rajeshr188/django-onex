@@ -3,6 +3,8 @@ from django.forms import inlineformset_factory, modelformset_factory
 from django_select2.forms import Select2Widget
 
 from contact.models import Customer
+from contact.forms import CustomerWidget
+
 from product.models import Stock
 
 from .models import Approval, ApprovalLine, ApprovalLineReturn
@@ -10,7 +12,9 @@ from .models import Approval, ApprovalLine, ApprovalLineReturn
 
 class ApprovalForm(forms.ModelForm):
     contact = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), widget=Select2Widget
+        queryset=Customer.objects.all(), 
+        # widget=Select2Widget
+        widget = CustomerWidget
     )
 
     class Meta:

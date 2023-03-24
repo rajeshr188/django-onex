@@ -72,35 +72,98 @@ def loan_list(request):
     else:
         return render(request, "girvi/loan_list.html", context)
 
+# @login_required
+# def create_loan(request,pk=None):
 
-class LoanCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = Loan
-    form_class = LoanForm
-    success_url = reverse_lazy("girvi_loan_create")
+#     if pk:
+#         customer = get_object_or_404(Customer,pk = pk)
+    
+#     if request.method == 'POST':
+#         form = LoanForm(request.POST or None)
+#         # check whether it's valid:
+#         if form.is_valid():
+#             l = form.save(commit=False)
+#             l.created_by = request.user
+#             last_loan = l.save()
+            
+#             messages.success(request, f"last loan id is {last_loan.lid}")  
+#             # return render(request,'girvi/partials/loan_info.html',
+#             #     {
+#             #         'object':last_loan,
+#             #         'previous':last_loan.get_previous(),
+#             #         'next':last_loan.get_next(),})
+#             reverse_lazy("girvi_loan_create")
+#         else:
+#             messages.warning(request, 'Please correct the error below.')
+#     else:
+#         if pk:
+#             form = LoanForm(initial={'customer':customer,'created':ld})
+#         else:
+#             form = LoanForm(initial={'created':ld})
+            
+#     if request.META.get('HTTP_HX_REQUEST'):
+#         return render(request,'form.html',{'form':form})
+#     return render(request,'girvi/loan_form.html',{
+#                     'form':form,
+#                     })
 
-    def get_template_names(self) -> List[str]:
-        if self.request.htmx:
-            self.template_name = "contact/partials/contact-form-model.html"
-        return super().get_template_names()
-
-    def get_success_message(self, cleaned_data):
-        return format_html(
-            'created loan {} <a href="/girvi/girvi/loan/detail/{}/"  class="btn btn-outline-info" >{}</a>',
-            self.success_message,
-            self.object.pk,
-            self.object,
-        )
-
-    def get_initial(self):
-        if self.kwargs:
-            customer = Customer.objects.get(id=self.kwargs["pk"])
-            return {"customer": customer, "created": ld}
+@login_required
+def create_loan(request,pk=None):
+    form = LoanForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            l = form.save(commit=False)
+            l.created_by = request.user
+            last_loan = l.save()
+            
+            messages.success(request, f"last loan id is {last_loan.lid}")  
+            
+            return reverse_lazy("girvi_loan_create")
         else:
-            return {"created": ld}
+            messages.warning(request, 'Please correct the error below.')
+    else:
+        if pk:
+            customer = get_object_or_404(Customer,pk = pk)
+            form = LoanForm(initial={'customer':customer,'created':ld})
+        else:
+            form = LoanForm(initial={'created':ld})
+        
+            
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request,'modal-form.html',{'form':form})
 
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super().form_valid(form)
+    return render(request,'girvi/loan_form.html',{
+                    'form':form,
+                    })
+
+# class LoanCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+#     model = Loan
+#     form_class = LoanForm
+#     success_url = reverse_lazy("girvi_loan_create")
+
+#     def get_template_names(self) -> List[str]:
+#         if self.request.htmx:
+#             self.template_name = "contact/partials/contact-form-model.html"
+#         return super().get_template_names()
+
+#     def get_success_message(self, cleaned_data):
+#         return format_html(
+#             'created loan {} <a href="/girvi/girvi/loan/detail/{}/"  class="btn btn-outline-info" >{}</a>',
+#             self.success_message,
+#             self.object.pk,
+#             self.object,
+#         )
+
+#     def get_initial(self):
+#         if self.kwargs:
+#             customer = Customer.objects.get(id=self.kwargs["pk"])
+#             return {"customer": customer, "created": ld}
+#         else:
+#             return {"created": ld}
+
+#     def form_valid(self, form):
+#         form.instance.created_by = self.request.user
+#         return super().form_valid(form)
 
 
 class LoanUpdateView(LoginRequiredMixin, UpdateView):

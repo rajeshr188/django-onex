@@ -1,14 +1,24 @@
+
 {% load crispy_forms_tags %}
+{{form.media}}
+{% block content %}
 <form hx-post="{{ request.path }}" class="modal-content">
     {% csrf_token %}
     <div class="modal-header">
-      <h5 class="modal-title">Add Contact :{{customer.name}}</h5>
+      <h5 class="modal-title">Add  for {{customer.name}}</h5>
     </div>
     <div class="modal-body">
-      {{form|crispy}}
+      {{form|crispy}}      
     </div>
     <div class="modal-footer">
       <button type="button" data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
       <button type="submit" class="btn btn-success">Save</button>
     </div>
   </form>
+<script>
+  $('.django-select2').djangoSelect2({
+    dropdownParent: $('#modal'),
+        width: '100%'
+  });
+</script>
+  {% endblock %}

@@ -1,4 +1,4 @@
-
+{%extends '_base.html'%}
 {% block title %}Acount detail{% endblock %}
 
 {% block content %}
@@ -98,7 +98,7 @@
         {%for i in txns%}
         <tr>
             <td>{{i.created}}</td>
-            <td><a href="{% url ''|add:i.voucher_url pk=i.voucher%}">{{i.voucher}}</a></td>
+            <td><a href="{% url ''|add:i.voucher_url id=i.voucher%}">{{i.voucher}}</a></td>
             <td>{{i.description}}</td>
             <td>{%if i.xactcode == 'Dr'%}{{i.amount}}{%else%}-{%endif%}</td>
             <td>{%if i.xactcode == 'Cr'%}{{i.amount}}{%else%}-{%endif%}</td>

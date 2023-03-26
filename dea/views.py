@@ -167,7 +167,7 @@ class AccountDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ct = super().get_context_data(**kwargs)
         acc = ct["object"]
-        if ct["object"].accountstatements.exists():
+        if acc.accountstatements.exists():
             acc_stmt = acc.accountstatements.latest()
             ls_created = acc_stmt.created
             txns = list(acc.txns(since=ls_created))

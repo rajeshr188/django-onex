@@ -127,7 +127,7 @@ def create_loan(request, pk=None):
         else:
             form = LoanForm(initial={"created": ld})
 
-    if request.META.get("HTTP_HX_REQUEST"):
+    if request.htmx:
         return render(request, "modal-form.html", {"form": form})
 
     return render(
@@ -302,7 +302,7 @@ def notice(request):
 @login_required
 def deleteLoan(request):
     id_list = request.POST.getlist("selection")
-    print(id_list)
+    
     Loan.objects.filter(id__in=id_list).delete()
     filter = LoanFilter(request.GET, queryset=Loan.objects.all())
     table = LoanTable(filter.qs)
@@ -315,9 +315,6 @@ def deleteLoan(request):
     return HttpResponse(response)
 
 
-# @login_required
-# def notify_msg(request):
-#     pass
 @login_required
 def notify_print(request):
     # check if user wanted all rows to be selected
@@ -357,10 +354,6 @@ def multirelease(request, id=None):
             # delete all selected rows
             Loan.objects.filter(id__in=id_list).delete()
 
-        elif action == "edit":
-            print("in edit action" + str(id_list))
-            formset = Loan_formset(queryset=Loan.objects.filter(id__in=id_list))
-            return render(request, "girvi/manage_loans.html", {"formset": formset})
         elif action == "release":
             print("in releaseaction")
             for loan_id in id_list:
@@ -590,5 +583,5 @@ def print_loan(request, pk=None):
     pdf = get_loan_pdf(loan=loan)
     # Create a response object
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="notice.pdf"'
+    response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
     return response

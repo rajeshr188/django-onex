@@ -22,7 +22,6 @@
     </div>
     <div class="row">
       <div class="col-6">
-       <!-- include contact_list.html -->
         <div id="contactno-list" 
         hx-trigger = "revealed,listChanged from:body  delay:100ms"
         hx-get = "{% url 'customer_contactno_list' customer.id%}"
@@ -58,7 +57,95 @@
       </h2>
       <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-          <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+          <div class="card-columns">
+    
+            <div class="card text-center">
+              <div class="card-header">
+              Invoice Balance
+              </div>
+              <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_cash}}</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_metal}}</span>
+                </ul>
+              </div>
+            </div>
+            <div class="card text-center">
+              <div class="card-header">
+              UnPaid Cash Balance : {{customer.get_unpaid_cash_total}}
+              </div>
+            </div>
+            <div class="card text-center " >
+              <div class="card-header">
+              UnPaid Metal Balance : {{customer.get_unpaid_metal_total}}
+              </div>
+            </div>
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Unpaid Month-Wise</h5>
+                <div class="table-responsive">
+                <table class ="table table-sm table-striped table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%for month in monthwise%}
+                    <tr>
+                      <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+                    </tr>
+                    {%endfor%}
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Purchase Month-Wise</h5>
+                <div class="table-responsive">
+                <table class ="table table-sm table-striped table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%for month in monthwiserev%}
+                    <tr>
+                      <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+                    </tr>
+                    {%endfor%}
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Payment Expected</h5>
+                <div class="table-responsive">
+                <table class ="table table-sm table-striped table-bordered">
+                  <thead>
+                    <tr>
+                      <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
+                    </tr>
+                    <tr>
+                      <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+          
+          </div>
         </div>
       </div>
     </div>
@@ -70,7 +157,24 @@
       </h2>
       <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-          <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+          <div class="card text-center">
+            <div class="card-header">
+            Loan
+            </div>
+            <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Loans  <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_weight.gold}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge bg-primary rounded-pill">{{customer.get_weight.silver}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge bg-primary rounded-pill"></span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
+              </ul>
+              </div>
+          </div>
         </div>
       </div>
     </div>
@@ -90,111 +194,5 @@
     </div>
   </div>
   
-  <div class="card-columns">
-    <div class="card text-center">
-      <div class="card-header">
-      Loan
-      </div>
-      <div class="card-body">
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          Loans  <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_weight.gold}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge bg-primary rounded-pill">{{customer.get_weight.silver}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge bg-primary rounded-pill"></span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
-        </ul>
-        </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-header">
-      Invoice Balance
-      </div>
-      <div class="card-body">
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_cash}}</span></li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_metal}}</span>
-        </ul>
-      </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-header">
-      UnPaid Cash Balance : {{customer.get_unpaid_cash_total}}
-      </div>
-    </div>
-    <div class="card text-center " >
-      <div class="card-header">
-      UnPaid Metal Balance : {{customer.get_unpaid_metal_total}}
-      </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">Unpaid Month-Wise</h5>
-        <div class="table-responsive">
-        <table class ="table table-sm table-striped table-bordered">
-          <thead>
-            <tr>
-              <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {%for month in monthwise%}
-            <tr>
-              <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-            </tr>
-            {%endfor%}
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">Purchase Month-Wise</h5>
-        <div class="table-responsive">
-        <table class ="table table-sm table-striped table-bordered">
-          <thead>
-            <tr>
-              <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {%for month in monthwiserev%}
-            <tr>
-              <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-            </tr>
-            {%endfor%}
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">Payment Expected</h5>
-        <div class="table-responsive">
-        <table class ="table table-sm table-striped table-bordered">
-          <thead>
-            <tr>
-              <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
-            </tr>
-            <tr>
-              <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-  
-  </div>
 </div>
 {% endblock %}

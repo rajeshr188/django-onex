@@ -12,12 +12,12 @@ from .models import Adjustment, Loan, LoanStatement, Release
 
 
 class LoanFilter(django_filters.FilterSet):
-    query = django_filters.CharFilter(method="universal_search", label="")
+    query = django_filters.CharFilter(method="universal_search", label="Search")
     # loanid = django_filters.CharFilter(lookup_expr="icontains")
     # itemdesc = django_filters.CharFilter(lookup_expr="icontains")
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.filter(customer_type="R"),
-        widget=CustomerWidget,
+        widget=CustomerWidget(empty_label="Customer"),
         # queryset = Customer.objects.all(),
         # widget = Select2Widget
     )

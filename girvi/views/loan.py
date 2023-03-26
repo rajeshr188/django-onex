@@ -16,11 +16,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import CreateView, DeleteView, UpdateView
-from django.views.generic.dates import (
-    MonthArchiveView,
-    WeekArchiveView,
-    YearArchiveView,
-)
+from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
+                                        YearArchiveView)
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook
@@ -72,12 +69,13 @@ def loan_list(request):
     else:
         return render(request, "girvi/loan_list.html", context)
 
+
 # @login_required
 # def create_loan(request,pk=None):
 
 #     if pk:
 #         customer = get_object_or_404(Customer,pk = pk)
-    
+
 #     if request.method == 'POST':
 #         form = LoanForm(request.POST or None)
 #         # check whether it's valid:
@@ -85,8 +83,8 @@ def loan_list(request):
 #             l = form.save(commit=False)
 #             l.created_by = request.user
 #             last_loan = l.save()
-            
-#             messages.success(request, f"last loan id is {last_loan.lid}")  
+
+#             messages.success(request, f"last loan id is {last_loan.lid}")
 #             # return render(request,'girvi/partials/loan_info.html',
 #             #     {
 #             #         'object':last_loan,
@@ -100,41 +98,46 @@ def loan_list(request):
 #             form = LoanForm(initial={'customer':customer,'created':ld})
 #         else:
 #             form = LoanForm(initial={'created':ld})
-            
+
 #     if request.META.get('HTTP_HX_REQUEST'):
 #         return render(request,'form.html',{'form':form})
 #     return render(request,'girvi/loan_form.html',{
 #                     'form':form,
 #                     })
 
+
 @login_required
-def create_loan(request,pk=None):
+def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)
-    if request.method == 'POST':
+    if request.method == "POST":
         if form.is_valid():
             l = form.save(commit=False)
             l.created_by = request.user
             last_loan = l.save()
-            
-            messages.success(request, f"last loan id is {last_loan.lid}")  
-            
+
+            messages.success(request, f"last loan id is {last_loan.lid}")
+
             return reverse_lazy("girvi_loan_create")
         else:
-            messages.warning(request, 'Please correct the error below.')
+            messages.warning(request, "Please correct the error below.")
     else:
         if pk:
-            customer = get_object_or_404(Customer,pk = pk)
-            form = LoanForm(initial={'customer':customer,'created':ld})
+            customer = get_object_or_404(Customer, pk=pk)
+            form = LoanForm(initial={"customer": customer, "created": ld})
         else:
-            form = LoanForm(initial={'created':ld})
-        
-            
-    if request.META.get('HTTP_HX_REQUEST'):
-        return render(request,'modal-form.html',{'form':form})
+            form = LoanForm(initial={"created": ld})
 
-    return render(request,'girvi/loan_form.html',{
-                    'form':form,
-                    })
+    if request.META.get("HTTP_HX_REQUEST"):
+        return render(request, "modal-form.html", {"form": form})
+
+    return render(
+        request,
+        "girvi/loan_form.html",
+        {
+            "form": form,
+        },
+    )
+
 
 # class LoanCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 #     model = Loan

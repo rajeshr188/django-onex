@@ -1,6 +1,5 @@
 import datetime
 from decimal import Decimal
-
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
 
@@ -9,16 +8,8 @@ import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models, transaction
-from django.db.models import (
-    BooleanField,
-    Case,
-    DecimalField,
-    ExpressionWrapper,
-    F,
-    Q,
-    Sum,
-    When,
-)
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, Q, Sum, When)
 from django.urls import reverse
 from django.utils import timezone
 from moneyed import Money

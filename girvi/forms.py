@@ -2,6 +2,8 @@ from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
+from django.contrib import admin
+from django.contrib.admin.widgets import AutocompleteSelect
 from django.contrib.postgres.forms import DateRangeField
 from django.forms import DateTimeInput, modelformset_factory
 from django.urls import reverse_lazy
@@ -12,8 +14,7 @@ from contact.forms import CustomerWidget
 from contact.models import Customer
 
 from .models import Adjustment, License, Loan, Release, Series
-from django.contrib import admin
-from django.contrib.admin.widgets import AutocompleteSelect
+
 
 class LoansWidget(s2forms.ModelSelect2Widget):
     search_fields = ["loanid__icontains"]
@@ -37,9 +38,12 @@ class SeriesForm(forms.ModelForm):
 
 class LoanForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), 
-        widget=CustomerWidget(select2_options={'width': '100%', })
-        
+        queryset=Customer.objects.all(),
+        widget=CustomerWidget(
+            select2_options={
+                "width": "100%",
+            }
+        ),
     )
     # customer = forms.ModelChoiceField(
     #     queryset=Customer.objects.all(),
@@ -84,13 +88,11 @@ class LoanForm(forms.ModelForm):
             "loanamount",
             "interestrate",
         ]
-       
-    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.form_class="modal-content"
+        self.helper.form_class = "modal-content"
         self.helper.form_action = reverse_lazy("girvi_loan_create")
         self.helper.attrs = {
             # "hx-post": reverse_lazy("girvi_loan_create"),
@@ -125,7 +127,7 @@ class LoanForm(forms.ModelForm):
                 Column(FloatingField("itemdesc"), css_class="form-group col-md-3 mb-0"),
                 css_class="form-row",
             ),
-            Submit("submit", "Submit"),
+            # Submit("submit", "Submit"),
         )
 
 

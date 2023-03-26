@@ -2,19 +2,9 @@
 from django import forms
 from django.contrib import admin
 
-from .models import (
-    Attribute,
-    AttributeValue,
-    Category,
-    Product,
-    ProductImage,
-    ProductType,
-    ProductVariant,
-    VariantImage,
-    Stock,
-    StockTransaction,
-    StockStatement,
-)
+from .models import (Attribute, AttributeValue, Category, Product,
+                     ProductImage, ProductType, ProductVariant, Stock,
+                     StockStatement, StockTransaction, VariantImage)
 
 
 class CategoryAdminForm(forms.ModelForm):
@@ -137,6 +127,7 @@ class VariantImageAdmin(admin.ModelAdmin):
 
 admin.site.register(VariantImage, VariantImageAdmin)
 
+
 class StockAdminForm(forms.ModelForm):
     class Meta:
         model = Stock
@@ -149,6 +140,7 @@ class StockAdmin(admin.ModelAdmin):
 
 admin.site.register(Stock, StockAdmin)
 
+
 class StockTransactionAdminForm(forms.ModelForm):
     class Meta:
         model = StockTransaction
@@ -160,6 +152,7 @@ class StockTransactionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(StockTransaction, StockTransactionAdmin)
+
 
 class StockStatementAdminForm(forms.ModelForm):
     class Meta:

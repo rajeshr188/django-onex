@@ -78,10 +78,18 @@ class ProofForm(forms.ModelForm):
 
 class CustomerMergeForm(forms.Form):
     original = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), widget=CustomerWidget()
+        queryset=Customer.objects.all(),
+        widget=CustomerWidget(
+            select2_options={
+                "width": "100%",
+            }
+        ),
     )
     duplicate = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), widget=CustomerWidget()
+        queryset=Customer.objects.all(),
+        widget=CustomerWidget(
+            select2_options={
+                "width": "100%",
+            }
+        ),
     )
-
-

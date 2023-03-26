@@ -2,6 +2,7 @@
 {%load django_tables2%}
 {% load widget_tweaks %}
 {{filter.form.media}}
+
 {%block content%}
 
 <div id="customer-content" class="container">
@@ -73,6 +74,7 @@
 </div>
 
 <script>
+  
   $('.modal').on('shown.bs.modal', function (e) {
     
     $(this).find('#id_customer').djangoSelect2({
@@ -81,4 +83,5 @@
 
 })
 </script> 
+
 {%endblock%}

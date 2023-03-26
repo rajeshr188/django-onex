@@ -7,8 +7,9 @@ from .models import Invoice, Payment
 class InvoiceTable(tables.Table):
     id = tables.Column(linkify=True)
     supplier = tables.Column(linkify=True)
-    paid = tables.Column(accessor='get_total_payments',verbose_name="Paid",
-                    orderable=False)
+    paid = tables.Column(
+        accessor="get_total_payments", verbose_name="Paid", orderable=False
+    )
     edit = tables.Column(
         linkify=("purchase:purchase_invoice_update", [tables.A("pk")]),
         empty_values=(),

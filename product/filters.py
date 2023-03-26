@@ -1,16 +1,8 @@
 import django_filters
 from django_select2.forms import Select2MultipleWidget, Select2Widget
 
-from .models import (
-    Attribute,
-    AttributeValue,
-    Category,
-    Product,
-    ProductType,
-    ProductVariant,
-    Stock,
-    StockTransaction,
-)
+from .models import (Attribute, AttributeValue, Category, Product, ProductType,
+                     ProductVariant, Stock, StockTransaction)
 
 
 class StockFilter(django_filters.FilterSet):

@@ -16,7 +16,6 @@ from contact.models import Customer
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-
 # from ..render import Render
 from ..tables import InvoiceTable
 
@@ -24,7 +23,7 @@ from ..tables import InvoiceTable
 @login_required
 def purchase_list(request):
     filter = InvoiceFilter(
-        request.GET, queryset=Invoice.objects.all().select_related('supplier','term')
+        request.GET, queryset=Invoice.objects.all().select_related("supplier", "term")
     )
     table = InvoiceTable(filter.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
@@ -48,14 +47,16 @@ def purchase_create(request):
             headers = {"HX-Redirect": obj.get_absolute_url()}
             return HttpResponse("Created", headers=headers)
         return redirect("purchase_invoice_list")
-    return render(request, "purchase/create_update.html", context)
+    return render(request, "sales/create_update.html", context)
 
 
 @login_required
 def purchase_update(request, id=None):
     obj = get_object_or_404(Invoice, pk=id)
     form = InvoiceForm(request.POST or None, instance=obj)
-    new_item_url = reverse("purchase:purchase_invoiceitem_create", kwargs={"parent_id": obj.id})
+    new_item_url = reverse(
+        "purchase:purchase_invoiceitem_create", kwargs={"parent_id": obj.id}
+    )
     context = {"object": obj, "form": form, "new_item_url": new_item_url}
     if form.is_valid():
         form.save()
@@ -120,8 +121,8 @@ def purchase_item_update_hx_view(request, parent_id=None, id=None):
             new_obj.invoice = parent_obj
         new_obj.save()
         context["object"] = new_obj
-        return render(request, "purchase/partials/item-inline.html", context)
-    return render(request, "purchase/partials/item-form.html", context)
+        return render(request, "sales/partials/item-inline.html", context)
+    return render(request, "sales/partials/item-form.html", context)
 
 
 @login_required

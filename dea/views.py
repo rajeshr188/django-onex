@@ -1,24 +1,16 @@
 from django.db import transaction
 from django.db.models.query_utils import subclasses
-from django.shortcuts import get_object_or_404, redirect, render,HttpResponse
+from django.shortcuts import HttpResponse, get_object_or_404, redirect, render
 from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from dea.utils.currency import Balance
 
-from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
-
+from .forms import (AccountForm, AccountStatementForm, LedgerForm,
+                    LedgerStatementForm)
 # Create your views here.
-from .models import (
-    Account,
-    Accountbalance,
-    AccountStatement,
-    Journal,
-    Ledger,
-    Ledgerbalance,
-    LedgerStatement,
-    LedgerTransaction,
-)
+from .models import (Account, Accountbalance, AccountStatement, Journal,
+                     Ledger, Ledgerbalance, LedgerStatement, LedgerTransaction)
 
 
 def home(request):
@@ -86,7 +78,7 @@ def daybook(request):
         latest_stmt = LedgerStatement.objects.latest()
     except:
         print("no ledger statements")
-    return HttpResponse(status = 404)
+    return HttpResponse(status=404)
 
 
 def set_ledger_ob(request, pk):
@@ -226,6 +218,7 @@ class LedgerCreateView(CreateView):
 
 class LedgerListView(ListView):
     model = Ledger
+
 
 class LedgerDetailView(DetailView):
     model = Ledger

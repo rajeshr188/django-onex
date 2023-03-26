@@ -16,7 +16,6 @@ from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-
 # from ..render import Render
 from ..tables import InvoiceTable
 
@@ -67,7 +66,12 @@ def home(request):
 
 
 def sales_list(request):
-    filter = InvoiceFilter(request.GET, queryset=Invoice.objects.all().select_related('customer','term','approval').prefetch_related())
+    filter = InvoiceFilter(
+        request.GET,
+        queryset=Invoice.objects.all()
+        .select_related("customer", "term", "approval")
+        .prefetch_related(),
+    )
     table = InvoiceTable(filter.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     context = {"filter": filter, "table": table}

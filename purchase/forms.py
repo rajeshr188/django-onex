@@ -1,15 +1,8 @@
 from datetime import datetime
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    ButtonHolder,
-    Column,
-    Field,
-    Fieldset,
-    Layout,
-    Row,
-    Submit,
-)
+from crispy_forms.layout import (ButtonHolder, Column, Field, Fieldset, Layout,
+                                 Row, Submit)
 from django import forms
 from django.db.models import Q
 from django.forms.models import inlineformset_factory
@@ -17,7 +10,6 @@ from django_select2.forms import Select2Widget
 
 from contact.models import Customer
 from product.models import ProductVariant
-
 # from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
@@ -128,7 +120,7 @@ class InvoiceItemForm(forms.ModelForm):
             "huid",
             "quantity",
             "product",
-            "invoice",
+            # "invoice",
             "makingcharge",
             "net_wt",
         ]

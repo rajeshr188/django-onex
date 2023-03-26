@@ -1,7 +1,6 @@
-
 {% load crispy_forms_tags %}
 {{form.media}}
-{% block content %}
+
 <form hx-post="{{ request.path }}" class="modal-content">
     {% csrf_token %}
     <div class="modal-header">
@@ -15,10 +14,3 @@
       <button type="submit" class="btn btn-success">Save</button>
     </div>
   </form>
-<script>
-  $('.django-select2').djangoSelect2({
-    dropdownParent: $('#modal'),
-        width: '100%'
-  });
-</script>
-  {% endblock %}

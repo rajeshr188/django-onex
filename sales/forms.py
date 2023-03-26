@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import ButtonHolder, Column, Field, Layout, Row, Submit
+from crispy_forms.layout import (ButtonHolder, Column, Field, Layout, Row,
+                                 Submit)
 from django import forms
 from django.forms.models import inlineformset_factory
 from django_select2.forms import Select2Widget
@@ -88,7 +89,6 @@ class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
         queryset=Stock.objects.all(),
         widget=StockWidget,
-        # widget = forms.Select(attrs={'class':'tomselect'})
     )
 
     class Meta:

@@ -10,7 +10,6 @@ from num2words import num2words
 from ..filters import ReceiptFilter
 from ..forms import ReceiptForm, ReceiptItemFormSet, ReceiptLineForm
 from ..models import Receipt, ReceiptLine
-
 # from ..render import Render
 from ..tables import ReceiptTable
 

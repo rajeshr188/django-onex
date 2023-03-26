@@ -9,7 +9,7 @@
             <a class="btn btn-danger" href='{{ object.get_delete_url }}' hx-post='{{ object.get_delete_url }}' hx-confirm='Are you sure you want to delete {{ object.id }}?' hx-trigger='click'
             >Delete</a>
             {%endif%}
-            <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Invoice</a>
+            <a class="btn btn-primary" href="{% url 'sales_invoice_create' %}">add Sale</a>
             <a class="btn btn-secondary" href="">Print</a>
           </p>
 

@@ -5,11 +5,9 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
-
 # from django.utils.encoding import smart_text
 from django.utils.text import slugify
 from django_extensions.db.fields import AutoSlugField
-
 # from django_measurement.models import MeasurementField
 # from measurement.measures import Weight
 from mptt.managers import TreeManager

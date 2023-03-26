@@ -8,12 +8,14 @@ from django.core.files.base import ContentFile
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_http_methods  # new
 from django_tables2.config import RequestConfig
 from render_block import render_block_to_string
 
 from sales.models import Month
+from utils.htmx_utils import for_htmx
 
 from .filters import CustomerFilter
 from .forms import AddressForm, ContactForm, CustomerForm, CustomerMergeForm
@@ -42,6 +44,7 @@ def home(request):
 
 
 @login_required
+@for_htmx(use_block="content")
 def customer_list(request):
     context = {}
     f = CustomerFilter(
@@ -52,20 +55,22 @@ def customer_list(request):
     context["filter"] = f
     context["table"] = table
 
-    if request.htmx:
-        response = render_block_to_string(
-            "contact/customer_list.html", "content", context, request
-        )
-        return HttpResponse(response)
-    return render(request, "contact/customer_list.html", context)
+    # if request.htmx:
+    #     response = render_block_to_string(
+    #         "contact/customer_list.html", "content", context, request
+    #     )
+    #     return HttpResponse(response)
+    return TemplateResponse(request, "contact/customer_list.html", context)
 
 
 @require_http_methods(["DELETE"])
 def customer_delete(request, pk):
-    Customer.objects.filter(id=pk).delete()
+    customer = get_object_or_404(Customer, pk=pk)
+    customer.delete()
     return HttpResponse("")
 
 
+@for_htmx(use_block="content")
 @login_required
 def customer_create(request):
     if request.method == "POST":
@@ -96,22 +101,22 @@ def customer_create(request):
             return redirect("contact_customer_list")
 
         else:
-            print("form invalid")
             messages.error(request, f"Error creating customer")
             return render(request, "contact/customer_form.html", {"form": form})
 
     else:
         form = CustomerForm()
 
-        if request.htmx:
-            response = render_block_to_string(
-                "contact/customer_form.html", "content", {"form": form}, request
-            )
-            return HttpResponse(response)
+        # if request.htmx:
+        #     response = render_block_to_string(
+        #         "contact/customer_form.html", "content", {"form": form}, request
+        #     )
+        #     return HttpResponse(response)
 
         return render(request, "contact/customer_form.html", {"form": form})
 
 
+@login_required
 def customer_merge(request):
     form = CustomerMergeForm(request.POST or None)
     if request.method == "POST":
@@ -121,9 +126,10 @@ def customer_merge(request):
             duplicate = form.cleaned_data["duplicate"]
             original.merge(duplicate)
             return redirect("contact_customer_list")
-    return render(request, "contact/customer_merge.html", context={"form": form})
+    return render(request, "modal-form.html", context={"form": form})
 
 
+@for_htmx(use_block="content")
 @login_required
 def customer_detail(request, pk=None):
     context = {}
@@ -166,13 +172,12 @@ def customer_detail(request, pk=None):
         .values("month", "tm", "tc")
     )
 
-    if request.htmx:
-        response = render_block_to_string(
-            "contact/customer_detail.html", "content", context, request
-        )
-        return HttpResponse(response)
-    else:
-        return render(request, "contact/customer_detail.html", context)
+    # if request.htmx:
+    #     response = render_block_to_string(
+    #         "contact/customer_detail.html", "content", context, request
+    #     )
+    #     return HttpResponse(response)
+    return render(request, "contact/customer_detail.html", context)
 
 
 @login_required
@@ -219,32 +224,32 @@ def reallot_payments(request, pk):
 
 @login_required
 def contact_create(request, pk=None):
-    print(f"pk:{pk}")
     customer = get_object_or_404(Customer, pk=pk)
     form = ContactForm(request.POST or None, initial={"customer": customer})
 
-    if request.method == "POST":
-        if form.is_valid():
-            f = form.save(commit=False)
-            f.customer = customer
-            f.save()
+    if request.method == "POST" and form.is_valid():
+        f = form.save(commit=False)
+        f.customer = customer
+        f.save()
 
-            return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
-            # return render(
-            #     request, "contact/contact_detail.html", context={"i": contact}
-            # )
-        else:
-            print("invalid form")
-            return render(
-                request,
-                "contact/partials/contact-form-model.html",
-                context={"form": form, "customer": customer},
-            )
+        return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
 
     return render(
         request,
         "contact/partials/contact-form-model.html",
         context={"form": form, "customer": customer},
+    )
+
+
+@login_required
+def contact_list(request, pk: int = None):
+    print(f"called")
+    customer = get_object_or_404(Customer, id=pk)
+    contacts = customer.contactno.all()
+    return render(
+        request,
+        "contact/contact_list.html",
+        {"contacts": contacts, "customer_id": customer.id},
     )
 
 
@@ -276,7 +281,7 @@ def contact_update(request, pk):
 def contact_delete(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     contact.delete()
-    return HttpResponse("")
+    return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
 
 
 @login_required
@@ -292,14 +297,9 @@ def address_create(request, pk=None):
             address.Customer = customer
 
             address.save()
+            # return HttpResponse(status=204, headers={"HX-Trigger": "addresslistChanged"})
             return render(
                 request, "contact/address_detail.html", context={"i": address}
-            )
-        else:
-            return render(
-                request,
-                "contact/partials/address_form.html",
-                context={"form": form, "customer": customer},
             )
 
     return render(

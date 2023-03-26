@@ -1,12 +1,12 @@
+from django.views.generic import CreateView
 from django_filters.views import FilterView
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin
 from num2words import num2words
-from django.views.generic import CreateView
+
 from ..filters import PaymentFilter
 from ..forms import PaymentForm
 from ..models import Payment
-
 # from ..render import Render
 from ..tables import PaymentTable
 
@@ -35,15 +35,15 @@ class PaymentCreateView(CreateView):
         paymentitem_form = PaymentItemFormSet()
 
         return self.render_to_response(
-            self.get_context_data(form=form,
-                                  paymentitem_form=paymentitem_form))
+            self.get_context_data(form=form, paymentitem_form=paymentitem_form)
+        )
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         paymentitem_form = PaymentItemFormSet(self.request.POST)
-        if (form.is_valid() and paymentitem_form.is_valid()):
+        if form.is_valid() and paymentitem_form.is_valid():
             return self.form_valid(form, paymentitem_form)
         else:
             return self.form_invalid(form, paymentitem_form)
@@ -61,8 +61,8 @@ class PaymentCreateView(CreateView):
         data-filled forms and errors.
         """
         return self.render_to_response(
-            self.get_context_data(form=form,
-                                  paymentitem_form=paymentitem_form))
+            self.get_context_data(form=form, paymentitem_form=paymentitem_form)
+        )
 
 
 def post_payment(request, pk):

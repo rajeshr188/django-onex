@@ -1,5 +1,4 @@
-
-{% load bootstrap4 %}
+{%load widget_tweaks %}
 {% block content %}
 {{form.media}}
 <p><a class="btn btn-default" href="{% url 'sales_receipt_list' %}">Receipt Listing</a></p>
@@ -9,34 +8,34 @@
         <div class="form-row">
             <div class="form-group col-md-3">
               {{ form.customer.errors }}
-              {% bootstrap_field form.customer size="small" %}
+              {% render_field form.customer size="small" %}
             </div>
             <div class="form-group col-md-3">
               {{ form.created.errors }}
-              {% bootstrap_field form.created size="small" %}
+              {% render_field form.created size="small" %}
             </div>
             <div class="form-group col-md-3">
               {{ form.status.errors }}
-              {% bootstrap_field form.status size="small"%}
+              {% render_field form.status size="small"%}
             </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-3">
               {{ form.type.errors }}
-              {% bootstrap_field form.type size="small" %}
+              {% render_field form.type size="small" %}
             </div>
             <div class="form-group col-md-3">
               {{ form.rate.errors }}
-              {% bootstrap_field form.rate size="small"%}
+              {% render_field form.rate size="small"%}
             </div>
             <div class="form-group col-md-3">
               {{ form.description.errors }}
-              {% bootstrap_field form.description size="small"%}
+              {% render_field form.description size="small"%}
             </div>
         </div>
         <div class="form-group row">
           {{ form.total.errors }}
-          <div class="col-sm-3">{% bootstrap_field form.total size="small"%}</div>
+          <div class="col-sm-3">{% render_field form.total size="small"%}</div>
         </div>
         {{ receiptitem_form.management_form }}
         {{ receiptitem_form.non_form_errors }}
@@ -58,7 +57,7 @@
                   {% for field in form.visible_fields %}
                   <td class="{{field.name}}" >
                       <!-- {{ field.errors.as_ul }} -->
-                      {% bootstrap_field field show_label=False size="small"%}
+                      {% render_field field show_label=False size="small"%}
                     </td>
                     {% endfor %}
                 </tr>

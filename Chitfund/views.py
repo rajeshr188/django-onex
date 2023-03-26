@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import AllotmentForm, ChitForm, CollectionForm, ContactForm

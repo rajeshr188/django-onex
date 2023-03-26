@@ -2,17 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from django.views.generic.base import TemplateView
 
 from ..filters import StockFilter
-from ..forms import StockForm, StockTransactionForm, UniqueForm, stockstatement_formset
+from ..forms import (StockForm, StockTransactionForm, UniqueForm,
+                     stockstatement_formset)
 from ..models import Stock, StockStatement, StockTransaction
 
 

@@ -60,6 +60,11 @@ urlpatterns += (
         name="customer_contact_delete",
     ),
     path(
+        "customer/<int:pk>/contactno/",
+        views.contact_list,
+        name="customer_contactno_list",
+    ),
+    path(
         "customer/<int:pk>/address/add/",
         views.address_create,
         name="customer_address_form",

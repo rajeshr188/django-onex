@@ -12,7 +12,7 @@ from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import Attribute, ProductVariant, Stock, StockTransaction
+from product.models import Attribute, ProductVariant, Stock,StockLot,StockTransaction
 
 
 # if not posted : delete/edit
@@ -176,7 +176,7 @@ class Invoice(models.Model):
         if not self.posted:
             try:
                 self.supplier.account
-            except:
+            except self.supplier.account.DOESNOTEXIST:
                 self.supplier.save()
 
             jrnl = Journal.objects.create(
@@ -256,28 +256,25 @@ class InvoiceItem(models.Model):
 
     @transaction.atomic()
     def post(self, journal):
+        """
+        if not return item create/add a stocklot then transact,
+        if return item then remove the lot from stocklot"""
         if not self.is_return:
             stock, created = Stock.objects.get_or_create(
-                variant=self.product, tracking_type="Lot"
-            )
-            if created:
-                stock.huid = self.huid
-                attributes = get_product_attributes_data(self.product.product)
-                purity = Attribute.objects.get(name="Purity")
-                stock.melting = int(attributes[purity].name)
-                stock.cost = self.touch
-                stock.touch = stock.cost + 2
-                stock.wastage = 10
-                stock.save()
-            stock.add(
-                journal=journal,
-                weight=self.weight,
-                quantity=self.quantity,
-                activity_type="P",
-            )
+                variant = self.product)
+            stock_lot = StockLot.objects.create(
+                stock = stock,
+                wt = self.weight,qty = self.qty,
+                purchase_touch = self.touch,
+                purchase_rate = self.invoice.rate,
+                purchase = self.invoice
+                )
+            stock_lot.transact(wt = self.weight,qty = self.quantity,
+                               journal = journal,movement_type = "P")
+
         else:
-            stock = Stock.objects.get(name=self.product.name, tracking_type="Lot")
-            stock.remove(
+            lot = StockLot.objects.get(stock__variant = self.product)
+            lot.transact(
                 journal=journal,
                 weight=self.weight,
                 quantity=self.quantity,
@@ -286,22 +283,22 @@ class InvoiceItem(models.Model):
 
     @transaction.atomic()
     def unpost(self, journal):
+        """
+        add lot back to stock lot if item is_return,
+        remove lot from stocklot if item is not return item"""
         if self.is_return:
-            # add lot back to stock
-            stock = Stock.objects.get(variant=self.product, tracking_type="Lot")
-            stock.add(
-                journal=journal,
-                weight=self.weight,
-                quantity=self.quantity,
-                activity_type="P",
+            self.stocklot_set.filter(variant= self.product).transact(
+                journal = journal,
+                weight = self.weight,
+                quantity = self.quantity,
+                movement_type = "P"
             )
         else:
-            stock = Stock.objects.get(variant=self.product, tracking_type="Lot")
-            stock.remove(
-                journal=journal,
-                weight=self.weight,
-                quantity=self.quantity,
-                activity_type="PR",
+            self.stocklot_set.filter(variant= self.product).transact(
+                journal = journal,
+                weight = self.weight,
+                quantity = self.quantity,
+                movement_type = "PR"
             )
 
 

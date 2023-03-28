@@ -18,7 +18,7 @@ from dea.models import Journal
 from product.attributes import get_product_attributes_data
 from utils.friendlyid import encode
 
-from .managers import StockManager
+from .managers import StockManager, StockLotManager
 from .weight import WeightUnits, zero_weight
 
 
@@ -200,19 +200,6 @@ class ProductVariant(models.Model):
     def get_ajax_label(self):
         return "%s, %s" % (self.sku, self.display_product())
 
-class Price(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    contact = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
-    
-
-class PricingTier(models.Model):
-    name = models.CharField(max_length=255)
-    contact = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    minimum_quantity = models.PositiveIntegerField()
-    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
 
 class Attribute(models.Model):
     name = models.CharField(max_length=50)
@@ -266,7 +253,8 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Product, related_name="images", on_delete=models.CASCADE
     )
-    image = VersatileImageField(upload_to="product/", ppoi_field="ppoi", blank=False)
+    image = VersatileImageField(
+        upload_to="product/", ppoi_field="ppoi", blank=False)
     ppoi = PPOIField("Image PPOI")
     alt = models.CharField(max_length=128, blank=True)
 
@@ -298,70 +286,48 @@ class VariantImage(models.Model):
     def get_update_url(self):
         return reverse("product_variantimage_update", args=(self.pk,))
 
-# on purchase add stock lot from purchase item and then create stock for this lot and do appropriate stocktransaction to reflect available qty,wt
-class StockLot(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    qty = models.IntegerField(default = 0)
-    wt = models.DecimalField(max_digits = 10,decimal_places = 3)
-    purchase_touch = models.DecimalField(max_digits = 10,decimal_places = 3)
-    purchase_rate = models.DecimalField(max_digits = 10,decimal_places = 3,null = true,blank = true)
-
-    variant = models.ForeignKey(
-        ProductVariant,
-        on_delete=models.CASCADE,
-        related_name = 'stock_lots'
-    )
-    objects = StockLotManager()
-
+class PricingTier(models.Model):
+    """
+    base-tier will have basic purchase and selling price for the product-variants,
+    consequent tiers can derive from base-tier and modify a set of price for the set of products
+    """
+    name = models.CharField(max_length=255)
+    contact = models.ForeignKey('contact.Customer', on_delete=models.CASCADE)
+    minimum_quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.name}"
+
+class Price(models.Model):
+    """
+    price for each product variant that will be used by stock in determining selling/purchasing
+    price based on the tier the customer belongs to
+    """
+    product = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
+    contact = models.ForeignKey('contact.Customer', on_delete=models.CASCADE)
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price_tier = models.ForeignKey(PricingTier, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.product} : {self.selling_price} {self.purchase_price}"
 
 class Stock(models.Model):
+
+    """
+    represents stock for each product variant.this stock is used in sale/purchase purposes
+    """
+
     created = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     reorderat = models.IntegerField(default=1)
-    stock_code = models.CharField(max_length = 4)
-    barcode = models.CharField(
-        max_length=155, null=True, blank=True, unique=True, editable=False
-    )
-    huid = models.CharField(max_length=6, null=True, blank=True, unique=True)
+
     variant = models.ForeignKey(
         ProductVariant,
         on_delete=models.CASCADE,
-        # related_name = 'stocks'
+        related_name = 'stocks'
     )
-    lot = models.ForeignKey(StockLot, on_delete = models.CASCADE,
-            # related_name = 'stock'
-            )
 
-    # following atrributes are not in dnf  i.e duplkicates of variant
-    melting = models.DecimalField(max_digits=10, decimal_places=3, default=100)
-    cost = models.DecimalField(max_digits=10, decimal_places=3, default=100)
-    touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
-    wastage = models.DecimalField(max_digits=10, decimal_places=3, default=0)
-
-    # remove trackingtype not needed
-    # tracking_type = models.CharField(
-    #     choices=(("Lot", "Lot"), ("Unique", "Unique")),
-    #     verbose_name="track_by",
-    #     null=True,
-    #     max_length=10,
-    #     default="Lot",
-    # )
-
-    status = models.CharField(
-        max_length=10,
-        choices=(
-            ("Empty", "Empty"),
-            ("Available", "Available"),
-            ("Sold", "Sold"),
-            ("Approval", "Approval"),
-            ("Return", "Return"),
-            ("Merged", "Merged"),
-        ),
-        default="Empty",
-    )
     objects = StockManager()
 
     class Meta:
@@ -369,7 +335,7 @@ class Stock(models.Model):
 
     def __str__(self):
         cb = self.current_balance()
-        return f"{self.variant} {self.barcode} {cb['wt']} {cb['qty']}"
+        return f"{self.code} {cb['wt']} {cb['qty']}"
 
     def get_absolute_url(self):
         return reverse("product_stock_detail", args=(self.pk,))
@@ -386,7 +352,9 @@ class Stock(models.Model):
         return bal["wt"] * self.cost
 
     def audit(self):
-        # get last audit cb,totalin,total out and then append following
+        """
+        get last audit cb,totalin,total out and then append following
+        """
         try:
             last_statement = self.stockstatement_set.latest()
         except StockStatement.DoesNotExist:
@@ -414,17 +382,204 @@ class Stock(models.Model):
         )
 
     def stock_in_txns(self, ls):
-        # filter since last audit
+        """
+        return all the In transactions since last audit"""
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
         st = st.filter(activity_type__in=["P", "SR", "AR", "AD"])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
+            qty=Coalesce(
+                Sum("quantity", output_field=models.IntegerField()), 0),
             wt=Coalesce(
                 Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
             ),
+        )
+
+    def stock_out_txns(self, ls):
+        """
+        return all Out Transactions since last audit
+        """
+        st = self.stocktransaction_set.all()
+        if ls:
+            st = st.filter(created__gte=ls.created)
+        st = st.filter(activity_type__in=["PR", "S", "A", "RM"])
+
+        return st.aggregate(
+            qty=Coalesce(
+                Sum("quantity", output_field=models.IntegerField()), 0),
+            wt=Coalesce(
+                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+            ),
+        )
+
+    def current_balance(self):
+        """
+         compute balance from last audit and append following
+         """
+        bal = {}
+        Closing_wt:Decimal = 0
+        Closing_qty:int = 0
+
+        try:
+            ls = self.stockstatement_set.latest()
+            Closing_wt = ls.Closing_wt
+            Closing_qty = ls.Closing_qty
+            
+        except StockStatement.DoesNotExist:
+            ls = None
+            
+        in_txns = self.stock_in_txns(ls)
+        out_txns = self.stock_out_txns(ls)
+        bal["wt"] = Closing_wt + (in_txns["wt"] - out_txns["wt"])
+        bal["qty"] = Closing_qty + (in_txns["qty"] - out_txns["qty"])
+        return bal
+
+    def get_age(self):
+        """
+        return get average of purchase date from today and average of sale dates from today then sub both
+        """
+        pass
+
+    def transact(self, weight, quantity, journal, movement_type):
+        """
+        Modifies weight and quantity associated with the stock based on movement type
+        Returns none
+        """
+        StockTransaction.objects.create(
+            journal=journal,
+            stock=self,
+            weight=weight,
+            quantity=quantity,
+            movement_type=movement_type,
+        )
+        self.update_status()
+
+    def merge_lots(self):
+        """
+            merges all lots in to individual lots representing this stock of its product variant.
+            single operation to merge lots blindly.
+            merge only non huid/non-unique lots
+            
+        """
+        all_lots = self.lots.exclude(is_unique = True)
+        current = all_lots.current_balance()
+        new_lot = StockLot.objects.create(wt = current.wt,qty = current.qty,
+                                          stock = current.stock)
+        new_lot.transact(wt = current.wt,qty = current.qty,journal = None,
+                        movement_type = 'AD')
+        for i in all_lots:
+            i.transact(wt = current.wt,qty = current.qty,journal = None,
+                        movement_type = 'RM')
+        return new_lot
+
+
+class StockLot(models.Model):
+    """
+    StockLot core idea: 
+        1 productV has many lots and all lots[productv] reference one stock
+        on purchase add to stocklot from purchase_item 
+        on sale choose from stocklot from sale_item
+    """
+    # should this be mptt?
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    qty = models.IntegerField(default=0)
+    wt = models.DecimalField(max_digits=10, decimal_places=3)
+    barcode = models.CharField(
+        max_length=155, null=True, blank=True, unique=True, editable=False
+    )
+    huid = models.CharField(max_length=6, null=True, blank=True, unique=True)
+    stock_code = models.CharField(max_length=4)
+    purchase_touch = models.DecimalField(max_digits=10, decimal_places=3)
+    purchase_rate = models.DecimalField(max_digits=10, decimal_places=3,
+                                        null=True, blank=True)
+    is_unique = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, choices=(
+        ('Empty', 'Empty'), ('Available', 'Available'), ('Sold', 'Sold'),
+        ('Approval', 'Approval'), ('Return',
+                                   'Return'), ('Merged', 'Merged'),
+    ),
+        default='Empty')
+
+    # related fields
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE,
+                              related_name='lots'
+                              )
+    # redundant aint it?
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.CASCADE,
+        related_name='stock_lots'
+    )
+    # not sure
+    purchase = models.ForeignKey('Purchase.Invoice', on_delete=models.SET_NULL,
+                                 null=True, blank=True)
+    sale = models.ForeignKey('Sales.Invoice', on_delete=models.SET_NULL,
+                             null=True, blank=True)
+
+    objects = StockLotManager()
+
+    def __str__(self):
+        return f"{self.barcode} | {self.huid}"
+
+    def save(self, *args, **kwargs):
+        super(StockLot, self).save(*args, **kwargs)
+        if not self.barcode:
+            self.barcode = encode(self.pk)
+            self.save()
+
+    def update_status(self):
+        cb = self.current_balance()
+        if cb['wt'] <= 0.0 or cb['qty'] <=0:
+            self.status = "Empty"
+        else:
+            self.status = "Available"
+        self.save()
+
+    def audit(self):
+
+        try:
+            last_statement = self.stockstatement_set.latest()
+        except StockStatement.DoesNotExist:
+            last_statement = None
+
+        if last_statement is not None:
+            ls_wt = last_statement.Closing_wt
+            ls_qty = last_statement.Closing_qty
+        else:
+            ls_wt = 0
+            ls_qty = 0
+
+        stock_in = self.stock_in_txns(last_statement)
+        stock_out = self.stock_out_txns(last_statement)
+        cb_wt = ls_wt + (stock_in['wt'] - stock_out['wt'])
+        cb_qty = ls_qty + (stock_in['qty'] - stock_out['qty'])
+
+        return StockStatement.objects.create(stock=self.stock,
+                                             stock_batch=self,
+                                             Closing_wt=cb_wt,
+                                             Closing_qty=cb_qty,
+                                             total_wt_in=stock_in['wt'] if stock_in['wt'] else 0.0,
+                                             total_qty_in=stock_in['qty']if stock_in['qty'] else 0,
+                                             total_wt_out=stock_out['wt']if stock_out['wt'] else 0.0,
+                                             total_qty_out=stock_out['qty']if stock_out['qty'] else 0)
+
+    def stock_in_txns(self, ls):
+        # filter since last audit
+        st = self.stocktransaction_set.all()
+        if ls:
+            st = st.filter(created__gte=ls.created)
+        st = st.filter(
+            movement_type__id__in=['P', 'SR', 'AR', 'AD'])
+
+        return st.aggregate(
+            qty=Coalesce(
+                Sum('quantity', output_field=models.IntegerField()), 0),
+            wt=Coalesce(
+                Sum('weight', output_field=models.DecimalField()), Decimal(0.0))
         )
 
     def stock_out_txns(self, ls):
@@ -432,14 +587,13 @@ class Stock(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(activity_type__in=["PR", "S", "A", "RM"])
+        st = st.filter(
+            movement_type__id__in=['PR', 'S', 'A', 'RM'])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
-            wt=Coalesce(
-                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
-            ),
-        )
+            qty=Coalesce(
+                Sum('quantity', output_field=models.IntegerField()), 0),
+            wt=Coalesce(Sum('weight', output_field=models.DecimalField()), Decimal(0.0)))
 
     def current_balance(self):
         # compute cb from last audit and append following
@@ -454,107 +608,82 @@ class Stock(models.Model):
             Closing_qty = 0
         in_txns = self.stock_in_txns(ls)
         out_txns = self.stock_out_txns(ls)
-        bal["wt"] = Closing_wt + (in_txns["wt"] - out_txns["wt"])
-        bal["qty"] = Closing_qty + (in_txns["qty"] - out_txns["qty"])
+        bal['wt'] = Closing_wt + (in_txns['wt'] - out_txns['wt'])
+        bal['qty'] = Closing_qty + (in_txns['qty'] - out_txns['qty'])
         return bal
 
-    def get_age(self):
-        pass
-        # if self.tracking_type == 'Lot':
-        #     get average of purchase date from today and average of sale dates from today then sub both
-        #     return 0
-        # else:
-        # check if sold then timedelta between created and last sales transaction
-        # else timedelta between today and date created
-
-    def add(self, weight, quantity, journal, activity_type):
-        print("came to create stxns")
+    def transact(self, weight, quantity, journal, movement_type):
+        """
+        Modifies weight and quantity associated with the stock based on movement type
+        Returns none
+        """
         StockTransaction.objects.create(
             journal=journal,
-            stock=self,
+            lot=self,
             weight=weight,
             quantity=quantity,
-            activity_type=activity_type,
-        )
-        self.update_status()
-        print("succeded")
-
-    def remove(self, weight, quantity, journal, activity_type):
-        StockTransaction.objects.create(
-            journal=journal,
-            stock=self,
-            weight=weight,
-            quantity=quantity,
-            activity_type=activity_type,
+            movement_type=movement_type,
         )
         self.update_status()
 
-    # split without tracking_type
-    def split(self, weight):
-        # split from stock:tracking_type::lot to unique
-        cb = self.current_balance()
-        if self.tracking_type == "Lot" and cb["wt"] >= weight and cb["qty"] > 1:
-            uniq_stock = Stock.objects.create(
-                variant=self.variant, tracking_type="Unique"
-            )
-            uniq_stock.barcode = "je" + str(uniq_stock.id)
+    def merge(self, lot:StockLot):
+        """
+        a lots qty and weight remains same troughout its life,
+        any add/remove/merge/split on a lot is performed via transactions,
+        and current balance of a lot is derived from transaction.
+        
+        Return : new_lot:StockLot
+        """
 
-            uniq_stock.melting = self.melting
-            uniq_stock.cost = self.cost
-            uniq_stock.touch = self.touch
-            uniq_stock.wastage = self.wastage
-            uniq_stock.add(weight, 1, None, "AD")
-            self.remove(weight, 1, None, at="RM")
-        else:
-            print("unique nodes cant be split.hint:merge to lot and then split")
+        if self.variant != lot.variant or self.stock != lot.stock:
+            raise Exception(
+                "cannot merge lots from different variant or associated with different stock")
 
-    # merge without tracking_type
-    def merge(self):
-        # merge stock:tracking_type:unique to lot
-        if self.tracking_type == "Unique":
-            lot = Stock.objects.get(variant=self.variant, tracking_type="Lot")
-            cb = self.current_balance()
-            lot.add(cb["wt"], cb["qty"], None, "AD")
-            self.remove(cb["wt"], cb["qty"], None, at="RM")
-        else:
-            print("lot cant be merged further")
+        new_lot = StockLot(variant=self.variant, wt=lot.wt +
+                           self.wt, qty=lot.qty+self.qty)
+        self.transact(self.wt,self.qty,journal = None,movement_type='RM')
+        lot.transact(lot.wt,lot.qty,journal = None,movement_type='RM')
+        new_lot.transact(
+            self.wt + lot.wt, self.qty + lot.qty, journal = None, movement_type='AD')
+        return new_lot
 
-    def transfer():
-        pass
+    def split(self, wt: Decimal, qty:int):
+        """
+        split a lot by creating a new lot and transfering the wt & qty to new lot
+        """     
+        if not self.is_unique and self.qty > qty and self.wt > wt:
+            
+            new_lot = StockLot(variant=self.variant,wt = wt,qty = qty)
+            new_lot.transact(wt,qty,journal = None,movement_type='AD')
+           
+            self.transact(wt,qty,journal = None,movement_type='RM')
 
-    def update_status(self):
-        cb = self.current_balance()
-        if cb["wt"] <= 0.0 or cb["qty"] <= 0:
-            self.status = "Empty"
-        else:
-            self.status = "Available"
-        self.save()
-
-    def save(self, *args, **kwargs):
-        super(Stock, self).save(*args, **kwargs)
-        if not self.barcode:
-            self.barcode = encode(self.pk)
-            self.save()
+            return new_lot     
+        raise Exception('Unique lots cant be split')
 
 class Movement(models.Model):
-    id = models.CharField(max_length = 3,primary_key=True)
-    name = models.CharField(max_length = 30)
-    direction = models.CharField(max_length = 1,default = '+')
+
+    """ represents movement_type with direction of stock/lot transaction
+    ex: [('purchase','+'),('purchase return','-'),('sales','-'),('sale return','+'),
+        ('split','-'),('merge','+')]
+    """
+    id = models.CharField(max_length=3, primary_key=True)
+    name = models.CharField(max_length=30)
+    direction = models.CharField(max_length=1, default='+')
+
 
 class StockTransaction(models.Model):
     created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     description = models.TextField()
 
-    # user = models.ForeignKey(CustomUser)
-    movement_type = models.ForeignKey(Movement,on_delete = models.CASCADE)
-
     # relational Fields
+    # user = models.ForeignKey(CustomUser)
+    movement_type = models.ForeignKey(Movement, on_delete=models.CASCADE)
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    # stock_batch = models.ForeignKey(StockBatch,null = True,blank = True,
-    #                                 on_delete=models.CASCADE)
+    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE)
 
     journal = models.ForeignKey(
         Journal, on_delete=models.CASCADE, null=True, blank=True, related_name="stxns"
@@ -573,6 +702,7 @@ class StockTransaction(models.Model):
     def get_update_url(self):
         return reverse("product_stocktransaction_update", args=(self.pk,))
 
+
 class StockStatement(models.Model):
     ss_method = (
         ("Auto", "Auto"),
@@ -580,11 +710,15 @@ class StockStatement(models.Model):
     )
     method = models.CharField(max_length=20, choices=ss_method, default="Auto")
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE)
+
     created = models.DateTimeField(auto_now=True)
     Closing_wt = models.DecimalField(max_digits=14, decimal_places=3)
     Closing_qty = models.IntegerField()
-    total_wt_in = models.DecimalField(max_digits=14, decimal_places=3, default=0.0)
-    total_wt_out = models.DecimalField(max_digits=14, decimal_places=3, default=0.0)
+    total_wt_in = models.DecimalField(
+        max_digits=14, decimal_places=3, default=0.0)
+    total_wt_out = models.DecimalField(
+        max_digits=14, decimal_places=3, default=0.0)
     total_qty_in = models.IntegerField(default=0.0)
     total_qty_out = models.IntegerField(default=0.0)
 
@@ -595,9 +729,11 @@ class StockStatement(models.Model):
     def __str__(self):
         return f"{self.stock} - qty:{self.Closing_qty} wt:{self.Closing_wt}"
 
+
 class StockBalance(models.Model):
-    stock = models.OneToOneField(Stock,on_delete=models.DO_NOTHING,primary_key=True)
-    Closing_wt = models.DecimalField(max_digits = 14, decimal_places = 3)
+    stock = models.OneToOneField(
+        Stock, on_delete=models.DO_NOTHING, primary_key=True)
+    Closing_wt = models.DecimalField(max_digits=14, decimal_places=3)
     Closing_qty = models.IntegerField()
     in_wt = models.DecimalField(max_digits=14, decimal_places=3)
     in_qty = models.IntegerField()
@@ -607,6 +743,28 @@ class StockBalance(models.Model):
     class Meta:
         managed = False
         db_table = 'stock_balance'
+
+    def get_qty_bal(self):
+        return self.Closing_qty + self.in_qty - self.out_qty
+
+    def get_wt_bal(self):
+        return self.Closing_wt + self.in_wt - self.out_wt
+
+
+class StockLotBalance(models.Model):
+
+    lot = models.OneToOneField(
+        StockLot, on_delete=models.DO_NOTHING, primary_key=True)
+    Closing_wt = models.DecimalField(max_digits=14, decimal_places=3)
+    Closing_qty = models.IntegerField()
+    in_wt = models.DecimalField(max_digits=14, decimal_places=3, default=0.0)
+    in_qty = models.IntegerField(default=0)
+    out_wt = models.DecimalField(max_digits=14, decimal_places=3, default=0.0)
+    out_qty = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'stockbatch_balance'
 
     def get_qty_bal(self):
         return self.Closing_qty + self.in_qty - self.out_qty

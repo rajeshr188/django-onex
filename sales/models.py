@@ -13,7 +13,7 @@ from approval.models import ApprovalLineReturn
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from invoice.models import PaymentTerm
-from product.models import Stock, StockTransaction
+from product.models import StockLot, StockTransaction
 
 
 class Month(Func):
@@ -320,7 +320,7 @@ class InvoiceItem(models.Model):
     makingcharge = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     # Relationship Fields
     product = models.ForeignKey(
-        Stock, on_delete=models.CASCADE, related_name="products"
+        StockLot, on_delete=models.CASCADE, related_name="products"
     )
     invoice = models.ForeignKey(
         "sales.Invoice", on_delete=models.CASCADE, related_name="saleitems"
@@ -366,17 +366,17 @@ class InvoiceItem(models.Model):
 
     @transaction.atomic()
     def post(self, jrnl):
-        if not self.is_return:  # if sold
-            self.product.remove(self.weight, self.quantity, jrnl, "S")
-        else:  # if returned
-            self.product.add(self.weight, self.quantity, jrnl, "SR")
+        if not self.is_return:
+            self.product.transact(self.weight, self.quantity, jrnl, "S")
+        else:
+            self.product.transact(self.weight, self.quantity, jrnl, "SR")
 
     @transaction.atomic()
     def unpost(self, jrnl):
         if self.is_return:
-            self.product.remove(self.weight, self.quantity, jrnl, "SR")
+            self.product.transact(self.weight, self.quantity, jrnl, "S")
         else:
-            self.product.add(self.weight, self.quantity, jrnl, "SR")
+            self.product.transact(self.weight, self.quantity, jrnl, "SR")
 
 
 class Receipt(models.Model):

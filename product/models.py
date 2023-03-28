@@ -18,7 +18,7 @@ from dea.models import Journal
 from product.attributes import get_product_attributes_data
 from utils.friendlyid import encode
 
-from .managers import StockManager
+from .managers import StockManager,StockLotManager
 from .weight import WeightUnits, zero_weight
 
 
@@ -202,14 +202,14 @@ class ProductVariant(models.Model):
 
 class Price(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    contact = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    contact = models.ForeignKey('contact.Customer', on_delete=models.CASCADE)
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     
 
 class PricingTier(models.Model):
     name = models.CharField(max_length=255)
-    contact = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    contact = models.ForeignKey('contact.Customer', on_delete=models.CASCADE)
     minimum_quantity = models.PositiveIntegerField()
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -304,7 +304,7 @@ class StockLot(models.Model):
     qty = models.IntegerField(default = 0)
     wt = models.DecimalField(max_digits = 10,decimal_places = 3)
     purchase_touch = models.DecimalField(max_digits = 10,decimal_places = 3)
-    purchase_rate = models.DecimalField(max_digits = 10,decimal_places = 3,null = true,blank = true)
+    purchase_rate = models.DecimalField(max_digits = 10,decimal_places = 3,null = True,blank = True)
 
     variant = models.ForeignKey(
         ProductVariant,

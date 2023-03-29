@@ -8,6 +8,8 @@ router.register(r"invoice", api.InvoiceViewSet)
 router.register(r"invoiceitem", api.InvoiceItemViewSet)
 router.register(r"receipt", api.ReceiptViewSet)
 
+app_name = "sales"
+
 urlpatterns = (
     # urls for Django Rest Framework API
     path("api/v1/", include(router.urls)),

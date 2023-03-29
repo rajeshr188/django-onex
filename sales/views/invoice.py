@@ -86,7 +86,7 @@ def sales_list(request):
 
 @login_required
 def sales_detail_view(request, id=None):
-    hx_url = reverse("hx-detail", kwargs={"id": id})
+    hx_url = reverse("sales:hx-detail", kwargs={"id": id})
     context = {
         "hx_url": hx_url,
     }
@@ -97,29 +97,39 @@ def sales_detail_view(request, id=None):
 def sales_detail_hx_view(request, id=None):
     if not request.htmx:
         raise Http404
-    try:
-        obj = Invoice.objects.get(
-            id=id,
-        )
+    obj = get_object_or_404(Invoice, pk=id)
+    # try:
+    #     obj = Invoice.objects.get(
+    #         id=id,
+    #     )
 
-    except:
-        obj = None
-    if obj is None:
-        return HttpResponse("Not found.")
-    context = {"object": obj, "previous": obj.get_previous(), "next": obj.get_next()}
+    # except:
+    #     obj = None
+    # if obj is None:
+    #     return HttpResponse("Not found.")
+    new_item_url = reverse(
+        "sales:sales_invoiceitem_create", kwargs={"parent_id": obj.id}
+    )
+    context = {
+        "object": obj,
+        "previous": obj.get_previous(),
+        "next": obj.get_next(),
+        "new_item_url": new_item_url,
+    }
     return render(request, "sales/partials/detail.html", context)
 
 
 @login_required
 def sales_delete_view(request, id=None):
-    try:
-        obj = Invoice.objects.get(id=id)
-    except:
-        obj = None
-    if obj is None:
-        if request.htmx:
-            return HttpResponse("Not Found")
-        raise Http404
+    obj = get_object_or_404(Invoice, pk=id)
+    # try:
+    #     obj = Invoice.objects.get(id=id)
+    # except:
+    #     obj = None
+    # if obj is None:
+    #     if request.htmx:
+    #         return HttpResponse("Not Found")
+    #     raise Http404
     if request.method == "POST":
         obj.delete()
         success_url = reverse("sales_invoice_list")
@@ -133,17 +143,18 @@ def sales_delete_view(request, id=None):
 
 @login_required
 def sale_item_delete_view(request, parent_id=None, id=None):
-    try:
-        obj = InvoiceItem.objects.get(
-            invoice__id=parent_id,
-            id=id,
-        )
-    except:
-        obj = None
-    if obj is None:
-        if request.htmx:
-            return HttpResponse("Not Found")
-        raise Http404
+    # try:
+    #     obj = InvoiceItem.objects.get(
+    #         invoice__id=parent_id,
+    #         id=id,
+    #     )
+    # except:
+    #     obj = None
+    # if obj is None:
+    #     if request.htmx:
+    #         return HttpResponse("Not Found")
+    #     raise Http404
+    obj = get_object_or_404(InvoiceItem, id=id)
     if request.method == "POST":
         id = obj.id
         obj.delete()
@@ -175,7 +186,9 @@ def sale_create_view(request):
 def sale_update_view(request, id=None):
     obj = get_object_or_404(Invoice, id=id)
     form = InvoiceForm(request.POST or None, instance=obj)
-    new_item_url = reverse("sales_invoiceitem_create", kwargs={"parent_id": obj.id})
+    new_item_url = reverse(
+        "sales:sales_invoiceitem_create", kwargs={"parent_id": obj.id}
+    )
     context = {"form": form, "object": obj, "new_item_url": new_item_url}
     if form.is_valid():
         form.save()
@@ -202,7 +215,7 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
         except:
             instance = None
     form = InvoiceItemForm(request.POST or None, instance=instance)
-    url = reverse("sales_invoiceitem_create", kwargs={"parent_id": parent_obj.id})
+    url = reverse("sales:sales_invoiceitem_create", kwargs={"parent_id": parent_obj.id})
     if instance:
         url = instance.get_hx_edit_url()
     context = {"url": url, "form": form, "object": instance}
@@ -213,6 +226,7 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
         new_obj.save()
         context["object"] = new_obj
         return render(request, "sales/partials/item-inline.html", context)
+
     return render(request, "sales/partials/item-form.html", context)
 
 
@@ -254,12 +268,6 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 
 #     def get_success_url(self) -> str:
 #         return reverse_lazy('sales_invoice_detail', kwargs={'pk': self.object.pk})
-
-
-# def print_invoice(request, pk):
-#     invoice = Invoice.objects.get(id=pk)
-#     params = {"invoice": invoice}
-#     return Render.render("sales/invoice_pdf.html", params)
 
 
 # def list_balance(request):

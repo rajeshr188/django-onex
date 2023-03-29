@@ -145,8 +145,15 @@ class Invoice(models.Model):
         blank=True,
         related_name="bill",
     )
-    # journals = GenericRelation(Journal,related_query_name='sales_doc',content_type_field='journal',object_id_field='object_id')
-    # stock_txns = GenericRelation(StockTransaction,content_type_field='content_type',object_id_field='object_id')
+    journals = GenericRelation(
+        Journal,
+        related_query_name="sales_doc",
+        # content_type_field='journal',object_id_field='object_id'
+    )
+    stock_txns = GenericRelation(
+        StockTransaction,
+        # content_type_field='content_type',object_id_field='object_id'
+    )
 
     class Meta:
         ordering = ("-created",)
@@ -156,16 +163,16 @@ class Invoice(models.Model):
         return f"{self.id}"
 
     def get_absolute_url(self):
-        return reverse("sales_invoice_detail", kwargs={"id": self.id})
+        return reverse("sales:sales_invoice_detail", kwargs={"id": self.id})
 
     def get_hx_url(self):
-        return reverse("hx-detail", kwargs={"id": self.id})
+        return reverse("sales:hx-detail", kwargs={"id": self.id})
 
     def get_update_url(self):
-        return reverse("sales_invoice_update", args=(self.pk,))
+        return reverse("sales:sales_invoice_update", args=(self.pk,))
 
     def get_delete_url(self):
-        return reverse("sales_invoice_delete", kwargs={"id": self.id})
+        return reverse("sales:sales_invoice_delete", kwargs={"id": self.id})
 
     def get_invoiceitem_children(self):
         return self.saleitems.all()
@@ -254,12 +261,12 @@ class Invoice(models.Model):
                 type=JournalTypes.SJ, content_object=self, desc="sale"
             )
 
-            inv = "GST INV" if self.content_object.is_gst else "Non-GST INV"
-            cogs = "GST COGS" if self.content_object.is_gst else "Non-GST COGS"
-            money = Money(self.balance, self.btype)
+            inv = "GST INV" if self.is_gst else "Non-GST INV"
+            cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
+            money = Money(self.balance, self.balancetype)
             tax = Money(self.get_gst(), "INR")
             lt = [
-                {"ledgerno": "sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
+                {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
                 {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
                 {
                     "ledgerno": "Output Igst",
@@ -269,7 +276,7 @@ class Invoice(models.Model):
             ]
             at = [
                 {
-                    "ledgerno": "sales",
+                    "ledgerno": "Sales",
                     "xacttypecode": "Cr",
                     "xacttypecode_ext": "CRSL",
                     "account": self.customer.account,
@@ -333,20 +340,20 @@ class InvoiceItem(models.Model):
         return "%s" % self.pk
 
     def get_absolute_url(self):
-        return reverse("sales_invoiceitem_detail", args=(self.pk,))
+        return reverse("sales:sales_invoiceitem_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("sales_invoiceitem_update", args=(self.pk,))
+        return reverse("sales:sales_invoiceitem_update", args=(self.pk,))
 
     def get_delete_url(self):
         return reverse(
-            "sales_invoiceitem_delete",
+            "sales:sales_invoiceitem_delete",
             kwargs={"id": self.id, "parent_id": self.invoice.id},
         )
 
     def get_hx_edit_url(self):
         kwargs = {"parent_id": self.invoice.id, "id": self.id}
-        return reverse("hx-invoiceitem-detail", kwargs=kwargs)
+        return reverse("sales:hx-invoiceitem-detail", kwargs=kwargs)
 
     def get_nettwt(self):
         if self.invoice.customer.type == "Re":

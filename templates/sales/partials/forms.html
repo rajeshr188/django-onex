@@ -4,7 +4,7 @@
 
     <form action='.' method="POST" 
             hx-post='.' hx-swap='outerHTML' 
-            hx-trigger='{% if form.instance.id %}change delay:500ms,{% endif %} submit'>
+            hx-trigger='{% if form.instance.id %}change delay:100ms,{% endif %} submit'>
        {% csrf_token %}        
        {{form|crispy}}
         

@@ -9,7 +9,7 @@ from django_tables2 import Column
 from approval.models import Approval
 from contact.models import Customer
 from product.forms import StockWidget
-from product.models import Stock
+from product.models import StockLot
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Receipt, ReceiptItem, ReceiptLine

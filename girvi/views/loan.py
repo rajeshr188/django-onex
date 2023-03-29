@@ -302,7 +302,7 @@ def notice(request):
 @login_required
 def deleteLoan(request):
     id_list = request.POST.getlist("selection")
-    
+
     Loan.objects.filter(id__in=id_list).delete()
     filter = LoanFilter(request.GET, queryset=Loan.objects.all())
     table = LoanTable(filter.qs)

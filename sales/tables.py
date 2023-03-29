@@ -17,7 +17,7 @@ class InvoiceTable(tables.Table):
     )
     # edit = tables.LinkColumn('sales_invoice_update', args=[A('id')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}}, orderable=False, empty_values=())
     remove = tables.LinkColumn(
-        "sales_invoice_delete",
+        "sales:sales_invoice_delete",
         args=[A("id")],
         attrs={"a": {"class": "btn btn-outline-danger", "role": "button"}},
         orderable=False,

@@ -65,13 +65,13 @@
             {%for i in object.stocktransaction_set.all %}
             <tr>
               <td>{{i.id}}</td>
-              <td>{{i.movement_type}}</td>
+              <td>{{i.movement_type.name}}</td>
               <td>
-                <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object%}">
-                  {{i.movement_type}}:{{i.journal}}</a>
+                <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
+                  {{i.journal.desc}}:{{i.journal.content_object}}</a>
               </td>
-              <td>{{i.weight}}</td>
-              <td>{{i.quantity}}</td>
+              <td>{{i.movement_type.direction}}{{i.weight}}</td>
+              <td>{{i.movement_type.direction}}{{i.quantity}}</td>
             </tr>
             {%endfor%}
           </tbody>

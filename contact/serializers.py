@@ -13,7 +13,6 @@ class CustomerSerializer(serializers.ModelSerializer):
             "name",
             "created",
             "last_updated",
-            
             "area",
             "type",
             "relatedas",

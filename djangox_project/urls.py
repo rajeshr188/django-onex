@@ -15,7 +15,7 @@ urlpatterns = [
     path("contact/", include("contact.urls")),
     path("product/", include("product.urls")),
     path("girvi/", include("girvi.urls")),
-    path("sales/", include("sales.urls")),
+    path("sales/", include("sales.urls", namespace="sales")),
     path("chitfund/", include("Chitfund.urls")),
     path("purchase/", include("purchase.urls", namespace="purchase")),
     path("daybook/", include("daybook.urls")),

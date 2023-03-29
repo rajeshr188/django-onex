@@ -67,7 +67,9 @@ class Approval(models.Model):
 
 
 class ApprovalLine(models.Model):
-    product = models.ForeignKey(StockLot, related_name="product", on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        StockLot, related_name="product", on_delete=models.CASCADE
+    )
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)

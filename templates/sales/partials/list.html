@@ -3,10 +3,10 @@
   
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-        <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_create' %}" role="button">Add Sale</a>
-        <a class="btn btn-primary mr-2" href="{% url 'sales_invoice_list' %}" role="button">Sales List</a>
+        <a class="btn btn-primary mr-2" href="{% url 'sales:sales_invoice_create' %}" role="button">Add Sale</a>
+        <a class="btn btn-primary mr-2" href="{% url 'sales:sales_invoice_list' %}" role="button">Sales List</a>
         <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
-        <a class="btn btn-primary" href="{% url 'sales_home'%}" role="button">export</a>
+        <a class="btn btn-primary" href="{% url 'sales:sales_home'%}" role="button">export</a>
         
         </div>
     </div>

@@ -12,7 +12,8 @@ from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import Attribute, ProductVariant, Stock,StockLot,StockTransaction
+from product.models import (Attribute, ProductVariant, Stock, StockLot,
+                            StockTransaction)
 
 
 # if not posted : delete/edit
@@ -260,21 +261,25 @@ class InvoiceItem(models.Model):
         if not return item create/add a stocklot then transact,
         if return item then remove the lot from stocklot"""
         if not self.is_return:
-            stock, created = Stock.objects.get_or_create(
-                variant = self.product)
+            stock, created = Stock.objects.get_or_create(variant=self.product)
             stock_lot = StockLot.objects.create(
-                variant = self.product,
-                stock = stock,
-                wt = self.weight,qty = self.quantity,
-                purchase_touch = self.touch,
-                purchase_rate = self.invoice.rate,
+                variant=self.product,
+                stock=stock,
+                wt=self.weight,
+                qty=self.quantity,
+                purchase_touch=self.touch,
+                purchase_rate=self.invoice.rate,
                 # purchase = self.invoice
-                )
-            stock_lot.transact(weight = self.weight,quantity = self.quantity,
-                               journal = journal,movement_type_id = "P")
+            )
+            stock_lot.transact(
+                weight=self.weight,
+                quantity=self.quantity,
+                journal=journal,
+                movement_type="P",
+            )
 
         else:
-            lot = StockLot.objects.get(stock__variant = self.product)
+            lot = StockLot.objects.get(stock__variant=self.product)
             lot.transact(
                 journal=journal,
                 weight=self.weight,
@@ -288,18 +293,18 @@ class InvoiceItem(models.Model):
         add lot back to stock lot if item is_return,
         remove lot from stocklot if item is not return item"""
         if self.is_return:
-            self.stocklot_set.filter(variant= self.product).transact(
-                journal = journal,
-                weight = self.weight,
-                quantity = self.quantity,
-                movement_type = "P"
+            self.product.stock_lots.get(variant=self.product).transact(
+                journal=journal,
+                weight=self.weight,
+                quantity=self.quantity,
+                movement_type="P",
             )
         else:
-            self.stocklot_set.filter(variant= self.product).transact(
-                journal = journal,
-                weight = self.weight,
-                quantity = self.quantity,
-                movement_type = "PR"
+            self.product.stock_lots.get(variant=self.product).transact(
+                journal=journal,
+                weight=self.weight,
+                quantity=self.quantity,
+                movement_type="PR",
             )
 
 

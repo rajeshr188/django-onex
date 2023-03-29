@@ -399,6 +399,7 @@ class Journal(models.Model):
     @transaction.atomic()
     def transact(self, lt=[], at=[]):
         for i in lt:
+            print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
             LedgerTransaction.objects.create_txn(
                 self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
             )

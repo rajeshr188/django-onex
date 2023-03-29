@@ -5,7 +5,7 @@
   <a class="btn btn-primary" href="{% url 'purchase:purchase_invoice_list' %}">Purchase Listing</a>
   <a class="btn btn-secondary" href="">Print</a>
   {%if not object.posted %}
-    <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Invoice</a>
+    <a class="btn btn-primary" href="{{object.get_update_url}}">Edit</a>
     <a class="btn btn-danger" href ="{% url 'purchase:purchase_invoice_delete' object.id %}">Delete </a>
   {%endif%}
 
@@ -19,8 +19,7 @@
   <a href="{% url 'purchase:purchase_invoice_detail' next.id %}" type="button" class="btn btn-primary mr-2">Next {{next.id}}</a>
   {%endif%}
 </div>
-<div class="p-4 p-md-4 mb-2 text-white rounded bg-dark">
-  
+<div class="p-4 p-md-4 mb-2 text-white rounded bg-dark"> 
   <div class="row">
     <div class="col-md-6 px-1">
       

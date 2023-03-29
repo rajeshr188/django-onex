@@ -481,6 +481,8 @@ class StockLot(models.Model):
         1 productV has many lots and all lots[productv] reference one stock
         on purchase add to stocklot from purchase_item 
         on sale choose from stocklot from sale_item
+        a lot belongs to a purchase and can be split/merged into new lot belonging to same purchase
+        smaller lots can be stockout'ed and stockin'ed seperately
     """
     # should this be mptt?
 

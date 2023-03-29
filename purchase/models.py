@@ -279,7 +279,7 @@ class InvoiceItem(models.Model):
                 journal=journal,
                 weight=self.weight,
                 quantity=self.quantity,
-                movement_type_id="PR",
+                movement_type="PR",
             )
 
     @transaction.atomic()
@@ -292,14 +292,14 @@ class InvoiceItem(models.Model):
                 journal = journal,
                 weight = self.weight,
                 quantity = self.quantity,
-                movement_type_id = "P"
+                movement_type = "P"
             )
         else:
             self.stocklot_set.filter(variant= self.product).transact(
                 journal = journal,
                 weight = self.weight,
                 quantity = self.quantity,
-                movement_type_id = "PR"
+                movement_type = "PR"
             )
 
 

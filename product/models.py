@@ -452,7 +452,7 @@ class Stock(models.Model):
             stock=self,
             weight=weight,
             quantity=quantity,
-            movement_type=movement_type,
+            movement_type_id = movement_type,
         )
         self.update_status()
 
@@ -622,7 +622,7 @@ class StockLot(models.Model):
             lot=self,
             weight=weight,
             quantity=quantity,
-            movement_type=movement_type,
+            movement_type_id=movement_type,
         )
         self.update_status()
 

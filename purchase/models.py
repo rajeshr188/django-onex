@@ -263,14 +263,15 @@ class InvoiceItem(models.Model):
             stock, created = Stock.objects.get_or_create(
                 variant = self.product)
             stock_lot = StockLot.objects.create(
+                variant = self.product,
                 stock = stock,
-                wt = self.weight,qty = self.qty,
+                wt = self.weight,qty = self.quantity,
                 purchase_touch = self.touch,
                 purchase_rate = self.invoice.rate,
-                purchase = self.invoice
+                # purchase = self.invoice
                 )
-            stock_lot.transact(wt = self.weight,qty = self.quantity,
-                               journal = journal,movement_type = "P")
+            stock_lot.transact(weight = self.weight,quantity = self.quantity,
+                               journal = journal,movement_type_id = "P")
 
         else:
             lot = StockLot.objects.get(stock__variant = self.product)
@@ -278,7 +279,7 @@ class InvoiceItem(models.Model):
                 journal=journal,
                 weight=self.weight,
                 quantity=self.quantity,
-                activity_type="PR",
+                movement_type_id="PR",
             )
 
     @transaction.atomic()
@@ -291,14 +292,14 @@ class InvoiceItem(models.Model):
                 journal = journal,
                 weight = self.weight,
                 quantity = self.quantity,
-                movement_type = "P"
+                movement_type_id = "P"
             )
         else:
             self.stocklot_set.filter(variant= self.product).transact(
                 journal = journal,
                 weight = self.weight,
                 quantity = self.quantity,
-                movement_type = "PR"
+                movement_type_id = "PR"
             )
 
 

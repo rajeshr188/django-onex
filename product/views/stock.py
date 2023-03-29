@@ -9,7 +9,7 @@ from django.views.generic.base import TemplateView
 from ..filters import StockFilter
 from ..forms import (StockForm, StockTransactionForm, UniqueForm,
                      stockstatement_formset)
-from ..models import Stock, StockStatement, StockTransaction
+from ..models import Stock,StockLot, StockStatement, StockTransaction
 
 
 @login_required
@@ -78,6 +78,8 @@ class StockUpdateView(LoginRequiredMixin, UpdateView):
 class StockDetailView(LoginRequiredMixin, DetailView):
     model = Stock
 
+class StockLotDetailView(LoginRequiredMixin, DetailView):
+    model = StockLot
 
 class StockDeleteView(LoginRequiredMixin, DeleteView):
     model = Stock

@@ -4,7 +4,7 @@ from django_select2.forms import Select2Widget
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
-from product.models import Stock
+from product.models import StockLot
 
 from .models import Approval, ApprovalLine, ApprovalLineReturn
 
@@ -23,7 +23,7 @@ class ApprovalForm(forms.ModelForm):
 
 class ApprovalLineForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-        queryset=Stock.objects.filter(status="Available"), widget=Select2Widget
+        queryset=StockLot.objects.filter(status="Available"), widget=Select2Widget
     )
 
     class Meta:

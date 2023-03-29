@@ -87,7 +87,7 @@ class InvoiceForm(forms.ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-        queryset=Stock.objects.all(),
+        queryset=StockLot.objects.all(),
         widget=StockWidget,
     )
 

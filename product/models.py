@@ -387,7 +387,7 @@ class Stock(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(activity_type__in=["P", "SR", "AR", "AD"])
+        st = st.filter(movement_type__in=["P", "SR", "AR", "AD"])
 
         return st.aggregate(
             qty=Coalesce(
@@ -404,7 +404,7 @@ class Stock(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(activity_type__in=["PR", "S", "A", "RM"])
+        st = st.filter(movement_type__in=["PR", "S", "A", "RM"])
 
         return st.aggregate(
             qty=Coalesce(
@@ -515,10 +515,10 @@ class StockLot(models.Model):
         related_name='stock_lots'
     )
     # not sure
-    purchase = models.ForeignKey('Purchase.Invoice', on_delete=models.SET_NULL,
-                                 null=True, blank=True)
-    sale = models.ForeignKey('Sales.Invoice', on_delete=models.SET_NULL,
-                             null=True, blank=True)
+    # purchase = models.ForeignKey('Purchase.Invoice', on_delete=models.SET_NULL,
+    #                              null=True, blank=True)
+    # sale = models.ForeignKey('Sales.Invoice', on_delete=models.SET_NULL,
+    #                          null=True, blank=True)
 
     objects = StockLotManager()
 
@@ -626,7 +626,7 @@ class StockLot(models.Model):
         )
         self.update_status()
 
-    def merge(self, lot:StockLot):
+    def merge(self, lot:int):
         """
         a lots qty and weight remains same troughout its life,
         any add/remove/merge/split on a lot is performed via transactions,
@@ -681,9 +681,9 @@ class StockTransaction(models.Model):
 
     # relational Fields
     # user = models.ForeignKey(CustomUser)
-    movement_type = models.ForeignKey(Movement, on_delete=models.CASCADE)
+    movement_type = models.ForeignKey(Movement, on_delete=models.CASCADE,default = 'P')
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE)
+    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE,default = 1)
 
     journal = models.ForeignKey(
         Journal, on_delete=models.CASCADE, null=True, blank=True, related_name="stxns"
@@ -710,7 +710,7 @@ class StockStatement(models.Model):
     )
     method = models.CharField(max_length=20, choices=ss_method, default="Auto")
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE)
+    lot = models.ForeignKey(StockLot, on_delete=models.CASCADE,null = True)
 
     created = models.DateTimeField(auto_now=True)
     Closing_wt = models.DecimalField(max_digits=14, decimal_places=3)

@@ -224,6 +224,11 @@ urlpatterns += (
         name="product_stock_detail",
     ),
     path(
+        "stocklot/detail/<int:pk>/",
+        views.StockLotDetailView.as_view(),
+        name="product_stocklot_detail",
+    ),
+    path(
         "stock/update/<int:pk>/",
         views.StockUpdateView.as_view(),
         name="product_stock_update",

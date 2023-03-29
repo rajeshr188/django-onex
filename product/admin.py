@@ -3,9 +3,19 @@ from django import forms
 from django.contrib import admin
 
 from .models import (Attribute, AttributeValue, Category, Product,
-                     ProductImage, ProductType, ProductVariant, Stock,
+                     ProductImage, ProductType, ProductVariant, Stock,Movement,
                      StockStatement, StockTransaction, VariantImage)
 
+class MovementAdminForm(forms.ModelForm):
+    class Meta:
+        model = Movement
+        fields = '__all__'
+
+class MovementAdmin(admin.ModelAdmin):
+    form = MovementAdminForm
+    list_display = ["name","direction"]
+
+admin.site.register(Movement,MovementAdmin)
 
 class CategoryAdminForm(forms.ModelForm):
     class Meta:

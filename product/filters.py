@@ -12,7 +12,7 @@ class StockFilter(django_filters.FilterSet):
 
     class Meta:
         model = Stock
-        fields = ["variant", "barcode", "huid"]
+        fields = ["variant"]
 
 
 class StockTransactionFilter(django_filters.FilterSet):

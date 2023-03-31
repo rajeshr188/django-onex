@@ -63,7 +63,6 @@ class LoanQuerySet(models.QuerySet):
             loan_interest=F("interestrate") * F("loanamount") * F("no_of_months") / 100,
         ).aggregate(Sum("loan_interest"))["loan_interest__sum"]
 
-
 class LoanManager(models.Manager):
     # def get_queryset(self):
     #     return super().get_queryset().select_related("series", "release", "customer")
@@ -94,7 +93,6 @@ class LoanManager(models.Manager):
 class ReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=False)
-
 
 class UnReleasedManager(models.Manager):
     def get_queryset(self):
@@ -310,7 +308,6 @@ class Loan(models.Model):
         notice = self.notification_set.last()
         return notice
 
-
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
 
@@ -340,7 +337,9 @@ class LoanItem(models.Model):
 
     def get_update_url(self):
         return reverse("girvi_loanitem_update", args=(self.pk,))
-
+    
+    def update_loan(self):
+        pass
 
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -349,9 +348,12 @@ class Adjustment(models.Model):
     )
     amount_received = models.IntegerField(default=0)
     as_interest = models.BooleanField(default=True)
+    posted = models.BooleanField(default=False)
+
     loan = models.ForeignKey(
         "girvi.Loan", on_delete=models.CASCADE, related_name="adjustments"
     )
+    journals = GenericRelation(Journal, related_query_name="loan_adjustment_doc")
 
     class Meta:
         ordering = ("created",)
@@ -364,7 +366,81 @@ class Adjustment(models.Model):
 
     def get_update_url(self):
         return reverse("girvi_adjustments_update", args=(self.pk,))
+    
+    # correct the transactions
+    def post(self):
+        amount = Money(self.amount_received, "INR")
+        interest =  0 if not self.as_interest else Money(self.amount_received, "INR")
+        if self.customer.type == "Su":
+            jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
+            lt = [
+                {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},
+                {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "LP",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Payable",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "IP",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+            ]
+        else:
+            jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
+            lt = [
+                {
+                    "ledgerno": "Loans & Advances",
+                    "ledgerno_dr": "Cash",
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "ledgerno_dr": "Cash",
+                    "amount": amount,
+                },
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans & Advances",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "LR",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "IR",
+                    "account": self.customer.account,
+                    "amount": interest,
+                },
+            ]
+        jrnl.transact(lt, at)
 
+        self.posted = True
+        self.save(update_fields=["posted"])
+
+    def unpost(self):
+        last_jrnl = self.journals.latest()
+        if self.loan.customer.type == "Su":
+            jrnl = Journal.objects.create(
+                content_object=self, desc="Loan Adjustment Revert"
+            )
+        else:
+            jrnl = Journal.objects.create(
+                content_object=self, desc="Loan Adjustment Revert"
+            )
+        jrnl.untransact(last_jrnl)
+        self.posted = False
+        self.save(update_fields="posted")
 
 class LoanStatement(models.Model):
     created = models.DateTimeField(auto_now_add=True)

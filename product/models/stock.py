@@ -2,7 +2,7 @@ from django.db import models
 from decimal import Decimal
 from utils.friendlyid import encode
 from ..managers import StockLotManager, StockManager
-
+from dea.models import Journal
 class Stock(models.Model):
 
     """
@@ -208,11 +208,11 @@ class StockLot(models.Model):
     variant = models.ForeignKey(
         'product.ProductVariant', on_delete=models.CASCADE, related_name="stock_lots"
     )
-
-    purchase = models.ForeignKey('purchase.Invoice', on_delete=models.SET_NULL,
-                                 null=True, blank=True)
-    sale = models.ForeignKey('sales.Invoice', on_delete=models.SET_NULL,
-                             null=True, blank=True)
+    # circular import?
+    # purchase = models.ForeignKey('purchase.Invoice', on_delete=models.SET_NULL,
+    #                              null=True, blank=True)
+    # sale = models.ForeignKey('sales.Invoice', on_delete=models.SET_NULL,
+    #                          null=True, blank=True)
 
     objects = StockLotManager()
 
@@ -386,7 +386,7 @@ class StockTransaction(models.Model):
     lot = models.ForeignKey(StockLot, on_delete=models.CASCADE, default=1)
 
     journal = models.ForeignKey(
-        'dea.Journal', on_delete=models.CASCADE, null=True, blank=True, related_name="stxns"
+        Journal, on_delete=models.CASCADE, null=True, blank=True, related_name="stxns"
     )
 
     class Meta:

@@ -10,3 +10,4 @@ CREATE TYPE public.money_value AS
 
 ALTER TYPE public.money_value
     OWNER TO postgres;
+

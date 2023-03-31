@@ -8,10 +8,6 @@ class ReleaseManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related("loan")
 
-
-
-# to-do seperate loanitems from loan normalize
-
 class Release(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now)

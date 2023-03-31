@@ -218,6 +218,9 @@ class AccountTransaction(models.Model):
     )
     objects = AccountTransactionManager()
 
+    class Meta:
+        indexes = [models.Index(fields=['ledgerno', ]), ]
+
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
 

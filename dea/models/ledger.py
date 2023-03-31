@@ -167,6 +167,10 @@ class LedgerTransaction(models.Model):
     )
     objects = LedgerTransactionManager()
 
+    class Meta:
+        indexes = [models.Index(fields=['ledgerno', ]),
+                   models.Index(fields=['ledgerno_dr', ])]
+
     def __str__(self):
         return self.ledgerno.name
 

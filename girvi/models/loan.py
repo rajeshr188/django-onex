@@ -1,5 +1,8 @@
-import datetime
-from decimal import Decimal
+from django.db import models, transaction
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, Q, Sum, When)
+from contact.models import Customer
+from dea.models import Journal, JournalTypes
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
 
@@ -7,18 +10,11 @@ import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import DateRangeField
-from django.db import models, transaction
-from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, Q, Sum, When)
 from django.urls import reverse
 from django.utils import timezone
 from moneyed import Money
-
-from contact.models import Customer
-from dea.models import Journal, JournalTypes
-
-# from notify.models import Notification
-
+import datetime
+from decimal import Decimal
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -95,7 +91,6 @@ class LoanManager(models.Manager):
     def unposted(self):
         return self.get_queryset().unposted()
 
-
 class ReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=False)
@@ -104,93 +99,7 @@ class ReleasedManager(models.Manager):
 class UnReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=True)
-
-
-class ReleaseManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().select_related("loan")
-
-
-class License(models.Model):
-    # Fields
-    name = models.CharField(max_length=255)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    updated = models.DateTimeField(auto_now=True, editable=False)
-    lt = (("PBL", "Pawn Brokers License"), ("GST", "Goods & Service Tax"))
-    type = models.CharField(max_length=30, choices=lt, default="PBL")
-    shopname = models.CharField(max_length=30)
-    address = models.TextField(max_length=100)
-    phonenumber = models.CharField(max_length=30)
-    propreitor = models.CharField(max_length=30)
-
-    class Meta:
-        ordering = ("-created",)
-
-    def __str__(self):
-        return "%s" % self.name
-
-    def get_absolute_url(self):
-        return reverse("girvi_license_detail", args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse("girvi_license_update", args=(self.pk,))
-
-    def get_series_count(self):
-        return self.series_set.count()
-
-
-class Series(models.Model):
-    name = models.CharField(max_length=30, default="", blank=True, unique=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    last_updated = models.DateTimeField(auto_now=True)
-    license = models.ForeignKey(License, on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ("created",)
-        unique_together = ["license", "name"]
-
-    def __str__(self):
-        return f"Series {self.name}"
-
-    def get_absolute_url(self):
-        return reverse("girvi_license_series_detail", args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse("girvi_license_series_update", args=(self.pk,))
-
-    def activate(self):
-        self.is_active = not self.is_active
-        self.save(update_fields=["is_active"])
-
-    def loan_count(self):
-        return self.loan_set.filter(release__isnull=True).count()
-
-    def total_loan_amount(self):
-        return self.loan_set.filter(release__isnull=True).aggregate(t=Sum("loanamount"))
-
-    def total_gold_loan(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Gold").aggregate(
-            t=Sum("loanamount")
-        )
-
-    def total_silver_loan(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Silver").aggregate(
-            t=Sum("loanamount")
-        )
-
-    def total_gold_weight(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Gold").aggregate(
-            t=Sum("itemweight")
-        )
-
-    def total_silver_weight(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Silver").aggregate(
-            t=Sum("itemweight")
-        )
-
-
-# to-do seperate loanitems from loan normalize
+        
 class Loan(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now)
@@ -210,7 +119,7 @@ class Loan(models.Model):
     interest = models.PositiveIntegerField()
 
     series = models.ForeignKey(
-        Series,
+        'girvi.Series',
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -467,110 +376,3 @@ class LoanStatement(models.Model):
     def __str__(self):
         return f"{self.created}"
 
-
-class Release(models.Model):
-    # Fields
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
-    releaseid = models.CharField(max_length=255, unique=True)
-    interestpaid = models.IntegerField(default=0)
-    posted = models.BooleanField(default=False)
-    # Relationship Fields
-    loan = models.OneToOneField(
-        "girvi.Loan", on_delete=models.CASCADE, related_name="release"
-    )
-    journals = GenericRelation(Journal, related_query_name="release_doc")
-    # manager
-    objects = ReleaseManager()
-
-    class Meta:
-        ordering = ("-id",)
-
-    def __str__(self):
-        return "%s" % self.releaseid
-
-    def get_absolute_url(self):
-        return reverse("girvi_release_detail", args=(self.pk,))
-
-    def get_update_url(self):
-        return reverse("girvi_release_update", args=(self.pk,))
-
-    def total_received(self):
-        return self.loan.loanamount + self.interestpaid
-
-    def post(self):
-        amount = Money(self.loan.loanamount, "INR")
-        interest = Money(self.interestpaid, "INR")
-        if self.customer.type == "Su":
-            jrnl = Journal.objects.create(content_object=self, desc="Loan Repaid")
-            lt = [
-                {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},
-                {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
-            ]
-            at = [
-                {
-                    "ledgerno": "Loans",
-                    "xacttypecode": "Cr",
-                    "xacttypecode_ext": "LP",
-                    "account": self.customer.account,
-                    "amount": amount,
-                },
-                {
-                    "ledgerno": "Interest Payable",
-                    "xacttypecode": "Cr",
-                    "xacttypecode_ext": "IP",
-                    "account": self.customer.account,
-                    "amount": amount,
-                },
-            ]
-        else:
-            jrnl = Journal.objects.create(content_object=self, desc="Loan Released")
-            lt = [
-                {
-                    "ledgerno": "Loans & Advances",
-                    "ledgerno_dr": "Cash",
-                    "amount": amount,
-                },
-                {
-                    "ledgerno": "Interest Received",
-                    "ledgerno_dr": "Cash",
-                    "amount": amount,
-                },
-            ]
-            at = [
-                {
-                    "ledgerno": "Loans & Advances",
-                    "xacttypecode": "Dr",
-                    "xacttypecode_ext": "LR",
-                    "account": self.customer.account,
-                    "amount": amount,
-                },
-                {
-                    "ledgerno": "Interest Received",
-                    "xacttypecode": "Dr",
-                    "xacttypecode_ext": "IR",
-                    "account": self.customer.account,
-                    "amount": interest,
-                },
-            ]
-        jrnl.transact(lt, at)
-
-        self.posted = True
-        self.save(update_fields=["posted"])
-
-    def unpost(self):
-        last_jrnl = self.journals.latest()
-        if self.loan.customer.type == "Su":
-            jrnl = Journal.objects.create(
-                content_object=self, desc="Loan Repaid Revert"
-            )
-        else:
-            jrnl = Journal.objects.create(
-                content_object=self, desc="Loan Released Revert"
-            )
-        jrnl.untransact(last_jrnl)
-        self.posted = False
-        self.save(update_fields="posted")

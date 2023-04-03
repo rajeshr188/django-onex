@@ -53,6 +53,11 @@ urlpatterns += (
 urlpatterns += (
     # urls for InvoiceItem
     path(
+        "sales/product/price",
+        views.get_sale_price,
+        name="sale_product_price"
+    ),
+    path(
         "sales/<int:parent_id>/invoiceitem/create",
         views.sale_item_update_hx_view,
         name="sales_invoiceitem_create",

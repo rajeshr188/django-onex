@@ -19,7 +19,8 @@ from ..models import Invoice, InvoiceItem
 # from ..render import Render
 from ..tables import InvoiceTable
 
-
+from product.models import ProductVariant,StockLot,PricingTier,PricingTierProductPrice
+from contact.models import Customer
 def home(request):
     context = {}
     qs = Invoice.objects
@@ -322,6 +323,35 @@ def unpost_sales(request, pk):
     sales_inv.unpost()
     return redirect(sales_inv)
 
+
+@login_required
+# not done yet
+def get_sale_price(request):
+    
+    product = StockLot.objects.get(id = request.GET.get('product', '')).variant
+    contact = Customer.objects.get(id=request.GET.get('customer', ''))
+
+    # Traverse the pricing tier hierarchy to get the effective selling price for the customer and product
+    pricing_tier = contact.pricing_tier
+    selling_price = 0
+    while pricing_tier:
+        pricing_tier_price = PricingTierProductPrice.objects.filter(pricing_tier=pricing_tier, product=product).first()
+        if pricing_tier_price: 
+            selling_price = pricing_tier_price.selling_price
+            break
+        else:
+            pricing_tier = pricing_tier.parent
+
+    # Fallback to individual price for customer and product
+    # if not pricing_tier:
+    #     price = Price.objects.filter(product=product, customer=customer).first()
+    #     selling_price = price.selling_price if price else None
+
+    form = InvoiceItemForm(initial={"touch": selling_price})
+    context = {
+        "field": form["touch"],
+    }
+    return render(request, "girvi/partials/field.html", context)
 
 def sales_count_by_month(request):
     # data = Invoice.objects.extra(select={'date': 'DATE(created)'},order_by=['date']).values('date').annotate(count_items=Count('id'))

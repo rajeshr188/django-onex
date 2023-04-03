@@ -9,7 +9,7 @@ from djmoney.models.fields import MoneyField
 from .moneyvalue import MoneyValueField
 from django.core.validators import MinValueValidator
 from ..managers import AccountManager
-
+from .ledger import Ledger
 # cr credit,dr debit
 class TransactionType_DE(models.Model):
     XactTypeCode = models.CharField(max_length=2, primary_key=True)

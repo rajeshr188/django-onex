@@ -18,7 +18,7 @@ from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
 # from ..render import Render
 from ..tables import InvoiceTable
-
+from product.models import ProductVariant,PricingTier,PricingTierProductPrice
 
 @login_required
 def purchase_list(request):
@@ -62,7 +62,7 @@ def purchase_update(request, id=None):
         form.save()
         context["message"] = "Updated"
     if request.htmx:
-        return render(request, "shared/partials/forms.html", context)
+        return render(request, "sales/partials/forms.html", context)
     return render(request, "sales/create_update.html", context)
 
 
@@ -165,6 +165,34 @@ def unpost_purchase(request, pk):
     purchase_inv.unpost()
     return redirect(purchase_inv)
 
+@login_required
+# not done yet
+def get_product_price(request):
+    
+    product = ProductVariant.objects.get(id=request.GET.get('product', ''))
+    contact = Customer.objects.get(id=request.GET.get('supplier', ''))
+
+    # Traverse the pricing tier hierarchy to get the effective selling price for the customer and product
+    pricing_tier = contact.pricing_tier
+    purchase_price = 0
+    while pricing_tier:
+        pricing_tier_price = PricingTierProductPrice.objects.filter(pricing_tier=pricing_tier, product=product).first()
+        if pricing_tier_price: 
+            purchase_price = pricing_tier_price.purchase_price
+            break
+        else:
+            pricing_tier = pricing_tier.parent
+
+    # Fallback to individual price for customer and product
+    # if not pricing_tier:
+    #     price = Price.objects.filter(product=product, customer=customer).first()
+    #     selling_price = price.selling_price if price else None
+
+    form = InvoiceItemForm(initial={"touch": purchase_price})
+    context = {
+        "field": form["touch"],
+    }
+    return render(request, "girvi/partials/field.html", context)
 
 def home(request):
     context = {}

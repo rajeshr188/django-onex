@@ -101,13 +101,23 @@
       <div class="card-body">
         <h5 class="card-title">Lots</h5>
         {%if object.lots%}
-        <ul class="list-group list-group-flush">
-          {%for i in object.lots.all%}
-          <li class="list-group-item">
-            created:{{i.created}} barcode:{{i.barcode}} huid:{{i.huid}} Available:{{i.current_balance}}
-          </li>
-        </ul>
-        {%endfor%}
+        <table class="table table-hover">
+          <thead>
+            <th>Created</th><th>Purchase</th><th>Barcode</th><th>Huid</th><th>current_balance</th>
+          </thead>
+          <tbody>
+            {%for i in object.lots.all%}
+            <tr>
+              <td>{{i.created}}</td>
+              <td>{{i.purchase}}</td>
+              <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
+              <td> {{i.huid}} </td>
+              <td>{{i.current_balance}}</td>
+            </tr>
+           {%endfor%}
+          </tbody>
+        </table>
+
         {%endif%}
       </div>
     </div>

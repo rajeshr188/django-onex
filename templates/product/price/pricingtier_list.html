@@ -1,0 +1,19 @@
+{%extends '_base.html'%}
+{%block content%}
+<h1>Pricing Tier</h1>
+<div class="div">
+    <button class="btn btn-success">Add Tier</button>
+    <table class="table">
+        <thead>
+            <th>Name</th><th>Description</th><th>Parent</th>
+        </thead>
+        <tbody>
+            {%for i in object_list%}
+            <tr> 
+                <td><a href="{% url 'product_pricingtier_detail' i.id%}">{{i.name}}</a></td><td>{{i.description}}</td><td>{{i.parent}}</td><td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+</div>
+{%endblock%}

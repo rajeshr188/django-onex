@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
 {% load crispy_forms_tags%}
+{%load model_name%}
 {% block content %}
 
 <style>
@@ -16,7 +17,7 @@
             {% if not object.id %}
                 <h1>Create Sale</h1>
             {%else%}
-                <h1>Update Sale</h1>
+                <h1>Update {{object|model_name}}</h1>
                 <a class="btn btn-danger" href='{{ object.get_delete_url }}'>Delete</a> </p>
 
             {% endif %}

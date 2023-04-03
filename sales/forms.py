@@ -13,7 +13,7 @@ from product.models import StockLot
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Receipt, ReceiptItem, ReceiptLine
-
+from django.urls import reverse_lazy
 
 class DateTimeLocalInput(forms.DateTimeInput):
     input_type = "datetime-local"
@@ -105,6 +105,17 @@ class InvoiceItemForm(forms.ModelForm):
             "makingcharge",
             "total",
         ]
+        widgets = {
+            'weight': forms.NumberInput(
+                attrs={
+                    "hx-include":"[name='customer'], [name='product']",
+                    "hx-get": reverse_lazy("sales:sale_product_price"),
+                    "hx-target": "#div_id_touch",
+                    "hx-trigger": "change",
+                    "hx-swap": "innerHTML",
+                }
+            )
+        }
 
 
 class ReceiptForm(forms.ModelForm):

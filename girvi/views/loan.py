@@ -56,7 +56,7 @@ class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
 
 @login_required
 def loan_list(request):
-    filter = LoanFilter(request.GET, queryset=Loan.objects.all())
+    filter = LoanFilter(request.GET, queryset=Loan.objects.with_due().with_current_value().with_is_overdue())
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
 
@@ -585,3 +585,24 @@ def print_loan(request, pk=None):
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
     return response
+
+def loan_item_create_or_update(request,loan):
+    form = LoanItemForm()
+    if request.method=='POST':
+        if form.is_valid():
+            form.save()
+    return render(request,'',context={'form':form})
+
+def get_loan_items(request,loan):
+    l = get_object_or_404(Loan,pk = loan)
+    items = l.loanitem_set.all()
+    return render(request,'',context = {'items':items})
+
+def loan_item_delete(request,pk):
+    item = get_object_or_404(LoanItem,pk = pk)
+    item.delete()
+    return HttpResponse(Status = 204)
+
+def loan_item_detail(request,pk):
+    loan_item = get_object_or_404(LoanItem,pk = pk)
+    return render(request,'loan/item/item_detail.html',context = {'obj':loan_item})

@@ -1,0 +1,16 @@
+{%extends '_base.html'%}
+{%block content%}
+<h1>Pricing Tier : <b>{{obj.name}}</b></h1>
+<div>
+    <table class="table">
+        <tbody>
+            {%for i in obj.price_list.all%}
+            <tr>
+                <td>{{i.product}}</td><td>{{i.purchase_price}}</td><td>{{i.selling_price}}</td><td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+    <button class="btn btn-outline btn-primary">Add Product Price</button>
+</div>
+{%endblock%}

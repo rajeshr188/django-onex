@@ -247,6 +247,8 @@ class Invoice(models.Model):
     def post(self):
         if not self.posted:
             if self.approval:
+                """
+                if any approval return and bill"""
                 for i in self.approval.items.filter(status="Pending"):
                     apr = ApprovalLineReturn.objects.create(
                         line=i, quantity=i.quantity, weight=i.weight
@@ -292,7 +294,10 @@ class Invoice(models.Model):
     @transaction.atomic()
     def unpost(self):
         if self.posted:
-            last_jrnl = self.journals.latest()
+            try:
+                last_jrnl = self.journals.latest()
+            except:
+                Exception("No Last_jrnl found")
             if self.approval:
                 self.approval.is_billed = False
                 for i in self.approval.items.all():
@@ -327,7 +332,7 @@ class InvoiceItem(models.Model):
     makingcharge = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     # Relationship Fields
     product = models.ForeignKey(
-        StockLot, on_delete=models.CASCADE, related_name="products"
+        StockLot, on_delete=models.CASCADE, related_name="sold_items"
     )
     invoice = models.ForeignKey(
         "sales.Invoice", on_delete=models.CASCADE, related_name="saleitems"

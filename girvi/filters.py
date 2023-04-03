@@ -27,6 +27,7 @@ class LoanFilter(django_filters.FilterSet):
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
+    sunk = django_filters.BooleanFilter(method = "sunken",label = 'sunken')
 
     def filter_status(self, queryset, name, value):
         return queryset.filter(release__isnull=value)
@@ -58,6 +59,8 @@ class LoanFilter(django_filters.FilterSet):
             | Q(itemweight__icontains=value)
             | Q(loanamount__icontains=value)
         )
+    def sunken(self,queryset,name,value):
+        return queryset.filter(is_overdue = value)
 
 
 class LoanStatementFilter(django_filters.FilterSet):

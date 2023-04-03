@@ -15,6 +15,13 @@ from contact.models import Customer
 
 from .models import Adjustment, License, Loan, Release, Series
 
+from django_select2.forms import Select2Mixin, Select2Widget
+class CustomSelect2Widget( Select2Widget,Select2Mixin):
+    def __init__(self, attrs=None, **kwargs):
+        default_attrs = {'class': 'select2', 'style': 'width: 100%;'}
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs, **kwargs)
 
 class LoansWidget(s2forms.ModelSelect2Widget):
     search_fields = ["loanid__icontains"]
@@ -55,6 +62,7 @@ class LoanForm(forms.ModelForm):
         queryset=Series.objects.exclude(is_active=False),
         # widget = ModelSelect2Widget(
         widget=forms.Select(
+        # widget = CustomSelect2Widget(
             attrs={
                 "hx-get": reverse_lazy("girvi_series_next_loanid"),
                 "hx-target": "#div_id_lid",

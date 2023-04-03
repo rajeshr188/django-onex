@@ -3,9 +3,75 @@ from django import forms
 from django.contrib import admin
 
 from .models import (Attribute, AttributeValue, Category, Movement, Product,
-                     ProductImage, ProductType, ProductVariant, Stock,
-                     StockStatement, StockTransaction, VariantImage)
+                     ProductImage, ProductType, ProductVariant, Stock,StockLot,
+                     StockStatement, StockTransaction, VariantImage,
+                     Price,PricingTier,PricingTierProductPrice,
+                     RateSource,Rate)
 
+class RateSourceAdminForm(forms.ModelForm):
+    class Meta:
+        model = RateSource
+        fields = "__all__"
+
+
+class RateSourceAdmin(admin.ModelAdmin):
+    form = RateSourceAdminForm
+    list_display = ["name","location","tax_included",]
+
+
+admin.site.register(RateSource, RateSourceAdmin)
+
+class RateAdminForm(forms.ModelForm):
+    class Meta:
+        model = Rate
+        fields = "__all__"
+
+
+class RateAdmin(admin.ModelAdmin):
+    form = RateAdminForm
+    list_display = ["rate_source","timestamp","metal","purity","buying_rate","selling_rate"]
+
+
+admin.site.register(Rate, RateAdmin)
+
+class PriceAdminForm(forms.ModelForm):
+    class Meta:
+        model = Price
+        fields = "__all__"
+
+
+class PriceAdmin(admin.ModelAdmin):
+    form = PriceAdminForm
+    list_display = ["product","contact","purchase_price","selling_price"]
+
+
+admin.site.register(Price, PriceAdmin)
+
+class PricingTierAdminForm(forms.ModelForm):
+    class Meta:
+        model = PricingTier
+        fields = "__all__"
+
+
+class PricingTierAdmin(admin.ModelAdmin):
+    form = PricingTierAdminForm
+    list_display = ["name", "parent"]
+
+
+admin.site.register(PricingTier, PricingTierAdmin)
+
+class PricingTierProductPriceAdminForm(forms.ModelForm):
+    class Meta:
+        model = PricingTierProductPrice
+        fields = "__all__"
+
+
+class PricingTierProductPriceAdmin(admin.ModelAdmin):
+    form = PricingTierProductPriceAdminForm
+    list_display = ["pricing_tier", "product","purchase_price","selling_price"]
+
+
+admin.site.register(PricingTierProductPrice, PricingTierProductPriceAdmin)
 
 class MovementAdminForm(forms.ModelForm):
     class Meta:

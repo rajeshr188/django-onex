@@ -5,7 +5,7 @@ from contact.models import Customer
 from dea.models import Journal, JournalTypes
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
-
+from product.models import Rate
 import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
@@ -15,6 +15,7 @@ from django.utils import timezone
 from moneyed import Money
 import datetime
 from decimal import Decimal
+from django.db.models.functions import ExtractMonth, ExtractYear
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -28,8 +29,40 @@ class LoanQuerySet(models.QuerySet):
 
     def unreleased(self):
         return self.filter(release__isnull=True)
+   
+    def with_due(self):
+        current_time = timezone.now()
+        return self.annotate(
+        months_since_created = ExpressionWrapper(
+            (ExtractYear(current_time) - ExtractYear(F('created'))) * 12 +
+            (ExtractMonth(current_time) - ExtractMonth(F('created'))) +
+            (current_time.day - F('created__day')) / 30,
+            output_field=models.FloatField()
+        ),
+        total_interest = ExpressionWrapper(
+            (F('loanamount') * F('interestrate') * F('months_since_created'))/100,
+            output_field=models.FloatField()
+        ),
+        total_due = F('loanamount') + F('total_interest')
+        )
 
-    def total(self):
+    def with_current_value(self):
+        latest_rate = Rate.objects.latest('timestamp')
+        return self.annotate(
+            current_value=ExpressionWrapper(
+            (F('itemweight')*75)/100 * latest_rate.buying_rate,
+             output_field = models.FloatField())
+        )
+
+    def with_is_overdue(self):
+        is_overdue = Case(
+            When(total_due__gt=F('current_value'), then=True),
+            default=False,
+            output_field=BooleanField()
+        )
+        return self.annotate(is_overdue=is_overdue)
+
+    def with_total_loanamount(self):
         return self.aggregate(
             total=Sum("loanamount"),
             gold=Sum("loanamount", filter=Q(itemtype="Gold")),
@@ -37,20 +70,7 @@ class LoanQuerySet(models.QuerySet):
             bronze=Sum("loanamount", filter=Q(itemtype="Bronze")),
         )
 
-    # def is_worth(self):
-    #     today = datetime.date.today()
-    #     # Get the total interest for all loans for this customer
-    #     return self.annotate(
-    #         no_of_months=ExpressionWrapper(today.month - F('created__month') + 12*(today.year - F('created__year')), output_field=DecimalField()),
-    #         loan_interest=F('interestrate') * F('loanamount') * F('no_of_months') / 100,
-    #         total = F('loanamount')+F('loan_interest'),
-    #         is_worth = Case(
-    #             When(F('total')> F('itemvalue'), then=True),
-    #                 default=False,
-    #                 output_field=BooleanField()
-    #             ))
-
-    def with_interest(self):
+    def with_total_interest(self):
         today = datetime.date.today()
 
         return self.annotate(
@@ -78,17 +98,27 @@ class LoanManager(models.Manager):
     def unreleased(self):
         return self.get_queryset().unreleased()
 
-    def with_interest(self):
-        return self.get_queryset().with_interest()
+    def with_total_interest(self):
+        return self.get_queryset().with_total_interest()
 
-    def total(self):
-        return self.get_queryset().total()
+    def with_total_loanamount(self):
+        return self.get_queryset().with_total_loanamount()
 
     def posted(self):
         return self.get_queryset().posted()
 
     def unposted(self):
         return self.get_queryset().unposted()
+    
+    def with_due(self):
+        return self.get_queryset().with_due()
+
+    def with_current_value(self):
+        return self.get_queryset().with_current_value()
+
+    def with_is_overdue(self):
+        return self.get_queryset().with_is_overdue()
+
 
 class ReleasedManager(models.Manager):
     def get_queryset(self):
@@ -97,7 +127,10 @@ class ReleasedManager(models.Manager):
 class UnReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=True)
-        
+
+# sinked_loans = Loan.objects.with_due().with_current_value().with_is_overdue().filter(is_overdue = True)
+# sinked_loans.filter(created__year_gt = 2021)
+# bursting possibilities :-; 
 class Loan(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now)
@@ -191,7 +224,8 @@ class Loan(models.Model):
         return self.loanamount + self.interestdue() - a["int"] - a["amt"]
 
     def is_worth(self):
-        return self.itemvalue < self.total()
+        rate = Rate.objects.latest('timestamp')
+        return ((self.itemweight*75)/100)*rate.buying_rate < self.total()
 
     def get_next(self):
         return (
@@ -310,20 +344,19 @@ class Loan(models.Model):
 
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+    item = models.ForeignKey('product.ProductVariant',on_delete = models.SET_NULL,
+                null = True)
+    # class Itemtype(models.TextChoices):
+    #     G = "Gold"
+    #     S = "Silver"
+    #     B = "Bronze"
 
-    class Itemtype(models.TextChoices):
-        G = "Gold"
-        S = "Silver"
-        B = "Bronze"
-
-    itemtype = models.CharField(
-        max_length=20, choices=Itemtype.choices, default=Itemtype.G
-    )
-    item = models.CharField(max_length=20)
+    # itemtype = models.CharField(
+    #     max_length=20, choices=Itemtype.choices, default=Itemtype.G
+    # )
+    # item = models.CharField(max_length=20)
     qty = models.PositiveIntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
-    purity = models.DecimalField(max_digits=10, decimal_places=3)
-    itemvalue = models.DecimalField(max_digits=10, decimal_places=3)
 
     loanamount = models.DecimalField(max_digits=10, decimal_places=2)
     interestrate = models.DecimalField(max_digits=10, decimal_places=2)

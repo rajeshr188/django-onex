@@ -1,8 +1,11 @@
 from django.db import models
+from django.db.models.functions import Coalesce
 from decimal import Decimal
 from utils.friendlyid import encode
 from ..managers import StockLotManager, StockManager
 from dea.models import Journal
+from django.shortcuts import reverse
+
 class Stock(models.Model):
 
     """
@@ -79,9 +82,9 @@ class Stock(models.Model):
         st = st.filter(movement_type__in=["P", "SR", "AR", "AD"])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
+            qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
             wt=Coalesce(
-                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+                models.Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
             ),
         )
 
@@ -95,9 +98,9 @@ class Stock(models.Model):
         st = st.filter(movement_type__in=["PR", "S", "A", "RM"])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
+            qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
             wt=Coalesce(
-                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+                models.Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
             ),
         )
 
@@ -197,7 +200,7 @@ class StockLot(models.Model):
             ("Sold", "Sold"),
             ("Approval", "Approval"),
             ("Return", "Return"),
-            ("Merged", "Merged"),
+            
         ),
         default="Empty",
     )
@@ -208,11 +211,10 @@ class StockLot(models.Model):
     variant = models.ForeignKey(
         'product.ProductVariant', on_delete=models.CASCADE, related_name="stock_lots"
     )
-    # circular import?
-    # purchase = models.ForeignKey('purchase.Invoice', on_delete=models.SET_NULL,
-    #                              null=True, blank=True)
-    # sale = models.ForeignKey('sales.Invoice', on_delete=models.SET_NULL,
-    #                          null=True, blank=True)
+    
+    purchase = models.ForeignKey('purchase.Invoice', on_delete=models.SET_NULL,
+                                 null=True, blank=True)
+    
 
     objects = StockLotManager()
 
@@ -270,9 +272,9 @@ class StockLot(models.Model):
         st = st.filter(movement_type__id__in=["P", "SR", "AR", "AD"])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
+            qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
             wt=Coalesce(
-                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+                models.Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
             ),
         )
 
@@ -284,9 +286,9 @@ class StockLot(models.Model):
         st = st.filter(movement_type__id__in=["PR", "S", "A", "RM"])
 
         return st.aggregate(
-            qty=Coalesce(Sum("quantity", output_field=models.IntegerField()), 0),
+            qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
             wt=Coalesce(
-                Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+                models.Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
             ),
         )
 

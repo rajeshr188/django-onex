@@ -11,29 +11,27 @@
     <div class="col-9 py-3">
         <table class="table table-sm table-responsive">
             <tr>
+                
                 <td>created</td>
-                <td>Barcode</td>
-                <td>HUID</td>
+                <td>Id</td>
                 <td>Product Code</td>
                 <td>Product</td>
-                <td>Tracking_Type</td>
                 <td>Weight</td>
                 <td>Quantity</td>
                 <td>updated_on</td>
-                <td>Status</td>
+               
             </tr>
             {% for object,bal in data.stock %}
             <tr>
                 <td>{{object.created|date}}</td>
                 <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
-                <td>{{object.huid}}</td>
+                
                 <td>{{object.variant.product_code}}</td>
                 <td><a href="{% url 'product_productvariant_detail' object.variant.id%}">{{object.variant.name}}</a></td>
-                <td>{{object.tracking_type}}</td>
                 <td>{{bal.wt}}</td>
                 <td>{{bal.qty}}</td>
                 <td>{{object.updated_on}}</td>
-                <td>{{object.status}}</td>
+                
             </tr>
             {% endfor %}
         </table>

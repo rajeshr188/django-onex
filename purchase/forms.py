@@ -14,6 +14,7 @@ from product.models import ProductVariant
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Payment, PaymentItem, PaymentLine
+from django.urls import reverse_lazy
 
 
 class InvoiceForm(forms.ModelForm):
@@ -113,17 +114,33 @@ class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
         fields = [
+            "is_return",
+            "product",
             "weight",
             "touch",
-            "total",
-            "is_return",
-            "huid",
+            # "total",
             "quantity",
-            "product",
             # "invoice",
             "makingcharge",
-            "net_wt",
+            # "net_wt",
         ]
+        widgets = {
+            'weight': forms.NumberInput(
+                attrs={
+                    "hx-include":"[name='supplier'], [name='product']",
+                    "hx-get": reverse_lazy("purchase:price_history"),
+                    "hx-target": "#div_id_touch",
+                    "hx-trigger": "change",
+                    "hx-swap": "innerHTML",
+                }
+            )
+        }
+    def save(self, commit=True):
+        instance = super(InvoiceItemForm, self).save(commit=False)
+        instance.total = self.cleaned_data['weight'] * self.cleaned_data['touch']
+        if commit:
+            instance.save()
+        return instance
 
 
 InvoiceItemFormSet = inlineformset_factory(
@@ -132,7 +149,7 @@ InvoiceItemFormSet = inlineformset_factory(
     form=InvoiceItemForm,
     fields=[
         "is_return",
-        "huid",
+        
         "product",
         "quantity",
         "weight",

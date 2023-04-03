@@ -60,8 +60,10 @@ class Customer(models.Model):
     area = models.CharField(max_length=50, blank=True)
     active = models.BooleanField(blank=True, default=True)
     # rank =models.IntegerField(verbose_name='Rank')
-    pricing_tier = models.ForeignKey('product.PricingTier',on_delete = models.CASCADE,
-                    null = True,blank = True)
+    pricing_tier = models.ForeignKey(
+        "product.PricingTier", on_delete=models.CASCADE, null=True, blank=True
+    )
+
     class Meta:
         ordering = ("-created", "name", "relatedto")
         unique_together = ("name", "relatedas", "relatedto")

@@ -12,13 +12,14 @@ from num2words import num2words
 from render_block import render_block_to_string
 
 from contact.models import Customer
+from product.models import PricingTier, PricingTierProductPrice, ProductVariant
 
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
 # from ..render import Render
 from ..tables import InvoiceTable
-from product.models import ProductVariant,PricingTier,PricingTierProductPrice
+
 
 @login_required
 def purchase_list(request):
@@ -165,19 +166,21 @@ def unpost_purchase(request, pk):
     purchase_inv.unpost()
     return redirect(purchase_inv)
 
+
 @login_required
 # not done yet
 def get_product_price(request):
-    
-    product = ProductVariant.objects.get(id=request.GET.get('product', ''))
-    contact = Customer.objects.get(id=request.GET.get('supplier', ''))
+    product = ProductVariant.objects.get(id=request.GET.get("product", ""))
+    contact = Customer.objects.get(id=request.GET.get("supplier", ""))
 
     # Traverse the pricing tier hierarchy to get the effective selling price for the customer and product
     pricing_tier = contact.pricing_tier
     purchase_price = 0
     while pricing_tier:
-        pricing_tier_price = PricingTierProductPrice.objects.filter(pricing_tier=pricing_tier, product=product).first()
-        if pricing_tier_price: 
+        pricing_tier_price = PricingTierProductPrice.objects.filter(
+            pricing_tier=pricing_tier, product=product
+        ).first()
+        if pricing_tier_price:
             purchase_price = pricing_tier_price.purchase_price
             break
         else:
@@ -193,6 +196,7 @@ def get_product_price(request):
         "field": form["touch"],
     }
     return render(request, "girvi/partials/field.html", context)
+
 
 def home(request):
     context = {}

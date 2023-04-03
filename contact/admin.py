@@ -20,7 +20,7 @@ class CustomerAdminForm(forms.ModelForm):
 class CustomerAdmin(ImportExportActionModelAdmin):
     form = CustomerAdminForm
     resource_class = CustomerResource
-    search_fields = ["id","name", "relatedto", "Address"]
+    search_fields = ["id", "name", "relatedto", "Address"]
     list_display = [
         "name",
         "id",

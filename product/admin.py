@@ -2,11 +2,12 @@
 from django import forms
 from django.contrib import admin
 
-from .models import (Attribute, AttributeValue, Category, Movement, Product,
-                     ProductImage, ProductType, ProductVariant, Stock,StockLot,
-                     StockStatement, StockTransaction, VariantImage,
-                     Price,PricingTier,PricingTierProductPrice,
-                     RateSource,Rate)
+from .models import (Attribute, AttributeValue, Category, Movement, Price,
+                     PricingTier, PricingTierProductPrice, Product,
+                     ProductImage, ProductType, ProductVariant, Rate,
+                     RateSource, Stock, StockLot, StockStatement,
+                     StockTransaction, VariantImage)
+
 
 class RateSourceAdminForm(forms.ModelForm):
     class Meta:
@@ -16,10 +17,15 @@ class RateSourceAdminForm(forms.ModelForm):
 
 class RateSourceAdmin(admin.ModelAdmin):
     form = RateSourceAdminForm
-    list_display = ["name","location","tax_included",]
+    list_display = [
+        "name",
+        "location",
+        "tax_included",
+    ]
 
 
 admin.site.register(RateSource, RateSourceAdmin)
+
 
 class RateAdminForm(forms.ModelForm):
     class Meta:
@@ -29,10 +35,18 @@ class RateAdminForm(forms.ModelForm):
 
 class RateAdmin(admin.ModelAdmin):
     form = RateAdminForm
-    list_display = ["rate_source","timestamp","metal","purity","buying_rate","selling_rate"]
+    list_display = [
+        "rate_source",
+        "timestamp",
+        "metal",
+        "purity",
+        "buying_rate",
+        "selling_rate",
+    ]
 
 
 admin.site.register(Rate, RateAdmin)
+
 
 class PriceAdminForm(forms.ModelForm):
     class Meta:
@@ -42,10 +56,11 @@ class PriceAdminForm(forms.ModelForm):
 
 class PriceAdmin(admin.ModelAdmin):
     form = PriceAdminForm
-    list_display = ["product","contact","purchase_price","selling_price"]
+    list_display = ["product", "contact", "purchase_price", "selling_price"]
 
 
 admin.site.register(Price, PriceAdmin)
+
 
 class PricingTierAdminForm(forms.ModelForm):
     class Meta:
@@ -60,6 +75,7 @@ class PricingTierAdmin(admin.ModelAdmin):
 
 admin.site.register(PricingTier, PricingTierAdmin)
 
+
 class PricingTierProductPriceAdminForm(forms.ModelForm):
     class Meta:
         model = PricingTierProductPrice
@@ -68,10 +84,11 @@ class PricingTierProductPriceAdminForm(forms.ModelForm):
 
 class PricingTierProductPriceAdmin(admin.ModelAdmin):
     form = PricingTierProductPriceAdminForm
-    list_display = ["pricing_tier", "product","purchase_price","selling_price"]
+    list_display = ["pricing_tier", "product", "purchase_price", "selling_price"]
 
 
 admin.site.register(PricingTierProductPrice, PricingTierProductPriceAdmin)
+
 
 class MovementAdminForm(forms.ModelForm):
     class Meta:

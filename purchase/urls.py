@@ -39,8 +39,9 @@ urlpatterns += (
 )
 urlpatterns += (
     # urls for InvoiceItem
-    path("purchase/product/price/history",views.get_product_price,
-        name="price_history"),
+    path(
+        "purchase/product/price/history", views.get_product_price, name="price_history"
+    ),
     path(
         "<int:parent_id>/invoiceitem/create/",
         views.purchase_item_update_hx_view,

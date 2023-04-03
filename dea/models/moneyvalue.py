@@ -1,7 +1,7 @@
-from psycopg2.extras import register_composite
-from psycopg2.extensions import register_adapter, adapt, AsIs
-from django.db import models, connection
+from django.db import connection, models
 from moneyed import Money
+from psycopg2.extensions import AsIs, adapt, register_adapter
+from psycopg2.extras import register_composite
 
 MoneyValue = register_composite(
     "money_value", connection.cursor().cursor, globally=True
@@ -43,4 +43,3 @@ class MoneyValueField(models.Field):
 
     def db_type(self, connection):
         return "money_value"
-

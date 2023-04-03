@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class License(models.Model):
     # Fields
     name = models.CharField(max_length=255)
@@ -77,4 +78,3 @@ class Series(models.Model):
         return self.loan_set.filter(release__isnull=True, itemtype="Silver").aggregate(
             t=Sum("itemweight")
         )
-

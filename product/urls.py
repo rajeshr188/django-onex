@@ -273,45 +273,41 @@ urlpatterns += (
         name="product_stockstatement_add",
     ),
 )
-urlpatterns +=(
-    path(
-        "pricingtier/",
-        views.pricing_tier_list,
-        name = "product_pricingtier_list"
-    ),
+urlpatterns += (
+    path("pricingtier/", views.pricing_tier_list, name="product_pricingtier_list"),
     path(
         "pricingtier/<int:pk>/",
         views.pricing_tier_detail,
-        name = "product_pricingtier_detail"
+        name="product_pricingtier_detail",
     ),
     path(
         "pricingtier/create/",
         views.pricing_tier_create,
-        name = "product_pricingtier_create"
+        name="product_pricingtier_create",
     ),
     path(
         "pricingtier/<int:pk>/update",
         views.pricing_tier_update,
-        name = "product_pricingtier_update"
+        name="product_pricingtier_update",
     ),
     path(
         "pricingtier/<int:pk>/delete/",
         views.pricing_tier_delete,
-        name = "product_pricingtier_delete"
+        name="product_pricingtier_delete",
     ),
     path(
         "pricingtier/<int:pk>/addproductprice",
         views.pricing_tier_product_price_create,
-        name = "product_pricingtier_create"
+        name="product_pricingtier_create",
     ),
     path(
         "pricingtier/productprice/<int:pk>/update",
         views.pricing_tier_product_price_update,
-        name = "product_pricingtier_update"
+        name="product_pricingtier_update",
     ),
     path(
         "pricingtier/productprice/<int:pk>/delete",
         views.pricing_tier_product_price_delete,
-        name = "product_pricingtier_delete"
-    )
+        name="product_pricingtier_delete",
+    ),
 )

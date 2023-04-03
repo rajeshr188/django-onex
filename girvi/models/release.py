@@ -1,12 +1,15 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.utils import timezone
+
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
-from django.utils import timezone
-from django.contrib.contenttypes.fields import GenericRelation
+
 
 class ReleaseManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related("loan")
+
 
 class Release(models.Model):
     # Fields

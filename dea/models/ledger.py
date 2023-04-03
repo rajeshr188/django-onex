@@ -1,14 +1,16 @@
+from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
-from mptt.models import MPTTModel, TreeForeignKey
-from django.contrib.postgres.fields import ArrayField
-from ..utils.currency import Balance
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
 from moneyed import Money
-from .moneyvalue import MoneyValueField
-from django.core.validators import MinValueValidator
+from mptt.models import MPTTModel, TreeForeignKey
+
 from ..managers import LedgerManager
+from ..utils.currency import Balance
+from .moneyvalue import MoneyValueField
+
 
 # ledger account type  for COA ,asset,liability,revenue,expense,gain,loss
 class AccountType(models.Model):
@@ -135,7 +137,6 @@ class Ledger(MPTTModel):
         return bal
 
 
-
 class LedgerTransactionManager(models.Manager):
     def create_txn(self, journal, ledgerno, ledgerno_dr, amount):
         dr = Ledger.objects.get(name=ledgerno_dr)
@@ -147,7 +148,9 @@ class LedgerTransactionManager(models.Manager):
 
 
 class LedgerTransaction(models.Model):
-    journal = models.ForeignKey('Journal', on_delete=models.CASCADE, related_name="ltxns")
+    journal = models.ForeignKey(
+        "Journal", on_delete=models.CASCADE, related_name="ltxns"
+    )
     ledgerno = models.ForeignKey(
         Ledger, on_delete=models.CASCADE, related_name="credit_txns"
     )
@@ -168,8 +171,18 @@ class LedgerTransaction(models.Model):
     objects = LedgerTransactionManager()
 
     class Meta:
-        indexes = [models.Index(fields=['ledgerno', ]),
-                   models.Index(fields=['ledgerno_dr', ])]
+        indexes = [
+            models.Index(
+                fields=[
+                    "ledgerno",
+                ]
+            ),
+            models.Index(
+                fields=[
+                    "ledgerno_dr",
+                ]
+            ),
+        ]
 
     def __str__(self):
         return self.ledgerno.name
@@ -195,6 +208,7 @@ class LedgerStatement(models.Model):
 
     def get_cb(self):
         return Balance(self.ClosingBalance)
+
 
 # postgresql read-only-view
 class Ledgerbalance(models.Model):
@@ -233,4 +247,3 @@ class Ledgerbalance(models.Model):
 
     def get_cr(self):
         return Balance(self.cr)
-

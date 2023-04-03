@@ -1,5 +1,6 @@
 from dea.models import Ledger
 
+
 def create_loan_journal(loan):
     try:
         loan.customer.account

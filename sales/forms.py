@@ -3,6 +3,7 @@ from crispy_forms.layout import (ButtonHolder, Column, Field, Layout, Row,
                                  Submit)
 from django import forms
 from django.forms.models import inlineformset_factory
+from django.urls import reverse_lazy
 from django_select2.forms import Select2Widget
 from django_tables2 import Column
 
@@ -13,7 +14,7 @@ from product.models import StockLot
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Receipt, ReceiptItem, ReceiptLine
-from django.urls import reverse_lazy
+
 
 class DateTimeLocalInput(forms.DateTimeInput):
     input_type = "datetime-local"
@@ -106,9 +107,9 @@ class InvoiceItemForm(forms.ModelForm):
             "total",
         ]
         widgets = {
-            'weight': forms.NumberInput(
+            "weight": forms.NumberInput(
                 attrs={
-                    "hx-include":"[name='customer'], [name='product']",
+                    "hx-include": "[name='customer'], [name='product']",
                     "hx-get": reverse_lazy("sales:sale_product_price"),
                     "hx-target": "#div_id_touch",
                     "hx-trigger": "change",

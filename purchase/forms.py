@@ -6,6 +6,7 @@ from crispy_forms.layout import (ButtonHolder, Column, Field, Fieldset, Layout,
 from django import forms
 from django.db.models import Q
 from django.forms.models import inlineformset_factory
+from django.urls import reverse_lazy
 from django_select2.forms import Select2Widget
 
 from contact.models import Customer
@@ -14,7 +15,6 @@ from product.models import ProductVariant
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Payment, PaymentItem, PaymentLine
-from django.urls import reverse_lazy
 
 
 class InvoiceForm(forms.ModelForm):
@@ -125,9 +125,9 @@ class InvoiceItemForm(forms.ModelForm):
             # "net_wt",
         ]
         widgets = {
-            'weight': forms.NumberInput(
+            "weight": forms.NumberInput(
                 attrs={
-                    "hx-include":"[name='supplier'], [name='product']",
+                    "hx-include": "[name='supplier'], [name='product']",
                     "hx-get": reverse_lazy("purchase:price_history"),
                     "hx-target": "#div_id_touch",
                     "hx-trigger": "change",
@@ -135,9 +135,10 @@ class InvoiceItemForm(forms.ModelForm):
                 }
             )
         }
+
     def save(self, commit=True):
         instance = super(InvoiceItemForm, self).save(commit=False)
-        instance.total = self.cleaned_data['weight'] * self.cleaned_data['touch']
+        instance.total = self.cleaned_data["weight"] * self.cleaned_data["touch"]
         if commit:
             instance.save()
         return instance
@@ -149,7 +150,6 @@ InvoiceItemFormSet = inlineformset_factory(
     form=InvoiceItemForm,
     fields=[
         "is_return",
-        
         "product",
         "quantity",
         "weight",

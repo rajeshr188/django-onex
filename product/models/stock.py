@@ -1,10 +1,14 @@
+from decimal import Decimal
+
 from django.db import models
 from django.db.models.functions import Coalesce
-from decimal import Decimal
-from utils.friendlyid import encode
-from ..managers import StockLotManager, StockManager
-from dea.models import Journal
 from django.shortcuts import reverse
+
+from dea.models import Journal
+from utils.friendlyid import encode
+
+from ..managers import StockLotManager, StockManager
+
 
 class Stock(models.Model):
 
@@ -17,7 +21,7 @@ class Stock(models.Model):
     reorderat = models.IntegerField(default=1)
 
     variant = models.ForeignKey(
-        'product.ProductVariant', on_delete=models.CASCADE, related_name="stocks"
+        "product.ProductVariant", on_delete=models.CASCADE, related_name="stocks"
     )
 
     objects = StockManager()
@@ -200,7 +204,6 @@ class StockLot(models.Model):
             ("Sold", "Sold"),
             ("Approval", "Approval"),
             ("Return", "Return"),
-            
         ),
         default="Empty",
     )
@@ -209,12 +212,12 @@ class StockLot(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="lots")
     # redundant aint it?
     variant = models.ForeignKey(
-        'product.ProductVariant', on_delete=models.CASCADE, related_name="stock_lots"
+        "product.ProductVariant", on_delete=models.CASCADE, related_name="stock_lots"
     )
-    
-    purchase = models.ForeignKey('purchase.Invoice', on_delete=models.SET_NULL,
-                                 null=True, blank=True)
-    
+
+    purchase = models.ForeignKey(
+        "purchase.Invoice", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     objects = StockLotManager()
 

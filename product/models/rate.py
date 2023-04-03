@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 
 class RateSource(models.Model):
     name = models.CharField(max_length=30)
@@ -36,7 +34,7 @@ class Rate(models.Model):
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
     purity = models.CharField(max_length=3, choices=PURITY_CHOICES)
     buying_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    selling_rate = models.DecimalField(max_digits = 10 ,decimal_places = 2)
+    selling_rate = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     # related Fields

@@ -12,6 +12,10 @@ from django_tables2.config import RequestConfig
 from openpyxl import load_workbook
 from render_block import render_block_to_string
 
+from contact.models import Customer
+from product.models import (PricingTier, PricingTierProductPrice,
+                            ProductVariant, StockLot)
+
 from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
@@ -19,8 +23,7 @@ from ..models import Invoice, InvoiceItem
 # from ..render import Render
 from ..tables import InvoiceTable
 
-from product.models import ProductVariant,StockLot,PricingTier,PricingTierProductPrice
-from contact.models import Customer
+
 def home(request):
     context = {}
     qs = Invoice.objects
@@ -327,16 +330,17 @@ def unpost_sales(request, pk):
 @login_required
 # not done yet
 def get_sale_price(request):
-    
-    product = StockLot.objects.get(id = request.GET.get('product', '')).variant
-    contact = Customer.objects.get(id=request.GET.get('customer', ''))
+    product = StockLot.objects.get(id=request.GET.get("product", "")).variant
+    contact = Customer.objects.get(id=request.GET.get("customer", ""))
 
     # Traverse the pricing tier hierarchy to get the effective selling price for the customer and product
     pricing_tier = contact.pricing_tier
     selling_price = 0
     while pricing_tier:
-        pricing_tier_price = PricingTierProductPrice.objects.filter(pricing_tier=pricing_tier, product=product).first()
-        if pricing_tier_price: 
+        pricing_tier_price = PricingTierProductPrice.objects.filter(
+            pricing_tier=pricing_tier, product=product
+        ).first()
+        if pricing_tier_price:
             selling_price = pricing_tier_price.selling_price
             break
         else:
@@ -352,6 +356,7 @@ def get_sale_price(request):
         "field": form["touch"],
     }
     return render(request, "girvi/partials/field.html", context)
+
 
 def sales_count_by_month(request):
     # data = Invoice.objects.extra(select={'date': 'DATE(created)'},order_by=['date']).values('date').annotate(count_items=Count('id'))

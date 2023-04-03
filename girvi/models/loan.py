@@ -1,21 +1,24 @@
-from django.db import models, transaction
-from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, Q, Sum, When)
-from contact.models import Customer
-from dea.models import Journal, JournalTypes
+import datetime
+from decimal import Decimal
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
-from product.models import Rate
+
 import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import DateRangeField
+from django.db import models, transaction
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, Q, Sum, When)
+from django.db.models.functions import ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
 from moneyed import Money
-import datetime
-from decimal import Decimal
-from django.db.models.functions import ExtractMonth, ExtractYear
+
+from contact.models import Customer
+from dea.models import Journal, JournalTypes
+from product.models import Rate
+
 
 class LoanQuerySet(models.QuerySet):
     def posted(self):
@@ -29,36 +32,37 @@ class LoanQuerySet(models.QuerySet):
 
     def unreleased(self):
         return self.filter(release__isnull=True)
-   
+
     def with_due(self):
         current_time = timezone.now()
         return self.annotate(
-        months_since_created = ExpressionWrapper(
-            (ExtractYear(current_time) - ExtractYear(F('created'))) * 12 +
-            (ExtractMonth(current_time) - ExtractMonth(F('created'))) +
-            (current_time.day - F('created__day')) / 30,
-            output_field=models.FloatField()
-        ),
-        total_interest = ExpressionWrapper(
-            (F('loanamount') * F('interestrate') * F('months_since_created'))/100,
-            output_field=models.FloatField()
-        ),
-        total_due = F('loanamount') + F('total_interest')
+            months_since_created=ExpressionWrapper(
+                (ExtractYear(current_time) - ExtractYear(F("created"))) * 12
+                + (ExtractMonth(current_time) - ExtractMonth(F("created")))
+                + (current_time.day - F("created__day")) / 30,
+                output_field=models.FloatField(),
+            ),
+            total_interest=ExpressionWrapper(
+                (F("loanamount") * F("interestrate") * F("months_since_created")) / 100,
+                output_field=models.FloatField(),
+            ),
+            total_due=F("loanamount") + F("total_interest"),
         )
 
     def with_current_value(self):
-        latest_rate = Rate.objects.latest('timestamp')
+        latest_rate = Rate.objects.latest("timestamp")
         return self.annotate(
             current_value=ExpressionWrapper(
-            (F('itemweight')*75)/100 * latest_rate.buying_rate,
-             output_field = models.FloatField())
+                (F("itemweight") * 75) / 100 * latest_rate.buying_rate,
+                output_field=models.FloatField(),
+            )
         )
 
     def with_is_overdue(self):
         is_overdue = Case(
-            When(total_due__gt=F('current_value'), then=True),
+            When(total_due__gt=F("current_value"), then=True),
             default=False,
-            output_field=BooleanField()
+            output_field=BooleanField(),
         )
         return self.annotate(is_overdue=is_overdue)
 
@@ -82,6 +86,7 @@ class LoanQuerySet(models.QuerySet):
             ),
             loan_interest=F("interestrate") * F("loanamount") * F("no_of_months") / 100,
         ).aggregate(Sum("loan_interest"))["loan_interest__sum"]
+
 
 class LoanManager(models.Manager):
     # def get_queryset(self):
@@ -109,7 +114,7 @@ class LoanManager(models.Manager):
 
     def unposted(self):
         return self.get_queryset().unposted()
-    
+
     def with_due(self):
         return self.get_queryset().with_due()
 
@@ -124,13 +129,15 @@ class ReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=False)
 
+
 class UnReleasedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=True)
 
+
 # sinked_loans = Loan.objects.with_due().with_current_value().with_is_overdue().filter(is_overdue = True)
 # sinked_loans.filter(created__year_gt = 2021)
-# bursting possibilities :-; 
+# bursting possibilities :-;
 class Loan(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now)
@@ -150,7 +157,7 @@ class Loan(models.Model):
     interest = models.PositiveIntegerField()
 
     series = models.ForeignKey(
-        'girvi.Series',
+        "girvi.Series",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -224,8 +231,8 @@ class Loan(models.Model):
         return self.loanamount + self.interestdue() - a["int"] - a["amt"]
 
     def is_worth(self):
-        rate = Rate.objects.latest('timestamp')
-        return ((self.itemweight*75)/100)*rate.buying_rate < self.total()
+        rate = Rate.objects.latest("timestamp")
+        return ((self.itemweight * 75) / 100) * rate.buying_rate < self.total()
 
     def get_next(self):
         return (
@@ -342,10 +349,12 @@ class Loan(models.Model):
         notice = self.notification_set.last()
         return notice
 
+
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
-    item = models.ForeignKey('product.ProductVariant',on_delete = models.SET_NULL,
-                null = True)
+    item = models.ForeignKey(
+        "product.ProductVariant", on_delete=models.SET_NULL, null=True
+    )
     # class Itemtype(models.TextChoices):
     #     G = "Gold"
     #     S = "Silver"
@@ -370,9 +379,10 @@ class LoanItem(models.Model):
 
     def get_update_url(self):
         return reverse("girvi_loanitem_update", args=(self.pk,))
-    
+
     def update_loan(self):
         pass
+
 
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -399,11 +409,11 @@ class Adjustment(models.Model):
 
     def get_update_url(self):
         return reverse("girvi_adjustments_update", args=(self.pk,))
-    
+
     # correct the transactions
     def post(self):
         amount = Money(self.amount_received, "INR")
-        interest =  0 if not self.as_interest else Money(self.amount_received, "INR")
+        interest = 0 if not self.as_interest else Money(self.amount_received, "INR")
         if self.customer.type == "Su":
             jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
             lt = [
@@ -475,6 +485,7 @@ class Adjustment(models.Model):
         self.posted = False
         self.save(update_fields="posted")
 
+
 class LoanStatement(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
@@ -484,4 +495,3 @@ class LoanStatement(models.Model):
 
     def __str__(self):
         return f"{self.created}"
-

@@ -1,8 +1,10 @@
-from django.contrib.contenttypes.models import ContentType
-from django.db import models,transaction
-from .ledger import LedgerTransaction
-from .account import AccountTransaction
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models, transaction
+
+from .account import AccountTransaction
+from .ledger import LedgerTransaction
+
 
 class JournalTypes(models.TextChoices):
     BJ = "Base Journal", "base journal"
@@ -87,4 +89,3 @@ class Journal(models.Model):
                 )
         else:
             print("No Last Journal to undo")
-

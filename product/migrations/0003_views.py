@@ -5,10 +5,9 @@ from django.db.migrations.operations.base import Operation
 
 
 class CreateView(Operation):
-
     reversible = True
 
-    def __init__(self, name,sql):
+    def __init__(self, name, sql):
         self.name = name
         self.sql = sql
 
@@ -19,7 +18,7 @@ class CreateView(Operation):
         schema_editor.execute(f"CREATE VIEW {self.name} AS {self.sql}")
 
     def database_backwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute(F"DROP VIEW IF EXISTS {self.name};")
+        schema_editor.execute(f"DROP VIEW IF EXISTS {self.name};")
 
     def describe(self):
         return "Creates VIEW %s" % self.name
@@ -28,10 +27,10 @@ class CreateView(Operation):
     def migration_name_fragment(self):
         return "create_view_%s" % self.name
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('product', '0002_auto_20230331_1406'),
+        ("product", "0002_auto_20230331_1406"),
     ]
     stock_balance_sql_v1 = """
         WITH stock_st AS
@@ -154,9 +153,8 @@ class Migration(migrations.Migration):
         FROM product_stockbatch sb
             LEFT JOIN ss ON ss.stock_batch_id = sb.id;
         """
-        
+
     operations = [
-        CreateView('stock_balance',stock_balance_sql_v1),
-        CreateView('stockbatch_balance',stockbatch_balance_sql)
-        
+        CreateView("stock_balance", stock_balance_sql_v1),
+        CreateView("stockbatch_balance", stockbatch_balance_sql),
     ]

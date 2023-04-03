@@ -3,8 +3,8 @@
 from django.db import migrations
 from django.db.migrations.operations.base import Operation
 
-class CreateView(Operation):
 
+class CreateView(Operation):
     reversible = True
 
     def __init__(self, name, sql):
@@ -18,7 +18,7 @@ class CreateView(Operation):
         schema_editor.execute(f"CREATE VIEW {self.name} AS {self.sql}")
 
     def database_backwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute(F"DROP VIEW IF EXISTS {self.name};")
+        schema_editor.execute(f"DROP VIEW IF EXISTS {self.name};")
 
     def describe(self):
         return "Creates VIEW %s" % self.name
@@ -26,6 +26,7 @@ class CreateView(Operation):
     @property
     def migration_name_fragment(self):
         return "create_view_%s" % self.name
+
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -95,7 +96,7 @@ class Migration(migrations.Migration):
         FROM ls ls(id, created, "ClosingBalance", ledgerno_id, id_1, name, lft, rght, tree_id, level, "AccountType_id", parent_id)
             JOIN dea_accounttype at ON at.id = ls."AccountType_id";
     """
-    ledger_balance_with_lt_and_at_sql ="""
+    ledger_balance_with_lt_and_at_sql = """
         WITH ls AS (
             SELECT DISTINCT ON (dea_ledgerstatement.ledgerno_id) dea_ledgerstatement.id,
                 dea_ledgerstatement.created,
@@ -218,6 +219,6 @@ class Migration(migrations.Migration):
         FROM astmt;
     """
     operations = [
-        CreateView('ledger_balance',ledger_balance_sql_v1),
-        CreateView('account_balance',account_balance_sql_v1)
+        CreateView("ledger_balance", ledger_balance_sql_v1),
+        CreateView("account_balance", account_balance_sql_v1),
     ]

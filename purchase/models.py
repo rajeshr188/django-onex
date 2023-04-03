@@ -227,11 +227,12 @@ class InvoiceItem(models.Model):
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
-    net_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0,blank = True)
-    total = models.DecimalField(max_digits=10, decimal_places=3,blank = True)
+    net_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0, blank=True)
+    total = models.DecimalField(max_digits=10, decimal_places=3, blank=True)
     is_return = models.BooleanField(default=False, verbose_name="Return")
-    makingcharge = models.DecimalField(max_digits=10, decimal_places=3,
-                    blank = True,null = True)
+    makingcharge = models.DecimalField(
+        max_digits=10, decimal_places=3, blank=True, null=True
+    )
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="products"
@@ -269,7 +270,7 @@ class InvoiceItem(models.Model):
                 qty=self.quantity,
                 purchase_touch=self.touch,
                 purchase_rate=self.invoice.rate,
-                purchase = self.invoice
+                purchase=self.invoice,
             )
             stock_lot.transact(
                 weight=self.weight,

@@ -1,15 +1,19 @@
+from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
-from moneyed import Money
-from ..utils.currency import Balance
-from contact.models import Customer
-from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
-from .moneyvalue import MoneyValueField
-from django.core.validators import MinValueValidator
+from moneyed import Money
+
+from contact.models import Customer
+
 from ..managers import AccountManager
+from ..utils.currency import Balance
 from .ledger import Ledger
+from .moneyvalue import MoneyValueField
+
+
 # cr credit,dr debit
 class TransactionType_DE(models.Model):
     XactTypeCode = models.CharField(max_length=2, primary_key=True)
@@ -180,6 +184,7 @@ class TransactionType_Ext(models.Model):
     def __str__(self):
         return self.XactTypeCode_ext
 
+
 class AccountTransactionManager(models.Manager):
     def create_txn(
         self, journal, ledgerno, xacttypecode, xacttypecode_ext, account, amount
@@ -199,8 +204,10 @@ class AccountTransactionManager(models.Manager):
 
 
 class AccountTransaction(models.Model):
-    journal = models.ForeignKey('Journal', on_delete=models.CASCADE, related_name="atxns")
-    ledgerno = models.ForeignKey('Ledger', on_delete=models.CASCADE)
+    journal = models.ForeignKey(
+        "Journal", on_delete=models.CASCADE, related_name="atxns"
+    )
+    ledgerno = models.ForeignKey("Ledger", on_delete=models.CASCADE)
     created = models.DateTimeField(
         auto_now_add=True,
         # unique = True
@@ -219,10 +226,17 @@ class AccountTransaction(models.Model):
     objects = AccountTransactionManager()
 
     class Meta:
-        indexes = [models.Index(fields=['ledgerno', ]), ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "ledgerno",
+                ]
+            ),
+        ]
 
     def __str__(self):
         return f"{self.XactTypeCode_ext}"
+
 
 class Accountbalance(models.Model):
     entity = models.CharField(max_length=30)
@@ -244,4 +258,3 @@ class Accountbalance(models.Model):
 
     def get_currbal(self):
         return Balance(self.ClosingBalance) + Balance(self.dr) - Balance(self.cr)
-

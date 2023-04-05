@@ -13,16 +13,9 @@ from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
+from product.models import ProductVariant
 
-from .models import Adjustment, License, Loan, Release, Series
-
-
-class CustomSelect2Widget(Select2Widget, Select2Mixin):
-    def __init__(self, attrs=None, **kwargs):
-        default_attrs = {"class": "select2", "style": "width: 100%;"}
-        if attrs:
-            default_attrs.update(attrs)
-        super().__init__(attrs=default_attrs, **kwargs)
+from .models import Adjustment, License, Loan, LoanItem, Release, Series
 
 
 class LoansWidget(s2forms.ModelSelect2Widget):
@@ -64,7 +57,6 @@ class LoanForm(forms.ModelForm):
         queryset=Series.objects.exclude(is_active=False),
         # widget = ModelSelect2Widget(
         widget=forms.Select(
-            # widget = CustomSelect2Widget(
             attrs={
                 "hx-get": reverse_lazy("girvi_series_next_loanid"),
                 "hx-target": "#div_id_lid",
@@ -98,18 +90,18 @@ class LoanForm(forms.ModelForm):
             "loanamount",
             "interestrate",
         ]
+    def clean(self):
+        cleaned_data = super().clean()
+        loanid = Series.objects.get(id = self.cleaned_data['series'].id).name +str(self.cleaned_data['lid'])
+        if Loan.objects.filter(loanid=loanid).exists():
+            raise forms.ValidationError("A loan with this loanID already exists.")
+        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.form_class = "modal-content"
-        self.helper.form_action = reverse_lazy("girvi_loan_create")
-        self.helper.attrs = {
-            # "hx-post": reverse_lazy("girvi_loan_create"),
-            # "hx-target": "#loancontent",
-            # "hx-swap": "innerHTML",
-            # "hx-push-url": "true",
-        }
+        # self.helper.form_action = reverse_lazy("girvi_loan_create")
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column(FloatingField("series"), css_class="form-group col-md-3 mb-0"),
@@ -137,13 +129,28 @@ class LoanForm(forms.ModelForm):
                 Column(FloatingField("itemdesc"), css_class="form-group col-md-3 mb-0"),
                 css_class="form-row",
             ),
-            # Submit("submit", "Submit"),
+            # Submit("submit", "Submit"),  
         )
-
 
 class LoanRenewForm(forms.Form):
     amount = forms.IntegerField()
     interest = forms.IntegerField()
+
+
+class LoanItemForm(forms.ModelForm):
+    item = forms.ModelChoiceField(
+        queryset=ProductVariant.objects.all(),
+        widget=ModelSelect2Widget(
+            search_fields=["name__icontains"],
+            select2_options={
+                "width": "100%",
+            },
+        ),
+    )
+
+    class Meta:
+        model = LoanItem
+        fields = ["item", "qty", "weight", "loanamount", "interestrate", "interest"]
 
 
 class ReleaseForm(forms.ModelForm):
@@ -214,26 +221,3 @@ class AdjustmentForm(forms.ModelForm):
     class Meta:
         model = Adjustment
         fields = ["loan", "amount_received", "as_interest"]
-
-
-Loan_formset = modelformset_factory(
-    Loan,
-    fields=(
-        "id",
-        "series",
-        "lid",
-        "created",
-        "customer",
-        "loanamount",
-        "itemtype",
-        "itemdesc",
-        "interestrate",
-        "itemweight",
-    ),
-    extra=0,
-)
-
-
-Release_formset = modelformset_factory(
-    Release, ReleaseForm, fields=("releaseid", "loan", "interestpaid")
-)

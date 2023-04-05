@@ -6,153 +6,179 @@
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
       <a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a>
-      
       <a class="btn btn-default" href="{% url 'girvi_loan_create' %}">Add new</a>
-      
       <button class="btn btn-sm btn-outline-secondary">Export</button>
-      
     </div>
   </div>
 </div>
 {% block loaninfo%}
-<div class="content" id="data">
-  <div class="btn-group justify-content-between" role="group" aria-label="Basic example">
-      {%if previous%}
-      <a hx-get="{% url 'girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
-          type="button" class="btn btn-primary mr-2">Previous
-          {{previous.loanid}}</a>
-      {%endif%}
-      {%if next %}
-      <a hx-get="{% url 'girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
-          type="button" class="btn btn-primary mr-2">Next {{next.loanid}}</a>
-      {%endif%}
-      
-      <a class="btn btn-secondary" href="{% url 'girvi_adjustment_create' object.id %}">Add Adjustment</a>
-      <a class="btn btn-secondary" href="{% url 'loan_pdf' loan.id %}">Print</a>
-      
-      <a class="btn btn-secondary" href="{% url 'girvi_release_create' object.id %}">Release</a>
-      <a class="btn btn-primary" href="{% url 'girvi_loan_update' object.id %}">Update</a>
-      <a class="btn btn-primary" href="{% url 'girvi_loan_delete' object.id %}">Delete</a>
-      <a class="btn btn-primary" href="{% url 'girvi_loan_renew' object.id %}">Renew</a>
-  </div>
-
-  <div class="row">
-      <div class="col-6">
-          <table class="table table-sm table-bordered table-striped">
-              <tbody>
-                  <tr>
-                      <td>
-                          loan id:
-                      </td>
-                      <td>
-                          {{object.lid}}
-                      </td>
-                  </tr>
-                  <tr>
-                      <td>Series</td>
-                      <td>{{object.series}}</td>
-                  </tr>
-                  <tr>
-                      <td>Customer</td>
-                      <td>
-                          <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
-                          {%if not object.posted %}
-                          <a class="btn btn-info"
-                              href="{% url 'contact_customer_update' object.customer.id %}">Edit</a>
-                      </td>
-                      {%endif%}
-                  </tr>
-                  <tr>
-                      <td>Posted</td>
-                      <td>
-                          {%if object.posted%}
-                          <a class="btn btn-info" href="{% url 'girvi_loan_unpost' object.id %}">Unpost</a>
-                          {%else%}
-                          <a class="btn btn-info" href="{% url 'girvi_loan_post' object.id %}">Post</a>
-                          {%endif%}
-                      </td>
-                  </tr>
-                  <tr>
-                      <td>created</td>
-                      <td>{{ object.created }}</td>
-                  </tr>
-                  <tr>
-                      <td>last_updated</td>
-                      <td>{{ object.last_updated }}</td>
-                  </tr>
-                  <tr>
-                      <td>itemtype</td>
-                      <td>{{ object.itemtype }}</td>
-                  </tr>
-                  <tr>
-                      <td>itemdesc</td>
-                      <td>{{ object.itemdesc }}</td>
-                  </tr>
-                  <tr>
-                      <td>itemweight</td>
-                      <td>{{ object.itemweight }}</td>
-                  </tr>
-                  <tr>
-                      <td>itemvalue</td>
-                      <td>{{ object.itemvalue }}</td>
-                  </tr>
-                  <tr>
-                      <td>loanamount</td>
-                      <td>{{ object.loanamount }}</td>
-                  </tr>
-                  <tr>
-                      <td>interestrate</td>
-                      <td>{{ object.interestrate }}</td>
-                  </tr>
-                  <tr>
-                      <td>interest</td>
-                      <td>{{ object.interest }}</td>
-                  </tr>
-              </tbody>
-          </table>
-
-      </div>
-      <div class="col-6">
-          <div class="card">
-              {% if loan.release %}
-              <table class="table table-sm">
-                  <thead>
-                      <tr>
-                          <th scope="col">Release Id</th>
-                          <th scope="col">Release Date</th>
-                          <th scope="col">Amount</th>
-                          <th scope="col">Interest</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr>
-                          <th><a
-                                  href="{% url 'girvi_release_detail' loan.release.id %}">{{loan.release.releaseid}}</a>
-                          </th>
-                          <td>{{loan.release.created}}</td>
-                          <td>{{loan.release.total_received}}</td>
-                          <td>{{loan.release.interestpaid}}</td>
-                      </tr>
-
-                  </tbody>
-              </table>
-              {%endif%}
-          </div>
-          <div class="card">
-              <div class="card-title">Loan Statement</div>
-              <div class="card-body">
-                  <ul>
-                      {%if loan.loanstatement_set%}
-                      {%for i in loan.loanstatement_set.all%}
-                      <li>{{i.created}}</li>
-                      {%endfor%}
-                      {%endif%}
-                  </ul>
-
+<div class=" container content" id="data">
+    <div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+        {%if previous%}
+        <a hx-get="{% url 'girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+            type="button" class="btn btn-primary mr-2">Previous
+            {{previous.loanid}}</a>
+        {%endif%}
+        {%if next %}
+        <a hx-get="{% url 'girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+            type="button" class="btn btn-primary mr-2">Next {{next.loanid}}</a>
+        {%endif%}
+        
+        <a class="btn btn-secondary" href="{% url 'girvi_adjustment_create' object.id %}">Add Adjustment</a>
+        <a class="btn btn-secondary" href="{% url 'loan_pdf' loan.id %}">Print</a>
+        <a class="btn btn-secondary" href="{% url 'girvi_release_create' object.id %}">Release</a>
+        <a class="btn btn-primary" href="{% url 'girvi_loan_update' object.id %}">Update</a>
+        <a class="btn btn-primary" href="{% url 'girvi_loan_delete' object.id %}">Delete</a>
+        <a class="btn btn-primary" href="{% url 'girvi_loan_renew' object.id %}">Renew</a>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table class="table table-sm table-bordered table-striped">
+                <tbody>
+                    <tr>
+                        <td>
+                            loan id:
+                        </td>
+                        <td>
+                            {{object.lid}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Series</td>
+                        <td>{{object.series}}</td>
+                    </tr>
+                    <tr>
+                        <td>Customer</td>
+                        <td>
+                            <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
+                            {%if not object.posted %}
+                            <a class="btn btn-info"
+                                href="{% url 'contact_customer_update' object.customer.id %}">Edit</a>
+                        </td>
+                        {%endif%}
+                    </tr>
+                    <tr>
+                        <td>Posted</td>
+                        <td>
+                            {%if object.posted%}
+                            <a class="btn btn-info" href="{% url 'girvi_loan_unpost' object.id %}">Unpost</a>
+                            {%else%}
+                            <a class="btn btn-info" href="{% url 'girvi_loan_post' object.id %}">Post</a>
+                            {%endif%}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>created</td>
+                        <td>{{ object.created }}</td>
+                    </tr>
+                    <tr>
+                        <td>last_updated</td>
+                        <td>{{ object.last_updated }}</td>
+                    </tr>
+                    <tr>
+                        <td>itemtype</td>
+                        <td>{{ object.itemtype }}</td>
+                    </tr>
+                    <tr>
+                        <td>itemdesc</td>
+                        <td>{{ object.itemdesc }}</td>
+                    </tr>
+                    <tr>
+                        <td>itemweight</td>
+                        <td>{{ object.itemweight }}</td>
+                    </tr>
+                    <tr>
+                        <td>itemvalue</td>
+                        <td>{{ object.itemvalue }}</td>
+                    </tr>
+                    <tr>
+                        <td>loanamount</td>
+                        <td>{{ object.loanamount }}</td>
+                    </tr>
+                    <tr>
+                        <td>interestrate</td>
+                        <td>{{ object.interestrate }}</td>
+                    </tr>
+                    <tr>
+                        <td>interest</td>
+                        <td>{{ object.interest }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <div class="accordion" id="accordionExample">      
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      Release :<span class="badge text-bg-secondary">{{object.release.created|date}}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        {%if loan.release%}
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Id</th>
+                                        <th scope="col">Amount</th>
+                                        <th scope="col">Interest</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><a
+                                                href="{% url 'girvi_release_detail' loan.release.id %}">{{loan.release.releaseid}}</a>
+                                        </td>
+                                        <td>{{loan.release.total_received}}</td>
+                                        <td>{{loan.release.interestpaid}}</td>
+                                    </tr>
+              
+                                </tbody>
+                            </table>
+                        {%endif%}
+                    </div>
+                  </div>
+                </div>
+                
+                {%if statements%}
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      Loan Statement
+                    </button>
+                  </h2>
+                  <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <ul>   
+                            {%for i in loan.loanstatement_set.all%}
+                            <li>{{i.created}}</li>
+                            {%endfor%}   
+                        </ul>
+                    </div>
+                  </div>
+                </div>
+                {%endif%}
+                
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Items  :<span class="badge text-bg-secondary">{{items.count}}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <ul id="items-list" class="list-group list-group-flush">
+                            {% for item in items %}
+                            {% include 'girvi/partials/item-inline.html' with object=item %}
+                            {% endfor %}                            
+                       </ul> 
+                    </div>
+                  </div>
+                </div>      
               </div>
-          </div>
-      </div>
-  </div>
+        </div>
+    </div>  
 </div>
 {%endblock%}
 {% endblock %}

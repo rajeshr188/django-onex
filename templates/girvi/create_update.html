@@ -1,37 +1,27 @@
-{% extends "_base.html" %}
+{% extends "_base.html"%}
 {% load crispy_forms_tags%}
-{%load model_name%}
+{{form.media}}
 {% block content %}
-
-<style>
-    .ingredient-form {
-        border-bottom: 1px solid black;
-    }
-    .hidden {
-        display: none
-    }
-</style>
-<div class="container">
+<div class="container" id = "loan-content">
     <div class='row'>
         <div class='{% if object.id %}col-12 col-md-6 {% else %} col-md-6 mx-auto {% endif %}'>
             {% if not object.id %}
-                <h1>Create Sale</h1>
+                <h1>Create Loan</h1>
             {%else%}
-                <h1>Update {{object|model_name}}</h1>
+                <h1>Update Loan</h1>
                 <a class="btn btn-danger" href='{{ object.get_delete_url }}'>Delete</a> </p>
 
             {% endif %}
 
 
-            {% include 'sales/partials/forms.html' %}
+            {% include 'girvi/partials/forms.html' %}
         </div>
 
         <div class='{% if object.id %}col-12 col-md-6 {% else %} d-none {% endif %}'>
             <h3>Items</h3>
-         
             <ul id="items-list" class="list-group list-group-flush">
-                {% for item in object.get_invoiceitem_children %}
-                {% include 'sales/partials/item-inline.html' with object=item %}
+                {% for item in object.loanitems.all %}
+                {% include 'girvi/partials/item-inline.html' with object=item %}
                 {% endfor %}
                 
               </ul>
@@ -45,4 +35,5 @@
         </div>
     </div>
 </div>
-{% endblock content %}
+
+{% endblock %}

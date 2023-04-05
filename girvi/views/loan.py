@@ -1,21 +1,18 @@
 import datetime
 import math
-from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.utils.html import format_html
 from django.views.decorators.http import require_http_methods  # new
-from django.views.generic import CreateView, DeleteView, UpdateView
+from django.views.generic import DeleteView
 from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
                                         YearArchiveView)
 from django_tables2.config import RequestConfig
@@ -28,8 +25,9 @@ from notify.models import NoticeGroup, Notification
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
-from ..forms import Loan_formset, LoanForm, LoanRenewForm, PhysicalStockForm
-from ..models import License, Loan, LoanStatement, Release, Series
+from ..forms import (LoanForm, LoanItemForm, LoanRenewForm,
+                     PhysicalStockForm)
+from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
 
 
@@ -72,67 +70,37 @@ def loan_list(request):
     else:
         return render(request, "girvi/loan_list.html", context)
 
-
-# @login_required
-# def create_loan(request,pk=None):
-
-#     if pk:
-#         customer = get_object_or_404(Customer,pk = pk)
-
-#     if request.method == 'POST':
-#         form = LoanForm(request.POST or None)
-#         # check whether it's valid:
-#         if form.is_valid():
-#             l = form.save(commit=False)
-#             l.created_by = request.user
-#             last_loan = l.save()
-
-#             messages.success(request, f"last loan id is {last_loan.lid}")
-#             # return render(request,'girvi/partials/loan_info.html',
-#             #     {
-#             #         'object':last_loan,
-#             #         'previous':last_loan.get_previous(),
-#             #         'next':last_loan.get_next(),})
-#             reverse_lazy("girvi_loan_create")
-#         else:
-#             messages.warning(request, 'Please correct the error below.')
-#     else:
-#         if pk:
-#             form = LoanForm(initial={'customer':customer,'created':ld})
-#         else:
-#             form = LoanForm(initial={'created':ld})
-
-#     if request.META.get('HTTP_HX_REQUEST'):
-#         return render(request,'form.html',{'form':form})
-#     return render(request,'girvi/loan_form.html',{
-#                     'form':form,
-#                     })
-
-
+# test this view
 @login_required
 def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)
+    
     if request.method == "POST":
         if form.is_valid():
             l = form.save(commit=False)
             l.created_by = request.user
             last_loan = l.save()
-
             messages.success(request, f"last loan id is {last_loan.lid}")
-
-            return reverse_lazy("girvi_loan_create")
+            if request.htmx:
+                print(f"returning 204")
+                return HttpResponse(status=204)
+            else:
+                print("redirecting after succesful creation")
+                return redirect("girvi_loan_create")
         else:
             messages.warning(request, "Please correct the error below.")
+            if request.htmx:
+                return render(request,'modal-form.html',{'form':form})
+            else:
+                return render(request,'girvi/loan_form.html',{'form':form})
     else:
         if pk:
             customer = get_object_or_404(Customer, pk=pk)
             form = LoanForm(initial={"customer": customer, "created": ld})
         else:
             form = LoanForm(initial={"created": ld})
-
     if request.htmx:
         return render(request, "modal-form.html", {"form": form})
-
     return render(
         request,
         "girvi/loan_form.html",
@@ -171,10 +139,18 @@ def create_loan(request, pk=None):
 #         form.instance.created_by = self.request.user
 #         return super().form_valid(form)
 
-
-class LoanUpdateView(LoginRequiredMixin, UpdateView):
-    model = Loan
-    form_class = LoanForm
+@login_required
+def loan_update(request, id=None):
+    obj = get_object_or_404(Loan, id=id)
+    form = LoanForm(request.POST or None, instance=obj)
+    new_item_url = reverse("girvi_loanitem_create", kwargs={"parent_id": obj.id})
+    context = {"form": form, "object": obj, "new_item_url": new_item_url}
+    if form.is_valid():
+        form.save()
+        context["message"] = "Data saved."
+    if request.htmx:
+        return render(request, "sales/partials/forms.html", context)
+    return render(request, "girvi/create_update.html", context)
 
 
 class LoanDeleteView(LoginRequiredMixin, DeleteView):
@@ -222,9 +198,12 @@ def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
     context = {
         "object": loan,
+        "items": loan.loanitems.all(),
+        "statements": loan.loanstatement_set.all(),
         "loan": loan,
         "next": loan.get_next(),
         "previous": loan.get_previous,
+        "new_item_url": reverse("girvi_loanitem_create", kwargs={"parent_id": loan.id}),
     }
 
     if request.htmx:
@@ -305,8 +284,9 @@ def notice(request):
 @login_required
 def deleteLoan(request):
     id_list = request.POST.getlist("selection")
-
-    Loan.objects.filter(id__in=id_list).delete()
+    loans = Loan.objects.filter(id__in = id_list)
+    for i in loans:
+        i.delete()
     filter = LoanFilter(request.GET, queryset=Loan.objects.all())
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
@@ -346,6 +326,14 @@ def notify_print(request):
         ni.save()
     return HttpResponse(status=204)
 
+@login_required
+def print_loan(request, pk=None):
+    loan = get_object_or_404(Loan, pk=pk)
+    pdf = get_loan_pdf(loan=loan)
+    # Create a response object
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
+    return response
 
 @login_required
 def multirelease(request, id=None):
@@ -581,21 +569,36 @@ def physical_list(request):
 
 
 @login_required
-def print_loan(request, pk=None):
-    loan = get_object_or_404(Loan, pk=pk)
-    pdf = get_loan_pdf(loan=loan)
-    # Create a response object
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
-    return response
+def loan_item_update_hx_view(request, parent_id=None, id=None):
+    if not request.htmx:
+        raise Http404
+    try:
+        parent_obj = Loan.objects.get(id=parent_id)
+    except:
+        parent_obj = None
+    if parent_obj is None:
+        return HttpResponse("Not found.")
+    instance = None
+    if id is not None:
+        try:
+            instance = LoanItem.objects.get(loan=parent_obj, id=id)
+        except LoanItem.DoesNotExist:
+            instance = None
+    form = LoanItemForm(request.POST or None, instance=instance)
 
+    url = reverse("girvi_loanitem_create", kwargs={"parent_id": parent_obj.id})
+    if instance:
+        url = instance.get_hx_edit_url()
+    context = {"url": url, "form": form, "object": instance}
+    if form.is_valid():
+        new_obj = form.save(commit=False)
+        if instance is None:
+            new_obj.loan = parent_obj
+        new_obj.save()
+        context["object"] = new_obj
+        return render(request, "girvi/partials/item-inline.html", context)
 
-def loan_item_create_or_update(request, loan):
-    form = LoanItemForm()
-    if request.method == "POST":
-        if form.is_valid():
-            form.save()
-    return render(request, "", context={"form": form})
+    return render(request, "girvi/partials/item-form.html", context)
 
 
 def get_loan_items(request, loan):

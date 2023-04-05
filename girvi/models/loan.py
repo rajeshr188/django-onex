@@ -351,7 +351,7 @@ class Loan(models.Model):
 
 
 class LoanItem(models.Model):
-    loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="loanitems")
     item = models.ForeignKey(
         "product.ProductVariant", on_delete=models.SET_NULL, null=True
     )
@@ -377,12 +377,9 @@ class LoanItem(models.Model):
     def get_absolute_url(self):
         return reverse("girvi_loanitem_detail", args=(self.pk,))
 
-    def get_update_url(self):
-        return reverse("girvi_loanitem_update", args=(self.pk,))
-
-    def update_loan(self):
-        pass
-
+    def get_hx_edit_url(self):
+        kwargs = {"parent_id": self.loan.id, "id": self.id}
+        return reverse("hx-loanitem-detail", kwargs=kwargs)
 
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add=True)

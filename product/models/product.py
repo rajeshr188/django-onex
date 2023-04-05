@@ -9,7 +9,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from versatileimagefield.fields import PPOIField, VersatileImageField
 
 from product.attributes import get_product_attributes_data
-
+from .stock import StockTransaction
 
 class Category(MPTTModel):
     # gold ,silver ,other
@@ -143,7 +143,7 @@ class ProductVariant(models.Model):
 
     def get_bal(self):
         st = StockTransaction.objects.filter(stock__variant_id=self.id)
-        ins = st.filter(activity_type__in=["P", "SR", "AR"])
+        ins = st.filter(movement_type__in=["P", "SR", "AR"])
         i = {}
         o = {}
         if ins.exists():
@@ -152,7 +152,7 @@ class ProductVariant(models.Model):
         else:
             i["wt"] = 0
             i["qty"] = 0
-        out = st.filter(activity_type__in=["S", "PR", "A"])
+        out = st.filter(movement_type__in=["S", "PR", "A"])
         if out.exists():
             o = out.aggregate(wt=Sum("weight"), qty=Sum("quantity"))
         else:

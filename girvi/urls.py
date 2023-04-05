@@ -109,8 +109,9 @@ urlpatterns += (
     path("girvi/loan/detail/<int:pk>/", views.loan_detail, name="girvi_loan_detail"),
     path("girvi/loan/detail/<int:pk>/pdf", views.print_loan, name="loan_pdf"),
     path(
-        "girvi/loan/update/<int:pk>/",
-        views.LoanUpdateView.as_view(),
+        "girvi/loan/update/<int:id>/",
+        # views.LoanUpdateView.as_view(),
+        views.loan_update,
         name="girvi_loan_update",
     ),
     path(
@@ -129,6 +130,18 @@ urlpatterns += (
         "girvi/loan/physicalstock/",
         views.physical_list,
         name="girvi_physicalstock_list",
+    ),
+)
+urlpatterns += (
+    path(
+        "loan/<int:parent_id>/item/create",
+        views.loan_item_update_hx_view,
+        name="girvi_loanitem_create",
+    ),
+    path(
+        "loan/<int:parent_id>/item/<int:id>/",
+        views.loan_item_update_hx_view,
+        name="hx-loanitem-detail",
     ),
 )
 urlpatterns += (

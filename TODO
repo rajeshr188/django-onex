@@ -8,3 +8,5 @@ add ledger codes
 create generic journal for manual transactions especially for stock in stock out
 create a book to open and close the transactions happened during a period of time more tobe thought
 since rate and price added staighten loanitems purchase items and approval to integrate seamlessly
+add validation on item forms 
+add rate to cache/

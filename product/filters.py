@@ -2,7 +2,7 @@ import django_filters
 from django_select2.forms import Select2MultipleWidget, Select2Widget
 
 from .models import (Attribute, AttributeValue, Category, Product, ProductType,
-                     ProductVariant, Stock, StockTransaction)
+                     ProductVariant, Stock,StockLot, StockTransaction)
 
 
 class StockFilter(django_filters.FilterSet):
@@ -11,9 +11,17 @@ class StockFilter(django_filters.FilterSet):
     )
 
     class Meta:
-        model = Stock
+        model = StockLot
         fields = ["variant"]
 
+class StockLotFilter(django_filters.FilterSet):
+    variant = django_filters.ModelChoiceFilter(
+        queryset=ProductVariant.objects.all(), widget=Select2Widget
+    )
+
+    class Meta:
+        model = StockLot
+        fields = ["variant",'stock','barcode','huid']
 
 class StockTransactionFilter(django_filters.FilterSet):
     class Meta:
@@ -45,4 +53,4 @@ class ProductVariantFilter(django_filters.FilterSet):
 
     class Meta:
         model = ProductVariant
-        fields = ["product", "product_code"]
+        fields = ["product"]

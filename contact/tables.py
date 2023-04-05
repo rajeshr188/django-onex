@@ -53,8 +53,8 @@ class CustomerTable(tables.Table):
         else:
             return f"{record.Address}"
 
-    def render_addloan(self):
-        return ""
+    # def render_addloan(self):
+    #     return ""
 
     def render_edit(self):
         return ""

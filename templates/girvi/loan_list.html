@@ -30,10 +30,10 @@
       <div class="col-sm-9" id="results">
         <div hx-include="#checked-items" hx-target="#content">
           <a class="btn btn-danger" hx-post="{% url 'girvi_loan_deletemultiple'%}"
-                                    hx-confirm = "sure?"
-              >Delete</a>
+            hx-include="[name='selection']" hx-confirm = "sure?">
+            Delete</a>
           <a class="btn btn-info" hx-get="{% url 'bulk_release'%}" 
-                                  hx-include="[name='selection']">
+              hx-include="[name='selection']">
             Release</a>
           <a class="btn btn-info" hx-post="{% url 'girvi_create_notice'%}?{{request.GET.urlencode}}"
                                   hx-include="[name='selection'],[name='selectall']">

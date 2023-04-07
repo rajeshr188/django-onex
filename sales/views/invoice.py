@@ -89,8 +89,8 @@ def sales_list(request):
 
 
 @login_required
-def sales_detail_view(request, id=None):
-    hx_url = reverse("sales:hx-detail", kwargs={"id": id})
+def sales_detail_view(request, pk=None):
+    hx_url = reverse("sales:hx-detail", kwargs={"id": pk})
     context = {
         "hx_url": hx_url,
     }

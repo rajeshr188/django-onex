@@ -20,7 +20,7 @@ urlpatterns += (
     path("sales/invoice/", views.sales_list, name="sales_invoice_list"),
     path("sales/invoice/create/", views.sale_create_view, name="sales_invoice_create"),
     path(
-        "sales/detail/<int:id>/", views.sales_detail_view, name="sales_invoice_detail"
+        "sales/detail/<int:pk>/", views.sales_detail_view, name="sales_invoice_detail"
     ),
     path("hx/detail/<int:id>/", views.sales_detail_hx_view, name="hx-detail"),
     # path(

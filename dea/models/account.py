@@ -1,7 +1,8 @@
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Case, F, Sum, Value, When, Window
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
 from moneyed import Money
@@ -97,10 +98,12 @@ class Account(models.Model):
             return None
 
     def txns(self, since=None):
+        # window = Window(expression=Sum("amount"), order_by=F("created").desc())
         if since:
-            return self.accounttransactions.filter(created__gte=since)
+            txns = self.accounttransactions.filter(created__gte=since)
         else:
-            return self.accounttransactions.all()
+            txns = self.accounttransactions.all()
+        return txns
 
     def total_credit(self, since=None):
         txns = self.txns(since=since)

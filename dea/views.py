@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Case, F, IntegerField, Sum, Value, When, Window
 from django.db.models.query_utils import subclasses
 from django.shortcuts import HttpResponse, get_object_or_404, redirect, render
 from django.urls.base import reverse_lazy
@@ -170,30 +171,31 @@ class AccountDetailView(DetailView):
         if acc.accountstatements.exists():
             acc_stmt = acc.accountstatements.latest()
             ls_created = acc_stmt.created
-            txns = list(acc.txns(since=ls_created))
+            txns = acc.txns(since=ls_created)
 
         else:
-            txns = list(acc.txns())
+            txns = acc.txns()
             acc_stmt = None
 
         ct["acc_stmt"] = acc_stmt
         op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
+        txns = txns.annotate(
+            credit_or_debit=Case(
+                When(XactTypeCode__XactTypeCode="Cr", then=Value(1)),
+                default=Value(-1),
+                output_field=IntegerField(),
+            ),
+            running_total=Window(
+                expression=Sum(F("amount") * F("credit_or_debit")),
+                partition_by=F("amount_currency"),
+                order_by="created",
+            ),
+        ).order_by("created")
+        print(txns.query)
+        print(f"txns: {txns.first().running_total}")
         running_bal = op_bal
-        txn_list = []
-        for i in txns:
-            txn_dict = {}
-            txn_dict["created"] = i.created
-            txn_dict["voucher"] = i.journal.content_object
-            txn_dict["voucher_url"] = i.journal.get_url_string()
-            txn_dict["description"] = i.XactTypeCode_ext.description
-            txn_dict["xactcode"] = i.XactTypeCode.XactTypeCode
-            txn_dict["amount"] = i.amount
-            if i.XactTypeCode.XactTypeCode == "Dr":
-                txn_dict["running_bal"] = running_bal + Balance([i.amount])
-            else:
-                txn_dict["running_bal"] = running_bal - Balance([i.amount])
-            txn_list.append(txn_dict)
-        ct["txns"] = txn_list
+        ct["raw"] = txns
+
         return ct
 
 

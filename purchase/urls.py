@@ -21,7 +21,7 @@ urlpatterns += (
     path("list/", views.purchase_list, name="purchase_invoice_list"),
     path("create/", views.purchase_create, name="purchase_invoice_create"),
     path(
-        "<int:id>/detail/", views.purchase_detail_view, name="purchase_invoice_detail"
+        "<int:pk>/detail/", views.purchase_detail_view, name="purchase_invoice_detail"
     ),
     path("<int:id>/update/", views.purchase_update, name="purchase_invoice_update"),
     path(

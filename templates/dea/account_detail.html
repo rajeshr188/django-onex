@@ -95,14 +95,16 @@
             <td>{{ object.accountstatements.latest.get_cb}}</td>
             
         </tr>
-        {%for i in txns%}
+        {%for i in raw%}
         <tr>
             <td>{{i.created}}</td>
-            <td><a href="{% url ''|add:i.voucher_url id=i.voucher%}">{{i.voucher}}</a></td>
-            <td>{{i.description}}</td>
-            <td>{%if i.xactcode == 'Dr'%}{{i.amount}}{%else%}-{%endif%}</td>
-            <td>{%if i.xactcode == 'Cr'%}{{i.amount}}{%else%}-{%endif%}</td>
-            <td>{{i.running_bal}}</td>
+            <td><a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
+                {{i.journal.content_object}}</a>
+            </td>
+            <td>{{i.XactTypeCode_ext.description}}</td>
+            <td>{%if i.XactTypeCode.XactTypeCode == 'Dr'%}{{i.amount}}{%else%}-{%endif%}</td>
+            <td>{%if i.XactTypeCode.XactTypeCode == 'Cr'%}{{i.amount}}{%else%}-{%endif%}</td>
+            <td>{{i.running_total}}</td>
         </tr>
         {%endfor%}
         <tr>

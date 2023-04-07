@@ -1,7 +1,8 @@
-
-import requests
 import BeautifulSoup
+import requests
+
 from product.models import Rate, RateSource
+
 url = "https://www.kjpl.in/rates"
 response = requests.get(url)
 soup = BeautifulSoup(response.text, "html.parser")

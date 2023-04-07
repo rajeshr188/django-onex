@@ -10,12 +10,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-from django.contrib.auth.decorators import login_required
+
+from dea.models import Journal
+
 from .filters import ApprovalLineFilter
 from .forms import Approval_formset, ApprovalForm, ApprovalLineForm
 from .models import Approval, ApprovalLine, ApprovalLineReturn
 
-from dea.models import Journal
+
 # Create your views here.
 @transaction.atomic
 def post_approval(request, pk):
@@ -129,16 +131,18 @@ class ApprovalCreateView(LoginRequiredMixin, CreateView):
             self.get_context_data(form=form, approvalline_form=approvalline_form)
         )
 
+
 @login_required
 def approval_detail(request, id):
     approval = get_object_or_404(Approval, id=id)
-    
+
     return render(
         request,
         "approval/approval_detail.html",
-        {"object": approval,},
+        {
+            "object": approval,
+        },
     )
-
 
 
 class ApprovalUpdateView(LoginRequiredMixin, UpdateView):
@@ -204,9 +208,8 @@ def ApprovalLineReturnView(request):
             if not result.posted:
                 journal = Journal.objects.create(
                     journal_type="AR",
-                    created = datetime.now(),
-                    contact = result.line.approval.contact,
-
+                    created=datetime.now(),
+                    contact=result.line.approval.contact,
                 )
                 result.post(journal)
                 result.posted = True

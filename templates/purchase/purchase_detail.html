@@ -96,18 +96,18 @@
     </h2>
     <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
       <div class="accordion-body">
-        {% if object.paymentline_set %}
+        {% if object.paymentallocation_set %}
         <table class="table table-sm table-striped table-bordered">
           <thead class="thead-dark">
             <tr>
               <th>Payment</th><th>created</th><th>amount</th>
             </tr>
           </thead>
-          {% for i in object.paymentline_set.all %}
+          {% for i in object.paymentallocation_set.all %}
           <tr>
             <td><a href="{% url 'purchase:purchase_payment_detail' i.payment.id %}">{{i.payment.id}}</a></td>
             <td>{{i.created}}</td>
-            <td>{{i.amount}}</td>
+            <td>{{i.allocated_amount}}</td>
 
           </tr>
           {%endfor%}

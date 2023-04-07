@@ -11,7 +11,7 @@ urlpatterns = [
     path("users/", include("django.contrib.auth.urls")),
     path("accounts/", include("allauth.urls")),
     path("", include("pages.urls")),
-    path("approval/", include("approval.urls",namespace ="approval")),
+    path("approval/", include("approval.urls", namespace="approval")),
     path("contact/", include("contact.urls")),
     path("product/", include("product.urls")),
     path("girvi/", include("girvi.urls")),

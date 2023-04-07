@@ -381,6 +381,7 @@ class LoanItem(models.Model):
         kwargs = {"parent_id": self.loan.id, "id": self.id}
         return reverse("hx-loanitem-detail", kwargs=kwargs)
 
+
 class Adjustment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(

@@ -25,8 +25,7 @@ from notify.models import NoticeGroup, Notification
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
-from ..forms import (LoanForm, LoanItemForm, LoanRenewForm,
-                     PhysicalStockForm)
+from ..forms import LoanForm, LoanItemForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
 
@@ -74,7 +73,7 @@ def loan_list(request):
 @login_required
 def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)
-    
+
     if request.method == "POST":
         if form.is_valid():
             l = form.save(commit=False)
@@ -90,9 +89,9 @@ def create_loan(request, pk=None):
         else:
             messages.warning(request, "Please correct the error below.")
             if request.htmx:
-                return render(request,'modal-form.html',{'form':form})
+                return render(request, "modal-form.html", {"form": form})
             else:
-                return render(request,'girvi/loan_form.html',{'form':form})
+                return render(request, "girvi/loan_form.html", {"form": form})
     else:
         if pk:
             customer = get_object_or_404(Customer, pk=pk)
@@ -138,6 +137,7 @@ def create_loan(request, pk=None):
 #     def form_valid(self, form):
 #         form.instance.created_by = self.request.user
 #         return super().form_valid(form)
+
 
 @login_required
 def loan_update(request, id=None):
@@ -284,7 +284,7 @@ def notice(request):
 @login_required
 def deleteLoan(request):
     id_list = request.POST.getlist("selection")
-    loans = Loan.objects.filter(id__in = id_list)
+    loans = Loan.objects.filter(id__in=id_list)
     for i in loans:
         i.delete()
     filter = LoanFilter(request.GET, queryset=Loan.objects.all())
@@ -326,6 +326,7 @@ def notify_print(request):
         ni.save()
     return HttpResponse(status=204)
 
+
 @login_required
 def print_loan(request, pk=None):
     loan = get_object_or_404(Loan, pk=pk)
@@ -334,6 +335,7 @@ def print_loan(request, pk=None):
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
     return response
+
 
 @login_required
 def multirelease(request, id=None):

@@ -195,8 +195,8 @@ class Invoice(models.Model):
             line_sum = self.rate * line_sum
         return line_sum
 
-    def get_total_receipts(self):
-        paid = self.receiptline_set.aggregate(t=Sum("amount"))
+    def get_allocations(self):
+        paid = self.receiptallocation_set.aggregate(t=Sum("allocated_amount"))
         return paid["t"]
 
     @property
@@ -215,8 +215,7 @@ class Invoice(models.Model):
             self.gross_wt = self.get_gross_wt()
             self.net_wt = self.get_net_wt()
             self.balance = self.get_total_balance()
-        if self.total < 0:
-            self.status = "Paid"
+
         self.due_date = self.created + timedelta(days=self.term.due_days)
         self.total = self.balance
         if self.is_gst:
@@ -260,7 +259,10 @@ class Invoice(models.Model):
                 self.approval.update_status()
 
             jrnl = Journal.objects.create(
-                type=JournalTypes.SJ, content_object=self, desc="sale"
+                journal_type=JournalTypes.SJ,
+                content_object=self,
+                desc="sale",
+                contact=self.customer,
             )
 
             inv = "GST INV" if self.is_gst else "Non-GST INV"
@@ -307,7 +309,12 @@ class Invoice(models.Model):
                 self.approval.save()
                 self.approval.update_status()
 
-            jrnl = Journal.objects.create(content_object=self, desc="sale-revert")
+            jrnl = Journal.objects.create(
+                content_object=self,
+                desc="sale-revert",
+                contact=self.customer,
+                journal_type=JournalTypes.SJ,
+            )
             jrnl.untransact(last_jrnl)
             for i in self.saleitems.all():
                 i.post(jrnl)
@@ -416,6 +423,8 @@ class Receipt(models.Model):
         choices=BType.choices,
         default=BType.CASH,
     )
+    weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     description = models.TextField(max_length=50, default="describe here")
@@ -434,6 +443,7 @@ class Receipt(models.Model):
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="receipts"
     )
+    invoices = models.ManyToManyField(Invoice, through="ReceiptAllocation")
 
     class Meta:
         ordering = ("-created",)
@@ -442,17 +452,17 @@ class Receipt(models.Model):
         return "%s" % self.id
 
     def get_absolute_url(self):
-        return reverse("sales_receipt_detail", args=(self.pk,))
+        return reverse("sales:sales_receipt_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("sales_receipt_update", args=(self.pk,))
+        return reverse("sales:sales_receipt_update", args=(self.pk,))
 
     def deactivate(self):
         self.is_active = False
         self.save(update_fields=["is_active"])
 
     def get_line_totals(self):
-        return self.receiptline_set.aggregate(t=Sum("amount"))["t"]
+        return self.receiptallocation_set.aggregate(t=Sum("allocated_amount"))["t"]
 
     def update_status(self):
         total_allotted = self.get_line_totals()
@@ -482,6 +492,7 @@ class Receipt(models.Model):
                 .exclude(status="Paid")
                 .order_by("created")
             )
+            print(f"invtopay:{invtopay}")
         except IndexError:
             invtopay = None
 
@@ -495,8 +506,8 @@ class Receipt(models.Model):
                 ReceiptLine.objects.create(receipt=self, invoice=i, amount=bal)
                 i.status = "Paid"
             else:
-                ReceiptLine.objects.create(
-                    receipt=self, invoice=i, amount=remaining_amount
+                ReceiptAllocation.objects.create(
+                    receipt=self, invoice=i, allocated_amount=remaining_amount
                 )
                 i.status = "PartiallyPaid"
                 remaining_amount = 0
@@ -507,7 +518,10 @@ class Receipt(models.Model):
     def post(self):
         if not self.posted:
             jrnl = Journal.objects.create(
-                content_object=self, type=JournalTypes.RC, desc="Receipt"
+                content_object=self,
+                journal_type=JournalTypes.RC,
+                contact=self.customer,
+                desc="Receipt",
             )
 
             money = Money(self.total, self.type)
@@ -530,43 +544,69 @@ class Receipt(models.Model):
     def unpost(self):
         if self.posted:
             last_jrnl = -self.journals.latest()
-            jrnl = Journal.objects.create(content_object=self, desc="Receipt-Revert")
+            jrnl = Journal.objects.create(
+                content_object=self,
+                desc="Receipt-Revert",
+                journal_type=JournalTypes.RC,
+                contact=self.customer,
+            )
             jrnl.untransact(last_jrnl)
             self.posted = False
             self.save(update_fields=["posted"])
 
 
-class ReceiptItem(models.Model):
-    weight = models.DecimalField(
-        max_digits=10, blank=True, decimal_places=3, default=0.0
-    )
-    touch = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, default=0.0
-    )
-    nettwt = models.DecimalField(
-        max_digits=10, blank=True, decimal_places=3, default=0.0
-    )
-    rate = models.IntegerField(default=0)
-    amount = models.DecimalField(max_digits=10, decimal_places=3)
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.amount
-
-
-class ReceiptLine(models.Model):
+class ReceiptAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    amount = models.DecimalField(max_digits=10, decimal_places=3)
-    # relationship Fields
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return "%s" % self.id
 
     def get_absolute_url(self):
-        return reverse("sales_receiptline_detail", args=(self.pk,))
+        return reverse("sales_receiptallocation_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("sales_receiptline_update", args=(self.pk,))
+        return reverse("sales_receiptallocation_update", args=(self.pk,))
+
+
+"""
+    This is a view that is used to get the outstanding balance of an invoice.
+    SQL:
+        CREATE VIEW invoice_receipt_view AS 
+        SELECT invoice.id, invoice.invoice_number, invoice.total_amount, 
+            COALESCE(SUM(receipt_allocation.allocated_amount), 0) AS amount_allocated, 
+            COALESCE(SUM(receipt.amount), 0) AS amount_paid 
+        FROM invoice 
+        LEFT JOIN receipt_allocation ON invoice.id = receipt_allocation.invoice_id 
+        LEFT JOIN receipt ON receipt_allocation.receipt_id = receipt.id 
+        GROUP BY invoice.id;
+
+    invoice_receipts = InvoiceReceiptView.objects.all()
+    for invoice in invoice_receipts:
+        print(f"Invoice #{invoice.invoice_number}: Total amount: {invoice.total_amount}, Amount paid: {invoice.amount_paid}, Amount allocated: {invoice.amount_allocated}, Outstanding balance: {invoice.outstanding_balance}")
+
+"""
+
+
+class InvoiceReceiptView(models.Model):
+    invoice_number = models.CharField(max_length=50)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    @property
+    def outstanding_balance(self):
+        return self.total_amount - self.amount_paid
+
+    @classmethod
+    def get_queryset(cls):
+        return cls.objects.annotate(
+            amount_allocated=Sum("invoice_receipts__allocated_amount")
+        )
+
+    class Meta:
+        managed = False
+        db_table = "sales_receipt_view"

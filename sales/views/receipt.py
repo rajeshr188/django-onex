@@ -1,5 +1,6 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 from django_filters.views import FilterView
@@ -8,15 +9,9 @@ from django_tables2.views import SingleTableMixin
 from num2words import num2words
 
 from ..filters import ReceiptFilter
-from ..forms import ReceiptForm, ReceiptItemFormSet, ReceiptLineForm
-from ..models import Receipt, ReceiptLine
-# from ..render import Render
+from ..forms import ReceiptForm
+from ..models import Receipt, ReceiptAllocation
 from ..tables import ReceiptTable
-
-# def print_receipt(request, pk):
-#     receipt = Receipt.objects.get(id=pk)
-#     params = {"receipt": receipt, "inwords": num2words(receipt.total, lang="en_IN")}
-#     return Render.render("sales/receipt.html", params)
 
 
 class ReceiptListView(ExportMixin, SingleTableMixin, FilterView):
@@ -30,42 +25,13 @@ class ReceiptListView(ExportMixin, SingleTableMixin, FilterView):
 class ReceiptCreateView(CreateView):
     model = Receipt
     form_class = ReceiptForm
+    success_url = reverse_lazy("sales:sales_receipt_list")
 
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        receiptitem_form = ReceiptItemFormSet()
 
-        return self.render_to_response(
-            self.get_context_data(form=form, receiptitem_form=receiptitem_form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        receiptitem_form = ReceiptItemFormSet(self.request.POST)
-        if form.is_valid() and receiptitem_form.is_valid():
-            return self.form_valid(form, receiptitem_form)
-        else:
-            return self.form_invalid(form, receiptitem_form)
-
-    def form_valid(self, form, receiptitem_form):
-        form.instance.created_by = self.request.user
-        self.object = form.save()
-        receiptitem_form.instance = self.object
-        receiptitem_form.save()
-        return redirect(self.get_success_url())
-
-    def form_invalid(self, form, receiptitem_form):
-        """
-        Called if a form is invalid. Re-renders the context data with the
-        data-filled forms and errors.
-        """
-        return self.render_to_response(
-            self.get_context_data(form=form, receiptline_form=receiptitem_form)
-        )
+class ReceiptUpdateView(UpdateView):
+    model = Receipt
+    form_class = ReceiptForm
+    success_url = reverse_lazy("sales:sales_receipt_list")
 
 
 @transaction.atomic()
@@ -89,62 +55,24 @@ class ReceiptDetailView(DetailView):
 class ReceiptUpdateView(UpdateView):
     model = Receipt
     form_class = ReceiptForm
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        receiptitem_form = ReceiptItemFormSet(instance=self.object)
-
-        return self.render_to_response(
-            self.get_context_data(form=form, receiptitem_form=receiptitem_form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        receiptitem_form = ReceiptItemFormSet(self.request.POST, instance=self.object)
-        if form.is_valid() and receiptitem_form.is_valid():
-            return self.form_valid(form, receiptitem_form)
-        else:
-            return self.form_invalid(form, receiptitem_form)
-
-    def form_valid(self, form, receiptitem_form):
-        self.object = form.save()
-
-        receiptitem_form.instance = self.object
-        receiptitem_form.save()
-        return redirect(self.get_success_url())
-
-    def form_invalid(self, form, receiptitem_form):
-        """
-        Called if a form is invalid. Re-renders the context data with the
-        data-filled forms and errors.
-        """
-        return self.render_to_response(
-            self.get_context_data(form=form, receiptitem_form=receiptitem_form)
-        )
+    success_url = reverse_lazy("sales_receipt_list")
 
 
 # create a function view on receipt list page  to reallot all receipts
+def reallocate_receipts(request):
+    receipts = Receipt.objects.all()
+    for receipt in receipts:
+        receipt.reallocate()
+    return redirect("sales_receipt_list")
 
 
 class ReceiptDeleteView(DeleteView):
     model = Receipt
-    success_url = reverse_lazy("sales_receipt_list")
+    success_url = reverse_lazy("sales:sales_receipt_list")
 
 
-class ReceiptLineCreateView(CreateView):
-    model = ReceiptLine
-    form_class = ReceiptLineForm
-
-
-class ReceiptLineUpdateView(UpdateView):
-    model = ReceiptLine
-    form = ReceiptLineForm
-
-
-class ReceiptLineDeleteView(DeleteView):
-    model = ReceiptLine
-    success_url = reverse_lazy("sales_receiptline_list")
+@login_required
+def receipt_allocate(request, pk):
+    receipt = get_object_or_404(Receipt, id=pk)
+    receipt.allot()
+    return redirect(receipt)

@@ -90,12 +90,14 @@ class LoanForm(forms.ModelForm):
             "loanamount",
             "interestrate",
         ]
+
     def clean(self):
         cleaned_data = super().clean()
-        loanid = Series.objects.get(id = self.cleaned_data['series'].id).name +str(self.cleaned_data['lid'])
+        loanid = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
+            self.cleaned_data["lid"]
+        )
         if Loan.objects.filter(loanid=loanid).exists():
             raise forms.ValidationError("A loan with this loanID already exists.")
-        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -129,8 +131,9 @@ class LoanForm(forms.ModelForm):
                 Column(FloatingField("itemdesc"), css_class="form-group col-md-3 mb-0"),
                 css_class="form-row",
             ),
-            # Submit("submit", "Submit"),  
+            # Submit("submit", "Submit"),
         )
+
 
 class LoanRenewForm(forms.Form):
     amount = forms.IntegerField()

@@ -318,7 +318,7 @@ class StockLot(models.Model):
         Returns none
         """
         StockTransaction.objects.create(
-            journal= journal,
+            journal=journal,
             lot=self,
             weight=weight,
             quantity=quantity,
@@ -366,7 +366,7 @@ class StockLot(models.Model):
 
     def get_age(self):
         return (timezone.now() - self.created).days
-        
+
 
 class Movement(models.Model):
 

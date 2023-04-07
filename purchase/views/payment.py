@@ -1,73 +1,64 @@
-from django.views.generic import CreateView
-from django_filters.views import FilterView
-from django_tables2.export.views import ExportMixin
-from django_tables2.views import SingleTableMixin
-from num2words import num2words
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
+from django_tables2 import RequestConfig
+from num2words import num2words
+
+from utils.htmx_utils import for_htmx
+
 from ..filters import PaymentFilter
 from ..forms import PaymentForm
 from ..models import Payment
-# from ..render import Render
 from ..tables import PaymentTable
 
-# def print_payment(pk):
-#     payment = Payment.objects.get(id=pk)
-#     params = {"payment": payment, "inwords": num2words(payment.total, lang="en_IN")}
-#     return Render.render("purchase/payment.html", params)
+
+# use signal to update allotment to associated invoices on create and update
+@login_required
+@for_htmx(use_block="content")
+def payment_list(request):
+    filter = PaymentFilter(
+        request.GET,
+        queryset=Payment.objects.all().select_related("supplier", "created_by"),
+    )
+    table = PaymentTable(filter.qs)
+    RequestConfig(request, paginate={"per_page": 10}).configure(table)
+    context = {"filter": filter, "table": table}
+    return TemplateResponse(request, "purchase/payment_list.html", context)
 
 
-class PaymentListView(ExportMixin, SingleTableMixin, FilterView):
-    model = Payment
-    table_class = PaymentTable
-    filterset_class = PaymentFilter
-    template_name = "purchase/payment_list.html"
-    paginate_by = 25
+def payment_create(request):
+    if request.method == "POST":
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.created_by = request.user
+            payment.save()
+            return redirect("purchase:purchase_payment_list")
+    else:
+        form = PaymentForm()
+    return render(request, "purchase/payment_form.html", {"form": form})
 
-
-class PaymentCreateView(CreateView):
-    model = Payment
-    form_class = PaymentForm
-
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        paymentitem_form = PaymentItemFormSet()
-
-        return self.render_to_response(
-            self.get_context_data(form=form, paymentitem_form=paymentitem_form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        paymentitem_form = PaymentItemFormSet(self.request.POST)
-        if form.is_valid() and paymentitem_form.is_valid():
-            return self.form_valid(form, paymentitem_form)
-        else:
-            return self.form_invalid(form, paymentitem_form)
-
-    def form_valid(self, form, paymentitem_form):
-        form.instance.created_by = self.request.user
-        self.object = form.save()
-        paymentitem_form.instance = self.object
-        paymentitem_form.save()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, paymentitem_form):
-        """
-        Called if a form is invalid. Re-renders the context data with the
-        data-filled forms and errors.
-        """
-        return self.render_to_response(
-            self.get_context_data(form=form, paymentitem_form=paymentitem_form)
-        )
 
 @login_required
-def payment_detail(request):
-    payment = Payment.objects.get(id=request.POST.get("id"))
-    return render(request, "purchase/payment_detail.html", {"payment": payment})
+def payment_detail(request, pk):
+    payment = get_object_or_404(Payment, id=pk)
+    return render(request, "purchase/payment_detail.html", {"object": payment})
+
+
+@login_required
+def payment_update(request, pk):
+    payment = get_object_or_404(Payment, id=pk)
+    if request.method == "POST":
+        form = PaymentForm(request.POST, instance=payment)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.created_by = request.user
+            payment.save()
+            return redirect("purchase:purchase_payment_list")
+    else:
+        form = PaymentForm(instance=payment)
+    return render(request, "purchase/payment_form.html", {"form": form})
+
 
 @login_required
 def payment_delete(request):
@@ -75,16 +66,23 @@ def payment_delete(request):
     payment.delete()
     return redirect("purchase:purchase_payment_list")
 
+
+@login_required
+def payment_allocate(request, pk):
+    payment = get_object_or_404(Payment, id=pk)
+    payment.allot()
+    return redirect(payment)
+
+
 def post_payment(request, pk):
-    # use get_objector404
-    payment = Payment.objects.get(id=pk)
+    payment = get_object_or_404(Payment, id=pk)
     # post to dea
     payment.post()
     return redirect(payment)
 
 
 def unpost_payment(request, pk):
-    payment = Payment.objects.get(id=pk)
+    payment = get_object_or_404(Payment, id=pk)
     # unpost to dea
     payment.unpost()
     return redirect(payment)

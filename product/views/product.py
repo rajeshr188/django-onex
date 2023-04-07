@@ -4,7 +4,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView
+
 from utils.htmx_utils import for_htmx
+
 from ..filters import ProductFilter
 from ..forms import ProductForm, ProductVariantForm
 from ..models import Product, ProductType, ProductVariant
@@ -16,7 +18,8 @@ from ..models import Product, ProductType, ProductVariant
 def product_list(request):
     products = Product.objects.prefetch_related("variants", "images").all()
     filter = ProductFilter(request.GET, queryset=products)
-    return TemplateResponse(request, "product/product_list.html",{"filter": filter})
+    return TemplateResponse(request, "product/product_list.html", {"filter": filter})
+
 
 @login_required
 @for_htmx(use_block="content")
@@ -60,6 +63,7 @@ def product_detail(request, pk):
     variants = product.variants.all()
     ctx = {"object": product, "variants": variants}
     return TemplateResponse(request, "product/product_detail.html", ctx)
+
 
 @login_required
 def product_edit(request, pk):

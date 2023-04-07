@@ -2,18 +2,18 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (ButtonHolder, Column, Field, Layout, Row,
                                  Submit)
 from django import forms
-from django.forms.models import inlineformset_factory
 from django.urls import reverse_lazy
 from django_select2.forms import Select2Widget
 from django_tables2 import Column
 
 from approval.models import Approval
+from contact.forms import CustomerWidget
 from contact.models import Customer
 from product.forms import StockWidget
 from product.models import StockLot
 from utils.custom_layout_object import *
 
-from .models import Invoice, InvoiceItem, Receipt, ReceiptItem, ReceiptLine
+from .models import Invoice, InvoiceItem, Receipt
 
 
 class DateTimeLocalInput(forms.DateTimeInput):
@@ -121,7 +121,7 @@ class InvoiceItemForm(forms.ModelForm):
 
 class ReceiptForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
-        queryset=Customer.objects.filter(customer_type="Wh"), widget=Select2Widget
+        queryset=Customer.objects.exclude(customer_type="S"), widget=CustomerWidget
     )
     created = DateTimeLocalInput()
 
@@ -131,44 +131,9 @@ class ReceiptForm(forms.ModelForm):
             "created",
             "customer",
             "type",
+            "weight",
+            "touch",
             "rate",
             "total",
             "description",
-            "status",
         ]
-
-
-class ReceiptLineForm(forms.ModelForm):
-    invoice = forms.ModelChoiceField(
-        queryset=Invoice.objects.all(), widget=Select2Widget
-    )
-
-    class Meta:
-        model = ReceiptLine
-        fields = ["invoice", "amount"]
-
-
-ReceiptLineFormSet = inlineformset_factory(
-    Receipt,
-    ReceiptLine,
-    fields=("invoice", "amount", "receipt"),
-    extra=0,
-    can_delete=True,
-    form=ReceiptLineForm,
-)
-
-
-class ReceiptItemForm(forms.ModelForm):
-    class Meta:
-        models = ReceiptItem
-        fields = "__all__"
-
-
-ReceiptItemFormSet = inlineformset_factory(
-    Receipt,
-    ReceiptItem,
-    fields=("weight", "touch", "nettwt", "amount", "receipt"),
-    extra=1,
-    can_delete=True,
-    form=ReceiptItemForm,
-)

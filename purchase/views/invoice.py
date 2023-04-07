@@ -51,6 +51,7 @@ def purchase_create(request):
     return render(request, "sales/create_update.html", context)
 
 
+# trigger signals to reallot if any payments since the invoice is updated
 @login_required
 def purchase_update(request, id=None):
     obj = get_object_or_404(Invoice, pk=id)
@@ -243,12 +244,6 @@ def home(request):
     context["total"] = total
 
     return render(request, "purchase/home.html", context)
-
-
-# def print_invoice(pk):
-#     invoice = Invoice.objects.get(id=pk)
-#     params = {"invoice": invoice}
-#     return Render.render("purchase/invoice_pdf.html", params)
 
 
 # def list_balance(request):

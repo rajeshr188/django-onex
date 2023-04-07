@@ -1,10 +1,13 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
+
+from utils.htmx_utils import for_htmx
+
 from ..forms import ProductTypeForm
 from ..models import ProductType
-from utils.htmx_utils import for_htmx
-from django.shortcuts import redirect,get_object_or_404
+
 
 @login_required
 @for_htmx(use_block="content")
@@ -12,6 +15,7 @@ def producttype_list(request):
     producttypes = ProductType.objects.all()
     ctx = {"object_list": producttypes}
     return TemplateResponse(request, "product/producttype_list.html", ctx)
+
 
 @login_required
 @for_htmx(use_block="content")
@@ -23,12 +27,14 @@ def producttype_create(request):
     ctx = {"form": form}
     return TemplateResponse(request, "product/producttype_form.html", ctx)
 
+
 @login_required
 @for_htmx(use_block="content")
 def producttype_detail(request, pk):
     producttype = get_object_or_404(ProductType, pk=pk)
     ctx = {"object": producttype}
     return TemplateResponse(request, "product/producttype_detail.html", ctx)
+
 
 @login_required
 @for_htmx(use_block="content")
@@ -40,6 +46,7 @@ def producttype_update(request, pk):
         return redirect("product_producttype_detail", pk=producttype.pk)
     ctx = {"form": form, "producttype": producttype}
     return TemplateResponse(request, "product/producttype_form.html", ctx)
+
 
 @login_required
 def producttype_delete(request, pk):

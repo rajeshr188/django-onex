@@ -63,22 +63,29 @@ urlpatterns += (
     # urls for Payment
     path(
         "purchase/payment/",
-        views.PaymentListView.as_view(),
+        views.payment_list,
         name="purchase_payment_list",
     ),
     path(
         "purchase/payment/create/",
-        views.PaymentCreateView.as_view(),
+        views.payment_create,
         name="purchase_payment_create",
     ),
-    path('purchase/payment/detail/<int:pk>/',
-         views.payment_detail,
-         name='purchase_payment_detail'),
-    # path('purchase/payment/detail/<int:id>/pdf', views.print_payment,name='paymentpdf'),
-    # path('purchase/payment/update/<int:pk>/', views.PaymentUpdateView.as_view(), name='purchase_payment_update'),
-    path('purchase/payment/delete/<int:pk>/',
-            views.payment_delete,
-            name='purchase_payment_delete'),
+    path(
+        "purchase/payment/detail/<int:pk>/",
+        views.payment_detail,
+        name="purchase_payment_detail",
+    ),
+    path(
+        "purchase/payment/update/<int:pk>/",
+        views.payment_update,
+        name="purchase_payment_update",
+    ),
+    path(
+        "purchase/payment/delete/<int:pk>/",
+        views.payment_delete,
+        name="purchase_payment_delete",
+    ),
     path(
         "purchase/payment/<int:pk>/post/",
         views.post_payment,
@@ -88,5 +95,10 @@ urlpatterns += (
         "purchase/payment/<int:pk>/unpost/",
         views.unpost_payment,
         name="purchase_payment_unpost",
+    ),
+    path(
+        "purchase/payment/<int:pk>/allocate/",
+        views.payment_allocate,
+        name="purchase_payment_allocate",
     ),
 )

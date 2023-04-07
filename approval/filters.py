@@ -1,7 +1,9 @@
 import django_filters
 
-from .models import ApprovalLine
 from contact.forms import CustomerWidget
+
+from .models import ApprovalLine
+
 
 class ApprovalLineFilter(django_filters.FilterSet):
     class Meta:
@@ -12,4 +14,3 @@ class ApprovalLineFilter(django_filters.FilterSet):
         widgets = {
             "approval__contact": CustomerWidget,
         }
-

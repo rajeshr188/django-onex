@@ -11,3 +11,4 @@ add rate to cache/
 deployment
 remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did
 combine sales and purchase app in to one order,salesoreder,invoice,deliverynote,quotation
+create sale-receipt and purchase-payment view from db view

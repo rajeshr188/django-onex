@@ -1,11 +1,12 @@
 import unittest
-from django.urls import reverse
-from django.test import Client
-from .models import License, Loan, Release
-from django.contrib.auth.models import User
-from django.contrib.auth.models import Group
+
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
+from django.test import Client
+from django.urls import reverse
 from useres.models import CustomUser
+
+from .models import License, Loan, Release
 
 # def create_django_contrib_auth_models_user(**kwargs):
 #     defaults = {}

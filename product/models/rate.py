@@ -48,5 +48,3 @@ class Rate(models.Model):
 
     # def get_absolute_url(self):
     #     return reverse("rate_detail", kwargs={"pk": self.pk})
-    
-

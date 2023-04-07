@@ -50,7 +50,7 @@
           <li >Balance :{{object.balance}}</li>
           <li>GST : {{object.is_gst}}</li>
           <li >Total :{{object.total}}</li>
-          <li >Paid : {{object.get_total_payments}}</li>
+          <li >Paid : {{object.get_allocations}}</li>
           <li >
             {%if object.posted%}
             <a class="btn btn-danger" href="{% url 'sales:sales_invoice_unpost' object.pk%}">Unpost</a>
@@ -93,18 +93,18 @@
     </h2>
     <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
       <div class="accordion-body">
-        {% if object.receiptline_set %}
+        {% if object.receiptallocation_set %}
         <table class="table table-sm table-striped table-bordered">
           <thead class="thead-dark">
             <tr>
               <th>Receipt</th><th>created</th><th>amount</th>
             </tr>
           </thead>
-          {% for i in object.receiptline_set.all %}
+          {% for i in object.receiptallocation_set.all %}
           <tr>
-            <td><a href="{% url 'sales_receipt_detail' i.payment.id %}">{{i.payment.id}}</a></td>
+            <td><a href="{% url 'sales:sales_receipt_detail' i.receipt.id %}">{{i.receipt.id}}</a></td>
             <td>{{i.created}}</td>
-            <td>{{i.amount}}</td>
+            <td>{{i.allocated_amount}}</td>
 
           </tr>
           {%endfor%}

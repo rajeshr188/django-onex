@@ -28,7 +28,7 @@
 </head>
 
 <body   hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  <nav class="navbar navbar-expand-lg bg-body-tertiary bg-dark navbar-dark">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary bg-dark navbar-dark mb-3">
     <div class="container-fluid">
       <a class="navbar-brand" href="{% url 'home' %}">One X</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,7 +144,7 @@
                     hx-push-url="true" >Purchase</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href=""
-                    hx-get="{% url 'purchase:purchase_invoice_list'%}"
+                    hx-get="{% url 'purchase:purchase_payment_list'%}"
                   hx-target="#content"
                   hx-swap="innerHTML"
                   hx-push-url="true">Payment</a></li>

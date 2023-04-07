@@ -1,17 +1,19 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
 from django.template.response import TemplateResponse
-
+from django.urls import reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from django.views.generic.base import TemplateView
+
 from utils.htmx_utils import for_htmx
+
 from ..filters import StockFilter
 from ..forms import (StockForm, StockTransactionForm, UniqueForm,
                      stockstatement_formset)
 from ..models import Stock, StockLot, StockStatement, StockTransaction
+
 
 @login_required
 def split_lot(request, pk):
@@ -79,8 +81,10 @@ class StockDeleteView(LoginRequiredMixin, DeleteView):
     model = Stock
     success_url = reverse_lazy("product_stock_list")
 
+
 class StockTransactionListView(LoginRequiredMixin, ListView):
     model = StockTransaction
+
 
 # stocktransactions are not meant to be creted manually but with journal ,stockjournal tobe specific
 # class StockTransactionCreateView(LoginRequiredMixin, CreateView):

@@ -3,8 +3,9 @@ from django.db.models import Sum
 from django.urls import reverse
 
 from contact.models import Customer
-from product.models import StockLot
 from dea.models import Journal
+from product.models import StockLot
+
 """
 When an approval voucher is created, the stock items that are being approved for release to a contact should be recorded in the database or inventory management system, along with the contact's information.
 
@@ -20,6 +21,8 @@ When the invoice is created, the stock items that were approved but not returned
 
 If any changes are made to the approval, return, or invoice, those changes should be recorded in the database or inventory management system, along with a timestamp and the user who made the changes.
 """
+
+
 # Create your models here.
 class Approval(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
@@ -37,8 +40,11 @@ class Approval(models.Model):
     is_billed = models.BooleanField(default=False)
     status = models.CharField(
         max_length=10,
-        choices=(("Pending", "Pending"), ("Complete", "Complete"),
-                    ("Billed", "Billed")),
+        choices=(
+            ("Pending", "Pending"),
+            ("Complete", "Complete"),
+            ("Billed", "Billed"),
+        ),
         default="Pending",
     )
 
@@ -58,11 +64,13 @@ class Approval(models.Model):
     def post(self):
         if not self.posted:
             journal = Journal.objects.create(
-                contact=self.contact,journal_type='AP',
-                content_object = self,desc = f"Approval {self.id}"
+                contact=self.contact,
+                journal_type="AP",
+                content_object=self,
+                desc=f"Approval {self.id}",
             )
             for i in self.items.all():
-                i.post(journal = journal)
+                i.post(journal=journal)
         self.posted = True
         self.save(update_fields=["posted"])
 
@@ -71,8 +79,12 @@ class Approval(models.Model):
         # if is billed cant unpost
         if self.posted and not self.is_billed:
             # last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(content_object=self, journal_type="AP",
-                    contact = self.contact,desc="approval revert")
+            jrnl = Journal.objects.create(
+                content_object=self,
+                journal_type="AP",
+                contact=self.contact,
+                desc="approval revert",
+            )
             for i in self.items.all():
                 i.unpost(jrnl)
             self.posted = False
@@ -88,6 +100,7 @@ class Approval(models.Model):
             self.status = "Complete"
         self.save()
 
+
 # rename to lineitem tobe referenced by return line and invoice line
 class ApprovalLine(models.Model):
     product = models.ForeignKey(
@@ -100,7 +113,7 @@ class ApprovalLine(models.Model):
     approval = models.ForeignKey(
         Approval, on_delete=models.CASCADE, related_name="items"
     )
-    #newly added based on chatgpt suggestion
+    # newly added based on chatgpt suggestion
     # invoice = models.ForeignKey('sales.Invoice', on_delete=models.CASCADE, null=True, blank=True)
 
     status = models.CharField(
@@ -128,10 +141,15 @@ class ApprovalLine(models.Model):
             )["t"]
         )
 
-    def post(self,journal):
-        self.product.transact(weight = self.weight,quantity= self.quantity, journal=journal,movement_type =  "A")
+    def post(self, journal):
+        self.product.transact(
+            weight=self.weight,
+            quantity=self.quantity,
+            journal=journal,
+            movement_type="A",
+        )
 
-    def unpost(self,journal):
+    def unpost(self, journal):
         for i in self.approvallinereturn_set.all():
             i.unpost(journal)
             i.delete()
@@ -147,6 +165,7 @@ class ApprovalLine(models.Model):
             self.status = "Pending"
         self.save()
         self.approval.update_status()
+
 
 # rename to Return for better clarity
 class ApprovalLineReturn(models.Model):
@@ -165,7 +184,7 @@ class ApprovalLineReturn(models.Model):
     def __str__(self):
         return f"{self.line.product}"
 
-    def post(self,journal):
+    def post(self, journal):
         if not self.posted:
             self.line.product.transact(self.weight, self.quantity, journal, "AR")
             self.posted = True
@@ -179,17 +198,23 @@ class ApprovalLineReturn(models.Model):
             self.save(update_fields=["posted"])
             self.line.update_status()
 
+
 class Return(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, null=True, blank=True)
-    contact = models.ForeignKey(Customer, related_name='approval_returns', on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
+    )
+    contact = models.ForeignKey(
+        Customer, related_name="approval_returns", on_delete=models.CASCADE
+    )
     total_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     total_qty = models.IntegerField(default=0)
     posted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Return #{self.id} for {self.contact}"
+
 
 class ReturnLineItem(models.Model):
     return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
@@ -198,6 +223,6 @@ class ReturnLineItem(models.Model):
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product.name} ({self.line_item.price} each)"

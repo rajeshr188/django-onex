@@ -100,4 +100,9 @@ urlpatterns += (
         views.unpost_receipt,
         name="sales_receipt_unpost",
     ),
+    path(
+        "sales/receipt/<int:pk>/allocate/",
+        views.receipt_allocate,
+        name="sales_receipt_allocate",
+    ),
 )

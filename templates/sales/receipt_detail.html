@@ -1,52 +1,102 @@
-
+{%extends '_base.html'%}
 {% load humanize %}
 {% block content %}
 
-<p><a class="btn btn-secondary" href="{% url 'sales_receipt_list' %}">Receipt Listing</a>
-  <a class="btn btn-primary" href="{% url 'sales_receipt_create' %}">Add Receipt </a>
+<p><a class="btn btn-secondary" href="{% url 'sales:sales_receipt_list' %}">Receipt Listing</a>
+  <a class="btn btn-primary" href="{% url 'sales:sales_receipt_create' %}">Add Receipt </a>
   <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Receipt</a>
-  <a class="btn btn-secondary" href="{% url 'receiptpdf'  object.id %}">Print</a>
-  <a class="btn btn-danger" href="{% url 'sales_receipt_delete' object.id%}">Delete</a>
+  <a class="btn btn-secondary" href="">Print</a>
+  <a class="btn btn-danger" href="{% url 'sales:sales_receipt_delete' object.id%}">Delete</a>
+  {%if object.status == 'Unallotted' and object.posted%}
+  <a class="btn btn-success" href="{% url 'sales:sales_receipt_allocate' object.pk%}">Allocate</a>
+{%elif object.posted%}
+  <a href="">Re-Allot</a>
+{%endif%}
 </p>
-
-<table class="table table-sm table-striped table-bordered">
-  <tr><td>Id</td><td>{{ object.id }}</td></tr>
-  <tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id%}">{{ object.customer }}</a></td></tr>
-  <tr><td>created</td><td>{{ object.created }}</td></tr>
-  <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
-  <tr><td>type</td><td>{{ object.type }}</td></tr>
-  <tr><td>status</td><td>{{ object.status }}</td></tr>
-  <tr><td>Total Received</td><td>{{ object.total }}</td></tr>
-  <tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
-  <tr><td>description</td><td>{{ object.description }}</td></tr>
-  <tr>
-    <td>Posted</td>
-    <td>
-      {%if object.posted%}
-      <a class="btn btn-danger" href="{% url 'sales_receipt_unpost' object.pk%}">Unpost</a>
-      {%else%}
-      <a class="btn btn-success" href="{% url 'sales_receipt_post' object.pk%}">Post</a>
-      {%endif%}
-    </td>
-  </tr>
-</table>
-
-<table class="table table-sm table-striped table-bordered">
-  <thead>
-    <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
-  </thead>
-  <tbody>
-    {% for i in object.receiptline_set.all.select_related %}
-
+<div class="row">
+  <div class="col">
+    <h2>Receipt Details</h2>
+    <table class="table table-sm table-striped table-bordered">
+      <tr><td>Id</td><td>{{ object.id }}</td></tr>
+      <tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.customer.id%}">{{ object.customer }}</a></td></tr>
+      <tr><td>created</td><td>{{ object.created }}</td></tr>
+      <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+      <tr><td>type</td><td>{{ object.type }}</td></tr>
+      <tr><td>status</td><td>{{ object.status }}</td></tr>
+      <tr><td>Total Received</td><td>{{ object.total }}</td></tr>
+      <tr><td>Total Allotted</td><td>{{object.get_line_totals}}</td></tr>
+      <tr><td>description</td><td>{{ object.description }}</td></tr>
       <tr>
-        <td><a href="{% url 'sales_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
-        <td>{{i.invoice.status}}</td>
-        <td>{{i.amount}}</td>
-        <td>{{i.invoice.get_balance}}</td>
+        <td>Posted</td>
+        <td>
+          {%if object.posted%}
+          <a class="btn btn-danger" href="{% url 'sales:sales_receipt_unpost' object.pk%}">Unpost</a>
+          {%else%}
+          <a class="btn btn-success" href="{% url 'sales:sales_receipt_post' object.pk%}">Post</a>
+          {%endif%}
+        </td>
       </tr>
+    </table>
+  </div>
+  <div class="col">
+    <div class="accordion" id="accordionExample">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Receipt Allocations
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <table class="table table-sm table-striped table-bordered">
+              <thead>
+                <tr><th>Invoice</th><th>Status</th><th>Amount Received</th><th>Balance</th></tr>
+              </thead>
+              <tbody>
+                {% for i in object.receiptallocation_set.all %}
+            
+                  <tr>
+                    <td><a href="{% url 'sales:sales_invoice_detail' i.invoice.id%}">{{i.invoice.created|date}}/{{i.invoice_id}}/{{i.invoice.balance}}</a></td>
+                    <td>{{i.invoice.status}}</td>
+                    <td>{{i.allocated_amount}}</td>
+                    <td>{{i.invoice.get_balance}}</td>
+                  </tr>
+            
+                {%endfor%}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Accordion Item #2
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Accordion Item #3
+          </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    {%endfor%}
-  </tbody>
-</table>
+
+
 
 {% endblock %}

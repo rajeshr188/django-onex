@@ -14,7 +14,7 @@ from product.models import ProductVariant
 # from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
-from .models import Invoice, InvoiceItem, Payment, PaymentItem, PaymentLine
+from .models import Invoice, InvoiceItem, Payment, PaymentAllocation
 
 
 class InvoiceForm(forms.ModelForm):
@@ -144,32 +144,12 @@ class InvoiceItemForm(forms.ModelForm):
         return instance
 
 
-InvoiceItemFormSet = inlineformset_factory(
-    Invoice,
-    InvoiceItem,
-    form=InvoiceItemForm,
-    fields=[
-        "is_return",
-        "product",
-        "quantity",
-        "weight",
-        "touch",
-        "net_wt",
-        "makingcharge",
-        "total",
-        "invoice",
-    ],
-    extra=1,
-    can_delete=True,
-)
-
-
 class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"})
     )
     supplier = forms.ModelChoiceField(
-        queryset=Customer.objects.all(), widget=Select2Widget
+        queryset=Customer.objects.filter(customer_type="S"), widget=Select2Widget
     )
 
     class Meta:
@@ -183,39 +163,3 @@ class PaymentForm(forms.ModelForm):
             "description",
             "status",
         ]
-
-
-class PaymentLineForm(forms.ModelForm):
-    invoice = forms.ModelChoiceField(
-        queryset=Invoice.objects.filter(Q(status="Unpaid") | Q(status="PartiallyPaid")),
-        widget=Select2Widget,
-    )
-
-    class Meta:
-        model = PaymentLine
-        fields = ["invoice", "amount"]
-
-
-class PaymentItemForm(forms.ModelForm):
-    class Meta:
-        models = PaymentItem
-        fields = "__all__"
-
-
-PaymentItemFormSet = inlineformset_factory(
-    Payment,
-    PaymentItem,
-    fields=("weight", "touch", "nettwt", "amount", "payment"),
-    extra=1,
-    can_delete=True,
-    form=PaymentItemForm,
-)
-
-PaymentLineFormSet = inlineformset_factory(
-    Payment,
-    PaymentLine,
-    fields=("invoice", "amount", "payment"),
-    extra=1,
-    can_delete=True,
-    form=PaymentLineForm,
-)

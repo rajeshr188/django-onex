@@ -145,11 +145,23 @@ class Invoice(models.Model):
     def get_net_wt(self):
         return self.purchaseitems.aggregate(t=Sum("net_wt"))["t"]
 
+    # @property
+    # def outstanding_balance(self):
+    #     return self.balance - self.total_allocated_amount
+
+    @classmethod
+    def with_outstanding_balance(cls):
+        return cls.objects.annotate(
+            total_allocated_amount=Sum("paymentallocation__allocated_amount")
+        ).annotate(outstanding_balance=F("balance") - F("total_allocated_amount"))
+
+    # overdue_invoices = Invoice.with_outstanding_balance().filter(outstanding_balance__gt=0, due_date__lt=date.today())
+
     def get_total_balance(self):
         return self.purchaseitems.aggregate(t=Sum("total"))["t"]
 
-    def get_total_payments(self):
-        paid = self.paymentline_set.aggregate(t=Sum("amount"))
+    def get_allocations(self):
+        paid = self.paymentallocation_set.aggregate(t=Sum("allocated_amount"))
         return paid["t"]
 
     @property
@@ -181,7 +193,10 @@ class Invoice(models.Model):
                 self.supplier.save()
 
             jrnl = Journal.objects.create(
-                type=JournalTypes.PJ, content_object=self, desc="purchase"
+                journal_type=JournalTypes.PJ,
+                content_object=self,
+                desc="purchase",
+                contact=self.supplier,
             )
 
             inv = "GST INV" if self.is_gst else "Non-GST INV"
@@ -214,7 +229,12 @@ class Invoice(models.Model):
     def unpost(self):
         if self.posted:
             last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(content_object=self, desc="purchase revert")
+            jrnl = Journal.objects.create(
+                content_object=self,
+                desc="purchase revert",
+                contact=self.supplier,
+                jouranl_type=JournalTypes.PJ,
+            )
             jrnl.untransact(last_jrnl)
             for i in self.purchaseitems.all():
                 i.unpost(jrnl)
@@ -334,6 +354,8 @@ class Payment(models.Model):
         choices=BType.choices,
         default=BType.CASH,
     )
+    weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, decimal_places=3)
     description = models.TextField(max_length=100)
@@ -352,6 +374,7 @@ class Payment(models.Model):
     supplier = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="payments"
     )
+    invoices = models.ManyToManyField(Invoice, through="PaymentAllocation")
 
     class Meta:
         ordering = ("-created",)
@@ -365,66 +388,77 @@ class Payment(models.Model):
     def get_update_url(self):
         return reverse("purchase:purchase_payment_update", args=(self.pk,))
 
-    def get_line_totals(self):
-        return self.paymentline_set.aggregate(t=Sum("amount"))["t"]
-
     def update_status(self):
-        total_allotted = self.get_line_totals()
-        if total_allotted is not None:
-            if total_allotted == self.total:
-                self.status = "Allotted"
-            else:
-                self.status = "Unallotted"
+        # total_allotted = self.get_line_totals()
+        total_allotted = (
+            self.paymentallocation_set.aggregate(t=Sum("allocated_amount"))["t"]
+            if self.paymentallocation_set.exists()
+            else 0
+        )
+        print(f"total_allotted : {total_allotted}")
+
+        if total_allotted == self.total:
+            self.status = "Allotted"
+        else:
+            self.status = "Unallotted"
         self.save()
 
     def allot(self):
-        print(f"allotting payment {self.id} type:{self.type} amount{self.total}")
-        invpaid = 0 if self.get_line_totals() is None else self.get_line_totals()
-        print(f" invpaid : {invpaid}")
-        remaining_amount = self.total - invpaid
-        print(f"remaining : {remaining_amount}")
-        try:
-            invtopay = (
-                Invoice.objects.filter(
-                    supplier=self.supplier,
-                    balancetype=self.type,
-                    posted=True,
-                    balance__gte=0,
+        if self.posted:
+            print(f"allotting payment {self.id} type:{self.type} amount{self.total}")
+            invpaid = 0 if self.amount_allotted() is None else self.amount_allotted()
+            print(f" invpaid : {invpaid}")
+            remaining_amount = self.total - invpaid
+            print(f"remaining : {remaining_amount}")
+            try:
+                invtopay = (
+                    Invoice.objects.filter(
+                        supplier=self.supplier,
+                        balancetype=self.type,
+                        posted=True,
+                        balance__gte=0,
+                    )
+                    .exclude(status="Paid")
+                    .order_by("created")
                 )
-                .exclude(status="Paid")
-                .order_by("created")
-            )
-        except IndexError:
-            invtopay = None
-        print(f" invtopay :{invtopay}")
+            except IndexError:
+                invtopay = None
+            print(f" invtopay :{invtopay}")
 
-        for i in invtopay:
-            print(f"i:{i} bal:{i.get_balance()}")
-            if remaining_amount <= 0:
-                break
-            bal = i.get_balance()
-            if remaining_amount >= bal:
-                remaining_amount -= bal
-                PaymentLine.objects.create(payment=self, invoice=i, amount=bal)
-                i.status = "Paid"
-            else:
-                PaymentLine.objects.create(
-                    payment=self, invoice=i, amount=remaining_amount
-                )
-                i.status = "PartiallyPaid"
-                remaining_amount = 0
-            i.save()
-        print("allotted payment")
-        self.update_status()
+            for i in invtopay:
+                print(f"i:{i} bal:{i.get_balance()}")
+                if remaining_amount <= 0:
+                    break
+                bal = i.get_balance()
+                if remaining_amount >= bal:
+                    remaining_amount -= bal
+                    PaymentAllocation.objects.create(
+                        payment=self, invoice=i, allocated_amount=bal
+                    )
+                    i.status = "Paid"
+                else:
+                    PaymentAllocation.objects.create(
+                        payment=self, invoice=i, allocated_amount=remaining_amount
+                    )
+                    i.status = "PartiallyPaid"
+                    remaining_amount = 0
+                i.save()
+            print("allotted payment")
+            self.update_status()
+        else:
+            raise Exception("Payment not posted")
 
     def deallot(self):
-        self.paymentline_set.all().delete()
+        self.paymentallocation_set.all().delete()
         self.update_status()
 
     def post(self):
         if not self.posted:
             jrnl = Journal.objects.create(
-                type=JournalTypes.PY, content_object=self, desc="payment"
+                contact=self.supplier,
+                journal_type=JournalTypes.PY,
+                content_object=self,
+                desc="payment",
             )
 
             money = Money(self.total, self.type)
@@ -447,43 +481,118 @@ class Payment(models.Model):
     def unpost(self):
         if self.posted:
             last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(content_object=self, desc="payment")
+            jrnl = Journal.objects.create(
+                content_object=self,
+                desc="payment - unpost",
+                contact=self.supplier,
+            )
             jrnl.untransact(last_jrnl)
+            self.deallot()
             self.posted = False
             self.save(update_fields=["posted"])
 
+    def amount_allotted(self):
+        return (
+            self.paymentallocation_set.aggregate(t=Sum("allocated_amount"))["t"]
+            if self.paymentallocation_set.exists()
+            else 0
+        )
 
-class PaymentItem(models.Model):
-    weight = models.DecimalField(
-        max_digits=10, blank=True, decimal_places=3, default=0.0
-    )
-    touch = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, default=0.0
-    )
-    nettwt = models.DecimalField(
-        max_digits=10, blank=True, decimal_places=3, default=0.0
-    )
-    rate = models.IntegerField(default=0)
-    amount = models.DecimalField(max_digits=10, decimal_places=3)
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    def allocate(self):
+        # get all unpaid invoices associated with this payment's customer
+        unpaid_invoices = (
+            Invoice.with_outstanding_balance()
+            .filter(
+                supplier=self.supplier,
+                # paid=False,
+                balancetype=self.type,
+                posted=True,
+                balance__gte=0,
+                outstanding_balance__gt=0,
+            )
+            .exclude(status="Paid")
+            .order_by("created")
+        )
 
-    def __str__(self):
-        return self.amount
+        # iterate over the unpaid invoices and allocate payment in order
+        amount_remaining = self.total
+        for invoice in unpaid_invoices:
+            if amount_remaining <= 0:
+                break
+
+            # calculate the amount to allocate to this invoice
+            amount_due = invoice.outstanding_balance
+            print(f"amount_due:{amount_due}")
+            print(f"amount_remaining:{amount_remaining}")
+            amount_to_allocate = min(amount_due, amount_remaining)
+
+            # create a PaymentAllocation object for this invoice and payment
+            allocation = PaymentAllocation.objects.create(
+                payment=self, invoice=invoice, allocated_amount=amount_to_allocate
+            )
+
+            # update the amount remaining to allocate
+            amount_remaining -= amount_to_allocate
+
+        # mark the payment as fully allocated if there is no amount remaining
+        if amount_remaining <= 0:
+            self.status = "Allotted"
+            self.save()
+        self.update_status()
 
 
-class PaymentLine(models.Model):
+class PaymentAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    amount = models.DecimalField(max_digits=10, decimal_places=3)
-    # relationship Fields
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return "%s" % self.id
 
     def get_absolute_url(self):
-        return reverse("purchase_paymentline_detail", args=(self.pk,))
+        return reverse("purchase_paymentallocated_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("purchase_paymentline_update", args=(self.pk,))
+        return reverse("purchase_paymentallocated_update", args=(self.pk,))
+
+
+"""
+    This is a view that is used to get the outstanding balance of an invoice.
+    SQL:
+        CREATE VIEW invoice_payment_view AS 
+        SELECT invoice.id, invoice.invoice_number, invoice.total_amount, 
+            COALESCE(SUM(payment_allocation.allocated_amount), 0) AS amount_allocated, 
+            COALESCE(SUM(payment.amount), 0) AS amount_paid 
+        FROM invoice 
+        LEFT JOIN payment_allocation ON invoice.id = payment_allocation.invoice_id 
+        LEFT JOIN payment ON payment_allocation.payment_id = payment.id 
+        GROUP BY invoice.id;
+
+    invoice_payments = InvoicePaymentView.objects.all()
+    for invoice in invoice_payments:
+        print(f"Invoice #{invoice.invoice_number}: Total amount: {invoice.total_amount}, Amount paid: {invoice.amount_paid}, Amount allocated: {invoice.amount_allocated}, Outstanding balance: {invoice.outstanding_balance}")
+
+"""
+
+
+class InvoicePaymentView(models.Model):
+    invoice_number = models.CharField(max_length=50)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    @property
+    def outstanding_balance(self):
+        return self.total_amount - self.amount_paid
+
+    @classmethod
+    def get_queryset(cls):
+        return cls.objects.annotate(
+            amount_allocated=Sum("invoice_payments__allocated_amount")
+        )
+
+    class Meta:
+        managed = False
+        db_table = "invoice_payment_view"

@@ -63,7 +63,7 @@ class PaymentTable(tables.Table):
     #                     args=[A('pk')],attrs={'a':{"class":"btn btn-outline-info","role":"button"}},
     #                     orderable=False, empty_values=())
     remove = tables.LinkColumn(
-        "purchase_payment_delete",
+        "purchase:purchase_payment_delete",
         args=[A("pk")],
         attrs={"a": {"class": "btn btn-outline-danger", "role": "button"}},
         orderable=False,

@@ -77,7 +77,7 @@ def insertData(apps, schema_editor):
             movement_type(id="A", name="Approval", direction="-"),
             movement_type(id="AR", name="Approval Return", direction="+"),
             movement_type(id="AD", name="Add", direction="+"),
-            movement_type(id="R", ame="Remove", direction="-"),
+            movement_type(id="R", name="Remove", direction="-"),
         ]
     )
     attrvalue = apps.get_model("product", "AttributeValue")

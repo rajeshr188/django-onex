@@ -22,20 +22,20 @@ urlpatterns = (
 
 urlpatterns += (
     # urls for Category
-    path("category/", views.CategoryListView.as_view(), name="product_category_list"),
+    path("category/", views.category_list, name="product_category_list"),
     path(
         "category/create/",
-        views.CategoryCreateView.as_view(),
+        views.category_create,
         name="product_category_create",
     ),
     path(
         "category/detail/<slug:slug>/",
-        views.CategoryDetailView.as_view(),
+        views.category_detail,
         name="product_category_detail",
     ),
     path(
         "category/update/<slug:slug>/",
-        views.CategoryUpdateView.as_view(),
+        views.category_update,
         name="product_category_update",
     ),
 )
@@ -44,27 +44,27 @@ urlpatterns += (
     # urls for ProductType
     path(
         "producttype/",
-        views.ProductTypeListView.as_view(),
+        views.producttype_list,
         name="product_producttype_list",
     ),
     path(
         "producttype/create/",
-        views.ProductTypeCreateView.as_view(),
+        views.producttype_create,
         name="product_producttype_create",
     ),
     path(
         "producttype/detail/<int:pk>/",
-        views.ProductTypeDetailView.as_view(),
+        views.producttype_detail,
         name="product_producttype_detail",
     ),
     path(
         "producttype/update/<int:pk>/",
-        views.ProductTypeUpdateView.as_view(),
+        views.producttype_update,
         name="product_producttype_update",
     ),
     path(
         "producttype/delete/<int:pk>/",
-        views.ProductTypeDeleteView.as_view(),
+        views.producttype_delete,
         name="product_producttype_delete",
     ),
 )
@@ -72,7 +72,7 @@ urlpatterns += (
 
 urlpatterns += (
     # urls for Product
-    path("product/", views.ProductListView.as_view(), name="product_product_list"),
+    path("product/", views.product_list, name="product_product_list"),
     path(
         "product/create/<int:type_pk>/",
         views.product_create,
@@ -80,7 +80,7 @@ urlpatterns += (
     ),
     path(
         "product/detail/<int:pk>/",
-        views.ProductDetailView.as_view(),
+        views.product_detail,
         name="product_product_detail",
     ),
     path("product/update/<int:pk>/", views.product_edit, name="product_product_update"),
@@ -95,7 +95,7 @@ urlpatterns += (
     # urls for ProductVariant
     path(
         "productvariant/",
-        views.ProductVariantListView.as_view(),
+        views.productvariant_list,
         name="product_productvariant_list",
     ),
     path(
@@ -105,12 +105,12 @@ urlpatterns += (
     ),
     path(
         "productvariant/detail/<int:pk>/",
-        views.ProductVariantDetailView.as_view(),
+        views.productvariant_detail,
         name="product_productvariant_detail",
     ),
     path(
         "productvariant/update/<int:pk>/",
-        views.ProductVariantUpdateView.as_view(),
+        views.productvariant_update,
         name="product_productvariant_update",
     ),
     path(
@@ -217,7 +217,7 @@ urlpatterns += (
 urlpatterns += (
     # urls for Stock
     path("stock/", views.stock_list, name="product_stock_list"),
-    path("stock/create/", views.StockCreateView.as_view(), name="product_stock_create"),
+    # path("stock/create/", views.StockCreateView.as_view(), name="product_stock_create"),
     path(
         "stock/detail/<int:pk>/",
         views.StockDetailView.as_view(),
@@ -228,11 +228,11 @@ urlpatterns += (
         views.StockLotDetailView.as_view(),
         name="product_stocklot_detail",
     ),
-    path(
-        "stock/update/<int:pk>/",
-        views.StockUpdateView.as_view(),
-        name="product_stock_update",
-    ),
+    # path(
+    #     "stock/update/<int:pk>/",
+    #     views.StockUpdateView.as_view(),
+    #     name="product_stock_update",
+    # ),
     path("stock/split/<int:pk>", views.split_lot, name="product_stock_split"),
     path("stock/merge/<int:pk>", views.merge_lot, name="product_stock_merge"),
     path("stock/audit/", views.audit_stock, name="product_stock_audit"),
@@ -245,21 +245,21 @@ urlpatterns += (
         views.StockTransactionListView.as_view(),
         name="product_stocktransaction_list",
     ),
-    path(
-        "stocktransaction/create/",
-        views.StockTransactionCreateView.as_view(),
-        name="product_stocktransaction_create",
-    ),
-    path(
-        "stocktransaction/detail/<int:pk>/",
-        views.StockTransactionDetailView.as_view(),
-        name="product_stocktransaction_detail",
-    ),
-    path(
-        "stocktransaction/update/<int:pk>/",
-        views.StockTransactionUpdateView.as_view(),
-        name="product_stocktransaction_update",
-    ),
+    # path(
+    #     "stocktransaction/create/",
+    #     views.StockTransactionCreateView.as_view(),
+    #     name="product_stocktransaction_create",
+    # ),
+    # path(
+    #     "stocktransaction/detail/<int:pk>/",
+    #     views.StockTransactionDetailView.as_view(),
+    #     name="product_stocktransaction_detail",
+    # ),
+    # path(
+    #     "stocktransaction/update/<int:pk>/",
+    #     views.StockTransactionUpdateView.as_view(),
+    #     name="product_stocktransaction_update",
+    # ),
 )
 urlpatterns += (
     path(

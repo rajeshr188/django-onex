@@ -40,6 +40,7 @@ werkzeug = "*"
 flake8 = "*"
 django-htmx-autocomplete = "*"
 django = "==4.2rc1"
+beautifulsoup4 = "*"
 
 [dev-packages]
 

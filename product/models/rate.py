@@ -45,3 +45,8 @@ class Rate(models.Model):
 
     def __str__(self):
         return f" {self.timestamp} {self.metal} {self.purity} {self.rate}"
+
+    # def get_absolute_url(self):
+    #     return reverse("rate_detail", kwargs={"pk": self.pk})
+    
+

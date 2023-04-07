@@ -70,7 +70,7 @@ def loan_list(request):
     else:
         return render(request, "girvi/loan_list.html", context)
 
-# test this view
+
 @login_required
 def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)

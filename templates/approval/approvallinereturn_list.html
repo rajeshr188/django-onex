@@ -4,8 +4,8 @@
 {% load mptt_tags %}
 
 <p>
-  <a class="btn btn-default" href="{% url 'approval_approvallinereturn_list' %}">ApprovalLine Return Listing</a>
-  <a class="btn btn-primary" href="{% url 'approval_approvallinereturn_create' %}">Create new ApprovalLine return</a>
+  <a class="btn btn-default" href="{% url 'approval:approval_approvallinereturn_list' %}">ApprovalLine Return Listing</a>
+  <a class="btn btn-primary" href="{% url 'approval:approval_approvallinereturn_create' %}">Create new ApprovalLine return</a>
 </p>
 
 <table class="table">
@@ -31,12 +31,12 @@
     <td>{{object.line.status}}</td>
     <td>
       {%if object.posted%}
-      <a class="btn btn-danger" href="{% url 'approvallinereturn_unpost' object.pk%}">Unpost</a>
+      <a class="btn btn-danger" href="{% url 'approval:approvallinereturn_unpost' object.pk%}">Unpost</a>
       {%else%}
-      <a class="btn btn-success" href="{% url 'approvallinereturn_post' object.pk%}">Post</a>
+      <a class="btn btn-success" href="{% url 'approval:approvallinereturn_post' object.pk%}">Post</a>
       {%endif%}
     </td>
-    <td><a class="btn btn-danger" href ="{% url 'approval_approvallinereturn_delete' object.pk%}">Delete</a></td>
+    <td><a class="btn btn-danger" href ="{% url 'approval:approval_approvallinereturn_delete' object.pk%}">Delete</a></td>
 </tr>
 {% endfor %}
 </table>

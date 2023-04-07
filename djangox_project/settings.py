@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",  # new
+    "django.contrib.postgres",
     # Third-party
     "django_select2",
     "allauth",

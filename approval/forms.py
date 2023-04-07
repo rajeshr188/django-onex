@@ -23,7 +23,8 @@ class ApprovalForm(forms.ModelForm):
 
 class ApprovalLineForm(forms.ModelForm):
     product = forms.ModelChoiceField(
-        queryset=StockLot.objects.filter(status="Available"), widget=Select2Widget
+        # change filter to available
+        queryset=StockLot.objects.all(), widget=Select2Widget
     )
 
     class Meta:

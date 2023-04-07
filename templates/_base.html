@@ -120,15 +120,34 @@
               Approval
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'approval_approval_create' %}">Add Approval</a></li>
+              <li><a class="dropdown-item" href="{% url 'approval:approval_approval_create' %}">Add Approval</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="{% url 'approval_approval_list' %}">Approval List</a></li>
+              <li><a class="dropdown-item" href="{% url 'approval:approval_approval_list' %}">Approval List</a></li>
               <li><hr class="dropdown-divider"></li>
-              <a class="dropdown-item" href="{% url 'approval_approvallinereturn_create' %}">Add ApprovalReturn</a>
+              <a class="dropdown-item" href="{% url 'approval:approval_approvallinereturn_create' %}">Add ApprovalReturn</a>
               <li><hr class="dropdown-divider"></li>
-              <a class="dropdown-item" href="{% url 'approval_approvallinereturn_list' %}">ApprovalLineReturn List</a>
+              <a class="dropdown-item" href="{% url 'approval:approval_approvallinereturn_list' %}">ApprovalLineReturn List</a>
               
             
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Purchase
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href=""
+                    hx-get="{% url 'purchase:purchase_invoice_list'%}"
+                    hx-target="#content"
+                    hx-swap="innerHTML"
+                    hx-push-url="true" >Purchase</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href=""
+                    hx-get="{% url 'purchase:purchase_invoice_list'%}"
+                  hx-target="#content"
+                  hx-swap="innerHTML"
+                  hx-push-url="true">Payment</a></li>
             </ul>
           </li>
           

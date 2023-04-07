@@ -1,4 +1,4 @@
-
+{% extends "_base.html" %}
 {% block content %}
 {% load mptt_tags %}
 <ul>
@@ -17,18 +17,16 @@
 
 <table class="table table-sm table-striped">
 <tr>
-<td>ID</td><td>Link</td>
-    <td>name</td><td>Parent</td>
-    <td>slug</td>
+<td>ID</td>
+    <td>name</td>
+    <td>Parent</td>
     <td>description</td>
 </tr>
 {% for object in object_list %}
 <tr>
-    <td>{{object.pk}}</td>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
     <td>{{ object.name }}</td>
-    <td>{{object.parent}}</td>
-    <td>{{ object.slug }}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object.parent}}</td>
     <td>{{ object.description }}</td>
 </tr>
 {% endfor %}

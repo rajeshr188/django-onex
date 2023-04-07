@@ -1,10 +1,10 @@
+{%extends '_base.html'%}
 {%load crispy_forms_tags%}
 {% block content %}
 <div class="container my-3">
     <p>
         <a class="btn btn-primary" href="{% url 'product_stock_list' %}">Stock Listing</a>
         <a class="btn btn-primary" href="{% url 'product_stock_audit' %}">Stock Audit</a>
-        <a class="btn btn-primary" href="{% url 'product_stock_create' %}">Create new Stock</a>
     </p>
 </div>
 <div class="row py-3">

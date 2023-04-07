@@ -1,13 +1,13 @@
 from django.urls import path
 
 from . import views
-
+app_name = "approval"
 urlpatterns = (
     # approval urls
     path("approval/", views.ApprovalListView.as_view(), name="approval_approval_list"),
     path(
-        "approval/detail/<int:pk>/",
-        views.ApprovalDetailView.as_view(),
+        "approval/detail/<int:id>/",
+        views.approval_detail,
         name="approval_approval_detail",
     ),
     path(

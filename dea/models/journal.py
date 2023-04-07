@@ -20,11 +20,16 @@ class JournalTypes(models.TextChoices):
     PJ = "Purchase", "Purchase"
     PR = "Purchase Return", "Purchase Return"
     PY = "Payment", "Payment"
+    SI = "StockIN", "StockIN"
+    SO = "StockOUT", "StockOUT"
+    AP = "Approval", "Approval"
+    AR = "Approval Return", "Approval Return"
 
 
 class Journal(models.Model):
     created = models.DateTimeField(auto_now_add=True)
-    type = models.CharField(
+    contact = models.ForeignKey('contact.Customer', on_delete=models.CASCADE)
+    journal_type = models.CharField(
         max_length=50, choices=JournalTypes.choices, default=JournalTypes.BJ
     )
     desc = models.TextField(blank=True, null=True)

@@ -55,11 +55,6 @@ def customer_list(request):
     context["filter"] = f
     context["table"] = table
 
-    # if request.htmx:
-    #     response = render_block_to_string(
-    #         "contact/customer_list.html", "content", context, request
-    #     )
-    #     return HttpResponse(response)
     return TemplateResponse(request, "contact/customer_list.html", context)
 
 

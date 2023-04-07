@@ -2,15 +2,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.template.response import TemplateResponse
+
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from django.views.generic.base import TemplateView
-
+from utils.htmx_utils import for_htmx
 from ..filters import StockFilter
 from ..forms import (StockForm, StockTransactionForm, UniqueForm,
                      stockstatement_formset)
 from ..models import Stock, StockLot, StockStatement, StockTransaction
-
 
 @login_required
 def split_lot(request, pk):
@@ -39,6 +40,7 @@ def merge_lot(request, pk):
 
 
 @login_required
+@for_htmx(use_block="content")
 def stock_list(request):
     context = {}
     st = Stock.objects.all()
@@ -60,19 +62,9 @@ def stock_list(request):
         bal["qty"] = cqty + (in_txns["qty"] - out_txns["qty"])
         stock.append([i, bal])
     context["stock"] = stock
-    return render(
+    return TemplateResponse(
         request, "product/stock_list.html", {"filter": stock_filter, "data": context}
     )
-
-
-class StockCreateView(LoginRequiredMixin, CreateView):
-    model = Stock
-    form_class = StockForm
-
-
-class StockUpdateView(LoginRequiredMixin, UpdateView):
-    model = Stock
-    form_class = StockForm
 
 
 class StockDetailView(LoginRequiredMixin, DetailView):
@@ -87,28 +79,25 @@ class StockDeleteView(LoginRequiredMixin, DeleteView):
     model = Stock
     success_url = reverse_lazy("product_stock_list")
 
-
-class StockTransactionCreateView(LoginRequiredMixin, CreateView):
-    model = StockTransaction
-    form_class = StockTransactionForm
-
-
 class StockTransactionListView(LoginRequiredMixin, ListView):
     model = StockTransaction
 
+# stocktransactions are not meant to be creted manually but with journal ,stockjournal tobe specific
+# class StockTransactionCreateView(LoginRequiredMixin, CreateView):
+#     model = StockTransaction
+#     form_class = StockTransactionForm
 
-class StockTransactionDetailView(LoginRequiredMixin, DetailView):
-    model = StockTransaction
+# class StockTransactionDetailView(LoginRequiredMixin, DetailView):
+#     model = StockTransaction
+
+# class StockTransactionUpdateView(LoginRequiredMixin, UpdateView):
+#     model = StockTransaction
+#     form_class = StockTransactionForm
 
 
-class StockTransactionUpdateView(LoginRequiredMixin, UpdateView):
-    model = StockTransaction
-    form_class = StockTransactionForm
-
-
-class StockTransactionDeleteView(LoginRequiredMixin, DeleteView):
-    model = StockTransaction
-    success_url = reverse_lazy("product_stocktransaction_list")
+# class StockTransactionDeleteView(LoginRequiredMixin, DeleteView):
+#     model = StockTransaction
+#     success_url = reverse_lazy("product_stocktransaction_list")
 
 
 class StockStatementListView(LoginRequiredMixin, ListView):

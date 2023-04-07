@@ -1,6 +1,7 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
+{{form.media}}
 <form method="get">
     {{ filter.form.as_p }}
     <button type="submit">Search</button>

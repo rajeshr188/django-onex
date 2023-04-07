@@ -1,3 +1,4 @@
+{% extends '_base.html'%}
 {%load crispy_forms_tags%}
 {% block content %}
 {{form.media}}
@@ -17,7 +18,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for object in object_list %}
+        {% for object in filter.qs %}
         <tr>
           <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
           <td>{{ object.product_code }}</td>

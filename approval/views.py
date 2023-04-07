@@ -10,12 +10,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-
+from django.contrib.auth.decorators import login_required
 from .filters import ApprovalLineFilter
 from .forms import Approval_formset, ApprovalForm, ApprovalLineForm
 from .models import Approval, ApprovalLine, ApprovalLineReturn
 
-
+from dea.models import Journal
 # Create your views here.
 @transaction.atomic
 def post_approval(request, pk):
@@ -129,9 +129,16 @@ class ApprovalCreateView(LoginRequiredMixin, CreateView):
             self.get_context_data(form=form, approvalline_form=approvalline_form)
         )
 
+@login_required
+def approval_detail(request, id):
+    approval = get_object_or_404(Approval, id=id)
+    
+    return render(
+        request,
+        "approval/approval_detail.html",
+        {"object": approval,},
+    )
 
-class ApprovalDetailView(LoginRequiredMixin, DetailView):
-    model = Approval
 
 
 class ApprovalUpdateView(LoginRequiredMixin, UpdateView):
@@ -176,7 +183,7 @@ class ApprovalUpdateView(LoginRequiredMixin, UpdateView):
 
 class ApprovalDeleteView(LoginRequiredMixin, DeleteView):
     model = Approval
-    success_url = reverse_lazy("approval_approval_list")
+    success_url = reverse_lazy("approval:approval_approval_list")
 
 
 def ApprovalLineReturnView(request):
@@ -195,7 +202,13 @@ def ApprovalLineReturnView(request):
         for form in formset:
             result = form.save()
             if not result.posted:
-                result.post()
+                journal = Journal.objects.create(
+                    journal_type="AR",
+                    created = datetime.now(),
+                    contact = result.line.approval.contact,
+
+                )
+                result.post(journal)
                 result.posted = True
                 result.save(update_fields=["posted"])
 
@@ -228,7 +241,7 @@ class ApprovalLineReturnListView(LoginRequiredMixin, ListView):
 
 class ApprovalLineReturnDeleteView(LoginRequiredMixin, DeleteView):
     model = ApprovalLineReturn
-    success_url = reverse_lazy("approval_approvallinereturn_list")
+    success_url = reverse_lazy("approval:approval_approvallinereturn_list")
 
 
 class ApprovalLineCreateView(LoginRequiredMixin, CreateView):

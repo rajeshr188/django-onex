@@ -1,50 +1,51 @@
+{% extends "_base.html" %}
 {%load crispy_forms_tags%}
 {% block content %}
 {{form.media}}
 <p><a class="btn btn-default" href="{% url 'product_product_list' %}">Product Listing</a></p>
 <div class="row">
-<div class="col-9">
-<table class="table table-sm table-striped table-hover">
-  <thead class="thead-light">
-<tr>
-  <th>Name</th>
-  <th>category</th>
-  <th>product type</th>
-  <th>description</th>
-  <th>attributes</th>
-  <th>Action</th>
-</tr>
-</thead>
-<tbody>
-{% for object in object_list %}
-<tr>
-    <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-    <td>{{object.category}}</td>
-    <td>{{object.product_type}}</td>
-    <td>{{ object.description }}</td>
-    <td>{{object.jattributes}}</td>
-    <td><a class="btn btn-danger" href="{% url 'product_product_delete' object.id%}">Delete</a></td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-<div class="col-3">
-  <div class="sticky-top">
-
-    {% if filter %}
-      <div class="card  bg-light mb-3 text-center">
-        <div class="card-header">
-          Filter
-        </div>
-        <div class="card-body">
-          <form action="" method="get" class="form-horizontal">
-              {{filter.form|crispy}}
-          </form>
-      </div>
-    </div>
-    {% endif %}
+  <div class="col-9">
+    <table class="table table-sm table-striped table-hover">
+      <thead class="thead-light">
+      <tr>
+        <th>Name</th>
+        <th>category</th>
+        <th>product type</th>
+        <th>description</th>
+        <th>attributes</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+      <tbody>
+        {% for object in filter.qs %}
+        <tr>
+            <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+            <td>{{object.category}}</td>
+            <td>{{object.product_type}}</td>
+            <td>{{ object.description }}</td>
+            <td>{{object.jattributes}}</td>
+            <td><a class="btn btn-danger" href="{% url 'product_product_delete' object.id%}">Delete</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-</div>
+  <div class="col-3">
+    <div class="sticky-top">
+
+      {% if filter %}
+        <div class="card  bg-light mb-3 text-center">
+          <div class="card-header">
+            Filter
+          </div>
+          <div class="card-body">
+            <form action="" method="get" class="form-horizontal">
+                {{filter.form|crispy}}
+            </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -1,12 +1,13 @@
 use frames in django orm to derive running balance
 approval to sales
-create loan items,loan items to reference product variant
-deployment
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
 scrape gold rates in to rates models
 add ledger codes
 create generic journal for manual transactions especially for stock in stock out
 create a book to open and close the transactions happened during a period of time more tobe thought
-since rate and price added staighten loanitems purchase items and approval to integrate seamlessly
+since rate and price added staighten purchase items and approval to integrate seamlessly
 add validation on item forms 
 add rate to cache/
+deployment
+remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did
+combine sales and purchase app in to one order,salesoreder,invoice,deliverynote,quotation

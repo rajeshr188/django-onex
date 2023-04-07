@@ -248,10 +248,10 @@ class InvoiceItem(models.Model):
         return "%s" % self.pk
 
     def get_absolute_url(self):
-        return reverse("purchase_invoiceitem_detail", args=(self.pk,))
+        return reverse("purchase:purchase_invoiceitem_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("purchase_invoiceitem_update", args=(self.pk,))
+        return reverse("purchase:purchase_invoiceitem_update", args=(self.pk,))
 
     def get_nettwt(self):
         return (self.weight * self.touch) / 100

@@ -3,7 +3,7 @@ from django_filters.views import FilterView
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin
 from num2words import num2words
-
+from django.contrib.auth.decorators import login_required
 from ..filters import PaymentFilter
 from ..forms import PaymentForm
 from ..models import Payment
@@ -64,6 +64,16 @@ class PaymentCreateView(CreateView):
             self.get_context_data(form=form, paymentitem_form=paymentitem_form)
         )
 
+@login_required
+def payment_detail(request):
+    payment = Payment.objects.get(id=request.POST.get("id"))
+    return render(request, "purchase/payment_detail.html", {"payment": payment})
+
+@login_required
+def payment_delete(request):
+    payment = Payment.objects.get(id=request.POST.get("id"))
+    payment.delete()
+    return redirect("purchase:purchase_payment_list")
 
 def post_payment(request, pk):
     # use get_objector404

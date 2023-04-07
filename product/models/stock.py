@@ -130,11 +130,11 @@ class Stock(models.Model):
         bal["qty"] = Closing_qty + (in_txns["qty"] - out_txns["qty"])
         return bal
 
-    def get_age(self):
-        """
-        return get average of purchase date from today and average of sale dates from today then sub both
-        """
-        pass
+    # def get_age(self):
+    #     """
+    #     returns age of stock in days
+    #     """
+    #     return (self.created - self.updated_on).days
 
     def transact(self, weight, quantity, journal, movement_type):
         """
@@ -318,7 +318,7 @@ class StockLot(models.Model):
         Returns none
         """
         StockTransaction.objects.create(
-            journal=journal,
+            journal= journal,
             lot=self,
             weight=weight,
             quantity=quantity,
@@ -364,6 +364,9 @@ class StockLot(models.Model):
             return new_lot
         raise Exception("Unique lots cant be split")
 
+    def get_age(self):
+        return (timezone.now() - self.created).days
+        
 
 class Movement(models.Model):
 

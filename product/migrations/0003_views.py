@@ -41,12 +41,12 @@ class Migration(migrations.Migration):
             )
         SELECT 
             product_stock.id as stock_id,product_stock.created,
-            reorderat,barcode,huid,melting,cost,touch,wastage,tracking_type,
-            status,variant_id,stock_st.method as statement_method,
-            stock_st.created as statement_created,stock_st.sstype,
-            Coalesce(stock_st."Closing_wt",0.0),Coalesce(stock_st."Closing_qty",0),
-            Coalesce(stock_st.total_wt_in,0.0),Coalesce(stock_st.total_wt_out,0.0),
-            Coalesce(stock_st.total_qty_in,0),Coalesce(stock_st.total_qty_out,0),   
+            reorderat,
+            variant_id,stock_st.method as statement_method,
+            stock_st.created as statement_created,
+            Coalesce(stock_st."Closing_wt",0.0)as Closing_wt,Coalesce(stock_st."Closing_qty",0) as Closing_qty,
+            Coalesce(stock_st.total_wt_in,0.0)as total_wt_in,Coalesce(stock_st.total_wt_out,0.0) as total_wt_out,
+            Coalesce(stock_st.total_qty_in,0)as total_qty_in,Coalesce(stock_st.total_qty_out,0)as total_qty_out,   
 		
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
             FROM product_stocktransaction
@@ -118,9 +118,9 @@ class Migration(migrations.Migration):
 
     stockbatch_balance_sql = """
           WITH ss AS (
-         SELECT DISTINCT ON (product_stockstatement.stock_batch_id) product_stockstatement.id,
+         SELECT DISTINCT ON (product_stockstatement.lot_id) product_stockstatement.id,
             product_stockstatement.method,
-            product_stockstatement.sstype,
+           
             product_stockstatement.created,
             product_stockstatement."Closing_wt",
             product_stockstatement."Closing_qty",
@@ -129,29 +129,29 @@ class Migration(migrations.Migration):
             product_stockstatement.total_qty_in,
             product_stockstatement.total_qty_out,
             product_stockstatement.stock_id,
-            product_stockstatement.stock_batch_id
+            product_stockstatement.lot_id
            FROM product_stockstatement
-          WHERE product_stockstatement.sstype::text = 'Stockbatch'::text
-          ORDER BY product_stockstatement.stock_batch_id, product_stockstatement.created DESC
+          
+          ORDER BY product_stockstatement.lot_id, product_stockstatement.created DESC
         )
         SELECT sb.stock_id,
-            sb.id AS stock_batch_id,
+            sb.id AS lot_id,
             COALESCE(ss."Closing_wt", 0.0) AS "Closing_wt",
             COALESCE(ss."Closing_qty", 0) AS "Closing_qty",
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
                 FROM product_stocktransaction
-                WHERE product_stocktransaction.stock_batch_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_qty,
+                WHERE product_stocktransaction.lot_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.quantity), 0::bigint) AS sum
                 FROM product_stocktransaction
-                WHERE product_stocktransaction.stock_batch_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_qty,
+                WHERE product_stocktransaction.lot_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_qty,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
                 FROM product_stocktransaction
-                WHERE product_stocktransaction.stock_batch_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_wt,
+                WHERE product_stocktransaction.lot_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text = ANY (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS in_wt,
             ( SELECT COALESCE(sum(product_stocktransaction.weight), 0.0) AS sum
                 FROM product_stocktransaction
-                WHERE product_stocktransaction.stock_batch_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_wt
-        FROM product_stockbatch sb
-            LEFT JOIN ss ON ss.stock_batch_id = sb.id;
+                WHERE product_stocktransaction.lot_id = sb.id AND (ss.created IS NULL OR product_stocktransaction.created >= ss.created) AND (product_stocktransaction.movement_type_id::text <> ALL (ARRAY['P'::character varying::text, 'SR'::character varying::text, 'AD'::character varying::text, 'AR'::character varying::text]))) AS out_wt
+        FROM product_stocklot sb
+            LEFT JOIN ss ON ss.lot_id = sb.id;
         """
 
     operations = [

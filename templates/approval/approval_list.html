@@ -4,8 +4,8 @@
 
 
 <p>
-  <a class="btn btn-default" href="{% url 'approval_approval_list' %}">Approval Listing</a>
-  <a class="btn btn-primary" href="{% url 'approval_approval_create' %}">Create new Approval</a>
+  <a class="btn btn-default" href="{% url 'approval:approval_approval_list' %}">Approval Listing</a>
+  <a class="btn btn-primary" href="{% url 'approval:approval_approval_create' %}">Create new Approval</a>
 </p>
 
 <table class="table">
@@ -30,7 +30,7 @@
     <td>{{object.status}}</td>
     <td>{{object.is_billed}}</td>
     <td>{{object.posted}}</td>
-    <td><a href ="{% url 'approval_approval_delete' object.pk%}">Delete</a></td>
+    <td><a href ="{% url 'approval:approval_approval_delete' object.pk%}">Delete</a></td>
 </tr>
 {% endfor %}
 </table>

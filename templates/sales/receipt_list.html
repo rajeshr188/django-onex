@@ -7,8 +7,8 @@
   <h1 class="h2 text-center">Receipts</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-     <a class="btn btn-primary mr-2" href="{% url 'sales_receipt_create' %}" role="button">Add Receipt</a>
-     <a class="btn btn-primary mr-2" href="{% url 'sales_receipt_list' %}" role="button">Receipt List</a>
+     <a class="btn btn-primary mr-2" href="{% url 'sales:sales_receipt_create' %}" role="button">Add Receipt</a>
+     <a class="btn btn-primary mr-2" href="{% url 'sales:sales_receipt_list' %}" role="button">Receipt List</a>
      <a class="btn btn-primary" href="{% export_url 'ods' %}" role="button">export</a>
 
     </div>

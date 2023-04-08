@@ -276,11 +276,15 @@ class PricingTierProductPriceForm(forms.ModelForm):
 
 class StockJournalForm(forms.Form):
     stock = forms.ModelChoiceField(queryset=Stock.objects.all(), widget=Select2Widget)
+    class StockJournalType(models.TextChoices):
+        IN = "IN", "IN"
+        OUT = "OUT", "OUT"
+        
+    sj_type = forms.ChoiceField(choices = StockJournalType.choices,required=False,label="Type")
     # import error for datepicker
-
+    lot = forms.ModelChoiceField(queryset=StockLot.objects.all(), widget=Select2Widget,required = False)
     weight = forms.DecimalField(max_digits=10, decimal_places=3)
     quantity = forms.DecimalField(max_digits=10, decimal_places=3)
     cost_price = forms.DecimalField(max_digits=10, decimal_places=3)
     price = forms.DecimalField(max_digits=10, decimal_places=3)
-    description = forms.CharField(widget=forms.Textarea)
-
+    

@@ -128,10 +128,26 @@ def stockjournal_create(request):
         form = StockJournalForm(request.POST)
         if form.is_valid():
             journal = Journal.objects.create(
-                journal_type=JournalType.SJ,desc="Stock Journal"
+                journal_type=JournalTypes.SJ,desc="Stock Journal"
 
                 )
-            return redirect(reverse_lazy("product_stocklot_list"))
+            sj_type = form.cleaned_data["sj_type"]
+            stock = form.cleaned_data["stock"]
+            lot = form.cleaned_data["lot"]
+            weight = form.cleaned_data["weight"]
+            quantity = form.cleaned_data["quantity"]
+            cost = form.cleaned_data["cost_price"]
+            price = form.cleaned_data["price"]
+            if sj_type == 'IN':
+                lot = StockLot.objects.create(stock=stock,wt=weight,qty=quantity,
+                            variant = stock.variant,purchase_touch = cost,)
+                lot.transact(weight = weight,quantity = quantity,
+                                journal =journal,movement_type = "IN")
+            else:
+                lot.transact(weight = weight,quantity = quantity,
+                            journal = journal,movement_type = "OUT")
+           
+            return redirect("dea_journal_detail", pk=journal.pk)
     else:
         form = StockJournalForm()
     return render(request, "product/stockjournal_create.html", context={"form": form})

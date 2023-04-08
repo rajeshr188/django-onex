@@ -49,8 +49,10 @@ class Journal(models.Model):
         return self.desc
 
     def get_url_string(self):
-        if self.content_type:
+        if self.content_type and self.content_object:
             return f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail"
+        else:
+            return None
 
     @transaction.atomic()
     def transact(self, lt=[], at=[]):

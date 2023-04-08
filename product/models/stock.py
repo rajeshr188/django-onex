@@ -83,7 +83,7 @@ class Stock(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(movement_type__in=["P", "SR", "AR", "AD"])
+        st = st.filter(movement_type__in=["P", "SR", "AR", "AD","IN"])
 
         return st.aggregate(
             qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
@@ -99,7 +99,7 @@ class Stock(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(movement_type__in=["PR", "S", "A", "RM"])
+        st = st.filter(movement_type__in=["PR", "S", "A", "RM","OT"])
 
         return st.aggregate(
             qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
@@ -184,13 +184,14 @@ class StockLot(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    # rename qty and weight
     qty = models.IntegerField(default=0)
     wt = models.DecimalField(max_digits=10, decimal_places=3)
     barcode = models.CharField(
         max_length=155, null=True, blank=True, unique=True, editable=False
     )
     huid = models.CharField(max_length=6, null=True, blank=True, unique=True)
-    stock_code = models.CharField(max_length=4)
+    stock_code = models.CharField(max_length=4,blank=True,null=True)
     purchase_touch = models.DecimalField(max_digits=10, decimal_places=3)
     purchase_rate = models.DecimalField(
         max_digits=10, decimal_places=3, null=True, blank=True
@@ -272,7 +273,7 @@ class StockLot(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(movement_type__id__in=["P", "SR", "AR", "AD"])
+        st = st.filter(movement_type__id__in=["P", "SR", "AR", "AD","IN"])
 
         return st.aggregate(
             qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
@@ -286,7 +287,7 @@ class StockLot(models.Model):
         st = self.stocktransaction_set.all()
         if ls:
             st = st.filter(created__gte=ls.created)
-        st = st.filter(movement_type__id__in=["PR", "S", "A", "RM"])
+        st = st.filter(movement_type__id__in=["PR", "S", "A", "RM","OT"])
 
         return st.aggregate(
             qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),

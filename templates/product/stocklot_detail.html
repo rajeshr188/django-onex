@@ -29,15 +29,15 @@
             </tr>
             <tr>
               <td>Cost</td>
-              <td>{{object.cost}}</td>
+              <td>{{object.purchase_touch}}</td>
             </tr>
             <tr>
-              <td>Touch</td>
-              <td>{{object.touch}}</td>
+              <td>Rate</td>
+              <td>{{object.purchase_rate}}</td>
             </tr>
             <tr>
-              <td>Wastage</td>
-              <td>{{object.wastage}}</td>
+              <td>Stock</td>
+              <td><a href="{% url 'product_stock_detail' object.stock.id%}">{{object.stock}}</a></td>
             </tr>
             <tr>
               <td>Weight</td>
@@ -98,8 +98,12 @@
                       <td>{{i.id}}</td>
                       <td>{{i.activity_type}}</td>
                       <td>
+                        {%if i.journal.get_url_string is not None%}
                         <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
                           {{i.activity_type}}:{{i.journal}}</a>
+                        {%else%}
+                        <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
+                        {%endif%}
                       </td>
                       <td>{{i.weight}}</td>
                       <td>{{i.quantity}}</td>

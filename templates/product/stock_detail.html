@@ -46,81 +46,117 @@
       </div>
     </div>
   </div>
-  <div class="col-4">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Transactions</h5>
-        {%if object.stocktransaction_set %}
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>movement</th>
-              <th>journal</th>
-              <th>weight</th>
-              <th>quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {%for i in object.stocktransaction_set.all %}
-            <tr>
-              <td>{{i.id}}</td>
-              <td>{{i.movement_type.name}}</td>
-              <td>
-                <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
-                  {{i.journal.desc}}:{{i.journal.content_object}}</a>
-              </td>
-              <td>{{i.movement_type.direction}}{{i.weight}}</td>
-              <td>{{i.movement_type.direction}}{{i.quantity}}</td>
-            </tr>
-            {%endfor%}
-          </tbody>
-        </table>
-        {%endif%}
+  <div class="col">
+    <div class="accordion" id="accordionExample">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Transactions
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="card">
+              <div class="card-body">
+                
+                {%if object.stocktransaction_set %}
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>movement</th>
+                      <th>journal</th>
+                      <th>weight</th>
+                      <th>quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%for i in object.stocktransaction_set.all %}
+                    <tr>
+                      <td>{{i.id}}</td>
+                      <td>{{i.movement_type.name}}</td>
+                      <td>
+                        {%if i.journal.get_url_string is not None%}
+                        <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
+                          {{i.journal.desc}}:{{i.journal.content_object}}</a>
+                        {%else%}
+                        <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
+                        {%endif%}
+                      </td>
+                      <td>{{i.movement_type.direction}}{{i.weight}}</td>
+                      <td>{{i.movement_type.direction}}{{i.quantity}}</td>
+                    </tr>
+                    {%endfor%}
+                  </tbody>
+                </table>
+                {%endif%}
+              </div>
+            </div>  
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Statements
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="card">
+              <div class="card-body">
+                
+                {%if object.stockstatement_set%}
+                <ul class="list-group list-group-flush">
+                  {%for i in object.stockstatement_set.all%}
+                  <li class="list-group-item">
+                    {{i.created}} wt:{{i.Closing_wt}} qty:{{i.Closing_qty}}
+                  </li>
+                </ul>
+                {%endfor%}
+                {%endif%}
+              </div>
+            </div>  
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Stock Lots
+          </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="card">
+              <div class="card-body">
+                
+                {%if object.lots%}
+                <table class="table table-hover">
+                  <thead>
+                    <th>Created</th><th>Purchase</th><th>Barcode</th><th>Huid</th><th>current_balance</th>
+                  </thead>
+                  <tbody>
+                    {%for i in object.lots.all%}
+                    <tr>
+                      <td>{{i.created}}</td>
+                      <td>{{i.purchase}}</td>
+                      <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
+                      <td> {{i.huid}} </td>
+                      <td>{{i.current_balance}}</td>
+                    </tr>
+                   {%endfor%}
+                  </tbody>
+                </table>
+        
+                {%endif%}
+              </div>
+            </div>  
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-4">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Statements</h5>
-        {%if object.stockstatement_set%}
-        <ul class="list-group list-group-flush">
-          {%for i in object.stockstatement_set.all%}
-          <li class="list-group-item">
-            {{i.created}} wt:{{i.Closing_wt}} qty:{{i.Closing_qty}}
-          </li>
-        </ul>
-        {%endfor%}
-        {%endif%}
-      </div>
-    </div>
-  </div>
-  <div class="col-4">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Lots</h5>
-        {%if object.lots%}
-        <table class="table table-hover">
-          <thead>
-            <th>Created</th><th>Purchase</th><th>Barcode</th><th>Huid</th><th>current_balance</th>
-          </thead>
-          <tbody>
-            {%for i in object.lots.all%}
-            <tr>
-              <td>{{i.created}}</td>
-              <td>{{i.purchase}}</td>
-              <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
-              <td> {{i.huid}} </td>
-              <td>{{i.current_balance}}</td>
-            </tr>
-           {%endfor%}
-          </tbody>
-        </table>
-
-        {%endif%}
-      </div>
-    </div>
+   
   </div>
 </div>
 

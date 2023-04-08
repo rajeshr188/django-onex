@@ -29,8 +29,8 @@ class JournalTypes(models.TextChoices):
 class Journal(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     # this must go
-    contact = models.ForeignKey("contact.Customer", on_delete=models.CASCADE,
-    null=True,blank = True)
+    # contact = models.ForeignKey("contact.Customer", on_delete=models.CASCADE,
+    # null=True,blank = True)
     journal_type = models.CharField(
         max_length=50, choices=JournalTypes.choices, default=JournalTypes.BJ
     )

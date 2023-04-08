@@ -64,7 +64,6 @@ class Approval(models.Model):
     def post(self):
         if not self.posted:
             journal = Journal.objects.create(
-                contact=self.contact,
                 journal_type="AP",
                 content_object=self,
                 desc=f"Approval {self.id}",
@@ -82,7 +81,6 @@ class Approval(models.Model):
             jrnl = Journal.objects.create(
                 content_object=self,
                 journal_type="AP",
-                contact=self.contact,
                 desc="approval revert",
             )
             for i in self.items.all():

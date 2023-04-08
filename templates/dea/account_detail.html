@@ -34,19 +34,18 @@
 
     </div>
 </div>
-<!-- <div class="row">
+<div class="row">
     <div class="col-sm">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Debit </h5>
                 <p class="card-text">
-                    {% for i in txns%}
+                    {% for i in raw%}
                     {%if i.XactTypeCode.XactTypeCode == 'Dr'%}
                     <li>{{i.amount}} | {{i.created|date}} To : {{i.ledgerno}} via : {{i.XactTypeCode_ext.description}}</li>
                     {%endif%}
                     {%endfor%}
                 </p>
-                <a href="#" class="btn btn-primary">Add</a>
             </div>
         </div>
     </div>
@@ -55,68 +54,72 @@
             <div class="card-body">
                 <h5 class="card-title">Credit </h5>
                 <p class="card-text">
-                    {% for i in txns%}
+                    {% for i in raw%}
                     {%if i.XactTypeCode.XactTypeCode == 'Cr'%}
                     <li>{{i.amount}} | {{i.created|date}} From : {{i.ledgerno}} Via : {{i.XactTypeCode_ext.description }} </li>
                     {%endif%}
                     {%endfor%}
                 </p>
-                <a href="#" class="btn btn-primary">Add</a>
             </div>
         </div>
     </div>
-</div> -->
+</div>
 <div class="card text-right">
     <div class="card-body">
         Closing Bal: {{object.current_balance}}
         <a class="btn btn-info" href="{% url 'dea_account_audit' object.id%}">Audit</a>
     </div>
 </div>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Voucher</th>
-            <th>Desc</th>
-            <th>Dr</th>
-            <th>Cr</th>
-            <th>Balance</th>
-
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ acc_stmt.created }}</td>
-            <td>{{acc_stmt}}</td>
-            <td>Opening Balance</td>
-            <td></td>
-            <td></td>
-            <td>{{ acc_stmt.get_cb}}</td>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Voucher</th>
+                <th>Desc</th>
+                <th>Dr</th>
+                <th>Cr</th>
+                <th>Balance</th>
+    
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            <tr>
+                <td>{{ acc_stmt.created }}</td>
+                <td>{{acc_stmt}}</td>
+                <td>Opening Balance</td>
+                <td></td>
+                <td></td>
+                <td>{{ acc_stmt.get_cb}}</td>
+                
+            </tr>
+            {%for i in raw%}
+            <tr>
+                <td>{{i.created}}</td>
+                <td>
+                    <!-- this is heavy on db -->
+                    <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
+                    {{i.journal.content_object}}</a>
+                </td>
+                <td>{{i.XactTypeCode_ext.description}}</td>
+                <td>{%if i.XactTypeCode.XactTypeCode == 'Dr'%}{{i.amount}}{%else%}-{%endif%}</td>
+                <td>{%if i.XactTypeCode.XactTypeCode == 'Cr'%}{{i.amount}}{%else%}-{%endif%}</td>
+                <td>{{i.running_total}}</td>
+            </tr>
+            {%endfor%}
             
-        </tr>
-        {%for i in raw%}
-        <tr>
-            <td>{{i.created}}</td>
-            <td>
-                <!-- this is heavy on db -->
-                <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
-                {{i.journal.content_object}}</a>
-            </td>
-            <td>{{i.XactTypeCode_ext.description}}</td>
-            <td>{%if i.XactTypeCode.XactTypeCode == 'Dr'%}{{i.amount}}{%else%}-{%endif%}</td>
-            <td>{%if i.XactTypeCode.XactTypeCode == 'Cr'%}{{i.amount}}{%else%}-{%endif%}</td>
-            <td>{{i.running_total}}</td>
-        </tr>
-        {%endfor%}
-        <tr>
-            <td></td>
-            <td></td>
-            <td>Closing Balance</td>
-            <td></td>
-            <td></td>
-            <td>{{object.current_balance}}</td>
-        </tr>
-    </tbody>
-</table>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Closing Balance</td>
+                <td></td>
+                <td></td>
+                <td>{{object.current_balance}}</td>
+            </tr>
+          </tfoot>
+    </table>
+</div>
+
 {% endblock %}

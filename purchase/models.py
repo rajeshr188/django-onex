@@ -196,7 +196,6 @@ class Invoice(models.Model):
                 journal_type=JournalTypes.PJ,
                 content_object=self,
                 desc="purchase",
-                contact=self.supplier,
             )
 
             inv = "GST INV" if self.is_gst else "Non-GST INV"
@@ -232,7 +231,6 @@ class Invoice(models.Model):
             jrnl = Journal.objects.create(
                 content_object=self,
                 desc="purchase revert",
-                contact=self.supplier,
                 jouranl_type=JournalTypes.PJ,
             )
             jrnl.untransact(last_jrnl)
@@ -455,7 +453,6 @@ class Payment(models.Model):
     def post(self):
         if not self.posted:
             jrnl = Journal.objects.create(
-                contact=self.supplier,
                 journal_type=JournalTypes.PY,
                 content_object=self,
                 desc="payment",
@@ -484,7 +481,6 @@ class Payment(models.Model):
             jrnl = Journal.objects.create(
                 content_object=self,
                 desc="payment - unpost",
-                contact=self.supplier,
             )
             jrnl.untransact(last_jrnl)
             self.deallot()

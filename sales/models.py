@@ -262,7 +262,6 @@ class Invoice(models.Model):
                 journal_type=JournalTypes.SJ,
                 content_object=self,
                 desc="sale",
-                contact=self.customer,
             )
 
             inv = "GST INV" if self.is_gst else "Non-GST INV"
@@ -312,7 +311,6 @@ class Invoice(models.Model):
             jrnl = Journal.objects.create(
                 content_object=self,
                 desc="sale-revert",
-                contact=self.customer,
                 journal_type=JournalTypes.SJ,
             )
             jrnl.untransact(last_jrnl)
@@ -520,7 +518,6 @@ class Receipt(models.Model):
             jrnl = Journal.objects.create(
                 content_object=self,
                 journal_type=JournalTypes.RC,
-                contact=self.customer,
                 desc="Receipt",
             )
 
@@ -548,7 +545,6 @@ class Receipt(models.Model):
                 content_object=self,
                 desc="Receipt-Revert",
                 journal_type=JournalTypes.RC,
-                contact=self.customer,
             )
             jrnl.untransact(last_jrnl)
             self.posted = False

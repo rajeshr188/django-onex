@@ -10,10 +10,10 @@ from django.views.generic.base import TemplateView
 from utils.htmx_utils import for_htmx
 
 from ..filters import StockFilter
-from ..forms import (StockForm, StockTransactionForm, UniqueForm,
-                     stockstatement_formset)
+from ..forms import (StockForm, UniqueForm,
+                     StockJournalForm,stockstatement_formset)
 from ..models import Stock, StockLot, StockStatement, StockTransaction
-
+from dea.models import Journal,JournalTypes
 
 @login_required
 def split_lot(request, pk):
@@ -86,24 +86,6 @@ class StockTransactionListView(LoginRequiredMixin, ListView):
     model = StockTransaction
 
 
-# stocktransactions are not meant to be creted manually but with journal ,stockjournal tobe specific
-# class StockTransactionCreateView(LoginRequiredMixin, CreateView):
-#     model = StockTransaction
-#     form_class = StockTransactionForm
-
-# class StockTransactionDetailView(LoginRequiredMixin, DetailView):
-#     model = StockTransaction
-
-# class StockTransactionUpdateView(LoginRequiredMixin, UpdateView):
-#     model = StockTransaction
-#     form_class = StockTransactionForm
-
-
-# class StockTransactionDeleteView(LoginRequiredMixin, DeleteView):
-#     model = StockTransaction
-#     success_url = reverse_lazy("product_stocktransaction_list")
-
-
 class StockStatementListView(LoginRequiredMixin, ListView):
     model = StockStatement
 
@@ -140,3 +122,16 @@ def stock_select(request, q):
         Q(variant__name__icontains=q) | Q(barcode__icontains=q) | Q(huid__contains=q)
     )
     return render(request, "product/stock_select.html", context={"result": objects})
+
+def stockjournal_create(request):
+    if request.method == "POST":
+        form = StockJournalForm(request.POST)
+        if form.is_valid():
+            journal = Journal.objects.create(
+                journal_type=JournalType.SJ,desc="Stock Journal"
+
+                )
+            return redirect(reverse_lazy("product_stocklot_list"))
+    else:
+        form = StockJournalForm()
+    return render(request, "product/stockjournal_create.html", context={"form": form})

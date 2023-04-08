@@ -29,7 +29,7 @@
 
 <div class="card">
     <div class="card-body">
-        Opening Bal: {{ object.accountstatements.latest.get_cb}} | {{object.accountstatements.latest.created}}
+        Opening Bal: {{ acc_stmt.get_cb}} | {{acc_stmt.created}}
         <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
 
     </div>
@@ -87,18 +87,20 @@
     </thead>
     <tbody>
         <tr>
-            <td>{{ object.accountstatements.latest.created }}</td>
-            <td>{{object.accountstatements.latest}}</td>
+            <td>{{ acc_stmt.created }}</td>
+            <td>{{acc_stmt}}</td>
             <td>Opening Balance</td>
             <td></td>
             <td></td>
-            <td>{{ object.accountstatements.latest.get_cb}}</td>
+            <td>{{ acc_stmt.get_cb}}</td>
             
         </tr>
         {%for i in raw%}
         <tr>
             <td>{{i.created}}</td>
-            <td><a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
+            <td>
+                <!-- this is heavy on db -->
+                <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
                 {{i.journal.content_object}}</a>
             </td>
             <td>{{i.XactTypeCode_ext.description}}</td>

@@ -7,7 +7,7 @@ urlpatterns = (
     # approval urls
     path("approval/", views.ApprovalListView.as_view(), name="approval_approval_list"),
     path(
-        "approval/detail/<int:id>/",
+        "approval/detail/<int:pk>/",
         views.approval_detail,
         name="approval_approval_detail",
     ),

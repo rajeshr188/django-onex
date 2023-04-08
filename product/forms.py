@@ -250,12 +250,6 @@ class UniqueForm(forms.Form):
     weight = forms.DecimalField(max_digits=10, decimal_places=3)
 
 
-class StockTransactionForm(forms.ModelForm):
-    class Meta:
-        model = StockTransaction
-        exclude = ["created", "updated"]
-
-
 class StockStatementForm(forms.Form):
     stock = forms.ModelChoiceField(queryset=Stock.objects.all(), widget=Select2Widget)
 
@@ -279,3 +273,14 @@ class PricingTierProductPriceForm(forms.ModelForm):
     class Meta:
         model = PricingTierProductPrice
         fields = "__all__"
+
+class StockJournalForm(forms.Form):
+    stock = forms.ModelChoiceField(queryset=Stock.objects.all(), widget=Select2Widget)
+    # import error for datepicker
+
+    weight = forms.DecimalField(max_digits=10, decimal_places=3)
+    quantity = forms.DecimalField(max_digits=10, decimal_places=3)
+    cost_price = forms.DecimalField(max_digits=10, decimal_places=3)
+    price = forms.DecimalField(max_digits=10, decimal_places=3)
+    description = forms.CharField(widget=forms.Textarea)
+

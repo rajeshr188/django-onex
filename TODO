@@ -1,4 +1,3 @@
-use windows frames in django orm to derive running balance
 approval to sales
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
 scrape gold rates in to rates models

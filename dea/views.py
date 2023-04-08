@@ -168,6 +168,7 @@ class AccountDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ct = super().get_context_data(**kwargs)
         acc = ct["object"]
+        
         if acc.accountstatements.exists():
             acc_stmt = acc.accountstatements.latest()
             ls_created = acc_stmt.created
@@ -178,7 +179,7 @@ class AccountDetailView(DetailView):
             acc_stmt = None
 
         ct["acc_stmt"] = acc_stmt
-        op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
+        # op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
         txns = txns.annotate(
             credit_or_debit=Case(
                 When(XactTypeCode__XactTypeCode="Cr", then=Value(1)),
@@ -191,11 +192,9 @@ class AccountDetailView(DetailView):
                 order_by="created",
             ),
         ).order_by("created")
-        print(txns.query)
-        print(f"txns: {txns.first().running_total}")
-        running_bal = op_bal
+        # running_bal = op_bal
         ct["raw"] = txns
-
+        ct["last"] = txns.last()
         return ct
 
 

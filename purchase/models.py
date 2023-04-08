@@ -216,7 +216,7 @@ class Invoice(models.Model):
                     "xacttypecode": "Dr",
                     "xacttypecode_ext": "CRPU",
                     "account": self.supplier.account,
-                    "amount": money + tax,
+                    "amount": money + tax if self.is_gst() else money,
                 }
             ]
             jrnl.transact(lt, at)

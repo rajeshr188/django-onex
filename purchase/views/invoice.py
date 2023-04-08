@@ -70,7 +70,7 @@ def purchase_update(request, id=None):
 
 @login_required
 def purchase_detail_view(request, pk=None):
-    obj = Invoice.objects.get(id=id)
+    obj = Invoice.objects.get(pk=pk)
     context = {
         "object": obj,
         "previous": obj.get_previous(),

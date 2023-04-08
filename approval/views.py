@@ -133,8 +133,8 @@ class ApprovalCreateView(LoginRequiredMixin, CreateView):
 
 
 @login_required
-def approval_detail(request, id):
-    approval = get_object_or_404(Approval, id=id)
+def approval_detail(request, pk):
+    approval = get_object_or_404(Approval, pk=pk)
 
     return render(
         request,

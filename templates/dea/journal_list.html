@@ -24,7 +24,7 @@
                 <td>
                     {%if i.content_type %}
                     <a
-                        href="{% url ''|add:i.get_url_string id=i.object_id %}">
+                        href="{% url ''|add:i.get_url_string pk=i.object_id %}">
                         {{i.content_type.app_label}}-{{i.content_type.model}} {{i.content_object}}
                     </a>
                     {%else%}

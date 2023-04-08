@@ -98,11 +98,10 @@ class Account(models.Model):
             return None
 
     def txns(self, since=None):
-        # window = Window(expression=Sum("amount"), order_by=F("created").desc())
         if since:
-            txns = self.accounttransactions.filter(created__gte=since)
+            txns = self.accounttransactions.filter(created__gte=since).select_related('journal','journal__content_type','Account','XactTypeCode','XactTypeCode_ext')
         else:
-            txns = self.accounttransactions.all()
+            txns = self.accounttransactions.all().select_related('journal','journal__content_type','Account','XactTypeCode','XactTypeCode_ext')
         return txns
 
     def total_credit(self, since=None):
@@ -128,31 +127,32 @@ class Account(models.Model):
         )
 
     def current_balance(self):
-        ls = self.latest_stmt()
-        if ls is None:
-            cb = Balance()
-            ac_txn = self.txns()
-        else:
-            cb = ls.get_cb()
-            ac_txn = self.txns(since=ls.created)
+        return self.total_credit() - self.total_debit()
+        # ls = self.latest_stmt()
+        # if ls is None:
+        #     cb = Balance()
+        #     ac_txn = self.txns()
+        # else:
+        #     cb = ls.get_cb()
+        #     ac_txn = self.txns(since=ls.created)
 
-        credit = (
-            ac_txn.filter(
-                XactTypeCode_ext__in=["LT", "LR", "IR", "CPU", "CRPU", "RCT", "AC"]
-            )
-            .values("amount_currency")
-            .annotate(total=Sum("amount"))
-        )
-        debit = (
-            ac_txn.filter(XactTypeCode_ext__in=["LG", "LP", "IP", "PYT", "CRSL", "AD"])
-            .values("amount_currency")
-            .annotate(total=Sum("amount"))
-        )
-        credit_bal = Balance([Money(r["total"], r["amount_currency"]) for r in credit])
+        # credit = (
+        #     ac_txn.filter(
+        #         XactTypeCode_ext__in=["LT", "LR", "IR", "CPU", "CRPU", "RCT", "AC"]
+        #     )
+        #     .values("amount_currency")
+        #     .annotate(total=Sum("amount"))
+        # )
+        # debit = (
+        #     ac_txn.filter(XactTypeCode_ext__in=["LG", "LP", "IP", "PYT", "CRSL", "AD"])
+        #     .values("amount_currency")
+        #     .annotate(total=Sum("amount"))
+        # )
+        # credit_bal = Balance([Money(r["total"], r["amount_currency"]) for r in credit])
 
-        debit_bal = Balance([Money(r["total"], r["amount_currency"]) for r in debit])
-        bal = cb + (credit_bal - debit_bal)
-
+        # debit_bal = Balance([Money(r["total"], r["amount_currency"]) for r in debit])
+        # bal = cb + (credit_bal - debit_bal)
+        # print(f"cb:{cb} credit_bal:{credit_bal} debit_bal:{debit_bal} bal:{bal}")
         return bal
 
 

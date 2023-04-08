@@ -228,15 +228,11 @@ urlpatterns += (
         views.StockLotDetailView.as_view(),
         name="product_stocklot_detail",
     ),
-    # path(
-    #     "stock/update/<int:pk>/",
-    #     views.StockUpdateView.as_view(),
-    #     name="product_stock_update",
-    # ),
     path("stock/split/<int:pk>", views.split_lot, name="product_stock_split"),
     path("stock/merge/<int:pk>", views.merge_lot, name="product_stock_merge"),
     path("stock/audit/", views.audit_stock, name="product_stock_audit"),
     path("stock/search/", views.stock_select, name="stock_select"),
+    path("stock/journal/create/", views.stockjournal_create, name="stock_journal_create"),
 )
 urlpatterns += (
     # urls for Stocktransaction
@@ -245,21 +241,6 @@ urlpatterns += (
         views.StockTransactionListView.as_view(),
         name="product_stocktransaction_list",
     ),
-    # path(
-    #     "stocktransaction/create/",
-    #     views.StockTransactionCreateView.as_view(),
-    #     name="product_stocktransaction_create",
-    # ),
-    # path(
-    #     "stocktransaction/detail/<int:pk>/",
-    #     views.StockTransactionDetailView.as_view(),
-    #     name="product_stocktransaction_detail",
-    # ),
-    # path(
-    #     "stocktransaction/update/<int:pk>/",
-    #     views.StockTransactionUpdateView.as_view(),
-    #     name="product_stocktransaction_update",
-    # ),
 )
 urlpatterns += (
     path(

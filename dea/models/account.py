@@ -99,9 +99,21 @@ class Account(models.Model):
 
     def txns(self, since=None):
         if since:
-            txns = self.accounttransactions.filter(created__gte=since).select_related('journal','journal__content_type','Account','XactTypeCode','XactTypeCode_ext')
+            txns = self.accounttransactions.filter(created__gte=since).select_related(
+                "journal",
+                "journal__content_type",
+                "Account",
+                "XactTypeCode",
+                "XactTypeCode_ext",
+            )
         else:
-            txns = self.accounttransactions.all().select_related('journal','journal__content_type','Account','XactTypeCode','XactTypeCode_ext')
+            txns = self.accounttransactions.all().select_related(
+                "journal",
+                "journal__content_type",
+                "Account",
+                "XactTypeCode",
+                "XactTypeCode_ext",
+            )
         return txns
 
     def total_credit(self, since=None):

@@ -9,7 +9,6 @@ def create_loan_journal(loan):
     amount = Money(loan.loanamount, "INR")
     interest = Money(loan.interest_amt(), "INR")
     if loan.customer.type == "Su":
-        
         jrnl = Journal.objects.create(
             type=JournalTypes.LT, content_object=loan, desc="Loan Taken"
         )
@@ -66,6 +65,7 @@ def create_loan_journal(loan):
             },
         ]
     jrnl.transact(lt, at)
+
 
 def create_release_journal(release):
     amount = Money(self.loan.loanamount, "INR")
@@ -124,6 +124,7 @@ def create_release_journal(release):
         ]
     jrnl.transact(lt, at)
 
+
 def create_adjustment_journal(adjustment):
     """
     loan adjustment can be applied to principal or interest
@@ -133,15 +134,22 @@ def create_adjustment_journal(adjustment):
     amount = Money(self.amount_received, "INR")
     if adjustment.as_interest:
         jrnl_desc = "Loan Interest Adjustment"
-        ledgerno_dr = "Interest Payable" if adjustment.customer.customer_type == 'Re' else "Interest Received"
+        ledgerno_dr = (
+            "Interest Payable"
+            if adjustment.customer.customer_type == "Re"
+            else "Interest Received"
+        )
     else:
         jrnl_desc = "Loan Principle Adjustment"
-        ledgerno_dr = "Loans" if adjustment.customer.customer_type == 'Re' else "Loans & Advances"
-        
-     jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
-    
+        ledgerno_dr = (
+            "Loans" if adjustment.customer.customer_type == "Re" else "Loans & Advances"
+        )
+
+    jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
+
     lt = [
-        {"ledgerno": "Cash", "ledgerno_dr": ledgerno_dr, "amount": amount},]
+        {"ledgerno": "Cash", "ledgerno_dr": ledgerno_dr, "amount": amount},
+    ]
     at = [
         {
             "ledgerno": "Interest Payable",
@@ -151,13 +159,14 @@ def create_adjustment_journal(adjustment):
             "amount": amount,
         },
     ]
-    
+
     jrnl.transact(lt, at)
+
 
 def create_sales_journal(sale):
     jrnl = Journal.objects.create(
-                type=JournalTypes.SJ, content_object=self, desc="sale"
-            )
+        type=JournalTypes.SJ, content_object=self, desc="sale"
+    )
 
     inv = "GST INV" if self.is_gst else "Non-GST INV"
     cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
@@ -168,11 +177,13 @@ def create_sales_journal(sale):
         {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
     ]
     if sale.is_gst:
-        lt.append({
-            "ledgerno": "Output Igst",
-            "ledgerno_dr": "Sundry Debtors",
-            "amount": tax,
-        })
+        lt.append(
+            {
+                "ledgerno": "Output Igst",
+                "ledgerno_dr": "Sundry Debtors",
+                "amount": tax,
+            }
+        )
     at = [
         {
             "ledgerno": "Sales",
@@ -184,14 +195,13 @@ def create_sales_journal(sale):
     ]
     jrnl.transact(lt, at)
 
+
 def create_receipt_journal(receipt):
     jrnl = Journal.objects.create(
-                content_object=self, type=JournalTypes.RC, desc="Receipt"
-            )
+        content_object=self, type=JournalTypes.RC, desc="Receipt"
+    )
     money = Money(self.total, self.type)
-    lt = [
-        {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}
-    ]
+    lt = [{"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}]
     at = [
         {
             "ledgerno": "Sundry Debtors",
@@ -203,12 +213,13 @@ def create_receipt_journal(receipt):
     ]
     jrnl.transact(lt, at)
 
+
 def create_purchase_journal(purchase):
-    
-    jrnl = Journal.objects.create(type=JournalTypes.PJ,
-                    content_object=self, desc='purchase')
-    
-    ledgers = dict(list(Ledger.objects.values_list('name', 'id')))
+    jrnl = Journal.objects.create(
+        type=JournalTypes.PJ, content_object=self, desc="purchase"
+    )
+
+    ledgers = dict(list(Ledger.objects.values_list("name", "id")))
     money = Money(self.balance, self.balancetype)
     try:
         self.supplier.account
@@ -216,33 +227,56 @@ def create_purchase_journal(purchase):
         self.supplier.save()
     if self.is_gst:
         inv = ledgers["GST INV"]
-        tax = Money(self.get_gst(), 'INR')
+        tax = Money(self.get_gst(), "INR")
         amount = money + tax
     else:
         inv = ledgers["Non-GST INV"]
         amount = money
-        tax = Money(0,'INR')
+        tax = Money(0, "INR")
 
     lt = [
-            {'ledgerno': ledgers['Sundry Creditors'],'ledgerno_dr':inv,'amount':money},
-            {'ledgerno': ledgers['Sundry Creditors'], 'ledgerno_dr': ledgers['Input IGST'], 'amount': tax}, 
-        ]
+        {"ledgerno": ledgers["Sundry Creditors"], "ledgerno_dr": inv, "amount": money},
+        {
+            "ledgerno": ledgers["Sundry Creditors"],
+            "ledgerno_dr": ledgers["Input IGST"],
+            "amount": tax,
+        },
+    ]
     at = [
-            {'ledgerno': ledgers['Sundry Creditors'],'xacttypecode':'Dr','xacttypecode_ext':'CRPU',
-                'account':self.supplier.account.id, 'amount':amount}
-        ]
- 
-    jrnl.transact(lt,at)
+        {
+            "ledgerno": ledgers["Sundry Creditors"],
+            "xacttypecode": "Dr",
+            "xacttypecode_ext": "CRPU",
+            "account": self.supplier.account.id,
+            "amount": amount,
+        }
+    ]
+
+    jrnl.transact(lt, at)
     return jrnl
 
+
 def create_payment_jounral(payment):
-    jrnl = Journal.objects.create(type = JournalTypes.PY,
-                content_object = self,
-                desc = 'payment')
-            
+    jrnl = Journal.objects.create(
+        type=JournalTypes.PY, content_object=self, desc="payment"
+    )
+
     money = Money(self.total, self.type)
-    lt = [{'ledgerno':ledgers['Cash'],'ledgerno_dr':ledgers['Sundry Creditors'],'amount':money}]
-    at = [{'ledgerno':ledgers['Sundry Creditors'],'xacttypecode':'Cr','xacttypecode_ext':'PYT',
-            'account':self.supplier.account.id,'amount':money}]
-    jrnl.transact(lt,at)
+    lt = [
+        {
+            "ledgerno": ledgers["Cash"],
+            "ledgerno_dr": ledgers["Sundry Creditors"],
+            "amount": money,
+        }
+    ]
+    at = [
+        {
+            "ledgerno": ledgers["Sundry Creditors"],
+            "xacttypecode": "Cr",
+            "xacttypecode_ext": "PYT",
+            "account": self.supplier.account.id,
+            "amount": money,
+        }
+    ]
+    jrnl.transact(lt, at)
     return jrnl

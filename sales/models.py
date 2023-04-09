@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from sympy import content
 
-from approval.models import ApprovalLineReturn
+from approval.models import ReturnItem
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from invoice.models import PaymentTerm
@@ -247,9 +247,10 @@ class Invoice(models.Model):
         if not self.posted:
             if self.approval:
                 """
-                if any approval return and bill"""
+                if any approval, return and bill
+                """
                 for i in self.approval.items.filter(status="Pending"):
-                    apr = ApprovalLineReturn.objects.create(
+                    apr = ReturnItem.objects.create(
                         line=i, quantity=i.quantity, weight=i.weight
                     )
                     apr.post()
@@ -341,6 +342,9 @@ class InvoiceItem(models.Model):
     )
     invoice = models.ForeignKey(
         "sales.Invoice", on_delete=models.CASCADE, related_name="saleitems"
+    )
+    approval_item = models.ForeignKey(
+        "approval.ApprovalLine", on_delete=models.CASCADE, null=True, blank=True
     )
 
     class Meta:

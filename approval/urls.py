@@ -5,7 +5,7 @@ from . import views
 app_name = "approval"
 urlpatterns = (
     # approval urls
-    path("approval/", views.ApprovalListView.as_view(), name="approval_approval_list"),
+    path("approval/", views.approval_list, name="approval_approval_list"),
     path(
         "approval/detail/<int:pk>/",
         views.approval_detail,
@@ -13,17 +13,17 @@ urlpatterns = (
     ),
     path(
         "approval/create/",
-        views.ApprovalCreateView.as_view(),
+        views.approval_create,
         name="approval_approval_create",
     ),
     path(
         "approval/update/<int:pk>/",
-        views.ApprovalUpdateView.as_view(),
+        views.approval_update,
         name="approval_approval_update",
     ),
     path(
         "approval/delete/<int:pk>/",
-        views.ApprovalDeleteView.as_view(),
+        views.approval_delete,
         name="approval_approval_delete",
     ),
     path("approval/post/<int:pk>/", views.post_approval, name="approval_post"),
@@ -32,38 +32,72 @@ urlpatterns = (
 
 urlpatterns += (
     path(
-        "approvalline/create/",
-        views.ApprovalLineCreateView.as_view(),
+        "approval/<int:approval_pk>/line/create/",
+        views.approvalline_create_update,
         name="approval_approvalline_create",
     ),
     path(
-        "approvallinereturn/",
-        views.ApprovalLineReturnView,
-        name="approval_approvallinereturn_create",
+        "approvalline/detail/<int:pk>/",
+        views.approval_line_detail,
+        name="approval_approvalline_detail",
     ),
     path(
-        "approvallinereturnlist/",
-        views.ApprovalLineReturnListView.as_view(),
-        name="approval_approvallinereturn_list",
+        "approval/<int:approval_pk>/line/<int:pk>/update/",
+        views.approvalline_create_update,
+        name="approval_approvalline_update",
     ),
     path(
-        "approvallinereturn/delete/<int:pk>/",
-        views.ApprovalLineReturnDeleteView.as_view(),
-        name="approval_approvallinereturn_delete",
+        "approvalline/<int:pk>/delete/",
+        views.approvalline_delete,
+        name="approval_approvalline_delete",
     ),
-    path(
-        "approvallinereturn/post/<int:pk>/",
-        views.post_approvallinereturn,
-        name="approvallinereturn_post",
-    ),
-    path(
-        "approvallinereturn/unpost/<int:pk>/",
-        views.unpost_approvallinereturn,
-        name="approvallinereturn_unpost",
-    ),
+)
+
+urlpatterns += (
     path(
         "approval/convert_sale/<int:pk>/",
         views.convert_sales,
         name="approval_convert_sale",
+    ),
+)
+
+urlpatterns += (
+    path(
+        "return/",
+        views.return_list,
+        name="approval_return_list",
+    ),
+    path(
+        "return/create/",
+        views.return_create,
+        name="approval_return_create",
+    ),
+    path(
+        "return/update/<int:pk>/",
+        views.return_update,
+        name="approval_return_update",
+    ),
+    path(
+        "return/delete/<int:pk>/",
+        views.return_delete,
+        name="approval_return_delete",
+    ),
+)
+
+urlpatterns += (
+    path(
+        "returnitem/create/",
+        views.returnitem_create,
+        name="approval_returnitem_create",
+    ),
+    path(
+        "returnitem/update/<int:pk>/",
+        views.returnitem_update,
+        name="approval_returnitem_update",
+    ),
+    path(
+        "returnitem/delete/<int:pk>/",
+        views.returnitem_delete,
+        name="approval_returnitem_delete",
     ),
 )

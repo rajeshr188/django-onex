@@ -3,19 +3,20 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.forms import modelformset_factory
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 
 from dea.models import Journal
+from utils.htmx_utils import for_htmx
 
 from .filters import ApprovalLineFilter
-from .forms import Approval_formset, ApprovalForm, ApprovalLineForm
-from .models import Approval, ApprovalLine, ApprovalLineReturn
+from .forms import ApprovalForm, ApprovalLineForm, ReturnForm, ReturnItemForm
+from .models import Approval, ApprovalLine, Return, ReturnItem
 
 
 # Create your views here.
@@ -31,20 +32,6 @@ def unpost_approval(request, pk):
     approval = get_object_or_404(Approval, pk=pk)
     approval.unpost()
     return redirect(approval)
-
-
-@transaction.atomic
-def post_approvallinereturn(request, pk):
-    approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
-    approval_lr.post()
-    return redirect(approval_lr.line.approval)
-
-
-@transaction.atomic
-def unpost_approvallinereturn(request, pk):
-    approval_lr = get_object_or_404(ApprovalLineReturn, pk=pk)
-    approval_lr.unpost()
-    return redirect(approval_lr.line.approval)
 
 
 from invoice.models import PaymentTerm
@@ -81,62 +68,31 @@ def convert_sales(request, pk):
     return redirect(sale)
 
 
-class ApprovalListView(LoginRequiredMixin, ListView):
-    model = Approval
-
-
-class ApprovalCreateView(LoginRequiredMixin, CreateView):
-    model = Approval
-    form_class = ApprovalForm
-
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        approvalline_form = Approval_formset()
-
-        return self.render_to_response(
-            self.get_context_data(form=form, approvalline_form=approvalline_form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        approvalline_form = Approval_formset(self.request.POST)
-
-        if form.is_valid() and approvalline_form.is_valid():
-            return self.form_valid(form, approvalline_form)
-        else:
-            return self.form_invalid(form, approvalline_form)
-
-    @transaction.atomic()
-    def form_valid(self, form, approvalline_form):
-        form.instance.created_by = self.request.user
-        self.object = form.save()
-        approvalline_form.instance = self.object
-        items = approvalline_form.save()
-        qty = 0
-        wt = 0
-        for i in items:
-            qty += i.quantity
-            wt += i.weight
-        self.object.total_wt = wt
-        self.object.total_qty = qty
-        self.object.save(update_fields=["total_wt", "total_qty"])
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, approvalline_form):
-        return self.render_to_response(
-            self.get_context_data(form=form, approvalline_form=approvalline_form)
-        )
+@login_required
+def approval_list(request):
+    approvals = Approval.objects.all()
+    return render(request, "approval/approval_list.html", {"object_list": approvals})
 
 
 @login_required
+def approval_create(request):
+    if request.method == "POST":
+        form = ApprovalForm(request.POST)
+        if form.is_valid():
+            approval = form.save(commit=False)
+            approval.save()
+            return redirect(approval)
+    else:
+        form = ApprovalForm()
+    return render(request, "approval/approval_form.html", {"form": form})
+
+
+@login_required
+@for_htmx(use_block="content")
 def approval_detail(request, pk):
     approval = get_object_or_404(Approval, pk=pk)
 
-    return render(
+    return TemplateResponse(
         request,
         "approval/approval_detail.html",
         {
@@ -145,108 +101,211 @@ def approval_detail(request, pk):
     )
 
 
-class ApprovalUpdateView(LoginRequiredMixin, UpdateView):
-    model = Approval
-    form_class = ApprovalForm
-
-    def get_context_data(self, **kwargs):
-        data = super(ApprovalUpdateView, self).get_context_data(**kwargs)
-        if self.object.posted:
-            raise Http404
-        if self.request.POST:
-            data["approvalline_form"] = Approval_formset(
-                self.request.POST, instance=self.object
-            )
-        else:
-            data["approvalline_form"] = Approval_formset(instance=self.object)
-        return data
-
-    @transaction.atomic()
-    def form_valid(self, form):
-        print("form valid")
-        context = self.get_context_data()
-        approvalline_form = context["approvalline_form"]
-        self.object = form.save()
-        items = approvalline_form.save()
-        qty = 0
-        wt = 0
-        for i in items:
-            qty += i.quantity
-            wt += i.weight
-        self.object.total_wt = wt
-        self.object.total_qty = qty
-        self.object.save(update_fields=["total_wt", "total_qty"])
-
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, approvalline_form):
-        return self.render_to_response(
-            self.get_context_data(form=form, approvalline_form=approvalline_form)
-        )
-
-
-class ApprovalDeleteView(LoginRequiredMixin, DeleteView):
-    model = Approval
-    success_url = reverse_lazy("approval:approval_approval_list")
-
-
-def ApprovalLineReturnView(request):
-    approvalline_list = ApprovalLine.objects.filter(status="Pending")
-    approvalline_filter = ApprovalLineFilter(request.GET, queryset=approvalline_list)
-
-    approvallinereturn_formset = modelformset_factory(
-        ApprovalLineReturn,
-        fields=("line", "quantity", "weight"),
-        extra=approvalline_filter.qs.count(),
-        max_num=approvalline_filter.qs.count(),
-    )
+@login_required
+def approval_update(request, pk):
+    approval = get_object_or_404(Approval, pk=pk)
     if request.method == "POST":
-        formset = approvallinereturn_formset(request.POST)
-        # stocktranx from approval to available
-        for form in formset:
-            result = form.save()
-            if not result.posted:
-                journal = Journal.objects.create(
-                    journal_type="AR",
-                    created=datetime.now(),
-                    contact=result.line.approval.contact,
-                )
-                result.post(journal)
-                result.posted = True
-                result.save(update_fields=["posted"])
-
-    elif request.method == "GET":
-        contact = request.GET.get("approval__contact", False)
-        if contact:
-            formset = approvallinereturn_formset(
-                initial=approvalline_filter.qs.values("product", "quantity", "weight")
-            )
-
-            for form in formset:
-                form.fields["line"].queryset = ApprovalLine.objects.filter(
-                    status="Pending", approval__contact_id=contact
-                )
-        else:
-            formset = approvallinereturn_formset(
-                queryset=ApprovalLineReturn.objects.none()
-            )
-
+        form = ApprovalForm(request.POST, instance=approval)
+        if form.is_valid():
+            approval = form.save(commit=False)
+            approval.save()
+            return redirect(approval)
+    else:
+        form = ApprovalForm(instance=approval)
     return render(
         request,
-        "approval/approvallinereturn.html",
-        {"filter": approvalline_filter, "formset": formset},
+        "approval/approval_form.html",
+        {"form": form, "approval": approval},
     )
 
 
-class ApprovalLineReturnListView(LoginRequiredMixin, ListView):
-    model = ApprovalLineReturn
+@login_required
+def approval_delete(request, pk):
+    approval = get_object_or_404(Approval, pk=pk)
+    if request.method == "POST":
+        approval.delete()
+        return redirect("approval:approval_list")
+    return render(request, "approval/approval_delete.html", {"object": approval})
 
 
-class ApprovalLineReturnDeleteView(LoginRequiredMixin, DeleteView):
-    model = ApprovalLineReturn
-    success_url = reverse_lazy("approval:approval_approvallinereturn_list")
+@login_required
+def approvalline_create_update(request, approval_pk, pk=None):
+    approval = get_object_or_404(Approval, pk=approval_pk)
+    if pk:
+        line = get_object_or_404(ApprovalLine, pk=pk)
+    else:
+        line = None
+    if request.method == "POST":
+        form = ApprovalLineForm(request.POST or None, instance=line)
+        if form.is_valid():
+            approvalline = form.save(commit=False)
+            approvalline.approval = approval
+            approvalline.save()
+            if request.htmx:
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "approvalChanged"}
+                )
+            return redirect("approval:approval_approvalline_detail", pk=approvalline.pk)
+    else:
+        form = ApprovalLineForm()
+    return render(
+        request,
+        "approval/approvalline_form.html",
+        {"form": form, "approval": approval},
+    )
 
 
-class ApprovalLineCreateView(LoginRequiredMixin, CreateView):
-    model = ApprovalLine
-    form_class = ApprovalLineForm
+@login_required
+def approval_line_detail(request, pk):
+    approvalline = get_object_or_404(ApprovalLine, pk=pk)
+    return render(
+        request,
+        "approval/approvalline_detail.html",
+        {
+            "item": approvalline,
+        },
+    )
+
+
+@login_required
+def approvalline_delete(request, pk):
+    approvalline = get_object_or_404(ApprovalLine, pk=pk)
+    if request.method == "POST":
+        approvalline.delete()
+        if request.htmx:
+            return HttpResponse(status=204, headers={"HX-Trigger": "approvalChanged"})
+    raise Http404()
+
+
+@login_required
+def approvalline_update(request, pk):
+    approvalline = get_object_or_404(ApprovalLine, pk=pk)
+    if request.method == "POST":
+        form = ApprovalLineForm(request.POST, instance=approvalline)
+        if form.is_valid():
+            approvalline = form.save(commit=False)
+            approvalline.save()
+            if request.htmx:
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "approvalChanged"}
+                )
+            return redirect(approvalline.approval)
+    else:
+        form = ApprovalLineForm(instance=approvalline)
+    return render(
+        request,
+        "approval/approvalline_form.html",
+        {"form": form, "approvalline": approvalline},
+    )
+
+
+@login_required
+def return_list(request):
+    returns = Return.objects.all()
+    return render(request, "approval/return_list.html", {"object_list": returns})
+
+
+@login_required
+def return_create(request, pk):
+    approval = get_object_or_404(Approval, pk=pk)
+    if request.method == "POST":
+        form = ReturnForm(request.POST)
+        if form.is_valid():
+            ret = form.save(commit=False)
+            ret.approval = approval
+            ret.save()
+            return redirect(ret)
+    else:
+        form = ReturnForm()
+    return render(
+        request,
+        "approval/return_form.html",
+        {"form": form, "approval": approval},
+    )
+
+
+@login_required
+def return_detail(request, pk):
+    ret = get_object_or_404(Return, pk=pk)
+    return render(
+        request,
+        "approval/return_detail.html",
+        {
+            "object": ret,
+        },
+    )
+
+
+@login_required
+def return_update(request, pk):
+    ret = get_object_or_404(Return, pk=pk)
+    if request.method == "POST":
+        form = ReturnForm(request.POST, instance=ret)
+        if form.is_valid():
+            ret = form.save(commit=False)
+            ret.save()
+            return redirect(ret)
+    else:
+        form = ReturnForm(instance=ret)
+    return render(request, "approval/return_form.html", {"form": form, "ret": ret})
+
+
+@login_required
+def return_delete(request, pk):
+    ret = get_object_or_404(Return, pk=pk)
+    if request.method == "POST":
+        ret.delete()
+        return redirect(ret.approval)
+    return render(request, "approval/return_delete.html", {"object": ret})
+
+
+# create fbv for returnitem_create
+@login_required
+def returnitem_create(request, pk):
+    ret = get_object_or_404(Return, pk=pk)
+    if request.method == "POST":
+        form = ReturnForm(request.POST)
+        if form.is_valid():
+            retitem = form.save(commit=False)
+            retitem.return_obj = ret
+            retitem.save()
+            return redirect(retitem)
+    else:
+        form = ReturnForm()
+    return render(
+        request,
+        "approval/return_form.html",
+        {"form": form, "return_obj": ret},
+    )
+
+
+# create fbv for returnitem_update
+@login_required
+def returnitem_update(request, pk):
+    retitem = get_object_or_404(ReturnItem, pk=pk)
+    if request.method == "POST":
+        form = ReturnForm(request.POST, instance=retitem)
+        if form.is_valid():
+            retitem = form.save(commit=False)
+            retitem.save()
+            return redirect(retitem.return_obj)
+    else:
+        form = ReturnForm(instance=retitem)
+    return render(
+        request,
+        "approval/return_form.html",
+        {"form": form, "retitem": retitem},
+    )
+
+
+@login_required
+def returnitem_delete(request, pk):
+    retitem = get_object_or_404(ReturnItem, pk=pk)
+    if request.method == "POST":
+        retitem.delete()
+        return redirect(retitem.return_obj)
+    return render(
+        request,
+        "approval/return_delete.html",
+        {"object": retitem},
+    )

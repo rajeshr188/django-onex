@@ -1,12 +1,11 @@
 from django import forms
-from django.forms import inlineformset_factory, modelformset_factory
 from django_select2.forms import Select2Widget
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
 from product.models import StockLot
 
-from .models import Approval, ApprovalLine, ApprovalLineReturn
+from .models import Approval, ApprovalLine, Return, ReturnItem
 
 
 class ApprovalForm(forms.ModelForm):
@@ -33,15 +32,24 @@ class ApprovalLineForm(forms.ModelForm):
         fields = ["product", "quantity", "weight", "touch"]
 
 
-Approval_formset = inlineformset_factory(
-    Approval,
-    ApprovalLine,
-    fields=("approval", "product", "quantity", "weight", "touch"),
-    form=ApprovalLineForm,
-    extra=1,
-    can_delete=True,
-)
+class ReturnForm(forms.ModelForm):
+    contact = forms.ModelChoiceField(
+        queryset=Customer.objects.all(),
+        # widget=Select2Widget
+        widget=CustomerWidget,
+    )
 
-approvallinereturn_formset = modelformset_factory(
-    ApprovalLineReturn, fields=("line", "quantity", "weight")
-)
+    class Meta:
+        model = Return
+        fields = "__all__"
+
+
+class ReturnItemForm(forms.ModelForm):
+    line_item = forms.ModelChoiceField(
+        queryset=ApprovalLine.objects.all(),
+        widget=Select2Widget,
+    )
+
+    class Meta:
+        model = ReturnItem
+        fields = "__all__"

@@ -1,68 +1,74 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<p>
-  <a class="btn btn-default" href="{% url 'approval:approval_approval_list' %}">Approval Listing</a>
-  {% if not object.posted%}
-  <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
-  <a class="btn btn-danger" href="{% url 'approval:approval_approval_delete' object.id%}">Delete</a>
-  {%endif%}
-  
-</p>
-<table class="table">
-<tr><td>id</td><td>{{ object.id }}</td></tr>
-<tr><td>Person</td><td>{{ object.contact }}</td></tr>
-<tr><td>Total Quantity</td><td>{{ object.total_qty }}</td></tr>
-<tr><td>Total Weight</td><td>{{ object.total_wt }}</td></tr>
-<tr><td>Created</td><td>{{ object.created }}</td></tr>
-<tr><td>Status</td><td>{{ object.status }}</td></tr>
-<tr><td>Is_billed</td><td>{{object.is_billed}}</td></tr>
-{% if object.is_billed %}
-<tr><td>Bill No</td><td><a href="{% url 'sales:sales_invoice_detail' object.bill %}">{{object.bill}}</a></td></tr>
-{%endif%}
-<tr>
-    <td>Posted</td>
-    <td>
-    {%if object.posted%}
-    <a class="btn btn-danger" href="{% url 'approval:approval_unpost' object.pk%}">Unpost</a>
-    {%else%}
-    <a class ="btn btn-success" href="{% url 'approval:approval_post' object.pk%}">Post</a>
+<div id = "content" hx-trigger="approvalChanged from:body" hx-get="{% url 'approval:approval_approval_detail' object.id%}">
+  <p>
+    <a class="btn btn-default" href="{% url 'approval:approval_approval_list' %}">Approval Listing</a>
+    {% if not object.posted%}
+    <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval</a>
+    <a class="btn btn-danger" href="{% url 'approval:approval_approval_delete' object.id%}">Delete</a>
     {%endif%}
-    </td>
-  </tr>
-</table>
-<table class="table-sm table-bordered table-striped">
+    
+  </p>
+  <div class="row">
+    <div class="col-md-4">
+      <h3>Approval Details</h3>
+      <table class="table table-striped table-sm">
+        <tr><td>id</td><td>{{ object.id }}</td></tr>
+        <tr><td>Person</td><td>{{ object.contact }}</td></tr>
+        <tr><td>Total Quantity</td><td>{{ object.get_total_wt }}</td></tr>
+        <tr><td>Total Weight</td><td>{{ object.get_total_qty }}</td></tr>
+        <tr><td>Created</td><td>{{ object.created_at|date }}</td></tr>
+        <tr><td>Status</td><td>{{ object.status }}</td></tr>
+        <tr><td>Is_billed</td><td>{{object.is_billed}}</td></tr>
+        {% if object.is_billed %}
+        <tr><td>Bill No</td><td><a href="{% url 'sales:sales_invoice_detail' object.bill %}">{{object.bill}}</a></td></tr>
+        {%endif%}
+        <tr>
+            <td>Posted</td>
+            <td>
+            {%if object.posted%}
+            <a class="btn btn-danger" href="{% url 'approval:approval_unpost' object.pk%}">Unpost</a>
+            {%else%}
+            <a class ="btn btn-success" href="{% url 'approval:approval_post' object.pk%}">Post</a>
+            {%endif%}
+            </td>
+          </tr>
+        </table>
+        {% if object.status == 'Pending' and object.posted %}
+        <form action="{% url 'sales:sales_invoice_create' %}" method="GET">
+          {% csrf_token %}
+          <input type="hidden" name="approvalid" value={{object.id}}>
+          <input class = "btn btn-primary" type="submit" value='Create POS'>
+        </form>
+        {%endif%}
+    </div>
+    <div class="col-md-8">
+      <p>
+        <h3>Approval Items</h3>
+      <a hx-get="{% url 'approval:approval_approvalline_create' object.id%}"
+          hx-target="#items" hx-swap="beforeend" class="btn btn-primary">
+       Add Items</a>
+      </p> 
+      <table  class="table-sm table-bordered table-striped">
+        <thead>
+          <th></th>
+          <th>id</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Weight</th>
+          <th>Status</th>
+          <th>Action</th>
+        </thead>
+        <tbody id = "items" hx-target = "closest tr" hx-swap="outerHTML">
+          {% for i in object.items.all %}
+            {%include 'approval/approvalline_detail.html' with item=i%}
+          {%endfor%}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-  <thead>
-    <th>id</th>
-    <th>Product</th>
-    <th>Quantity</th>
-    <th>Weight</th>
-    <th>Status</th>
-  </thead>
-  <tbody>
-    <tr></tr>
-    {% for i in object.items.all %}
-    <tr>
-      <!-- <td><input type="checkbox" name="approvalline" value={{i.id}}></td> -->
-      <td>{{i.id}}</td>
-      <td> {{i.product}} </td>
-      <td> {{i.quantity}} </td>
-      <td> {{i.weight}} </td>
-      <td> {{i.status}}</td>
-    </tr>
-    {%endfor%}
-  </tbody>
-
-</table>
-{% if object.status == 'Pending' and object.posted %}
-<!-- <form action="{% url 'sales:sales_invoice_create' %}?cid={{object.approval.contact.id|urlencode}}" method="GET"> -->
-
-<form action="{% url 'sales:sales_invoice_create' %}" method="GET">
-  {% csrf_token %}
-  <input type="hidden" name="approvalid" value={{object.id}}>
-  <input class = "btn btn-primary" type="submit" value='Create POS'>
-</form>
-{%endif%}
 
 {% endblock %}

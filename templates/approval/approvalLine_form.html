@@ -1,11 +1,16 @@
-{% extends "_base.html" %}
-{% load static %}
 {% load crispy_forms_tags %}
-{% block content %}
-<p><a class="btn btn-default" href="{% url 'approval:approval_approvalline_list' %}">Approval Line Listing</a></p>
-<form method="post">
-{% csrf_token %}
-{{form|crispy}}
-<button class="btn btn-primary" type="submit">Submit</button>
-</form>
-{% endblock %}
+
+<tr >
+    
+    <td>{{form.media}}</td>
+    {% for field in form.visible_fields%}
+    <td>{{field|as_crispy_field}}</td>
+    {%endfor%}
+    <td></td>
+    <td>
+        <a class="btn btn-success" hx-post="{% url 'approval:approval_approvalline_create' approval.id %}" hx-include="closest tr">Save</a>
+        <a class="btn btn-danger" hx-get="">Cancel</a>
+    </td>
+</tr>
+
+

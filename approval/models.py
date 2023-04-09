@@ -98,8 +98,26 @@ class Approval(models.Model):
             self.status = "Complete"
         self.save()
 
+    def update_billed_status(self):
+        if any(i.status == "Billed" for i in self.items.all()):
+            self.is_billed = True
+        else:
+            self.is_billed = False
+        self.save()
 
-# rename to lineitem tobe referenced by return line and invoice line
+    def get_total_qty(self):
+        return self.items.aggregate(t=Sum("quantity"))["t"]
+
+    def get_total_wt(self):
+        return self.items.aggregate(t=Sum("weight"))["t"]
+
+    def update_total(self):
+        self.total_wt = self.get_total_wt()
+        self.total_qty = self.get_total_wt()
+        self.update_billed_status()
+        self.save()
+
+
 class ApprovalLine(models.Model):
     product = models.ForeignKey(
         StockLot, related_name="approval_lineitems", on_delete=models.CASCADE
@@ -112,12 +130,14 @@ class ApprovalLine(models.Model):
         Approval, on_delete=models.CASCADE, related_name="items"
     )
     # newly added based on chatgpt suggestion
-    # invoice = models.ForeignKey('sales.Invoice', on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(
+        "sales.Invoice", on_delete=models.CASCADE, null=True, blank=True
+    )
 
     status = models.CharField(
         max_length=30,
         choices=(
-            ("Pending", "Pending"),
+            ("Partially Returned", "Partially Returned"),
             ("Returned", "Returned"),
             ("Billed", "Billed"),
         ),
@@ -130,6 +150,10 @@ class ApprovalLine(models.Model):
 
     def __str__(self):
         return f"{self.id}"
+
+    def get_hx_edit_url(self):
+        kwargs = {"approval_pk": self.approval.id, "pk": self.pk}
+        return reverse("approval:approval_approvalline_update", kwargs=kwargs)
 
     def balance(self):
         return (
@@ -165,38 +189,6 @@ class ApprovalLine(models.Model):
         self.approval.update_status()
 
 
-# rename to Return for better clarity
-class ApprovalLineReturn(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
-    line = models.ForeignKey(ApprovalLine, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0)
-    weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
-    posted = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ("id",)
-
-    def __str__(self):
-        return f"{self.line.product}"
-
-    def post(self, journal):
-        if not self.posted:
-            self.line.product.transact(self.weight, self.quantity, journal, "AR")
-            self.posted = True
-            self.save(update_fields=["posted"])
-            self.line.update_status()
-
-    def unpost(self):
-        if self.posted:
-            self.line.product.transact(self.weight, self.quantity, journal, "A")
-            self.posted = False
-            self.save(update_fields=["posted"])
-            self.line.update_status()
-
-
 class Return(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -214,7 +206,7 @@ class Return(models.Model):
         return f"Return #{self.id} for {self.contact}"
 
 
-class ReturnLineItem(models.Model):
+class ReturnItem(models.Model):
     return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
     line_item = models.ForeignKey(ApprovalLine, on_delete=models.CASCADE)
     quantity = models.IntegerField()
@@ -224,3 +216,17 @@ class ReturnLineItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product.name} ({self.line_item.price} each)"
+
+    def post(self, journal):
+        if not self.posted:
+            self.line.product.transact(self.weight, self.quantity, journal, "AR")
+            self.posted = True
+            self.save(update_fields=["posted"])
+            self.line.update_status()
+
+    def unpost(self):
+        if self.posted:
+            self.line.product.transact(self.weight, self.quantity, journal, "A")
+            self.posted = False
+            self.save(update_fields=["posted"])
+            self.line.update_status()

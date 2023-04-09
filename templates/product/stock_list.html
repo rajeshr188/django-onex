@@ -9,31 +9,32 @@
 </div>
 <div class="row py-3">
     <div class="col-9 py-3">
-        <table class="table table-sm table-responsive">
-            <tr>
-                
-                <td>created</td>
-                <td>Id</td>
-                <td>Product Code</td>
-                <td>Product</td>
-                <td>Weight</td>
-                <td>Quantity</td>
-                <td>updated_on</td>
-               
-            </tr>
-            {% for object,bal in data.stock %}
-            <tr>
-                <td>{{object.created|date}}</td>
-                <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
-                
-                <td>{{object.variant.product_code}}</td>
-                <td><a href="{% url 'product_productvariant_detail' object.variant.id%}">{{object.variant.name}}</a></td>
-                <td>{{bal.wt}}</td>
-                <td>{{bal.qty}}</td>
-                <td>{{object.updated_on}}</td>
-                
-            </tr>
-            {% endfor %}
+        <table class="table table-sm table-responsive table-striped table-bordered">
+            <tbody>
+                <tr>  
+                    <td>created</td>
+                    <td>Id</td>
+                    <td>Product Code</td>
+                    <td>Product</td>
+                    <td>Weight</td>
+                    <td>Quantity</td>
+                    <td>updated_on</td>
+                   
+                </tr>
+                {% for object,bal in data.stock %}
+                <tr>
+                    <td>{{object.created|date}}</td>
+                    <td><a href="{{object.get_absolute_url}}">{{object.id}}</a></td>
+                    
+                    <td>{{object.variant.product_code}}</td>
+                    <td><a href="{% url 'product_productvariant_detail' object.variant.id%}">{{object.variant.name}}</a></td>
+                    <td>{{bal.wt}}</td>
+                    <td>{{bal.qty}}</td>
+                    <td>{{object.updated_on}}</td>
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
     <div class="col-3">

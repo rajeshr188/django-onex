@@ -98,7 +98,7 @@ class MovementAdminForm(forms.ModelForm):
 
 class MovementAdmin(admin.ModelAdmin):
     form = MovementAdminForm
-    list_display = ["id","name", "direction"]
+    list_display = ["id", "name", "direction"]
 
 
 admin.site.register(Movement, MovementAdmin)

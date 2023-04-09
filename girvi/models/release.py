@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.shortcuts import reverse
 from django.utils import timezone
 
 from contact.models import Customer
@@ -47,7 +48,8 @@ class Release(models.Model):
     def post(self):
         amount = Money(self.loan.loanamount, "INR")
         interest = Money(self.interestpaid, "INR")
-        if self.customer.type == "Su":
+        if self.loan.loan_type == self.LoanType.TAKEN:
+            # if self.customer.type == "Su":
             jrnl = Journal.objects.create(content_object=self, desc="Loan Repaid")
             lt = [
                 {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},

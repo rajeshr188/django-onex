@@ -29,6 +29,11 @@ class InvoiceForm(forms.ModelForm):
             }
         )
     )
+    # pull in rate from rate model
+    # rate = forms.NumberInput(
+    #     attrs={
+    #         "class": "form-control"
+    #     })
 
     class Meta:
         model = Invoice

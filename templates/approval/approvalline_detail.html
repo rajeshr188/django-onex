@@ -1,0 +1,19 @@
+<!-- this will be the partial template called by htmx for approvalline detail -->
+<!-- Path: templates\approval\approvalline_detail.html -->
+<tr >
+    <td><input type="checkbox" name="approvalline" value={{item.id}}></td>
+    <td>{{item.id}}</td>
+    <td> {{item.product}} </td>
+    <td> {{item.quantity}} </td>
+    <td> {{item.weight}} </td>
+    <td> {{item.status}}</td>
+    <td>
+        <a class="btn btn-danger" 
+            hx-confirm="Are you sure?"
+            hx-post="{% url 'approval:approval_approvalline_delete' item.id%}">
+            Delete</a>
+        <a class = "btn btn-secondary"
+            hx-get="{{item.get_hx_edit_url}}">
+            Edit</a>
+    </td>
+</tr>

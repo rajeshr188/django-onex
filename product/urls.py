@@ -232,7 +232,9 @@ urlpatterns += (
     path("stock/merge/<int:pk>", views.merge_lot, name="product_stock_merge"),
     path("stock/audit/", views.audit_stock, name="product_stock_audit"),
     path("stock/search/", views.stock_select, name="stock_select"),
-    path("stock/journal/create/", views.stockjournal_create, name="stock_journal_create"),
+    path(
+        "stock/journal/create/", views.stockjournal_create, name="stock_journal_create"
+    ),
 )
 urlpatterns += (
     # urls for Stocktransaction

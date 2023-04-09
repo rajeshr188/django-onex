@@ -147,11 +147,22 @@ class Loan(models.Model):
     )
     lid = models.IntegerField(blank=True, null=True)
     loanid = models.CharField(max_length=255, unique=True)
+    has_collateral = models.BooleanField(default=False)
+
+    class LoanType(models.TextChoices):
+        TAKEN = "Taken", "Taken"
+        GIVEN = "Given", "Given"
+
+    loan_type = models.CharField(
+        max_length=10, choices=LoanType.choices, default=LoanType.GIVEN
+    )
+    # ----------------legacy---------------------------------
     itype = (("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze"))
     itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
     itemdesc = models.TextField(max_length=100)
     itemweight = models.DecimalField(max_digits=10, decimal_places=2)
     itemvalue = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # --------------------mustgo--------------------------------------
     loanamount = models.PositiveIntegerField()
     interestrate = models.PositiveSmallIntegerField(default=2)
     interest = models.PositiveIntegerField()
@@ -257,8 +268,9 @@ class Loan(models.Model):
             self.customer.save()
         amount = Money(self.loanamount, "INR")
         interest = Money(self.interest_amt(), "INR")
-        if self.customer.type == "Su":
-            print(self.customer.type)
+        if self.loan_type == self.LoanType.TAKEN:
+            # if self.customer.type == "Su":
+
             jrnl = Journal.objects.create(
                 type=JournalTypes.LT, content_object=self, desc="Loan Taken"
             )
@@ -341,6 +353,8 @@ class Loan(models.Model):
             self.itemvalue = self.loanamount + 500
         self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
+        # add logic to get the total loan amount if has_collateram from the loanitems
+
         super().save(*args, **kwargs)
         return self
 
@@ -355,15 +369,6 @@ class LoanItem(models.Model):
     item = models.ForeignKey(
         "product.ProductVariant", on_delete=models.SET_NULL, null=True
     )
-    # class Itemtype(models.TextChoices):
-    #     G = "Gold"
-    #     S = "Silver"
-    #     B = "Bronze"
-
-    # itemtype = models.CharField(
-    #     max_length=20, choices=Itemtype.choices, default=Itemtype.G
-    # )
-    # item = models.CharField(max_length=20)
     qty = models.PositiveIntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
 
@@ -412,7 +417,8 @@ class Adjustment(models.Model):
     def post(self):
         amount = Money(self.amount_received, "INR")
         interest = 0 if not self.as_interest else Money(self.amount_received, "INR")
-        if self.customer.type == "Su":
+        if self.loan_type == Loan.LoanTypes.TAKEN:
+            # if self.customer.type == "Su":
             jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
             lt = [
                 {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},

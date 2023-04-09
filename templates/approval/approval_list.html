@@ -1,8 +1,6 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-
-
 <p>
   <a class="btn btn-default" href="{% url 'approval:approval_approval_list' %}">Approval Listing</a>
   <a class="btn btn-primary" href="{% url 'approval:approval_approval_create' %}">Create new Approval</a>
@@ -24,7 +22,7 @@
 <tr>
     <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
     <td>{{ object.created_at }}</td>
-    <td>{{object.contact}}/{{object.contact.id}}</td>
+    <td><a href="{% url 'contact_customer_detail' object.contact.id%}">{{object.contact}}</a></td>
     <td>{{ object.total_qty }}</td>
     <td>{{ object.total_wt }}</td>
     <td>{{object.status}}</td>

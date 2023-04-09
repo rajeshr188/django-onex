@@ -1,19 +1,21 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from django.views.generic.base import TemplateView
 
+from dea.models import Journal, JournalTypes
 from utils.htmx_utils import for_htmx
 
 from ..filters import StockFilter
-from ..forms import (StockForm, UniqueForm,
-                     StockJournalForm,stockstatement_formset)
+from ..forms import (StockForm, StockJournalForm, UniqueForm,
+                     stockstatement_formset)
 from ..models import Stock, StockLot, StockStatement, StockTransaction
-from dea.models import Journal,JournalTypes
+
 
 @login_required
 def split_lot(request, pk):
@@ -111,7 +113,7 @@ def audit_stock(request):
     stocks = Stock.objects.all()
     for i in stocks:
         i.audit()
-    return reverse_lazy("product_stock_list")
+    return HttpResponseRedirect(reverse("product_stock_list"))
 
 
 from django.db.models import Q
@@ -123,14 +125,14 @@ def stock_select(request, q):
     )
     return render(request, "product/stock_select.html", context={"result": objects})
 
+
 def stockjournal_create(request):
     if request.method == "POST":
         form = StockJournalForm(request.POST)
         if form.is_valid():
             journal = Journal.objects.create(
-                journal_type=JournalTypes.SJ,desc="Stock Journal"
-
-                )
+                journal_type=JournalTypes.SJ, desc="Stock Journal"
+            )
             sj_type = form.cleaned_data["sj_type"]
             stock = form.cleaned_data["stock"]
             lot = form.cleaned_data["lot"]
@@ -138,15 +140,28 @@ def stockjournal_create(request):
             quantity = form.cleaned_data["quantity"]
             cost = form.cleaned_data["cost_price"]
             price = form.cleaned_data["price"]
-            if sj_type == 'IN':
-                lot = StockLot.objects.create(stock=stock,wt=weight,qty=quantity,
-                            variant = stock.variant,purchase_touch = cost,)
-                lot.transact(weight = weight,quantity = quantity,
-                                journal =journal,movement_type = "IN")
+            if sj_type == "IN":
+                lot = StockLot.objects.create(
+                    stock=stock,
+                    wt=weight,
+                    qty=quantity,
+                    variant=stock.variant,
+                    purchase_touch=cost,
+                )
+                lot.transact(
+                    weight=weight,
+                    quantity=quantity,
+                    journal=journal,
+                    movement_type="IN",
+                )
             else:
-                lot.transact(weight = weight,quantity = quantity,
-                            journal = journal,movement_type = "OUT")
-           
+                lot.transact(
+                    weight=weight,
+                    quantity=quantity,
+                    journal=journal,
+                    movement_type="OUT",
+                )
+
             return redirect("dea_journal_detail", pk=journal.pk)
     else:
         form = StockJournalForm()

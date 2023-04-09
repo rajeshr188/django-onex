@@ -154,7 +154,7 @@ def approvalline_create_update(request, approval_pk, pk=None):
     return render(
         request,
         "approval/approvalline_form.html",
-        {"form": form, "approval": approval,"url":url},
+        {"form": form, "approval": approval,"url":url,"line":line},
     )
 
 

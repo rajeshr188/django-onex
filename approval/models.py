@@ -151,6 +151,9 @@ class ApprovalLine(models.Model):
     def __str__(self):
         return f"{self.id}"
 
+    def get_absolute_url(self):
+        return reverse("approval:approval_approvalline_detail", args=(self.pk,))
+
     def get_hx_edit_url(self):
         kwargs = {"approval_pk": self.approval.id, "pk": self.pk}
         return reverse("approval:approval_approvalline_update", kwargs=kwargs)

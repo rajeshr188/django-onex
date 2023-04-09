@@ -1,15 +1,15 @@
 {% load crispy_forms_tags %}
-
-<tr >
-    
+<tr id="row">  
     <td>{{form.media}}</td>
     {% for field in form.visible_fields%}
     <td>{{field|as_crispy_field}}</td>
     {%endfor%}
     <td></td>
     <td>
-        <a class="btn btn-success" hx-post="{% if url %}{{ url }}{% else %}.{% endif%}" hx-include="closest tr">Save</a>
-        <a class="btn btn-danger" hx-get="">Cancel</a>
+        <a class="btn btn-success" 
+            hx-post="{% if url %}{{ url }}{% else %}.{% endif%}" 
+            hx-include="closest tr">Save</a>
+        <a class="btn btn-danger" {%if line%}hx-get="{{line.get_absolute_url}}" {%else%}_="on click transition opacity to 0 then remove #row" {%endif%}>Cancel</a>
     </td>
 </tr>
 

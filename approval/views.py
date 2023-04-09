@@ -131,10 +131,12 @@ def approval_delete(request, pk):
 @login_required
 def approvalline_create_update(request, approval_pk, pk=None):
     approval = get_object_or_404(Approval, pk=approval_pk)
+    url = reverse("approval:approval_approvalline_create", kwargs={"approval_pk": approval.pk})
+    line = None
     if pk:
         line = get_object_or_404(ApprovalLine, pk=pk)
-    else:
-        line = None
+        url = line.get_hx_edit_url()
+        
     print(f"approval_pk: {approval_pk}, pk: {pk}, line: {line}")
     form = ApprovalLineForm(request.POST or None, instance=line)
     if request.method == "POST":
@@ -152,7 +154,7 @@ def approvalline_create_update(request, approval_pk, pk=None):
     return render(
         request,
         "approval/approvalline_form.html",
-        {"form": form, "approval": approval},
+        {"form": form, "approval": approval,"url":url},
     )
 
 
@@ -176,28 +178,6 @@ def approvalline_delete(request, pk):
         if request.htmx:
             return HttpResponse(status=204, headers={"HX-Trigger": "approvalChanged"})
     raise Http404()
-
-
-@login_required
-def approvalline_update(request, pk):
-    approvalline = get_object_or_404(ApprovalLine, pk=pk)
-    if request.method == "POST":
-        form = ApprovalLineForm(request.POST, instance=approvalline)
-        if form.is_valid():
-            approvalline = form.save(commit=False)
-            approvalline.save()
-            if request.htmx:
-                return HttpResponse(
-                    status=204, headers={"HX-Trigger": "approvalChanged"}
-                )
-            return redirect(approvalline.approval)
-    else:
-        form = ApprovalLineForm(instance=approvalline)
-    return render(
-        request,
-        "approval/approvalline_form.html",
-        {"form": form, "approvalline": approvalline},
-    )
 
 
 @login_required

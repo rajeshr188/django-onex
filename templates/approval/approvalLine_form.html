@@ -8,7 +8,7 @@
     {%endfor%}
     <td></td>
     <td>
-        <a class="btn btn-success" hx-post="{% url 'approval:approval_approvalline_create' approval.id %}" hx-include="closest tr">Save</a>
+        <a class="btn btn-success" hx-post="{% if url %}{{ url }}{% else %}.{% endif%}" hx-include="closest tr">Save</a>
         <a class="btn btn-danger" hx-get="">Cancel</a>
     </td>
 </tr>

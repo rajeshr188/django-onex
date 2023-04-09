@@ -135,8 +135,10 @@ def approvalline_create_update(request, approval_pk, pk=None):
         line = get_object_or_404(ApprovalLine, pk=pk)
     else:
         line = None
+    print(f"approval_pk: {approval_pk}, pk: {pk}, line: {line}")
+    form = ApprovalLineForm(request.POST or None, instance=line)
     if request.method == "POST":
-        form = ApprovalLineForm(request.POST or None, instance=line)
+        
         if form.is_valid():
             approvalline = form.save(commit=False)
             approvalline.approval = approval
@@ -146,8 +148,7 @@ def approvalline_create_update(request, approval_pk, pk=None):
                     status=204, headers={"HX-Trigger": "approvalChanged"}
                 )
             return redirect("approval:approval_approvalline_detail", pk=approvalline.pk)
-    else:
-        form = ApprovalLineForm()
+    
     return render(
         request,
         "approval/approvalline_form.html",

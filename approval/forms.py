@@ -41,7 +41,7 @@ class ReturnForm(forms.ModelForm):
 
     class Meta:
         model = Return
-        fields = "__all__"
+        fields = ["contact"]
 
 
 class ReturnItemForm(forms.ModelForm):
@@ -52,4 +52,4 @@ class ReturnItemForm(forms.ModelForm):
 
     class Meta:
         model = ReturnItem
-        fields = "__all__"
+        fields = ["line_item", "quantity", "weight"]

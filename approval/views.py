@@ -137,19 +137,16 @@ def approvalline_create_update(request, approval_pk, pk=None):
         line = get_object_or_404(ApprovalLine, pk=pk)
         url = line.get_hx_edit_url()
         
-    print(f"approval_pk: {approval_pk}, pk: {pk}, line: {line}")
     form = ApprovalLineForm(request.POST or None, instance=line)
-    if request.method == "POST":
-        
-        if form.is_valid():
-            approvalline = form.save(commit=False)
-            approvalline.approval = approval
-            approvalline.save()
-            if request.htmx:
-                return HttpResponse(
-                    status=204, headers={"HX-Trigger": "approvalChanged"}
-                )
-            return redirect("approval:approval_approvalline_detail", pk=approvalline.pk)
+    if request.method == "POST"and form.is_valid():
+        approvalline = form.save(commit=False)
+        approvalline.approval = approval
+        approvalline.save()
+        if request.htmx:
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "approvalChanged"}
+            )
+        return redirect("approval:approval_approvalline_detail", pk=approvalline.pk)
     
     return render(
         request,
@@ -187,13 +184,13 @@ def return_list(request):
 
 
 @login_required
-def return_create(request, pk):
-    approval = get_object_or_404(Approval, pk=pk)
+def return_create(request):
+    
     if request.method == "POST":
         form = ReturnForm(request.POST)
         if form.is_valid():
             ret = form.save(commit=False)
-            ret.approval = approval
+            ret.created_by = request.user
             ret.save()
             return redirect(ret)
     else:
@@ -201,14 +198,15 @@ def return_create(request, pk):
     return render(
         request,
         "approval/return_form.html",
-        {"form": form, "approval": approval},
+        {"form": form},
     )
 
 
 @login_required
+@for_htmx(use_block="content")
 def return_detail(request, pk):
     ret = get_object_or_404(Return, pk=pk)
-    return render(
+    return TemplateResponse(
         request,
         "approval/return_detail.html",
         {
@@ -242,51 +240,53 @@ def return_delete(request, pk):
 
 # create fbv for returnitem_create
 @login_required
-def returnitem_create(request, pk):
-    ret = get_object_or_404(Return, pk=pk)
-    if request.method == "POST":
-        form = ReturnForm(request.POST)
-        if form.is_valid():
-            retitem = form.save(commit=False)
-            retitem.return_obj = ret
-            retitem.save()
-            return redirect(retitem)
-    else:
-        form = ReturnForm()
+def returnitem_create_update(request, return_pk,pk = None):
+    ret = get_object_or_404(Return, pk=return_pk)
+    retitem = None
+    url = reverse("approval:approval_returnitem_create", kwargs={"return_pk": ret.pk})
+    if pk:
+        retitem = get_object_or_404(ReturnItem, pk=pk)
+        url = retitem.get_hx_edit_url()
+    
+    form = ReturnItemForm(request.POST or None, instance=retitem)
+    if request.method == "POST" and form.is_valid():
+        retitem = form.save(commit=False)
+        retitem.return_obj = ret
+        retitem.save()
+        if request.htmx:
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "returnChanged"}
+            )
+        return redirect("approval:approval_returnitem_detail", pk=retitem.pk)
+    
     return render(
         request,
-        "approval/return_form.html",
-        {"form": form, "return_obj": ret},
+        "approval/returnitem_form.html",
+        {"form": form, "return_obj": ret,"line":retitem,"url":url},
     )
-
-
-# create fbv for returnitem_update
-@login_required
-def returnitem_update(request, pk):
-    retitem = get_object_or_404(ReturnItem, pk=pk)
-    if request.method == "POST":
-        form = ReturnForm(request.POST, instance=retitem)
-        if form.is_valid():
-            retitem = form.save(commit=False)
-            retitem.save()
-            return redirect(retitem.return_obj)
-    else:
-        form = ReturnForm(instance=retitem)
-    return render(
-        request,
-        "approval/return_form.html",
-        {"form": form, "retitem": retitem},
-    )
-
 
 @login_required
 def returnitem_delete(request, pk):
     retitem = get_object_or_404(ReturnItem, pk=pk)
     if request.method == "POST":
         retitem.delete()
+        if request.htmx:
+            return HttpResponse(status=204, headers={"HX-Trigger": "returnChanged"})
         return redirect(retitem.return_obj)
     return render(
         request,
         "approval/return_delete.html",
         {"object": retitem},
     )
+
+@login_required
+def returnitem_detail(request, pk):
+    ret = get_object_or_404(ReturnItem, pk=pk)
+    return render(
+        request,
+        "approval/returnline_detail.html",
+        {
+            "item": ret,
+        },
+    )
+

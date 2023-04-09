@@ -1,0 +1,71 @@
+{%extends '_base.html'%}
+{%block content%}
+
+<div id = "content" hx-trigger="returnChanged from:body" hx-get="{% url 'approval:approval_return_detail' object.id%}">
+    <h1>Approval Return Details</h1>
+    <p>
+        <a class="btn btn-default" href="{% url 'approval:approval_return_list'%}">Approval ReturnListing</a>
+        {% if not object.posted%}
+        <a class="btn btn-primary" href="{{object.get_update_url}}">Edit Approval Return</a>
+        <a class="btn btn-danger" href="{% url 'approval:approval_return_delete' object.id%}">Delete</a>
+        {%endif%}
+        <a class="btn btn-primary" href="{% url 'approval:approval_return_create'%}">Add new </a>
+    </p>
+    <div class="row">
+        <div class="col">
+            <h3>Approval Return</h3>
+            <table class="table">
+                <tr>
+                    <td>ID</td>
+                    <td>{{object}}</td>
+                </tr>
+                <tr>
+                    <td>created</td>
+                    <td>{{object.created_at}}</td>
+                </tr>
+                <tr>
+                    <td>Customer</td>
+                    <td><a href="{% url 'contact_customer_detail' object.contact.id%}">{{object.contact}}</a></td>
+                </tr>
+                <tr>
+                    <td>quantity</td>
+                    <td>{{object.get_total_qty}}</td>
+                </tr>
+                <tr>
+                    <td>weight</td>
+                    <td>{{object.get_total_wt}}</td>
+                </tr>
+                <tr>
+                    <td>Posted</td>
+                    <td>{{object.posted}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="col">
+    
+            <h3>Approval Return Items</h3>
+            <p>
+                <a class="btn btn-primary" 
+                    hx-target="#items" hx-swap="beforeend"
+                    hx-get="{% url 'approval:approval_returnitem_create' object.id%}">Add Return Item</a>
+            </p>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <td></td>
+                        <td>Item</td>
+                        <td>Quantity</td>
+                        <td>Weight</td>
+                    </tr>
+                </thead>           
+                <tbody id = "items" hx-target = "closest tr" hx-swap="outerHTML">
+                    {%for item in object.returnitem_set.all%}
+                      {%include 'approval/returnline_detail.html' with item=item%}
+                    {%endfor%}
+                  </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{%endblock%}

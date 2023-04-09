@@ -1,0 +1,14 @@
+<tr id="items">
+    <td><a href="{% url 'approval:approval_approvalline_detail' item.line_item.id%}">{{item.line_item}}</a></td>
+    <td>{{item.quantity}}</td>
+    <td>{{item.weight}}</td>
+    <td>
+        <a class="btn btn-danger" 
+            hx-confirm="Are you sure?"
+            hx-post="{% url 'approval:approval_returnitem_delete' item.id%}">
+            Delete</a>
+        <a class = "btn btn-secondary"
+            hx-get="{{item.get_hx_edit_url}}">
+            Edit</a>
+    </td>
+</tr>

@@ -175,7 +175,7 @@ class ApprovalLine(models.Model):
         )
 
     def unpost(self, journal):
-        for i in self.approvallinereturn_set.all():
+        for i in self.returnitem_set.all():
             i.unpost(journal)
             i.delete()
         self.product.transact(self.weight, self.quantity, journal, "AR")
@@ -208,6 +208,15 @@ class Return(models.Model):
     def __str__(self):
         return f"Return #{self.id} for {self.contact}"
 
+    def get_absolute_url(self):
+        return reverse("approval:approval_return_detail", args=(self.pk,))
+
+    def get_total_qty(self):
+        return self.returnitem_set.aggregate(t=Sum("quantity"))["t"]
+
+    def get_total_wt(self):
+        return self.returnitem_set.aggregate(t=Sum("weight"))["t"]
+
 
 class ReturnItem(models.Model):
     return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
@@ -216,9 +225,17 @@ class ReturnItem(models.Model):
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    posted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product.name} ({self.line_item.price} each)"
+
+    def get_absolute_url(self):
+        return reverse("approval:approval_returnitem_detail", args=(self.pk,))
+
+    def get_hx_edit_url(self):
+        kwargs = {"return_pk": self.return_obj.id, "pk": self.pk}
+        return reverse("approval:approval_returnitem_update", kwargs=kwargs)
 
     def post(self, journal):
         if not self.posted:
@@ -227,7 +244,7 @@ class ReturnItem(models.Model):
             self.save(update_fields=["posted"])
             self.line.update_status()
 
-    def unpost(self):
+    def unpost(self,journal):
         if self.posted:
             self.line.product.transact(self.weight, self.quantity, journal, "A")
             self.posted = False

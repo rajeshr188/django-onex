@@ -17,34 +17,6 @@
       {% render_field form.contact class="form-control" %}
     </div>
   </div>
-  {{ approvalline_form.management_form }}
-  {{ approvalline_form.non_form_errors }}
-    {% for form in approvalline_form %}
-      {%csrf_token%}
-      {{form.id}}
-      {{form.errors}}
-      <table class="table table-sm table-striped">
-        {%if forloop.first%}
-        <thead class="thead-dark">
-          <tr>
-           {% for field in form.visible_fields %}
-           <th>{{field.label}}</th>
-           {%endfor%}
-          </tr>
-        </thead>
-        {% endif %}
-        <tbody>
-          <tr class="inline {{approvalline_form.prefix}}">
-            {% for field in form.visible_fields %}
-            <td class="{{field.name}}" >
-              <!-- {{ field.errors.as_ul }} -->
-              {% render_field field show_label=False size="small"%}
-            </td>
-            {% endfor %}
-          </tr>
-        </tbody>
-      </table>
-      {% endfor %}
   <button class="btn btn-primary" type="submit">Save Approval</button>
 </form>
 

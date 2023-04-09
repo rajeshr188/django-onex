@@ -73,6 +73,11 @@ urlpatterns += (
         name="approval_return_create",
     ),
     path(
+        "return/detail/<int:pk>/",
+        views.return_detail,
+        name="approval_return_detail",
+    ),
+    path(
         "return/update/<int:pk>/",
         views.return_update,
         name="approval_return_update",
@@ -86,14 +91,19 @@ urlpatterns += (
 
 urlpatterns += (
     path(
-        "returnitem/create/",
-        views.returnitem_create,
+        "return/<int:return_pk>/returnitem/create/",
+        views.returnitem_create_update,
         name="approval_returnitem_create",
     ),
     path(
-        "returnitem/update/<int:pk>/",
-        views.returnitem_update,
+        "return/<int:return_pk>/returnitem/update/<int:pk>/",
+        views.returnitem_create_update,
         name="approval_returnitem_update",
+    ),
+    path(
+        "returnitem/detail/<int:pk>/",
+        views.returnitem_detail,
+        name="approval_returnitem_detail",
     ),
     path(
         "returnitem/delete/<int:pk>/",

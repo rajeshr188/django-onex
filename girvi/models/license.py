@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.db.models import Sum
+from django.shortcuts import reverse
 
 class License(models.Model):
     # Fields

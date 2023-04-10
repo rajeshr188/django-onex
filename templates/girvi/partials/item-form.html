@@ -1,12 +1,13 @@
 {%load crispy_forms_tags%}
-{{form.media}}
-<form action='.' method="POST" hx-post='{% if url %}{{ url }}{% else %}.{% endif%}' hx-swap='outerHTML'>
-    {% csrf_token %}
-   {{ form|crispy }}
-    <div class='htmx-indicator'>Loading...</div>
-    <button class='btn btn-success htmx-inverted-indicator' style='margin-top:10px;' type='submit' ><i class="fa fa-save"></i></button>
-</form>
-<script>
-    $('.django-select2').djangoSelect2();
-    
-</script>
+<tr id="row">
+    <td>{{form.media}}</td>
+    {% for field in form.visible_fields%}
+    <td>{{field|as_crispy_field}}</td>
+    {%endfor%}
+    <td>
+        <a class="btn btn-success" 
+            hx-post="{% if url %}{{ url }}{% else %}.{% endif%}" 
+            hx-include="closest tr"><i class="fa fa-save"></i>Save</a>
+        <a class="btn btn-danger" {%if object%}hx-get="{{object.get_absolute_url}}" {%else%}_="on click transition opacity to 0 then remove #row" {%endif%}>Cancel</a>
+    </td>
+</tr>

@@ -21,15 +21,19 @@ class LoanFilter(django_filters.FilterSet):
         # queryset = Customer.objects.all(),
         # widget = Select2Widget
     )
-    Status = django_filters.BooleanFilter(field_name="release", method="filter_status")
+    
+    status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")
     till_date = django_filters.DateFilter("created", lookup_expr="lte")
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
+    # create a filter for loan_type field with choices
+    loan_type = django_filters.ChoiceFilter(choices = Loan.LoanType.choices, empty_label="Select Loan Type")
     sunk = django_filters.BooleanFilter(method="sunken", label="sunken")
 
     def filter_status(self, queryset, name, value):
+        print(value)
         return queryset.filter(release__isnull=value)
 
     class Meta:
@@ -39,9 +43,6 @@ class LoanFilter(django_filters.FilterSet):
             "series",
             "customer",
             "itemtype",
-            # "itemweight",
-            # "itemdesc",
-            # "loanamount",
         ]
 
     def universal_search(self, queryset, name, value):

@@ -294,3 +294,18 @@ urlpatterns += (
         name="product_pricingtier_delete",
     ),
 )
+urlpatterns += (
+    path(
+        "product/rate/latest",
+        views.get_latest_rate,
+        name="product_rate",
+    ),
+    path(
+        "product/rate/",
+        views.rate_list,
+        name="product_rate_list",
+    ),
+    path("product/rate/create", views.rate_create, name="product_rate_create"),
+    path("product/rate/<int:pk>/", views.rate_delete, name="product_rate_delete"),
+)
+

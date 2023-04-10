@@ -15,6 +15,8 @@
             role="button">Bulk Release</a>
           <a class="btn btn-primary" href="{% url 'loan_archive'%}"
             role="button">Archive</a>
+            <a class="btn btn-primary" href="{% url 'notice'%}"
+            role="button">Outdated</a>
           <a class="btn btn-primary" href="{% export_url 'ods' %}" 
             role="button">export</a>
           <a class="btn btn-primary" href="{%url 'girvi_physicalstock_add'%}">take stock</a>
@@ -49,7 +51,8 @@
             Select All
           </label>
         </div>
-        <div id="table" class = "table-responsive">   
+        <div id="table" class = "table-responsive">  
+          <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>
           {% render_table table %}
         </div>
       </div>

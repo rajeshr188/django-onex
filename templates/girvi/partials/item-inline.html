@@ -1,13 +1,20 @@
-<li class="list-group-item" id="item-{{ object.id}}" >
-    {{ object.item }} {{ object.qty }} - {{ object.weight }} {{object.loanamount}}
-    <button class="btn btn-info" hx-trigger='click'     
-            hx-get='{{ object.get_hx_edit_url }}' 
-            hx-target="#item-{{ object.id}}"
-            hx-swap="outerHTML" >
-            <i class="fa fa-edit"></i></button>
-    
-    <a class="btn btn-danger"hx-post='{{ object.get_delete_url }}' 
-        hx-confirm='Delete item?' hx-trigger='click' href='{{ object.get_delete_url }}'
-        hx-target='#item-{{ object.id }}' hx-swap='outerHTML'>
-        <i class="fa fa-trash"></i></a>
-</li>
+<tr id="#item-{{ object.id }}">
+        <td></td>
+        <td>{{object.item}}</td>
+        <td>{{object.qty}}</td>
+        <td>{{object.weight}}</td>
+        <td>{{object.interestrate}}</td>
+        <td>{{object.loanamount}}</td> 
+        <td>{{object.interest}}</td>
+        <td>
+                <button class="btn btn-info" hx-trigger='click'     
+                        hx-get='{{ object.get_hx_edit_url }}'>
+                        <i class="fa fa-edit"></i></button>
+                <a class="btn btn-danger"
+                        hx-post='{{ object.get_delete_url }}' 
+                        hx-confirm='Delete item?' hx-trigger='click' 
+                        >
+                        <i class="fa fa-trash"></i></a>
+        </td>
+</tr>       
+

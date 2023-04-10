@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django.utils.html import format_html
 from django_tables2.utils import A
-
+from math import floor
 from .models import Loan, Release
 
 
@@ -13,7 +13,7 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 class LoanTable(tables.Table):
     loanid = tables.Column(linkify=True)
-    interest = tables.Column(linkify=False)
+    
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
         accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
@@ -30,8 +30,6 @@ class LoanTable(tables.Table):
     #         '<a hx-post="/girvi/girvi/loan/{}/delete/" class="btn btn-outline-danger" role="button">Delete</a>',
     #         record.pk,
     #     )
-    def render_interest(self, value, record):
-        return record.interestdue
 
     def render_created(self, value):
         return value.date
@@ -48,6 +46,7 @@ class LoanTable(tables.Table):
         fields = (
             "selection",
             "id",
+            "loan_type",
             "loanid",
             "created",
             "customer",
@@ -61,7 +60,9 @@ class LoanTable(tables.Table):
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {
             "data-released": lambda record: record.is_released,
-            "data-notworth": lambda record: record.is_worth,
+            # "data-notworth": lambda record: record.is_worth,
+            "data-notworth": lambda record: record.is_overdue,
+            # "class": lambda record: "table-success" if record.is_released else "
         }
         attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no loans matching the search criteria..."

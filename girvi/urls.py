@@ -143,6 +143,16 @@ urlpatterns += (
         views.loan_item_update_hx_view,
         name="hx-loanitem-detail",
     ),
+    path(
+        "loan/item/<int:pk>/detail",
+        views.loanitem_detail,
+        name="girvi_loanitem_detail"
+    ),
+    path(
+        "loan/<int:parent_id>/item/<int:id>/delete/",
+        views.loanitem_delete,
+        name="girvi_loanitem_delete",
+    ),
 )
 urlpatterns += (
     # urls for Adjustment

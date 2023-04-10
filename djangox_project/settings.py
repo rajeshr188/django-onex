@@ -81,6 +81,7 @@ MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
     "django_htmx.middleware.HtmxMiddleware",
+    "product.middleware.RateMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

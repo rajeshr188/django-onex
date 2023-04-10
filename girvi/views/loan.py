@@ -28,7 +28,8 @@ from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
-
+from utils.htmx_utils import for_htmx
+from django.template.response import TemplateResponse
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
@@ -52,6 +53,7 @@ class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
 
 
 @login_required
+@for_htmx(use_block="content")
 def loan_list(request):
     filter = LoanFilter(
         request.GET,
@@ -61,13 +63,7 @@ def loan_list(request):
     context = {"filter": filter, "table": table}
 
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
-    if request.htmx:
-        response = render_block_to_string(
-            "girvi/loan_list.html", "content", context, request
-        )
-        return HttpResponse(response)
-    else:
-        return render(request, "girvi/loan_list.html", context)
+    return TemplateResponse(request, "girvi/loan_list.html", context)
 
 
 @login_required
@@ -194,6 +190,7 @@ def unpost_loan(pk):
 
 
 @login_required
+@for_htmx(use_block="loaninfo")
 def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
     context = {
@@ -206,13 +203,7 @@ def loan_detail(request, pk):
         "new_item_url": reverse("girvi_loanitem_create", kwargs={"parent_id": loan.id}),
     }
 
-    if request.htmx:
-        html = render_block_to_string("girvi/loan_detail.html", "loaninfo", context)
-        response = HttpResponse(html)
-        return response
-    else:
-        template = "girvi/loan_detail.html"
-        return render(request, template, context)
+    return TemplateResponse(request, "girvi/loan_detail.html", context)
 
 
 @login_required
@@ -273,8 +264,8 @@ def notice(request):
     data = {}
 
     data["loancount"] = selected_loans.count()
-    data["total"] = selected_loans.total()
-    data["interest"] = selected_loans.with_interest()
+    data["total"] = selected_loans.with_total_loanamount()
+    data["interest"] = selected_loans.with_total_interest()
     data["cust"] = customers
 
     return render(request, "girvi/notice.html", context={"data": data})
@@ -287,7 +278,7 @@ def deleteLoan(request):
     loans = Loan.objects.filter(id__in=id_list)
     for i in loans:
         i.delete()
-    filter = LoanFilter(request.GET, queryset=Loan.objects.all())
+    filter = LoanFilter(request.GET, queryset=Loan.objects.with_due().with_current_value().with_is_overdue())
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
@@ -598,6 +589,10 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
             new_obj.loan = parent_obj
         new_obj.save()
         context["object"] = new_obj
+        if request.htmx:
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "loanChanged"}
+            )
         return render(request, "girvi/partials/item-inline.html", context)
 
     return render(request, "girvi/partials/item-form.html", context)
@@ -609,12 +604,12 @@ def get_loan_items(request, loan):
     return render(request, "", context={"items": items})
 
 
-def loan_item_delete(request, pk):
-    item = get_object_or_404(LoanItem, pk=pk)
+def loanitem_delete(request, parent_id,id):
+    item = get_object_or_404(LoanItem, id=id,loan_id = parent_id)
     item.delete()
-    return HttpResponse(Status=204)
+    return HttpResponse(status=204, headers={"HX-Trigger": "loanChanged"})
 
-
-def loan_item_detail(request, pk):
-    loan_item = get_object_or_404(LoanItem, pk=pk)
-    return render(request, "loan/item/item_detail.html", context={"obj": loan_item})
+@login_required
+def loanitem_detail(request,pk):
+    item = get_object_or_404(LoanItem,pk =pk)
+    return render(request,'girvi/partials/item-inline.html',{'object':item})

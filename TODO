@@ -1,12 +1,10 @@
-add approvalline,Return,ReturnLine
 approval to sales
-htmx to all listviews
+mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
 add validation on item forms 
 create sale-receipt and purchase-payment view from db view
 add rate to cache/
-scrape gold rates in to rates models
 deployment
 add ledger codes
 create a book to open and close the transactions happened during a period of time more tobe thought

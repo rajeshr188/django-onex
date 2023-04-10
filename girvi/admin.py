@@ -92,7 +92,6 @@ class LoanAdmin(ImportExportModelAdmin):
         "itemvalue",
         "loanamount",
         "interestrate",
-        "interest",
     ]
     search_fields = ["customer__name", "series"]
     autocomplete_fields = ["customer"]

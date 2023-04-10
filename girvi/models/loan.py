@@ -2,14 +2,14 @@ import datetime
 from decimal import Decimal
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
-
+from math import floor
 import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models, transaction
 from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, Q, Sum, When)
+                              ExpressionWrapper, F,Func, Q, Sum, When)
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
@@ -43,7 +43,7 @@ class LoanQuerySet(models.QuerySet):
                 output_field=models.FloatField(),
             ),
             total_interest=ExpressionWrapper(
-                (F("loanamount") * F("interestrate") * F("months_since_created")) / 100,
+                Func((F("loanamount") * F("interestrate") * F("months_since_created")) / 100, function="ROUND",),
                 output_field=models.FloatField(),
             ),
             total_due=F("loanamount") + F("total_interest"),
@@ -161,11 +161,11 @@ class Loan(models.Model):
     itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
     itemdesc = models.TextField(max_length=100)
     itemweight = models.DecimalField(max_digits=10, decimal_places=2)
-    itemvalue = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    itemvalue = models.DecimalField(max_digits=10, decimal_places=2, null=True,verbose_name='Value')
     # --------------------mustgo--------------------------------------
-    loanamount = models.PositiveIntegerField()
-    interestrate = models.PositiveSmallIntegerField(default=2)
-    interest = models.PositiveIntegerField()
+    loanamount = models.PositiveIntegerField(verbose_name="Amount")
+    interestrate = models.PositiveSmallIntegerField(default=2,verbose_name='ROI')
+    interest = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     series = models.ForeignKey(
         "girvi.Series",
@@ -385,6 +385,12 @@ class LoanItem(models.Model):
     def get_hx_edit_url(self):
         kwargs = {"parent_id": self.loan.id, "id": self.id}
         return reverse("hx-loanitem-detail", kwargs=kwargs)
+    
+    def get_delete_url(self):
+        return reverse(
+            "girvi_loanitem_delete",
+            kwargs={"id": self.id, "parent_id": self.loan.id},
+        ) 
 
 
 class Adjustment(models.Model):

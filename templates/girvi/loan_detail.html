@@ -12,16 +12,18 @@
   </div>
 </div>
 {% block loaninfo%}
-<div class=" container content" id="data">
-    <div class="btn-group justify-content-between" role="group" aria-label="Basic example">
+<div id="content" class="" 
+    hx-trigger="loanChanged from:body" 
+    hx-get="{% url 'girvi_loan_detail' object.id%}">
+    <div class="btn-group justify-content-between mb-3" role="group" aria-label="Basic example">
         {%if previous%}
         <a hx-get="{% url 'girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
-            type="button" class="btn btn-primary mr-2">Previous
+            type="button" class="btn btn-primary">Previous
             {{previous.loanid}}</a>
         {%endif%}
         {%if next %}
         <a hx-get="{% url 'girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
-            type="button" class="btn btn-primary mr-2">Next {{next.loanid}}</a>
+            type="button" class="btn btn-primary">Next {{next.loanid}}</a>
         {%endif%}
         
         <a class="btn btn-secondary" href="{% url 'girvi_adjustment_create' object.id %}">Add Adjustment</a>
@@ -32,7 +34,7 @@
         <a class="btn btn-primary" href="{% url 'girvi_loan_renew' object.id %}">Renew</a>
     </div>
     <div class="row">
-        <div class="col">
+        <div class="col-md-4">
             <table class="table table-sm table-bordered table-striped">
                 <tbody>
                     <tr>
@@ -106,7 +108,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="col">
+        <div class="col-md-8">
             <div class="accordion" id="accordionExample">      
                 <div class="accordion-item">
                   <h2 class="accordion-header">
@@ -168,11 +170,23 @@
                   </h2>
                   <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                     <div class="accordion-body">
-                        <ul id="items-list" class="list-group list-group-flush">
-                            {% for item in items %}
-                            {% include 'girvi/partials/item-inline.html' with object=item %}
-                            {% endfor %}                            
-                       </ul> 
+                        <a class="btn btn-info"
+                            hx-get="{% url 'girvi_loanitem_create' object.id%}"
+                            hx-target="#items" hx-swap="beforeend">Add Items</a>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <th></th>
+                                    <th>Item</th><th>qty</th><th>weight</th><th>ROI</th><th>Amount</th>
+                                    </th><th>Interest</th><th>Action</th>
+                                </thead>
+                                <tbody id = "items" hx-target = "closest tr" hx-swap="outerHTML">
+                                    {%for i in items%}
+                                    {% include 'girvi/partials/item-inline.html' with object=i %}
+                                    {%endfor%}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                   </div>
                 </div>      

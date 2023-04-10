@@ -9,6 +9,6 @@ class RateMiddleware(MiddlewareMixin):
     def process_request(self, request):
         rate = cache.get("latest_rate")
         if not rate:
-            rate = Rate.objects.latest("date")
+            rate = Rate.objects.latest("timestamp")
             cache.set("latest_rate", rate)
         request.rate = rate

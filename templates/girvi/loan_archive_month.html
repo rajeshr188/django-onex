@@ -1,28 +1,28 @@
 {%extends "_base.html"%}
 {% load static %}
 {%block content%}
-<p><a href="{% url 'loan_archive' %}">Loans Archive</a> </p>
+<p><a href="{% url 'girvi:loan_archive' %}">Loans Archive</a> </p>
 <p>
     {% if previous_month %}
-        Previous Month: <a href = "{% url 'archive_month' previous_month|date:"Y" previous_month|date:"M" %}">{{ previous_month|date:"F Y" }} </a>
+        Previous Month: <a href = "{% url 'girvi:archive_month' previous_month|date:"Y" previous_month|date:"M" %}">{{ previous_month|date:"F Y" }} </a>
     {% endif %}
     {% if next_month %}
-        Next Month: <a href = "{% url 'archive_month' next_month|date:"Y" next_month|date:"M" %}">{{ next_month|date:"F Y" }} </a>
+        Next Month: <a href = "{% url 'girvi:archive_month' next_month|date:"Y" next_month|date:"M" %}">{{ next_month|date:"F Y" }} </a>
     {% endif %}
 </p>
 <h1>All Loans for {{ month }} / {{object_list.count}}</h1>
 <ul>
     {% for loan in object_list %}
-        <li><a href="{%url 'girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
+        <li><a href="{%url 'girvi:girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
     {% endfor %}
 </ul>
 
 <p>
     {% if previous_month %}
-        Previous Month: <a href = "{% url 'archive_month' previous_month|date:"Y" previous_month|date:"M" %}">{{ previous_month|date:"F Y" }} </a>
+        Previous Month: <a href = "{% url 'girvi:archive_month' previous_month|date:"Y" previous_month|date:"M" %}">{{ previous_month|date:"F Y" }} </a>
     {% endif %}
     {% if next_month %}
-        Next Month: <a href = "{% url 'archive_month' next_month|date:"Y" next_month|date:"M" %}">{{ next_month|date:"F Y" }} </a>
+        Next Month: <a href = "{% url 'girvi:archive_month' next_month|date:"Y" next_month|date:"M" %}">{{ next_month|date:"F Y" }} </a>
     {% endif %}
 </p>
 

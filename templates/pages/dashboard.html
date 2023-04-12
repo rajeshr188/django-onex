@@ -70,6 +70,7 @@
                         <ul>
                             <li>Total : {{loan.count}}</li>
                             <li>Unreleased: {{loan.unreleased.count}}</li>
+                            <li>Released: {{loan.released.count}}</li>
                         </ul>
                       </p>
                     </div>
@@ -79,8 +80,8 @@
                   <div class="card">
                     <img src="..." class="card-img-top" alt="...">
                     <div class="card-body">
-                      <h5 class="card-title">Interest</h5>
-                      <p class="card-text">{{loan.unreleased.with_interest}}</p>
+                      <h5 class="card-title">Amount</h5>
+                      <p class="card-text">{{total_loan_amount}}</p>
                     </div>
                   </div>
                 </div>
@@ -88,8 +89,44 @@
                   <div class="card">
                     <img src="..." class="card-img-top" alt="...">
                     <div class="card-body">
-                      <h5 class="card-title">Overdue</h5>
-                      <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional content.</p>
+                      <h5 class="card-title">Due</h5>
+                      <p class="card-text">{{due_amount}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card">
+                    <img src="..." class="card-img-top" alt="...">
+                    <div class="card-body">
+                      <h5 class="card-title">Assets</h5>
+                      <p class="card-text">{{total_weight}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card">
+                    <img src="..." class="card-img-top" alt="...">
+                    <div class="card-body">
+                      <h5 class="card-title">Current Value</h5>
+                      <p class="card-text">{{current_value}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card">
+                    <img src="..." class="card-img-top" alt="...">
+                    <div class="card-body">
+                      <h5 class="card-title">Interest</h5>
+                      <p class="card-text">{{total_interest}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card">
+                    <img src="..." class="card-img-top" alt="...">
+                    <div class="card-body">
+                      <h5 class="card-title">Sunken</h5>
+                      <p class="card-text">count:{{is_overdue.count}} total:{{sunken_total}}</p>
                     </div>
                   </div>
                 </div>

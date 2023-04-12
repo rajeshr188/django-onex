@@ -3,39 +3,39 @@
 <div class="container">
   <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a class="nav-link" hx-get="{% url 'girvi_loan_list'%}"
+        <a class="nav-link" hx-get="{% url 'girvi:girvi_loan_list'%}"
           hx-swap = "innerHTML"
           hx-target = "#girvi-content"
           hx-push-url = "true">Loan</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" hx-get="{% url 'girvi_release_list'%}" 
+      <a class="nav-link" hx-get="{% url 'girvi:girvi_release_list'%}" 
         hx-swap = "innerHTML"
         hx-target = "#girvi-content">Release</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" hx-get="{% url 'girvi_license_list'%}" 
+      <a class="nav-link" hx-get="{% url 'girvi:girvi_license_list'%}" 
         hx-swap = "innerHTML"
         hx-target = "#girvi-content">License</a>
     </li>
     
     <li class="nav-item">
-        <a hx-get="{%url 'loan_archive' %}" class="nav-link" 
+        <a hx-get="{%url 'girvi:loan_archive' %}" class="nav-link" 
           hx-swap = "innerHTML"
           hx-target = "#girvi-content">Archive</a>
     </li>
     <li class="nav-item">
-        <a hx-get="{%url 'notice' %}" class="nav-link" 
+        <a hx-get="{%url 'girvi:notice' %}" class="nav-link" 
           hx-swap = "innerHTML"
           hx-target = "#girvi-content">Outdated</a>
     </li>
     <li class="nav-item">
-        <a hx-get="{%url 'girvi_physicalstock_add'%}" class="nav-link" 
+        <a hx-get="{%url 'girvi:girvi_physicalstock_add'%}" class="nav-link" 
           hx-swap = "innerHTML"
           hx-target = "#girvi-content">Take Stock</a>
     </li>
     <li class="nav-item">
-        <a hx-get="{%url 'girvi_physicalstock_list'%}" class="nav-link" 
+        <a hx-get="{%url 'girvi:girvi_physicalstock_list'%}" class="nav-link" 
           hx-swap = "innerHTML"
           hx-target = "#girvi-content">StockList</a>
     </li>

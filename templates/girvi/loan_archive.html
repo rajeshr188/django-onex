@@ -6,7 +6,7 @@
   
     {% for y in date_list %}
     <li class = "list-group-item"></li>
-    <a href = "{% url 'loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}} </a>
+    <a href = "{% url 'girvi:loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}} </a>
   </li>
     {% endfor %}
   

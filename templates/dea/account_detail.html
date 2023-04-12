@@ -98,7 +98,7 @@
                 <td>{{i.created}}</td>
                 <td>
                     <!-- this is heavy on db -->
-                    <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.content_object %}">
+                    <a href="{% url ''|add:i.journal.get_url_string pk=i.journal.object_id %}">
                     {{i.journal.content_object}}</a>
                 </td>
                 <td>{{i.XactTypeCode_ext.description}}</td>

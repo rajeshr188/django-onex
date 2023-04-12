@@ -2,7 +2,6 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,20 +13,17 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
 from dea.models import Journal
 from utils.htmx_utils import for_htmx
 
-from .filters import ApprovalLineFilter
+from .filters import ApprovalLineFilter,ApprovalFilter
 from .forms import ApprovalForm, ApprovalLineForm, ReturnForm, ReturnItemForm
 from .models import Approval, ApprovalLine, Return, ReturnItem
 
 
 # Create your views here.
-@transaction.atomic
 def post_approval(request, pk):
     approval = get_object_or_404(Approval, pk=pk)
     approval.post()
     return redirect(approval)
 
-
-@transaction.atomic
 def unpost_approval(request, pk):
     approval = get_object_or_404(Approval, pk=pk)
     approval.unpost()
@@ -38,8 +34,6 @@ from invoice.models import PaymentTerm
 from sales.models import Invoice as sinv
 from sales.models import InvoiceItem as sinvitem
 
-
-@transaction.atomic()
 def convert_sales(request, pk):
     # create sales invoice and invoice items from approval
     approval = get_object_or_404(Approval, pk=pk)
@@ -69,9 +63,11 @@ def convert_sales(request, pk):
 
 
 @login_required
+# @for_htmx(use_block="table")
 def approval_list(request):
     approvals = Approval.objects.all()
-    return render(request, "approval/approval_list.html", {"object_list": approvals})
+    filter = ApprovalFilter(request.GET, queryset=approvals)
+    return render(request, "approval/approval_list.html", {"filter": filter})
 
 
 @login_required
@@ -119,15 +115,17 @@ def approval_update(request, pk):
     )
 
 
+class ApprovalDeleteView(LoginRequiredMixin, DeleteView):
+    model = Approval
+    success_url = reverse_lazy("approval:approval_approval_list")
+
 @login_required
-def approval_delete(request, pk):
-    approval = get_object_or_404(Approval, pk=pk)
-    if request.method == "POST":
-        approval.delete()
-        return redirect("approval:approval_list")
-    return render(request, "approval/approval_delete.html", {"object": approval})
-
-
+# create a list view for approvalline with status pending
+def approvalline_list(request):
+    approvallines = ApprovalLine.objects.exclude(status="Billed")
+    filter = ApprovalLineFilter(request.GET, queryset=approvallines)
+    return render(request, "approval/approvalline_list.html", {"filter": filter})
+    
 @login_required
 def approvalline_create_update(request, approval_pk, pk=None):
     approval = get_object_or_404(Approval, pk=approval_pk)
@@ -229,14 +227,9 @@ def return_update(request, pk):
     return render(request, "approval/return_form.html", {"form": form, "ret": ret})
 
 
-@login_required
-def return_delete(request, pk):
-    ret = get_object_or_404(Return, pk=pk)
-    if request.method == "POST":
-        ret.delete()
-        return redirect(ret.approval)
-    return render(request, "approval/return_delete.html", {"object": ret})
-
+class ReturnDeleteView(LoginRequiredMixin, DeleteView):
+    model = Return
+    success_url = reverse_lazy("approval:approval_return_list")
 
 # create fbv for returnitem_create
 @login_required

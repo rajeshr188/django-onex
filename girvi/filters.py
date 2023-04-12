@@ -16,12 +16,12 @@ class LoanFilter(django_filters.FilterSet):
     # loanid = django_filters.CharFilter(lookup_expr="icontains")
     # itemdesc = django_filters.CharFilter(lookup_expr="icontains")
     customer = django_filters.ModelChoiceFilter(
-        queryset=Customer.objects.filter(customer_type="R"),
+        queryset=Customer.objects.all(),
         widget=CustomerWidget(empty_label="Customer"),
         # queryset = Customer.objects.all(),
         # widget = Select2Widget
     )
-    
+    posted = django_filters.BooleanFilter(field_name="posted")
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")
     till_date = django_filters.DateFilter("created", lookup_expr="lte")
@@ -33,7 +33,6 @@ class LoanFilter(django_filters.FilterSet):
     sunk = django_filters.BooleanFilter(method="sunken", label="sunken")
 
     def filter_status(self, queryset, name, value):
-        print(value)
         return queryset.filter(release__isnull=value)
 
     class Meta:

@@ -29,13 +29,13 @@ class LicenseUpdateView(LoginRequiredMixin, UpdateView):
 
 class LicenseDeleteView(LoginRequiredMixin, DeleteView):
     model = License
-    success_url = reverse_lazy("girvi_license_list")
+    success_url = reverse_lazy("girvi:girvi_license_list")
 
 
 def activate_series(request, pk):
     s = get_object_or_404(Series, pk=pk)
     s.activate()
-    return redirect("girvi_loan_list")
+    return redirect("girvi:girvi_loan_list")
 
 
 class SeriesListView(LoginRequiredMixin, ListView):
@@ -58,4 +58,4 @@ class SeriesUpdateView(LoginRequiredMixin, UpdateView):
 
 class LicenseSeriesDeleteView(LoginRequiredMixin, DeleteView):
     model = License
-    success_url = reverse_lazy("girvi_license_list")
+    success_url = reverse_lazy("girvi:girvi_license_list")

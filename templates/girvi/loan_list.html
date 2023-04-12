@@ -9,18 +9,18 @@
       <h1 class="h2">Loan</h1>
       <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-          <a class="btn btn-primary" href="{% url 'girvi_loan_create' %}" 
+          <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_create' %}" 
             role="button">New Loan</a>
-          <a class="btn btn-primary" href="{% url 'bulk_release' %}" 
+          <a class="btn btn-primary" href="{% url 'girvi:bulk_release' %}" 
             role="button">Bulk Release</a>
-          <a class="btn btn-primary" href="{% url 'loan_archive'%}"
+          <a class="btn btn-primary" href="{% url 'girvi:loan_archive'%}"
             role="button">Archive</a>
-            <a class="btn btn-primary" href="{% url 'notice'%}"
+            <a class="btn btn-primary" href="{% url 'girvi:notice'%}"
             role="button">Outdated</a>
           <a class="btn btn-primary" href="{% export_url 'ods' %}" 
             role="button">export</a>
-          <a class="btn btn-primary" href="{%url 'girvi_physicalstock_add'%}">take stock</a>
-          <a class="btn btn-primary" href="{%url 'girvi_physicalstock_list'%}">Physical Loans</a>
+          <a class="btn btn-primary" href="{%url 'girvi:girvi_physicalstock_add'%}">take stock</a>
+          <a class="btn btn-primary" href="{%url 'girvi:girvi_physicalstock_list'%}">Physical Loans</a>
         </div>
       </div>
     </div>
@@ -35,13 +35,13 @@
       </div>
       <div class="col-sm-9" id="results">
         <div hx-include="#checked-items" hx-target="#content">
-          <a class="btn btn-danger" hx-post="{% url 'girvi_loan_deletemultiple'%}"
+          <a class="btn btn-danger" hx-post="{% url 'girvi:girvi_loan_deletemultiple'%}"
             hx-include="[name='selection']" hx-confirm = "sure?">
             Delete</a>
-          <a class="btn btn-info" hx-get="{% url 'bulk_release'%}" 
+          <a class="btn btn-info" hx-get="{% url 'girvi:bulk_release'%}" 
               hx-include="[name='selection']">
             Release</a>
-          <a class="btn btn-info" hx-post="{% url 'girvi_create_notice'%}?{{request.GET.urlencode}}"
+          <a class="btn btn-info" hx-post="{% url 'girvi:girvi_create_notice'%}?{{request.GET.urlencode}}"
                                   hx-include="[name='selection'],[name='selectall']">
             Notify</a>
         </div>

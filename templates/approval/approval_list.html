@@ -4,32 +4,46 @@
 <p>
   <a class="btn btn-default" href="{% url 'approval:approval_approval_list' %}">Approval Listing</a>
   <a class="btn btn-primary" href="{% url 'approval:approval_approval_create' %}">Create new Approval</a>
+  <a class="btn btn-primary" href="{% url 'approval:approval_approvalline_list'%}">Product-wise</a>
 </p>
+<div class="row">
+  <div class="col-md-3">
+    {%include 'filter.html'%}
+  </div>
+  <div class="col-md-9">
+    <div id="table" class="table-responsive">
+      <table class="table table-sm table-hover">
+        <tr>
+            <td>ID</td>
+            <td>created</td>
+            <td>Customer</td>
+            <td>quantity</td>
+            <td>weight</td>
+            <td>Status</td>
+            <td>Is billed</td>
+            <td>Posted</td>
+            <td>Action</td>
+        </tr>
+      {% for object in filter.qs %}
+      <tr>
+          <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+          <td>{{ object.created_at }}</td>
+          <td><a href="{% url 'contact_customer_detail' object.contact.id%}">{{object.contact}}</a></td>
+          <td>{{ object.get_total_qty }}</td>
+          <td>{{ object.get_total_wt }}</td>
+          <td>{{object.status}}</td>
+          <td>{{object.is_billed}}</td>
+          <td>{{object.posted}}</td>
+          <td><a class="btn btn-danger" href ="{% url 'approval:approval_approval_delete' object.pk%}">Delete</a></td>
+      </tr>
+      {% endfor %}
+      <!-- pagination here -->
+  
+      </table>
+    </div>
+    
+  </div>
+</div>
 
-<table class="table">
-  <tr>
-      <td>ID</td>
-      <td>created</td>
-      <td>Customer</td>
-      <td>quantity</td>
-      <td>weight</td>
-      <td>Status</td>
-      <td>Is billed</td>
-      <td>Posted</td>
-      <td>Action</td>
-  </tr>
-{% for object in object_list %}
-<tr>
-    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
-    <td>{{ object.created_at }}</td>
-    <td><a href="{% url 'contact_customer_detail' object.contact.id%}">{{object.contact}}</a></td>
-    <td>{{ object.total_qty }}</td>
-    <td>{{ object.total_wt }}</td>
-    <td>{{object.status}}</td>
-    <td>{{object.is_billed}}</td>
-    <td>{{object.posted}}</td>
-    <td><a href ="{% url 'approval:approval_approval_delete' object.pk%}">Delete</a></td>
-</tr>
-{% endfor %}
-</table>
+
 {% endblock %}

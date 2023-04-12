@@ -13,8 +13,8 @@ class RateSource(models.Model):
 
 class Rate(models.Model):
     class Metal(models.TextChoices):
-        GOLD = "gold", "Gold"
-        SILVER = "silver", "Silver"
+        GOLD = "Gold", "Gold"
+        SILVER = "Silver", "Silver"
     class Currency(models.TextChoices):
         INR = "INR", "INR"
         USD = "USD", "USD"

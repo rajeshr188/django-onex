@@ -58,7 +58,10 @@ class Approval(models.Model):
         return reverse("approval:approval_approval_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("approval:approval_approval_update", args=(self.pk,))
+        if not self.posted:
+            return reverse("approval:approval_approval_update", args=(self.pk,))
+        else:
+            return self.get_absolute_url()
 
     @transaction.atomic()
     def post(self):
@@ -137,6 +140,7 @@ class ApprovalLine(models.Model):
     status = models.CharField(
         max_length=30,
         choices=(
+            ("Pending", "Pending"),
             ("Partially Returned", "Partially Returned"),
             ("Returned", "Returned"),
             ("Billed", "Billed"),
@@ -149,7 +153,7 @@ class ApprovalLine(models.Model):
         ordering = ("approval",)
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.id} - {self.product.barcode}"
 
     def get_absolute_url(self):
         return reverse("approval:approval_approvalline_detail", args=(self.pk,))
@@ -190,6 +194,10 @@ class ApprovalLine(models.Model):
             self.status = "Pending"
         self.save()
         self.approval.update_status()
+
+    def get_returned_qty(self):
+        # return the ReturnItem quanitty for thisapprovalline
+        return self.returnitem_set.aggregate(Sum('quantity'))['quantity_sum']
 
 
 class Return(models.Model):

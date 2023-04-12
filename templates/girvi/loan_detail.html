@@ -5,8 +5,8 @@
   <h1 class="h2">Loan Detail</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-      <a class="btn btn-default" href="{% url 'girvi_loan_list' %}">Loan Listing</a>
-      <a class="btn btn-default" href="{% url 'girvi_loan_create' %}">Add new</a>
+      <a class="btn btn-default" href="{% url 'girvi:girvi_loan_list' %}">Loan Listing</a>
+      <a class="btn btn-default" href="{% url 'girvi:girvi_loan_create' %}">Add new</a>
       <button class="btn btn-sm btn-outline-secondary">Export</button>
     </div>
   </div>
@@ -14,28 +14,29 @@
 {% block loaninfo%}
 <div id="content" class="" 
     hx-trigger="loanChanged from:body" 
-    hx-get="{% url 'girvi_loan_detail' object.id%}">
+    hx-get="{% url 'girvi:girvi_loan_detail' object.id%}">
     <div class="btn-group justify-content-between mb-3" role="group" aria-label="Basic example">
         {%if previous%}
-        <a hx-get="{% url 'girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+        <a hx-get="{% url 'girvi:girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
             type="button" class="btn btn-primary">Previous
             {{previous.loanid}}</a>
         {%endif%}
         {%if next %}
-        <a hx-get="{% url 'girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+        <a hx-get="{% url 'girvi:girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
             type="button" class="btn btn-primary">Next {{next.loanid}}</a>
         {%endif%}
         
-        <a class="btn btn-secondary" href="{% url 'girvi_adjustment_create' object.id %}">Add Adjustment</a>
-        <a class="btn btn-secondary" href="{% url 'loan_pdf' loan.id %}">Print</a>
-        <a class="btn btn-secondary" href="{% url 'girvi_release_create' object.id %}">Release</a>
-        <a class="btn btn-primary" href="{% url 'girvi_loan_update' object.id %}">Update</a>
-        <a class="btn btn-primary" href="{% url 'girvi_loan_delete' object.id %}">Delete</a>
-        <a class="btn btn-primary" href="{% url 'girvi_loan_renew' object.id %}">Renew</a>
+        <a class="btn btn-secondary" href="{% url 'girvi:girvi_adjustment_create' object.id %}">Add Adjustment</a>
+        <a class="btn btn-secondary" href="{% url 'girvi:loan_pdf' loan.id %}">Print</a>
+        <a class="btn btn-secondary" href="{% url 'girvi:girvi_release_create' object.id %}">Release</a>
+        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_update' object.id %}">Update</a>
+        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_delete' object.id %}">Delete</a>
+        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_renew' object.id %}">Renew</a>
     </div>
+    
     <div class="row">
         <div class="col-md-4">
-            <table class="table table-sm table-bordered table-striped">
+            <table class="table table-sm table-bordered table-striped {%if not sunken%}table-danger{%endif%} ">
                 <tbody>
                     <tr>
                         <td>
@@ -63,9 +64,9 @@
                         <td>Posted</td>
                         <td>
                             {%if object.posted%}
-                            <a class="btn btn-info" href="{% url 'girvi_loan_unpost' object.id %}">Unpost</a>
+                            <a class="btn btn-info" href="{% url 'girvi:girvi_loan_unpost' object.id %}">Unpost</a>
                             {%else%}
-                            <a class="btn btn-info" href="{% url 'girvi_loan_post' object.id %}">Post</a>
+                            <a class="btn btn-info" href="{% url 'girvi:girvi_loan_post' object.id %}">Post</a>
                             {%endif%}
                         </td>
                     </tr>
@@ -90,10 +91,6 @@
                         <td>{{ object.itemweight }}</td>
                     </tr>
                     <tr>
-                        <td>itemvalue</td>
-                        <td>{{ object.itemvalue }}</td>
-                    </tr>
-                    <tr>
                         <td>loanamount</td>
                         <td>{{ object.loanamount }}</td>
                     </tr>
@@ -103,7 +100,11 @@
                     </tr>
                     <tr>
                         <td>interest</td>
-                        <td>{{ object.interest }}</td>
+                        <td>{{ object.interestdue }}</td>
+                    </tr>
+                    <tr>
+                        <td>Value</td>
+                        <td>{{ object.current_value }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -130,7 +131,7 @@
                                 <tbody>
                                     <tr>
                                         <td><a
-                                                href="{% url 'girvi_release_detail' loan.release.id %}">{{loan.release.releaseid}}</a>
+                                                href="{% url 'girvi:girvi_release_detail' loan.release.id %}">{{loan.release.releaseid}}</a>
                                         </td>
                                         <td>{{loan.release.total_received}}</td>
                                         <td>{{loan.release.interestpaid}}</td>
@@ -171,7 +172,7 @@
                   <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                     <div class="accordion-body">
                         <a class="btn btn-info"
-                            hx-get="{% url 'girvi_loanitem_create' object.id%}"
+                            hx-get="{% url 'girvi:girvi_loanitem_create' object.id%}"
                             hx-target="#items" hx-swap="beforeend">Add Items</a>
                         <div class="table-responsive">
                             <table class="table table-striped">
@@ -189,7 +190,25 @@
                         </div>
                     </div>
                   </div>
-                </div>      
+                </div>  
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJournal" aria-expanded="false" aria-controls="collapseJournal">
+                          Journals  :<span class="badge text-bg-secondary">{{journals.count}}</span>
+                      </button>
+                    </h2>
+                    <div id="collapseJournal" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                      <div class="accordion-body">
+                          <div class="table-responsive">
+                              <table class="table table-striped">
+                                  {%for i in journals%}
+                                    {% include 'girvi/journals-inline.html' with object=i %}
+                                    {%endfor%}
+                              </table>
+                          </div>
+                      </div>
+                    </div>
+                  </div>     
               </div>
         </div>
     </div>  

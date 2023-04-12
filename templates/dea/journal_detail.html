@@ -2,37 +2,69 @@
 {% block title %}Acount detail{% endblock %}
 
 {% block content %}
-<p>Journal Details</p>
-<p>{{object.type}}</p>
-<div class="row">
-    <div class="col-4">
-        <div class="card">
-            <h3>Ledger Transaction</h3>
-            <ul>
-                {%for i in object.ltxns.all%}
-                <li>From {{i.ledgerno}} To {{i.ledgerno_dr}} - {{i.amount}}</li>
-                {%endfor%}
-            </ul>
+<div class="content">
+    <h2>Journal Details</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Journal</h3>
+                    <table>
+                        <tbody class="table-group-divider">
+                            <tr><td>Type</td><td>{{object.journal_type}}</td></tr>
+                        <tr><td>Created</td><td>{{object.created}}</td></tr>
+                        <tr><td>Desc</td><td>{{object.desc}}</td></tr>
+                        <tr>
+                            <td>Doc</td>
+                            <td>
+                                <a href="{% url ''|add:object.get_url_string pk=object.object_id %}">
+                                {{object.content_type}}:{{content_object}}</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>     
+            </div>
         </div>
-    </div>
-    <div class="col-4">
-        <div class="card">
-            <h3>Account Transaction</h3>
-            <ul>
-                {%for i in object.atxns.all%}
-                <li>{{i.account}} {{i.XactTypeCode}}{{i.amount}}</li>
-                {%endfor%}
-            </ul>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Journal Transaction</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Debit</th>
+                                    <th>Credit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {%for i in object.atxns.all%}
+                                <tr class="table-light">
+                                    <td><a href="{% url 'dea_account_detail' i.Account.id %}">{{i.Account.contact}}</a></td>
+                                    <td>{%if i.XactTypeCode.XactTypeCode == 'Dr'%}{{i.amount}}{%endif%}</td>
+                                    <td>{%if i.XactTypeCode.XactTypeCode == 'Cr'%}{{i.amount}}{%endif%}</td>
+                                </tr>
+                                {%endfor%}
+                                {%for i in object.ltxns.all%}
+                                <tr class="table-info">
+                                    <td>{{i.amount}}</td>
+                                    <td>{{i.ledgerno_dr}}</td>
+                                    <td>{{i.ledgerno}}</td>
+                                </tr>
+                                {%endfor%}
+                                {%for i in object.stxns.all%}
+                                <tr class="table-dark">
+                                    <td>{{i.stock}} {{i.lot.barcode}}</td>
+                                    <td>{%if i.movement_type.direction == '+'%}+{{i.quantity}} nos +{{i.weight}} gms{%endif%}</td>
+                                    <td>{%if i.movement_type.direction == '-'%}-{{i.quantity}} nos -{{i.weight}} gms{%endif%}</td>
+                                </tr>
+                                {%endfor%}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-4">
-        <h3>Stock Transaction</h3>
-        <ul>
-            {{i.stxns.all}}
-            {%for i in object.stxns.all%}
-            <li>{{i.stock}} {{i.activity_type}} wt:{{i.weight}} qty:{{i.quantity}}</li>
-            {%endfor%}
-        </ul>
     </div>
 </div>
 {%endblock%}

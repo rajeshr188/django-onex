@@ -2,7 +2,7 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
-<p><a class="btn btn-default" href="{% url 'girvi_adjustment_list' %}">Adjustment Listing</a></p>
+<p><a class="btn btn-default" href="{% url 'girvi:girvi_adjustment_list' %}">Adjustment Listing</a></p>
 <form method="post">
 {% csrf_token %}
 {{ form.non_field_errors }}

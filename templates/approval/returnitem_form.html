@@ -1,6 +1,6 @@
 {% load crispy_forms_tags %}
 <tr id="row">  
-    <td>{{form.media}}</td>
+    <td>{{form.media}}{{form.errors}}</td>
     {% for field in form.visible_fields%}
     <td>{{field|as_crispy_field}}</td>
     {%endfor%}

@@ -37,10 +37,10 @@ class Release(models.Model):
         return "%s" % self.releaseid
 
     def get_absolute_url(self):
-        return reverse("girvi_release_detail", args=(self.pk,))
+        return reverse("girvi:girvi_release_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("girvi_release_update", args=(self.pk,))
+        return reverse("girvi:girvi_release_update", args=(self.pk,))
 
     def total_received(self):
         return self.loan.loanamount + self.interestpaid

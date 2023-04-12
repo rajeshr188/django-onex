@@ -51,12 +51,12 @@
               Girvi
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="{% url 'girvi_license_list'%}">License</a></li>
+              <li><a class="dropdown-item" href="{% url 'girvi:girvi_license_list'%}">License</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" hx-get="{% url 'girvi_loan_list'%}"
+              <li><a class="dropdown-item" hx-get="{% url 'girvi:girvi_loan_list'%}"
                 hx-target="#content" hx-swap="innerHTML" hx-push-url = "true">Loan</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="{% url 'girvi_release_list'%}" >Release</a></li>
+              <li><a class="dropdown-item" href="{% url 'girvi:girvi_release_list'%}" >Release</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="{%url 'notify_noticegroup_list' %}">Notice Group</a></li>
             </ul>

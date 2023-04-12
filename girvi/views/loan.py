@@ -81,7 +81,7 @@ def create_loan(request, pk=None):
                 return HttpResponse(status=204)
             else:
                 print("redirecting after succesful creation")
-                return redirect("girvi_loan_create")
+                return redirect("girvi:girvi_loan_create")
         else:
             messages.warning(request, "Please correct the error below.")
             if request.htmx:
@@ -139,7 +139,7 @@ def create_loan(request, pk=None):
 def loan_update(request, id=None):
     obj = get_object_or_404(Loan, id=id)
     form = LoanForm(request.POST or None, instance=obj)
-    new_item_url = reverse("girvi_loanitem_create", kwargs={"parent_id": obj.id})
+    new_item_url = reverse("girvi:girvi_loanitem_create", kwargs={"parent_id": obj.id})
     context = {"form": form, "object": obj, "new_item_url": new_item_url}
     if form.is_valid():
         form.save()
@@ -151,7 +151,7 @@ def loan_update(request, id=None):
 
 class LoanDeleteView(LoginRequiredMixin, DeleteView):
     model = Loan
-    success_url = reverse_lazy("girvi_loan_list")
+    success_url = reverse_lazy("girvi:girvi_loan_list")
 
 
 def ld():
@@ -174,7 +174,7 @@ def next_loanid(request):
 
 
 @login_required
-def post_loan(pk):
+def post_loan(request,pk):
     loan = get_object_or_404(Loan, pk=pk)
     if not loan.posted:
         loan.post()
@@ -182,7 +182,7 @@ def post_loan(pk):
 
 
 @login_required
-def unpost_loan(pk):
+def unpost_loan(request,pk):
     loan = get_object_or_404(Loan, pk=pk)
     if loan.posted:
         loan.unpost()
@@ -193,14 +193,17 @@ def unpost_loan(pk):
 @for_htmx(use_block="loaninfo")
 def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
+    print(loan.total() < loan.current_value())
     context = {
         "object": loan,
+        "sunken": loan.total() < loan.current_value(),
         "items": loan.loanitems.all(),
         "statements": loan.loanstatement_set.all(),
         "loan": loan,
         "next": loan.get_next(),
+        "journals": loan.journals.all(),
         "previous": loan.get_previous,
-        "new_item_url": reverse("girvi_loanitem_create", kwargs={"parent_id": loan.id}),
+        "new_item_url": reverse("girvi:girvi_loanitem_create", kwargs={"parent_id": loan.id}),
     }
 
     return TemplateResponse(request, "girvi/loan_detail.html", context)
@@ -351,7 +354,7 @@ def multirelease(request, id=None):
                     interestpaid=0,
                 )
 
-    return HttpResponseRedirect(reverse("girvi_loan_list"))
+    return HttpResponseRedirect(reverse("girvi:girvi_loan_list"))
 
 
 @user_passes_test(lambda user: user.is_superuser)
@@ -579,7 +582,7 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
             instance = None
     form = LoanItemForm(request.POST or None, instance=instance)
 
-    url = reverse("girvi_loanitem_create", kwargs={"parent_id": parent_obj.id})
+    url = reverse("girvi:girvi_loanitem_create", kwargs={"parent_id": parent_obj.id})
     if instance:
         url = instance.get_hx_edit_url()
     context = {"url": url, "form": form, "object": instance}

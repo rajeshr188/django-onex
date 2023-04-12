@@ -21,10 +21,10 @@ class License(models.Model):
         return "%s" % self.name
 
     def get_absolute_url(self):
-        return reverse("girvi_license_detail", args=(self.pk,))
+        return reverse("girvi:girvi_license_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("girvi_license_update", args=(self.pk,))
+        return reverse("girvi:girvi_license_update", args=(self.pk,))
 
     def get_series_count(self):
         return self.series_set.count()
@@ -45,10 +45,10 @@ class Series(models.Model):
         return f"Series {self.name}"
 
     def get_absolute_url(self):
-        return reverse("girvi_license_series_detail", args=(self.pk,))
+        return reverse("girvi:girvi_license_series_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("girvi_license_series_update", args=(self.pk,))
+        return reverse("girvi:girvi_license_series_update", args=(self.pk,))
 
     def activate(self):
         self.is_active = not self.is_active

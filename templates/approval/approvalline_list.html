@@ -1,0 +1,43 @@
+{%extends '_base.html'%}
+{% block content%}
+
+<div class="content">
+    <h1>Products Out on Approvals</h1>
+    <div class="row">
+        <div class="col-md-3">
+            {%include 'filter.html'%}
+        </div>
+        <div class="col-md-9">
+            <div class="table-responsive" id="table">
+                <table class="table table-hover">
+                    <tbody>
+                        <tr>
+                            <td>ID</td>
+                            <td>Product</td>
+                            <td>Customer</td>
+                            <td>quantity</td>
+                            <td>weight</td>
+                            <td>Status</td>
+                            <td>approval</td>
+                            <td>Action</td>
+                        </tr>
+                        {% for object in filter.qs %}
+                        <tr>
+                            <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+                            <td>{{ object.product }}</td>
+                            <td><a href="{% url 'contact_customer_detail' object.approval.contact.id%}">{{object.approval.contact}}</a></td>
+                            <td>{{ object.quantity }}</td>
+                            <td>{{ object.weight }}</td>
+                            <td>{{object.status}}</td>
+                            <td><a href="{% url 'approval:approval_approval_detail' object.approval_id%}">{{object.approval}}</a></td>
+                            <td><a class="btn btn-danger" href ="{% url 'approval:approval_approvalline_delete' object.pk%}">Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{%endblock%}

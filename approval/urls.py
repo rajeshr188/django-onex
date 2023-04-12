@@ -23,7 +23,7 @@ urlpatterns = (
     ),
     path(
         "approval/delete/<int:pk>/",
-        views.approval_delete,
+        views.ApprovalDeleteView.as_view(),
         name="approval_approval_delete",
     ),
     path("approval/post/<int:pk>/", views.post_approval, name="approval_post"),
@@ -31,6 +31,7 @@ urlpatterns = (
 )
 
 urlpatterns += (
+    path("approval/line/", views.approvalline_list, name="approval_approvalline_list"),
     path(
         "approval/<int:approval_pk>/line/create/",
         views.approvalline_create_update,
@@ -84,7 +85,7 @@ urlpatterns += (
     ),
     path(
         "return/delete/<int:pk>/",
-        views.return_delete,
+        views.ReturnDeleteView.as_view(),
         name="approval_return_delete",
     ),
 )

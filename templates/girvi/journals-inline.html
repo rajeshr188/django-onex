@@ -1,0 +1,7 @@
+<tr>
+    <td><a href="{% url 'dea_journal_detail' i.id%}">{{i.id}}</a></td>
+    <td>{{i.created|date}}</td>
+    <td>{{i.desc}}</td>
+    <td><a class="btn btn-danger" href="{% url 'dea_journal_delete' i.id%}">Delete</a></td>
+   
+</tr>

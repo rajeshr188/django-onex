@@ -66,5 +66,18 @@ def Dashboard(request):
     context["customer_count"] = Customer.objects.values("customer_type").annotate(
         count=Count("id")
     )
+    unreleased = Loan.objects.unreleased()
     context["loan"] = Loan.objects
+    context["loan_count"] = unreleased.count()
+    context["total_loan_amount"] = unreleased.with_total_loanamount()
+    context["total_interest"] = unreleased.with_total_interest()
+    context["due_amount"] = unreleased.with_due().aggregate(
+                                Sum('total_loanamount'),
+                                Sum('total_interest'),
+                                Sum('total_due'))
+    context['current_value'] = unreleased.with_due().with_current_value().aggregate(Sum('current_value'))['current_value__sum']
+    context['is_overdue'] = unreleased.with_due().with_current_value().with_is_overdue().filter(is_overdue = True)
+    context['sunken_count'] = context['is_overdue'].count()
+    context['sunken_total'] = context['is_overdue'].aggregate(Sum('total_due'))['total_due__sum']
+    context['total_weight'] =  unreleased.with_weight()
     return render(request, "pages/dashboard.html", context)

@@ -10,7 +10,7 @@ router.register(r"license", api.LicenseViewSet)
 router.register(r"loan", api.LoanViewSet)
 router.register(r"release", api.ReleaseViewSet)
 
-
+app_name = "girvi"
 urlpatterns = (
     # urls for Django Rest Framework API
     path("api/v1/", include(router.urls)),
@@ -87,15 +87,13 @@ urlpatterns += (
         views.LicenseDeleteView.as_view(),
         name="girvi_license_delete",
     ),
-)
-
-urlpatterns += (
     path(
         "license/series/create/",
         views.SeriesCreateView.as_view(),
         name="girvi_series_create",
     ),
 )
+
 urlpatterns += (
     # urls for Loan
     path("girvi/loan/", views.loan_list, name="girvi_loan_list"),

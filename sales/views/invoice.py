@@ -98,10 +98,10 @@ def sales_detail_view(request, pk=None):
 
 
 @login_required
-def sales_detail_hx_view(request, id=None):
+def sales_detail_hx_view(request, pk=None):
     if not request.htmx:
         raise Http404
-    obj = get_object_or_404(Invoice, pk=id)
+    obj = get_object_or_404(Invoice, pk=pk)
     # try:
     #     obj = Invoice.objects.get(
     #         id=id,

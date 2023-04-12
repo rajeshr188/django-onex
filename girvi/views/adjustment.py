@@ -20,7 +20,7 @@ class AdjustmentListView(LoginRequiredMixin, ExportMixin, SingleTableMixin, Filt
 class AdjustmentCreateView(LoginRequiredMixin, CreateView):
     model = Adjustment
     form_class = AdjustmentForm
-    success_url = "girvi_loan_detail"
+    success_url = "girvi:girvi_loan_detail"
 
     def get_initial(self):
         if self.kwargs:
@@ -41,4 +41,4 @@ class AdjustmentUpdateView(LoginRequiredMixin, UpdateView):
 
 class AdjustmentDeleteView(LoginRequiredMixin, DeleteView):
     model = Adjustment
-    success_url = reverse_lazy("girvi_adjustments_list")
+    success_url = reverse_lazy("girvi:girvi_adjustments_list")

@@ -1,11 +1,29 @@
+
 approval to sales
 mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
 add validation on item forms 
 create sale-receipt and purchase-payment view from db view
-add rate to cache/
 deployment
 add ledger codes
-create a book to open and close the transactions happened during a period of time more tobe thought
 remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did
+
+when a voucher is created/edited :
+    a jounrnal(ledger/account) is created
+    after that each time a voucher is updated
+        last_journal.untransact()
+        new_journal.transact()
+when a line item :
+        is created : then create a stock journal
+                        update the voucher so that it creates ledger and account journals
+        is updated: then last_Stock_journal.untransact() and new journal.transact()
+                        update the voucher so that it creates ledger and account journals
+
+lets say journal are of two types/three types
+    1 Ledger Journal only involves Ledger Transaction of the assoiated voucher
+    2 Account Journal only involves Account Transaction of the associated voucher
+    3 Stock Journal only involves Stock Transaction of the associated voucher
+
+    all these journal are created when a line item of the voucher is created/edited
+

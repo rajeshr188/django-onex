@@ -163,7 +163,7 @@ class Invoice(models.Model):
         return f"{self.id}"
 
     def get_absolute_url(self):
-        return reverse("sales:sales_invoice_detail", kwargs={"id": self.id})
+        return reverse("sales:sales_invoice_detail", kwargs={"pk": self.pk})
 
     def get_hx_url(self):
         return reverse("sales:hx-detail", kwargs={"id": self.id})

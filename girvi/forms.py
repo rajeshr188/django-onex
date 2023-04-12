@@ -58,7 +58,7 @@ class LoanForm(forms.ModelForm):
         # widget = ModelSelect2Widget(
         widget=forms.Select(
             attrs={
-                "hx-get": reverse_lazy("girvi_series_next_loanid"),
+                "hx-get": reverse_lazy("girvi:girvi_series_next_loanid"),
                 "hx-target": "#div_id_lid",
                 "hx-trigger": "change",
                 "hx-swap": "innerHTML",
@@ -80,6 +80,7 @@ class LoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
+            "loan_type",
             "series",
             "customer",
             "lid",
@@ -102,9 +103,11 @@ class LoanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        # self.helper.form_action = reverse_lazy("girvi_loan_create")
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            Row(Column(FloatingField("loan_type"), css_class="form-group col-md-3 mb-0"),
+                css_class="form-row",
+            ),
             Row(
                 Column(FloatingField("series"), css_class="form-group col-md-3 mb-0"),
                 Column(FloatingField("lid"), css_class="form-group col-md-3 mb-0"),

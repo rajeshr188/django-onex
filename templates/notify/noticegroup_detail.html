@@ -4,7 +4,7 @@
 {%block content%}
 <div class="">
     <p>
-        <h1>Notice Group : {{object.name}}</h1><br/>
+        <h1>Notice Group : {{object.name}}  count: {{items.count}}</h1><br/>
         <!-- <h3>Date From:{{object.date_range.lower}} To:{{object.date_range.upper}}</h3> -->
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -30,7 +30,7 @@
               </tr>
             </thead>
             <tbody class="table-group-divider">
-            {%for i in object.notification_set.all%}
+            {%for i in items%}
              <tr>
                 <td><input type="checkbox" name="selected" id=""></td>
                 <td><a href="{% url 'notify_notification_detail' i.id%}">{{i.id}}</a></td>

@@ -94,9 +94,15 @@ class LoanForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        # generate loan id when creted
         loanid = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
             self.cleaned_data["lid"]
         )
+        # in update mode, check if loanid is changed
+        if self.instance.loanid and self.instance.loanid == loanid:
+            return cleaned_data
+        # when created, check if loanid already exists
         if Loan.objects.filter(loanid=loanid).exists():
             raise forms.ValidationError("A loan with this loanID already exists.")
 

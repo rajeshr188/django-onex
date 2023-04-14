@@ -138,10 +138,13 @@ def create_loan(request, pk=None):
 @login_required
 def loan_update(request, id=None):
     obj = get_object_or_404(Loan, id=id)
+    print(f"{obj} is being updated")
     form = LoanForm(request.POST or None, instance=obj)
     new_item_url = reverse("girvi:girvi_loanitem_create", kwargs={"parent_id": obj.id})
     context = {"form": form, "object": obj, "new_item_url": new_item_url}
+    print(f"{obj} updateform is:{form.is_valid()}")
     if form.is_valid():
+        print(f"trying to save updated loan")
         form.save()
         context["message"] = "Data saved."
     if request.htmx:

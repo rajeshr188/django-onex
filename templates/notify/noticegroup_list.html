@@ -2,7 +2,7 @@
 {%load static%}
 {%block content%}
 <div class="" id="noticegroup_list">
-    <h2>NoticeGroup List</h2><br/>
+    <h2>NoticeGroup List : {{items.count}}</h2><br/>
     <a href="{% url 'notify_noticegroup_create'%}">Create New</a>
     <ul class="list-group">
         {%for i in objects%}

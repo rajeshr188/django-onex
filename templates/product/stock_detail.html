@@ -77,7 +77,7 @@
                       <td>{{i.movement_type.name}}</td>
                       <td>
                         {%if i.journal.get_url_string is not None%}
-                        <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
+                        <a href="{{i.journal.get_url_string}}">
                           {{i.journal.desc}}:{{i.journal.content_object}}</a>
                         {%else%}
                         <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
@@ -140,7 +140,7 @@
                     {%for i in object.lots.all%}
                     <tr>
                       <td>{{i.created}}</td>
-                      <td>{{i.purchase}}</td>
+                      <td><a href="{{i.puchase.get_absolute_url}}" >{{i.purchase}}</a></td>
                       <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
                       <td> {{i.huid}} </td>
                       <td>{{i.current_balance}}</td>

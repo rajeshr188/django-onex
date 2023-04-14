@@ -274,6 +274,21 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch) / 100
 
+    def save(self, *args, **kwargs):
+        self.net_wt = self.get_nettwt()
+        rate = self.invoice.rate if self.invoice.rate > 0 else 0
+        self.total = self.net_wt * rate + self.makingcharge
+        super(InvoiceItem, self).save(*args, **kwargs)
+        self.post()
+
+    def update(self, *args, **kwargs):
+        self.unpost()
+        self.net_wt = self.get_nettwt()
+        rate = self.invoice.rate if self.invoice.rate > 0 else 0
+        self.total = self.net_wt * rate + self.makingcharge
+        super(InvoiceItem, self).update(*args, **kwargs)
+        self.post()
+
     @transaction.atomic()
     def post(self, journal):
         """

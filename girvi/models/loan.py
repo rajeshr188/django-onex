@@ -277,6 +277,135 @@ class Loan(models.Model):
             .last()
         )
 
+# mult be abstracted
+    def create_journals(self):
+        ledgerJournal = Journal.objects.create(
+            journal_type=JournalTypes.LJ, content_object=self, desc=self.loan_type
+        )
+        accountJournal = Journal.objects.create(
+            journal_type=JournalTypes.AJ, content_object=self, desc=self.loan_type
+        )
+        return ledgerJournal, accountJournal
+
+    def delete_journals(self):
+        self.journals.all().delete()
+        
+# must be abstracted
+    def get_journals(self):
+        ledgerJournal = Journal.objects.filter(loan_doc = self,journal_type=JournalTypes.LJ).first()
+        accountJournal = Journal.objects.filter(loan_doc =self,journal_type= JournalTypes.AJ).first()
+
+        print(ledgerJournal, accountJournal)
+        if ledgerJournal.exists() and accountJournal.exists:
+            return ledgerJournal, accountJournal
+        
+        else:
+            return self.create_journals()
+
+# must be abstracted
+    def get_transactions(self):
+        try:
+            self.customer.account
+        except:
+            self.customer.save()
+        amount = Money(self.loanamount, "INR")
+        interest = Money(self.interest_amt(), "INR")
+        if self.loan_type == self.LoanType.TAKEN:
+            # if self.customer.type == "Su":
+
+            # jrnl = Journal.objects.create(
+            #     journal_type=JournalTypes.LJ, content_object=self, desc="Loan Taken"
+            # )
+            lt = [
+                {"ledgerno": "Loans", "ledgerno_dr": "Cash", "amount": amount},
+                {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans",
+                    "Xacttypecode": "Dr",
+                    "xacttypecode_ext": "LT",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Payable",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "IP",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+            ]
+        else:
+            # jrnl = Journal.objects.create(
+            #     journal_type=JournalTypes.LJ, content_object=self, desc="Loan Given"
+            # )
+            lt = [
+                {
+                    "ledgerno": "Cash",
+                    "ledgerno_dr": "Loans & Advances",
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "ledgerno_dr": "Cash",
+                    "amount": interest,
+                },
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans & Advances",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "LG",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "IR",
+                    "account": self.customer.account,
+                    "amount": interest,
+                },
+            ]
+        return lt,at
+
+# must be abstracted
+    def create_transactions(self):
+        # get contact.Account
+        
+        ledger_journal,Account_journal = self.get_journals()
+        lt,at = self.get_transactions()
+
+        ledger_journal.transact(lt)
+        account_journal.transact(at)
+        # jrnl.transact(lt, at)
+        # # create account transactions
+        # account_transactions = []
+        # # ... create account transactions based on the voucher and voucher items
+        # # create ledger transactions
+        # ledger_transactions = []
+        # # ... create ledger transactions based on the voucher and voucher items
+        # # save transactions to the journal
+        # self.journal.add_transactions(account_transactions + ledger_transactions)
+
+# must be abstracted
+    def reverse_transactions(self):
+        ledger_journal,Account_journal = self.get_journals()
+        lt,at = self.get_transactions()
+
+        ledger_journal.untransact(lt)
+        account_journal.untransact(at)
+        # # reverse account transactions
+        # account_transactions = []
+        # # ... reverse account transactions based on the voucher and voucher items
+        # # reverse ledger transactions
+        # ledger_transactions = []
+        # # ... reverse ledger transactions based on the voucher and voucher items
+        # # save reversed transactions to the journal
+        # self.journal.add_transactions(account_transactions + ledger_transactions)
+
+# no longer significant bypassed --depreceated
     @transaction.atomic()
     def post(self):
         if not self.posted:
@@ -349,7 +478,7 @@ class Loan(models.Model):
 
             self.posted = True
             self.save(update_fields=["posted"])
-
+# no longer significant bypassed --depreceated
     @transaction.atomic()
     def unpost(self):
         if self.posted:
@@ -368,14 +497,14 @@ class Loan(models.Model):
             self.posted = False
             self.save(update_fields=["posted"])
 
+# must be abstracted
     def save(self, *args, **kwargs):
-        if not self.pk:
-            self.itemvalue = self.loanamount + 500
+        
         self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
-        # add logic to get the total loan amount if has_collateral from the loanitems
+        self.loanamount = Sum("loanitems__loanamount") if self.loanamount == 0 else self.loanamount
 
-        super().save(*args, **kwargs)
+        super(Loan,self).save(*args, **kwargs)
         return self
 
     @property
@@ -411,6 +540,7 @@ class LoanItem(models.Model):
             "girvi:girvi_loanitem_delete",
             kwargs={"id": self.id, "parent_id": self.loan.id},
         ) 
+    
 
 
 class Adjustment(models.Model):
@@ -439,6 +569,100 @@ class Adjustment(models.Model):
     def get_update_url(self):
         return reverse("girvi:girvi_adjustments_update", args=(self.pk,))
 
+    def get_transactions(self):
+        amount = Money(self.amount_received, "INR")
+        interest = 0 if not self.as_interest else Money(self.amount_received, "INR")
+        if self.loan_type == Loan.LoanTypes.TAKEN:
+            # if self.customer.type == "Su":
+            jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
+            lt = [
+                {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},
+                {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "LP",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Payable",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "IP",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+            ]
+        else:
+            jrnl = Journal.objects.create(content_object=self, desc="Loan Adjustment")
+            lt = [
+                {
+                    "ledgerno": "Loans & Advances",
+                    "ledgerno_dr": "Cash",
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "ledgerno_dr": "Cash",
+                    "amount": amount,
+                },
+            ]
+            at = [
+                {
+                    "ledgerno": "Loans & Advances",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "LR",
+                    "account": self.customer.account,
+                    "amount": amount,
+                },
+                {
+                    "ledgerno": "Interest Received",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "IR",
+                    "account": self.customer.account,
+                    "amount": interest,
+                },
+            ]
+        return lt, at
+
+    def create_journals(self):
+        ledgerJournal = LedgerJournal.objects.create(
+            journal_type=JournalTypes.LJ, content_object=self, desc=f"Adjustment for :{self.loan_type}"
+        )
+        accountJournal = AccountJournal.objects.create(
+            journal_type=JournalTypes.AJ, content_object=self, desc=f"Adjustment for :{self.loan_type}"
+        )
+        return ledgerJournal, accountJournal
+
+    def delete_journals(self):
+        self.journals.all().delete()
+
+    def get_journals(self):
+        ledgerJournal = Journal.objects.filter(journal_type=JournalTypes.LJ, adjustment_doc=self)
+        accountJournal = Journal.objects.filter(journal_type=JournalTypes.AJ, adjustment_doc=self)
+
+        if ledgerjournal.exists() and accountJournal.exists():
+            return ledgerJournal.first(), accountJournal.first()
+        return self.create_journals()
+
+    def create_transactions(self):
+        lt, at = self.get_transactions()
+        ledgerJournal, accountJournal = self.get_journals()
+        ledgerJournal.transact(lt)
+        accountJournal.transact(at)
+
+    def reverse_transactions(self):
+        lt, at = self.get_transactions()
+        ledgerJournal, accountJournal = self.get_journals()
+        ledgerJournal.untransact(lt)
+        accountJournal.untransact(at)
+
+    def save(self, *args, **kwargs):
+        super(Adjustment,self).save(*args, **kwargs)
+
+    # obsolete depreceated
     # correct the transactions
     def post(self):
         amount = Money(self.amount_received, "INR")

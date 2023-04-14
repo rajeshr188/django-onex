@@ -17,8 +17,9 @@
                         <tr>
                             <td>Doc</td>
                             <td>
-                                <a href="{% url ''|add:object.get_url_string pk=object.object_id %}">
-                                {{object.content_type}}:{{content_object}}</a></td></tr>
+                                
+                                <a href="{{object.get_url_string}}">
+                                {{object.content_type}}:{{content_object}}}}</a></td></tr>
                         </tbody>
                     </table>
                 </div>     

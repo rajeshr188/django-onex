@@ -237,6 +237,18 @@ class StockAdmin(admin.ModelAdmin):
 
 admin.site.register(Stock, StockAdmin)
 
+class StockLotAdminForm(forms.ModelForm):
+    class Meta:
+        model = StockLot
+        fields = "__all__"
+
+
+class StockLotAdmin(admin.ModelAdmin):
+    form = StockLotAdminForm
+    list_display = ["id", "variant", "wt", "qty", "barcode","huid","purchase","purchase_rate","purchase_touch"]
+
+
+admin.site.register(StockLot, StockLotAdmin)
 
 class StockTransactionAdminForm(forms.ModelForm):
     class Meta:

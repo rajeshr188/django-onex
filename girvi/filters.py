@@ -13,8 +13,7 @@ from .models import Adjustment, Loan, LoanStatement, Release
 
 class LoanFilter(django_filters.FilterSet):
     query = django_filters.CharFilter(method="universal_search", label="Search")
-    # loanid = django_filters.CharFilter(lookup_expr="icontains")
-    # itemdesc = django_filters.CharFilter(lookup_expr="icontains")
+
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.all(),
         widget=CustomerWidget(empty_label="Customer"),
@@ -59,7 +58,7 @@ class LoanFilter(django_filters.FilterSet):
             | Q(itemweight__icontains=value)
             | Q(loanamount__icontains=value)
         )
-
+    # causes trouble in the table while filtering by id
     def sunken(self, queryset, name, value):
         return queryset.filter(is_overdue=value)
 

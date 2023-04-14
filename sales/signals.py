@@ -1,7 +1,7 @@
 from django.db.models import signals
 from django.dispatch import receiver
-
-from sales.models import ReceiptAllocation
+from django.db.models.signals import post_save
+from sales.models import Invoice,InvoiceItem,Receipt,ReceiptAllocation
 
 
 @receiver(signals.post_delete, sender=ReceiptAllocation)
@@ -14,3 +14,37 @@ def delete_status(sender, instance, *args, **kwargs):
     else:
         inv.status = "PartialPaid"
     inv.save()
+
+@receiver(post_save, sender=Invoice)
+@receiver(post_save, sender=Receipt)
+def create_journal(sender, instance, created, **kwargs):
+    lt,at = instance.get_transactions()
+    if created:
+        print("newly created journal")
+        lj,aj = instance.create_journals()
+        lj.transact(lt)
+        aj.transact(at)
+    else:
+        print("existing journal:appending txns")
+        lj,aj = instance.get_journals()
+        print(f"in signalls lt:{lt}")
+        lj.untransact(lt)
+        aj.untransact(at)
+        lj.transact(lt)
+        aj.transact(at)
+    return instance
+
+@receiver(post_save, sender=InvoiceItem)
+# @receiver(post_save, sender=PaymentAllocation)
+def create_stock_journal(sender, instance, created, **kwargs):
+
+    if created:
+        print("newly created stock journal")
+        sj = instance.create_journal()
+        instance.post(sj)
+    else:
+        print("existing stock journal:appending txns")
+        sj = instance.get_journal()
+        instance.unpost(sj)
+        instance.post(sj)
+    return instance

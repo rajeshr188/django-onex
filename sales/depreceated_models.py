@@ -316,7 +316,7 @@ class Invoice(models.Model):
             )
             jrnl.untransact(last_jrnl)
             for i in self.saleitems.all():
-                i.post(jrnl)
+                i.unpost(jrnl)
             self.posted = False
             self.save(update_fields=["posted"])
 

@@ -46,7 +46,7 @@ class InvoiceTable(tables.Table):
             "balance",
             "status",
             "is_gst",
-            "posted",
+            # "posted",
             "term",
             "due_date",
         )

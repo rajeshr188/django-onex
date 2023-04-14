@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (Flowable, Frame, Image, ListFlowable, ListItem,
                                 PageBreak, Paragraph, SimpleDocTemplate,
-                                Spacer, Table, TableStyle)
+                                Spacer, Table, TableStyle,KeepTogether)
 
 from contact.models import Customer
 from girvi.models import Loan
@@ -319,14 +319,14 @@ def get_loan_pdf(loan):
     buffer.close()
     return pdf
 
-
+# why does this takes too long to execute?
 def get_notice_pdf(selection=None):
     # # get all loans with selected ids
     # selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
     selected_loans = selection
     # get a list of unique customers for the selected loans
     customers = Customer.objects.filter(loan__in=selected_loans).distinct()
-
+    print(f"customers gathered")
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
     # Create the PDF canvas
@@ -360,6 +360,7 @@ def get_notice_pdf(selection=None):
     story = []
     spacer = Spacer(0, 0.25 * inch)
     # Loop through each customer
+    print("looping through customers")
     for customer in customers:
         # Calculate the total loan amount for the customer
         # total_loan_amount = loans.aggregate(Sum('loanamount'))['loanamount__sum'] or 0
@@ -426,8 +427,15 @@ def get_notice_pdf(selection=None):
         story.append(f)
         story.append(PageBreak())
 
+    print("pdf generated")
     # Save the PDF and return the response
+    print(f"story length: {len(story)}")
+    story = [KeepTogether(story)]
     doc.build(story)
+    print("doc built")
     pdf = buffer.getvalue()
+    print("pdf ready")
     buffer.close()
+    print("buffer closed...hurray returning")
+    print(f"pdf length: {pdf.__sizeof__()}")
     return pdf

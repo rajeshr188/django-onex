@@ -22,7 +22,7 @@ urlpatterns += (
     path(
         "sales/detail/<int:pk>/", views.sales_detail_view, name="sales_invoice_detail"
     ),
-    path("hx/detail/<int:id>/", views.sales_detail_hx_view, name="hx-detail"),
+    path("hx/detail/<int:pk>/", views.sales_detail_hx_view, name="hx-detail"),
     # path(
     #     "sales/invoice/detail/<int:pk>/pdf",
     #     views.print_invoice,

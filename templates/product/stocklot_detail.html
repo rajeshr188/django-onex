@@ -86,8 +86,8 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>type</th>
-                      <th>activity_type</th>
+                      <th>movement_type</th>
+                      <th>Journal</th>
                       <th>weight</th>
                       <th>quantity</th>
                     </tr>
@@ -96,11 +96,11 @@
                     {%for i in object.stocktransaction_set.all %}
                     <tr>
                       <td>{{i.id}}</td>
-                      <td>{{i.activity_type}}</td>
+                      <td>{{i.movement_type.name}}</td>
                       <td>
                         {%if i.journal.get_url_string is not None%}
-                        <a href="{% url ''|add:i.journal.get_url_string i.journal.content_object%}">
-                          {{i.activity_type}}:{{i.journal}}</a>
+                        <a href="{{i.journal.get_url_string}}">
+                          {{i.journal}}</a>
                         {%else%}
                         <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
                         {%endif%}

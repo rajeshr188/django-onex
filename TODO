@@ -1,4 +1,9 @@
-
+update voucher when item is update/saved
+remove post from everywhere
+bug in is_overdue queryste while filtering loan by id
+printing loan notice group hangs
+stocklist isto be sourced from stockbalance db view
+handle stock journal when a lot is not associated with purchase
 approval to sales
 mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
@@ -27,3 +32,7 @@ lets say journal are of two types/three types
 
     all these journal are created when a line item of the voucher is created/edited
 
+one journal with all stock,ledger,acc Transaction
+a journal each time with all stock ledger,acc txns
+one stock,ledger,acc journal with each having their own txns----this is clear winner
+one stock,ledger,acc journal each time having thei own txns

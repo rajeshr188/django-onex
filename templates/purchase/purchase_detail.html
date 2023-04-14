@@ -44,13 +44,7 @@
           <li>GST : {{object.is_gst}}</li>
           <li >Total :{{object.total}}</li>
           <li >Paid : {{object.get_total_payments}}</li>
-          <li >
-            {%if object.posted%}
-            <a class="btn btn-danger" href="{% url 'purchase:purchase_invoice_unpost' object.pk%}">Unpost</a>
-            {%else%}
-            <a class="btn btn-success" href="{% url 'purchase:purchase_invoice_post' object.pk%}">Post</a>
-            {%endif%}
-          </li>
+          
         </ul>
       </p>
     
@@ -81,6 +75,12 @@
                 <td>{{i.weight}}</td>
                 <td>{{i.touch}}</td>
                 <td>{{i.total}}</td>
+                <td>
+                  {%if i.journal%}
+                    <a href="{% url 'dea_journal_detail' i.journal.first.id %}">Journal</a>
+                  {%else%}{{i.journal}}
+                  {%endif%}
+                </td>
               </tr>
           {%endfor%}
           </table>
@@ -136,6 +136,7 @@
               <td>{{journal}}</td>
             </tr>
             {%endfor%}
+            
           </tbody>
         </table>
         {%endif%}

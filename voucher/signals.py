@@ -1,11 +1,8 @@
 from django.db.models.signals import post_save
 from dea.models import Journal
 from django.dispatch import receiver
-from girvi.models import Loan,Adjustment,Release
 
-@receiver(post_save, sender=Loan)
-@receiver(post_save, sender=Adjustment)
-@receiver(post_save, sender=Release)
+# @receiver(post_save, sender=Loan)
 def create_journal(sender, instance, created, **kwargs):
     lt,at = instance.get_transactions()
     if created:

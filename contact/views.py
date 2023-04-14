@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods  # new
 from django_tables2.config import RequestConfig
 from render_block import render_block_to_string
 
-from sales.models import Month
+# from sales.models import Month
 from utils.htmx_utils import for_htmx
 
 from .filters import CustomerFilter

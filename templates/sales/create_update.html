@@ -28,7 +28,7 @@
 
         <div class='{% if object.id %}col-12 col-md-6 {% else %} d-none {% endif %}'>
             <h3>Items</h3>
-         
+            total:{{ object.get_invoiceitem_children.count }}
             <ul id="items-list" class="list-group list-group-flush">
                 {% for item in object.get_invoiceitem_children %}
                 {% include 'sales/partials/item-inline.html' with object=item %}

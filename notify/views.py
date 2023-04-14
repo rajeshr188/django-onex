@@ -31,12 +31,13 @@ def noticegroup_detail(request, pk):
     # loans = Loan.objects.unreleased().filter(
     #     created__gt=ng.date_range.lower, created__lt=ng.date_range.upper
     # )
-
+    items= ng.notification_set.all().prefetch_related('loans').select_related("group","customer")
     return render(
         request,
         "notify/noticegroup_detail.html",
         context={
             "object": ng,
+            "items": items,
             #  "loans": loans
         },
     )
@@ -66,14 +67,17 @@ def notification_detail(request, pk):
 
     return render(request, "notify/notification_detail.html", context={"object": ng})
 
-
+# this looks heavy on frontend with items > 100: optimise it
 def noticegroup_print(request, pk):
     ng = get_object_or_404(NoticeGroup, pk=pk)
     selected_loans = []
-    for i in ng.notification_set.all():
-        for j in i.loans.all():
+    items = ng.notification_set.all().prefetch_related('loans').select_related("group","customer")
+    print("generated items to print in this noticegroup")
+    for i in items:
+        for j in i.loans.all().select_related("customer"):
             selected_loans.append(j.id)
     selected_loans = Loan.objects.unreleased().filter(id__in=selected_loans)
+    print("selected loans to print in this noticegroup")
     pdf = get_notice_pdf(selection=selected_loans)
     # Create a response object
     response = HttpResponse(pdf, content_type="application/pdf")

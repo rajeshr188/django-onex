@@ -184,9 +184,9 @@ class StockLot(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
-    # rename qty and weight
-    qty = models.IntegerField(default=0)
-    wt = models.DecimalField(max_digits=10, decimal_places=3)
+
+    quantity = models.IntegerField(default=0)
+    weight = models.DecimalField(max_digits=10, decimal_places=3)
     barcode = models.CharField(
         max_length=155, null=True, blank=True, unique=True, editable=False
     )
@@ -343,12 +343,17 @@ class StockLot(models.Model):
             )
 
         new_lot = StockLot(
-            variant=self.variant, wt=lot.wt + self.wt, qty=lot.qty + self.qty
+            variant=self.variant,
+            weight=lot.weight + self.eight,
+            quantity=lot.quantity + self.quantity,
         )
-        self.transact(self.wt, self.qty, journal=None, movement_type="RM")
-        lot.transact(lot.wt, lot.qty, journal=None, movement_type="RM")
+        self.transact(self.weight, self.quantity, journal=None, movement_type="RM")
+        lot.transact(lot.weight, lot.quantity, journal=None, movement_type="RM")
         new_lot.transact(
-            self.wt + lot.wt, self.qty + lot.qty, journal=None, movement_type="AD"
+            self.weight + lot.weight,
+            self.quantity + lot.quantity,
+            journal=None,
+            movement_type="AD",
         )
         return new_lot
 
@@ -356,8 +361,8 @@ class StockLot(models.Model):
         """
         split a lot by creating a new lot and transfering the wt & qty to new lot
         """
-        if not self.is_unique and self.qty > qty and self.wt > wt:
-            new_lot = StockLot(variant=self.variant, wt=wt, qty=qty)
+        if not self.is_unique and self.quantity > qty and self.weight > wt:
+            new_lot = StockLot(variant=self.variant, weight=wt, quantity=qty)
             new_lot.transact(wt, qty, journal=None, movement_type="AD")
 
             self.transact(wt, qty, journal=None, movement_type="RM")

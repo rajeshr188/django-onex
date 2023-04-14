@@ -35,7 +35,7 @@ class Receipt(models.Model):
         )
         SILVER = "AUD", _("Silver")
 
-    type = models.CharField(
+    receipt_type = models.CharField(
         max_length=30,
         verbose_name="Currency",
         choices=BType.choices,
@@ -54,14 +54,13 @@ class Receipt(models.Model):
     status = models.CharField(
         max_length=18, choices=status_choices, default="Unallotted"
     )
-    posted = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     journals = GenericRelation(Journal, related_query_name="receipt_doc")
     # Relationship Fields
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="receipts"
     )
-    invoices = models.ManyToManyField('sales.Invoice', through="ReceiptAllocation")
+    invoices = models.ManyToManyField("sales.Invoice", through="ReceiptAllocation")
 
     class Meta:
         ordering = ("-created",)
@@ -133,43 +132,6 @@ class Receipt(models.Model):
 
         self.update_status()
 
-    def post(self):
-        if not self.posted:
-            jrnl = Journal.objects.create(
-                content_object=self,
-                journal_type=JournalTypes.RC,
-                desc="Receipt",
-            )
-
-            money = Money(self.total, self.type)
-            lt = [
-                {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}
-            ]
-            at = [
-                {
-                    "ledgerno": "Sundry Debtors",
-                    "xacttypecode": "Dr",
-                    "xacttypecode_ext": "RCT",
-                    "account": self.customer.account,
-                    "amount": money,
-                }
-            ]
-            jrnl.transact(lt, at)
-            self.posted = True
-            self.save(update_fields=["posted"])
-
-    def unpost(self):
-        if self.posted:
-            last_jrnl = -self.journals.latest()
-            jrnl = Journal.objects.create(
-                content_object=self,
-                desc="Receipt-Revert",
-                journal_type=JournalTypes.RC,
-            )
-            jrnl.untransact(last_jrnl)
-            self.posted = False
-            self.save(update_fields=["posted"])
-
     def create_journals(self):
         ledgerjournal = LedgerJournal.objects.create(
             content_object=self,
@@ -192,16 +154,8 @@ class Receipt(models.Model):
         return self.create_journals()
 
     def get_transactions(self):
-        jrnl = Journal.objects.create(
-                content_object=self,
-                journal_type=JournalTypes.RC,
-                desc="Receipt",
-            )
-
         money = Money(self.total, self.type)
-        lt = [
-            {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}
-        ]
+        lt = [{"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}]
         at = [
             {
                 "ledgerno": "Sundry Debtors",
@@ -211,23 +165,20 @@ class Receipt(models.Model):
                 "amount": money,
             }
         ]
-        return lt,at
+        return lt, at
 
-    # must be abstracted
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-        
 
-# must be abstracted
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
         account_journal.untransact(at)
@@ -237,7 +188,7 @@ class ReceiptAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    invoice = models.ForeignKey('sales.Invoice', on_delete=models.CASCADE)
+    invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE)
     allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):

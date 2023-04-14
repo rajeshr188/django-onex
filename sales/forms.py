@@ -130,7 +130,7 @@ class ReceiptForm(forms.ModelForm):
         fields = [
             "created",
             "customer",
-            "type",
+            "receipt_type",
             "weight",
             "touch",
             "rate",

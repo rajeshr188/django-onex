@@ -308,4 +308,3 @@ urlpatterns += (
     path("product/rate/create", views.rate_create, name="product_rate_create"),
     path("product/rate/<int:pk>/", views.rate_delete, name="product_rate_delete"),
 )
-

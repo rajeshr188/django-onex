@@ -82,8 +82,8 @@ class InvoiceItemAdminForm(forms.ModelForm):
 class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemAdminForm
     list_display = ["weight", "touch", "total", "is_return", "quantity"]
-    list_filter = ('invoice',)
-    search_fields = ('invoice__id',)
+    list_filter = ("invoice",)
+    search_fields = ("invoice__id",)
 
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
@@ -118,7 +118,7 @@ class PaymentAdmin(ImportExportActionModelAdmin):
         "id",
         "created",
         "updated",
-        "type",
+        "payment_type",
         "total",
         "description",
         "status",

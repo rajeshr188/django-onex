@@ -1,2 +1,2 @@
-from .sale import Invoice,InvoiceItem
-from .receipt import Receipt,ReceiptAllocation
+from .receipt import Receipt, ReceiptAllocation
+from .sale import Invoice, InvoiceItem

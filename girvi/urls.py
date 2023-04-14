@@ -11,26 +11,38 @@ router.register(r"loan", api.LoanViewSet)
 router.register(r"release", api.ReleaseViewSet)
 
 app_name = "girvi"
+
 urlpatterns = (
     # urls for Django Rest Framework API
     path("api/v1/", include(router.urls)),
 )
-urlpatterns += (path("", views.home, name="girvi-home"),)
-urlpatterns += (path("multirelease/", views.multirelease, name="girvi-multirelease"),)
+
 urlpatterns += (
+    path("", views.home, name="girvi-home"),
+    path("multirelease/", views.multirelease, name="girvi-multirelease"),
     path("deletemultiple/", views.deleteLoan, name="girvi_loan_deletemultiple"),
+    path("girvi/check/", views.check_girvi, name="check_girvi"),
+    path("girvi/bulk_release/", views.bulk_release, name="bulk_release"),
+    path(
+        "girvi/series/<int:pk>/activate",
+        views.activate_series,
+        name="girvi_activate_series",
+    ),
+    path(
+        "girvi/series/next-loanid/", views.next_loanid, name="girvi_series_next_loanid"
+    ),
+    # Example: /2012/week/23/
+    path("girvi/notice/", views.notice, name="notice"),
+    path("girvi/outdatedloans/notify/", views.notify_print, name="girvi_create_notice"),
 )
+
 urlpatterns += (
     path(
         "loan_archive/",
         ArchiveIndexView.as_view(model=Loan, date_field="created"),
         name="loan_archive",
     ),
-)
-urlpatterns += (
     path("<int:year>/", views.LoanYearArchiveView.as_view(), name="loan_year_archive"),
-)
-urlpatterns += (
     # Example: /2012/08/
     path(
         "<int:year>/<int:month>/",
@@ -43,8 +55,6 @@ urlpatterns += (
         views.LoanMonthArchiveView.as_view(),
         name="archive_month",
     ),
-)
-urlpatterns += (
     # Example: /2012/week/23/
     path(
         "<int:year>/week/<int:week>/",
@@ -52,18 +62,7 @@ urlpatterns += (
         name="archive_week",
     ),
 )
-urlpatterns += (
-    path("girvi/check/", views.check_girvi, name="check_girvi"),
-    path("girvi/bulk_release/", views.bulk_release, name="bulk_release"),
-    path(
-        "girvi/series/<int:pk>/activate",
-        views.activate_series,
-        name="girvi_activate_series",
-    ),
-    path(
-        "girvi/series/next-loanid/", views.next_loanid, name="girvi_series_next_loanid"
-    ),
-)
+
 urlpatterns += (
     # urls for License
     path("girvi/license/", views.LicenseListView.as_view(), name="girvi_license_list"),
@@ -117,8 +116,6 @@ urlpatterns += (
         views.LoanDeleteView.as_view(),
         name="girvi_loan_delete",
     ),
-    path("girvi/loan/<int:pk>/post/", views.post_loan, name="girvi_loan_post"),
-    path("girvi/loan/<int:pk>/unpost/", views.unpost_loan, name="girvi_loan_unpost"),
     path(
         "girvi/loan/take_physicalstock/",
         views.physical_stock,
@@ -130,7 +127,9 @@ urlpatterns += (
         name="girvi_physicalstock_list",
     ),
 )
+
 urlpatterns += (
+    # urls for loanitem
     path(
         "loan/<int:parent_id>/item/create",
         views.loan_item_update_hx_view,
@@ -142,9 +141,7 @@ urlpatterns += (
         name="hx-loanitem-detail",
     ),
     path(
-        "loan/item/<int:pk>/detail",
-        views.loanitem_detail,
-        name="girvi_loanitem_detail"
+        "loan/item/<int:pk>/detail", views.loanitem_detail, name="girvi_loanitem_detail"
     ),
     path(
         "loan/<int:parent_id>/item/<int:id>/delete/",
@@ -152,6 +149,7 @@ urlpatterns += (
         name="girvi_loanitem_delete",
     ),
 )
+
 urlpatterns += (
     # urls for Adjustment
     path(
@@ -209,15 +207,4 @@ urlpatterns += (
         views.ReleaseDeleteView.as_view(),
         name="girvi_release_delete",
     ),
-    path("girvi/release/<int:pk>/post/", views.post_release, name="girvi_release_post"),
-    path(
-        "girvi/release/<int:pk>/unpost/",
-        views.unpost_release,
-        name="girvi_release_unpost",
-    ),
-)
-urlpatterns += (
-    # Example: /2012/week/23/
-    path("girvi/notice/", views.notice, name="notice"),
-    path("girvi/outdatedloans/notify/", views.notify_print, name="girvi_create_notice"),
 )

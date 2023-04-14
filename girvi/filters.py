@@ -13,22 +13,19 @@ from .models import Adjustment, Loan, LoanStatement, Release
 
 class LoanFilter(django_filters.FilterSet):
     query = django_filters.CharFilter(method="universal_search", label="Search")
-
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.all(),
         widget=CustomerWidget(empty_label="Customer"),
-        # queryset = Customer.objects.all(),
-        # widget = Select2Widget
     )
-    posted = django_filters.BooleanFilter(field_name="posted")
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     from_date = django_filters.DateFilter("created", lookup_expr="gte")
     till_date = django_filters.DateFilter("created", lookup_expr="lte")
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
-    # create a filter for loan_type field with choices
-    loan_type = django_filters.ChoiceFilter(choices = Loan.LoanType.choices, empty_label="Select Loan Type")
+    loan_type = django_filters.ChoiceFilter(
+        choices=Loan.LoanType.choices, empty_label="Select Loan Type"
+    )
     sunk = django_filters.BooleanFilter(method="sunken", label="sunken")
 
     def filter_status(self, queryset, name, value):
@@ -44,11 +41,11 @@ class LoanFilter(django_filters.FilterSet):
         ]
 
     def universal_search(self, queryset, name, value):
-        # if value.replace(".", "", 1).isdigit():
-        #     value = Decimal(value)
-        #     return Customer.objects.filter(
-        #         Q(price=value) | Q(cost=value)
-        #     )
+        if value.replace(".", "", 1).isdigit():
+            value = Decimal(value)
+            return Customer.objects.filter(
+                Q(id=value) | Q(lid=value) | Q(loanamount=value)
+            )
 
         return Loan.objects.filter(
             Q(id__icontains=value)
@@ -58,6 +55,7 @@ class LoanFilter(django_filters.FilterSet):
             | Q(itemweight__icontains=value)
             | Q(loanamount__icontains=value)
         )
+
     # causes trouble in the table while filtering by id
     def sunken(self, queryset, name, value):
         return queryset.filter(is_overdue=value)

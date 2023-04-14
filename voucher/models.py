@@ -1,8 +1,7 @@
-from django.db import models
-
+from django.core.exceptions import ValidationError
 # Create your models here.
 from django.db import models
-from django.core.exceptions import ValidationError
+
 
 class Voucher(models.Model):
     # fields
@@ -12,13 +11,14 @@ class Voucher(models.Model):
 
     class Meta:
         abstract = True
+
     # methods
     def save(self, *args, **kwargs):
         if not self.pk:
             # create the journal for this voucher
-            journal = Journal.objects.create(voucher=self, type='ledger')
+            journal = Journal.objects.create(voucher=self, type="ledger")
             self.journal = journal
-            
+
         # calculate voucher balance
         voucher_items = self.voucher_items.all()
         voucher_balance = sum([item.balance for item in voucher_items])
@@ -33,13 +33,13 @@ class Voucher(models.Model):
         self.create_transactions()
 
     def create_journals(self):
-        ledger_journal = Journal.objects.create(voucher=self, type='ledger')
-        account_journal = Journal.objects.create(voucher=self, type='account')
+        ledger_journal = Journal.objects.create(voucher=self, type="ledger")
+        account_journal = Journal.objects.create(voucher=self, type="account")
         return ledger_journal, account_journal
 
     def get_journals(self):
-        ledger_journal = Journal.objects.get(voucher=self, type='ledger')
-        account_journal = Journal.objects.get(voucher=self, type='account')
+        ledger_journal = Journal.objects.get(voucher=self, type="ledger")
+        account_journal = Journal.objects.get(voucher=self, type="account")
         return ledger_journal, account_journal
 
     def delete_journals(self):
@@ -74,21 +74,21 @@ class Voucher(models.Model):
 
 
 class VoucherItem(models.Model):
-    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name='items')
+    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name="items")
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
     def __str__(self):
-        return f'{self.item} - {self.quantity}'
-    
+        return f"{self.item} - {self.quantity}"
+
     def save(self, *args, **kwargs):
         """
         Create a new stock transaction and update the voucher's balance
         """
         previous_transaction = self.get_previous_stock_transaction()
         new_balance = self.get_updated_balance()
-        
+
         # create a new stock transaction
         stock_journal = Journal.objects.get(type=JournalType.STOCK)
         stock_transaction = StockTransaction(
@@ -97,24 +97,26 @@ class VoucherItem(models.Model):
             voucher=self.voucher,
             quantity=self.quantity,
             rate=self.rate,
-            previous_balance=previous_transaction.balance if previous_transaction else 0,
+            previous_balance=previous_transaction.balance
+            if previous_transaction
+            else 0,
             new_balance=new_balance,
-            timestamp=timezone.now()
+            timestamp=timezone.now(),
         )
         stock_transaction.save()
-        
+
         # update the voucher's balance
         self.voucher.update()
-        
+
         super().save(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         """
         Reverse the existing stock transaction and update the voucher's balance
         """
         previous_transaction = self.get_previous_stock_transaction()
         new_balance = self.get_updated_balance()
-        
+
         # reverse the existing stock transaction
         stock_journal = Journal.objects.get(type=JournalType.STOCK)
         stock_transaction = StockTransaction(
@@ -123,23 +125,29 @@ class VoucherItem(models.Model):
             voucher=self.voucher,
             quantity=self.quantity * -1,
             rate=self.rate,
-            previous_balance=previous_transaction.balance if previous_transaction else 0,
+            previous_balance=previous_transaction.balance
+            if previous_transaction
+            else 0,
             new_balance=new_balance,
-            timestamp=timezone.now()
+            timestamp=timezone.now(),
         )
         stock_transaction.save()
-        
+
         # update the voucher's balance
         self.voucher.update()
-        
+
         super().delete(*args, **kwargs)
-    
+
     def get_previous_stock_transaction(self):
         """
         Get the previous stock transaction for this item
         """
-        return StockTransaction.objects.filter(item=self.item, voucher=self.voucher).order_by('-timestamp').first()
-    
+        return (
+            StockTransaction.objects.filter(item=self.item, voucher=self.voucher)
+            .order_by("-timestamp")
+            .first()
+        )
+
     def get_updated_balance(self):
         """
         Calculate the updated balance for this item
@@ -148,60 +156,61 @@ class VoucherItem(models.Model):
         previous_balance = previous_transaction.balance if previous_transaction else 0
         return previous_balance + Decimal(self.quantity) * Decimal(self.rate)
 
+
 # --------------------------------composition--------------------------------
 # from django.db import models
 
 # class Voucher(models.Model):
 #     # common fields for all vouchers
-    
+
 #     created_at = models.DateTimeField(auto_now_add=True)
 #     updated_at = models.DateTimeField(auto_now=True)
 #     voucher_type = models.CharField(max_length=255)
-    
+
 #     def save(self, *args, **kwargs):
 #         # calculate voucher balance
 #         voucher_items = self.voucher_items.all()
 #         voucher_balance = sum([item.balance for item in voucher_items])
 #         self.balance = voucher_balance
-        
+
 #         super().save(*args, **kwargs)
-    
+
 # class SalesVoucher(models.Model):
 #     voucher = models.OneToOneField(Voucher, on_delete=models.CASCADE, related_name='sales_voucher')
-    
+
 #     # fields specific to sales voucher
 #     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 #     invoice_number = models.CharField(max_length=255)
-    
+
 #     def create_journal(self):
 #         # create ledger and account journals for sales voucher
 #         # ...
-    
+
 #     def create_transactions(self):
 #         # create ledger and account transactions for sales voucher
 #         # ...
-    
+
 #     def reverse_transactions(self):
 #         # reverse ledger and account transactions for sales voucher
 #         # ...
-    
+
 # class PurchaseVoucher(models.Model):
 #     voucher = models.OneToOneField(Voucher, on_delete=models.CASCADE, related_name='purchase_voucher')
-    
+
 #     # fields specific to purchase voucher
 #     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
 #     purchase_order_number = models.CharField(max_length=255)
-    
+
 #     def create_journal(self):
 #         # create ledger and account journals for purchase voucher
 #         # ...
-    
+
 #     def create_transactions(self):
 #         # create ledger and account transactions for purchase voucher
 #         # ...
-    
+
 #     def reverse_transactions(self):
 #         # reverse ledger and account transactions for purchase voucher
 #         # ...
-    
+
 # other voucher types modeled similarly...

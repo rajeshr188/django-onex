@@ -10,7 +10,6 @@ from .models import Invoice, Receipt
 class InvoiceFilter(django_filters.FilterSet):
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.all(),
-        # widget=Select2Widget
         widget=CustomerWidget,
     )
     due_date = django_filters.DateFilter(field_name="due_date", lookup_expr="lte")
@@ -27,4 +26,4 @@ class ReceiptFilter(django_filters.FilterSet):
 
     class Meta:
         model = Receipt
-        fields = ["id", "created", "type", "status"]
+        fields = ["id", "created", "receipt_type", "status"]

@@ -2,38 +2,25 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
-from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  UpdateView)
+from django.views.generic import DeleteView
 
 from dea.models import Journal
+from invoice.models import PaymentTerm
+from sales.models import Invoice as sinv
+from sales.models import InvoiceItem as sinvitem
 from utils.htmx_utils import for_htmx
 
-from .filters import ApprovalLineFilter,ApprovalFilter
+from .filters import ApprovalFilter, ApprovalLineFilter
 from .forms import ApprovalForm, ApprovalLineForm, ReturnForm, ReturnItemForm
 from .models import Approval, ApprovalLine, Return, ReturnItem
 
 
-# Create your views here.
-def post_approval(request, pk):
-    approval = get_object_or_404(Approval, pk=pk)
-    approval.post()
-    return redirect(approval)
-
-def unpost_approval(request, pk):
-    approval = get_object_or_404(Approval, pk=pk)
-    approval.unpost()
-    return redirect(approval)
-
-
-from invoice.models import PaymentTerm
-from sales.models import Invoice as sinv
-from sales.models import InvoiceItem as sinvitem
-
+@login_required
 def convert_sales(request, pk):
     # create sales invoice and invoice items from approval
     approval = get_object_or_404(Approval, pk=pk)
@@ -119,37 +106,39 @@ class ApprovalDeleteView(LoginRequiredMixin, DeleteView):
     model = Approval
     success_url = reverse_lazy("approval:approval_approval_list")
 
+
 @login_required
 # create a list view for approvalline with status pending
 def approvalline_list(request):
     approvallines = ApprovalLine.objects.exclude(status="Billed")
     filter = ApprovalLineFilter(request.GET, queryset=approvallines)
     return render(request, "approval/approvalline_list.html", {"filter": filter})
-    
+
+
 @login_required
 def approvalline_create_update(request, approval_pk, pk=None):
     approval = get_object_or_404(Approval, pk=approval_pk)
-    url = reverse("approval:approval_approvalline_create", kwargs={"approval_pk": approval.pk})
+    url = reverse(
+        "approval:approval_approvalline_create", kwargs={"approval_pk": approval.pk}
+    )
     line = None
     if pk:
         line = get_object_or_404(ApprovalLine, pk=pk)
         url = line.get_hx_edit_url()
-        
+
     form = ApprovalLineForm(request.POST or None, instance=line)
-    if request.method == "POST"and form.is_valid():
+    if request.method == "POST" and form.is_valid():
         approvalline = form.save(commit=False)
         approvalline.approval = approval
         approvalline.save()
         if request.htmx:
-            return HttpResponse(
-                status=204, headers={"HX-Trigger": "approvalChanged"}
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "approvalChanged"})
         return redirect("approval:approval_approvalline_detail", pk=approvalline.pk)
-    
+
     return render(
         request,
         "approval/approvalline_form.html",
-        {"form": form, "approval": approval,"url":url,"line":line},
+        {"form": form, "approval": approval, "url": url, "line": line},
     )
 
 
@@ -183,7 +172,6 @@ def return_list(request):
 
 @login_required
 def return_create(request):
-    
     if request.method == "POST":
         form = ReturnForm(request.POST)
         if form.is_valid():
@@ -231,32 +219,31 @@ class ReturnDeleteView(LoginRequiredMixin, DeleteView):
     model = Return
     success_url = reverse_lazy("approval:approval_return_list")
 
-# create fbv for returnitem_create
+
 @login_required
-def returnitem_create_update(request, return_pk,pk = None):
+def returnitem_create_update(request, return_pk, pk=None):
     ret = get_object_or_404(Return, pk=return_pk)
     retitem = None
     url = reverse("approval:approval_returnitem_create", kwargs={"return_pk": ret.pk})
     if pk:
         retitem = get_object_or_404(ReturnItem, pk=pk)
         url = retitem.get_hx_edit_url()
-    
+
     form = ReturnItemForm(request.POST or None, instance=retitem)
     if request.method == "POST" and form.is_valid():
         retitem = form.save(commit=False)
         retitem.return_obj = ret
         retitem.save()
         if request.htmx:
-            return HttpResponse(
-                status=204, headers={"HX-Trigger": "returnChanged"}
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "returnChanged"})
         return redirect("approval:approval_returnitem_detail", pk=retitem.pk)
-    
+
     return render(
         request,
         "approval/returnitem_form.html",
-        {"form": form, "return_obj": ret,"line":retitem,"url":url},
+        {"form": form, "return_obj": ret, "line": retitem, "url": url},
     )
+
 
 @login_required
 def returnitem_delete(request, pk):
@@ -272,6 +259,7 @@ def returnitem_delete(request, pk):
         {"object": retitem},
     )
 
+
 @login_required
 def returnitem_detail(request, pk):
     ret = get_object_or_404(ReturnItem, pk=pk)
@@ -282,4 +270,3 @@ def returnitem_detail(request, pk):
             "item": ret,
         },
     )
-

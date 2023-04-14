@@ -5,6 +5,7 @@ printing loan notice group hangs
 stocklist isto be sourced from stockbalance db view
 handle stock journal when a lot is not associated with purchase
 approval to sales
+handle orphan stocklots without purchase
 mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
@@ -13,26 +14,3 @@ create sale-receipt and purchase-payment view from db view
 deployment
 add ledger codes
 remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did
-
-when a voucher is created/edited :
-    a jounrnal(ledger/account) is created
-    after that each time a voucher is updated
-        last_journal.untransact()
-        new_journal.transact()
-when a line item :
-        is created : then create a stock journal
-                        update the voucher so that it creates ledger and account journals
-        is updated: then last_Stock_journal.untransact() and new journal.transact()
-                        update the voucher so that it creates ledger and account journals
-
-lets say journal are of two types/three types
-    1 Ledger Journal only involves Ledger Transaction of the assoiated voucher
-    2 Account Journal only involves Account Transaction of the associated voucher
-    3 Stock Journal only involves Stock Transaction of the associated voucher
-
-    all these journal are created when a line item of the voucher is created/edited
-
-one journal with all stock,ledger,acc Transaction
-a journal each time with all stock ledger,acc txns
-one stock,ledger,acc journal with each having their own txns----this is clear winner
-one stock,ledger,acc journal each time having thei own txns

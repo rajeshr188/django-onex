@@ -143,8 +143,8 @@ def stockjournal_create(request):
             if sj_type == "IN":
                 lot = StockLot.objects.create(
                     stock=stock,
-                    wt=weight,
-                    qty=quantity,
+                    weight=weight,
+                    quantity=quantity,
                     variant=stock.variant,
                     purchase_touch=cost,
                 )

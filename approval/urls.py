@@ -26,8 +26,6 @@ urlpatterns = (
         views.ApprovalDeleteView.as_view(),
         name="approval_approval_delete",
     ),
-    path("approval/post/<int:pk>/", views.post_approval, name="approval_post"),
-    path("approval/unpost/<int:pk>/", views.unpost_approval, name="approval_unpost"),
 )
 
 urlpatterns += (

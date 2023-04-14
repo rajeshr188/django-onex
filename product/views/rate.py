@@ -1,14 +1,18 @@
 import requests
-from django.http import HttpResponse
-from ..models import Rate
-from django.utils.html import format_html
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.html import format_html
+
+from ..models import Rate
+
 
 def get_latest_rate(request):
-    rate = Rate.objects.latest('timestamp')
-    return HttpResponse(f"{rate.metal} {rate.purity} {rate.currency} {rate.buying_rate} {rate.timestamp}")
-    
+    rate = Rate.objects.latest("timestamp")
+    return HttpResponse(
+        f"{rate.metal} {rate.purity} {rate.currency} {rate.buying_rate} {rate.timestamp}"
+    )
+
 
 # create list view for rate
 @login_required
@@ -16,11 +20,13 @@ def rate_list(request):
     rates = Rate.objects.all()
     return render(request, "product/rate_list.html", {"rates": rates})
 
+
 def rate_delete(request, pk):
-    if request.method=='POST':
+    if request.method == "POST":
         rate = get_object_or_404(Rate, pk=pk)
         rate.delete()
     return redirect("rate_list")
+
 
 @login_required
 def rate_create(request):

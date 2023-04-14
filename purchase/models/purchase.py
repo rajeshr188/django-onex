@@ -15,48 +15,8 @@ from product.attributes import get_product_attributes_data
 from product.models import (Attribute, ProductVariant, Stock, StockLot,
                             StockTransaction)
 
+from ..managers import PurchaseQueryset
 
-# if not posted : delete/edit
-#  if posted : !edit
-#  delete any time
-class PurchaseQueryset(models.QuerySet):
-    def posted(self):
-        return self.filter(posted=True)
-
-    def unposted(self):
-        return self.filter(posted=False)
-
-    def gst(self):
-        return self.filter(is_gst=True)
-
-    def non_gst(self):
-        return self.filter(is_gst=False)
-
-    def total(self):
-        return self.aggregate(
-            cash=Sum("balance", filter=Q(balancetype="INR")),
-            gold=Sum("balance", filter=Q(balancetype="USD")),
-            silver=Sum("balance", filter=Q(balancetype="AUD")),
-        )
-
-    def today(self):
-        return self.filter(created__date=date.today())
-
-    def cur_month(self):
-        return self.filter(
-            created__month=date.today().month, created__year=date.today().year
-        )
-
-    def total_with_ratecut(self):
-        return self.aggregate(
-            cash=Sum("balance", filter=Q(balancetype="INR")),
-            cash_g=Sum("balance", filter=Q(balancetype="INR", metaltype="Gold")),
-            cash_s=Sum("balance", filter=Q(balancetype="INR", metaltype="Silver")),
-            cash_g_nwt=Sum("net_wt", filter=Q(balancetype="INR", metaltype="Gold")),
-            cash_s_nwt=Sum("net_wt", filter=Q(balancetype="INR", metaltype="Silver")),
-            gold=Sum("balance", filter=Q(balancetype="USD")),
-            silver=Sum("balance", filter=Q(balancetype="AUD")),
-        )
 
 # multicurrency balance with balance field for ecery currency or a balance field with array of currency?
 class Invoice(models.Model):
@@ -72,7 +32,6 @@ class Invoice(models.Model):
     )
     rate = models.DecimalField(max_digits=10, decimal_places=3)
     is_gst = models.BooleanField(default=False)
-    posted = models.BooleanField(default=False)
     gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
     net_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
     total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
@@ -187,38 +146,15 @@ class Invoice(models.Model):
     def get_gst(self):
         return (self.balance * 3) / 100 if self.is_gst else 0
 
-    @transaction.atomic()
-    def post(self):
-        if not self.posted:
-            
-            jrnl.transact(lt, at)
-            for i in self.purchaseitems.all():
-                i.post(jrnl)
-            self.posted = True
-            self.save(update_fields=["posted"])
-
-    @transaction.atomic()
-    def unpost(self):
-        if self.posted:
-            last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(
-                content_object=self,
-                desc="purchase revert",
-                jouranl_type=JournalTypes.PJ,
-            )
-            jrnl.untransact(last_jrnl)
-            for i in self.purchaseitems.all():
-                i.unpost(jrnl)
-            self.posted = False
-            self.save(update_fields=["posted"])
-
     def create_journals(self):
         ledgerjournal = Journal.objects.create(
-            content_object=self,journal_type=JournalTypes.LJ,
+            content_object=self,
+            journal_type=JournalTypes.LJ,
             desc="purchase",
         )
         accountjournal = Journal.objects.create(
-            content_object=self,journal_type=JournalTypes.AJ,
+            content_object=self,
+            journal_type=JournalTypes.AJ,
             desc="purchase",
         )
         return ledgerjournal, accountjournal
@@ -231,18 +167,12 @@ class Invoice(models.Model):
             return ledgerjournal, accountjournal
 
         return self.create_journals()
-    
+
     def get_transactions(self):
         try:
             self.supplier.account
         except self.supplier.account.DOESNOTEXIST:
             self.supplier.save()
-
-        # jrnl = Journal.objects.create(
-        #     journal_type=JournalTypes.,
-        #     content_object=self,
-        #     desc="purchase",
-        # )
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         money = Money(self.balance, self.balancetype)
@@ -264,27 +194,23 @@ class Invoice(models.Model):
                 "amount": money + tax if self.is_gst else money,
             }
         ]
-        return lt,at
-    
-    # must be abstracted
+        return lt, at
+
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-        
 
-# must be abstracted
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
         account_journal.untransact(at)
-        
 
 
 class InvoiceItem(models.Model):
@@ -326,16 +252,14 @@ class InvoiceItem(models.Model):
         self.net_wt = self.get_nettwt()
         rate = self.invoice.rate if self.invoice.rate > 0 else 0
         self.total = self.net_wt * rate + self.makingcharge
-        super(InvoiceItem, self).save(*args, **kwargs)
-        # self.post()
+        return super(InvoiceItem, self).save(*args, **kwargs)
 
     def update(self, *args, **kwargs):
         self.unpost()
         self.net_wt = self.get_nettwt()
         rate = self.invoice.rate if self.invoice.rate > 0 else 0
         self.total = self.net_wt * rate + self.makingcharge
-        super(InvoiceItem, self).update(*args, **kwargs)
-        # self.post()
+        return super(InvoiceItem, self).update(*args, **kwargs)
 
     def create_journal(self):
         stock_journal = Journal.objects.create(
@@ -350,7 +274,6 @@ class InvoiceItem(models.Model):
         if stock_journal.exists():
             return stock_journal.first()
         return self.create_journal()
-
 
     @transaction.atomic()
     def post(self, journal):
@@ -403,7 +326,7 @@ class InvoiceItem(models.Model):
             self.product.stock_lots.get(
                 # variant=self.product,
                 purchase=self.invoice,
-                ).transact(
+            ).transact(
                 journal=journal,
                 weight=self.weight,
                 quantity=self.quantity,

@@ -1,7 +1,8 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.db.models import Sum
 from django.urls import reverse
-from django.contrib.contenttypes.fields import GenericRelation
+
 from approval.models import ApprovalLine
 from contact.models import Customer
 from dea.models import Journal
@@ -25,6 +26,7 @@ If any changes are made to the approval, return, or invoice, those changes shoul
 
 
 # Create your models here.
+
 
 class Return(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
@@ -59,8 +61,9 @@ class ReturnItem(models.Model):
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    posted = models.BooleanField(default=False)
+
     journal = GenericRelation(Journal, related_query_name="approval_returnitem")
+
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product.name} ({self.line_item.price} each)"
 
@@ -71,28 +74,20 @@ class ReturnItem(models.Model):
         kwargs = {"return_pk": self.return_obj.id, "pk": self.pk}
         return reverse("approval:approval_returnitem_update", kwargs=kwargs)
 
-
     def create_journal(self):
         return Journal.objects.create(
-            journal_type = JournalTypes.SJ,
-            desc = "Approval Return",
-            content_object = self,
-
+            journal_type=JournalTypes.SJ,
+            desc="Approval Return",
+            content_object=self,
         )
 
     def get_journal(self):
         return self.journal
 
     def post(self, journal):
-        if not self.posted:
-            self.line.product.transact(self.weight, self.quantity, journal, "AR")
-            self.posted = True
-            self.save(update_fields=["posted"])
-            self.line.update_status()
+        self.line.product.transact(self.weight, self.quantity, journal, "AR")
+        self.line.update_status()
 
-    def unpost(self,journal):
-        if self.posted:
-            self.line.product.transact(self.weight, self.quantity, journal, "A")
-            self.posted = False
-            self.save(update_fields=["posted"])
-            self.line.update_status()
+    def unpost(self, journal):
+        self.line.product.transact(self.weight, self.quantity, journal, "A")
+        self.line.update_status()

@@ -1,7 +1,8 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.db.models import Sum
 from django.urls import reverse
-from django.contrib.contenttypes.fields import GenericRelation
+
 from contact.models import Customer
 from dea.models import Journal
 from product.models import StockLot
@@ -20,6 +21,9 @@ If any stock items were approved for release but not returned, those items shoul
 When the invoice is created, the stock items that were approved but not returned should be included on the invoice, along with the appropriate billing information.
 
 If any changes are made to the approval, return, or invoice, those changes should be recorded in the database or inventory management system, along with a timestamp and the user who made the changes.
+
+If the approval is closed, the approval should be flagged as closed and no further changes should be allowed.
+
 """
 
 
@@ -33,9 +37,10 @@ class Approval(models.Model):
     contact = models.ForeignKey(
         Customer, related_name="contact", on_delete=models.CASCADE
     )
+    # calculated fields need to be stored?
     total_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     total_qty = models.IntegerField(default=0)
-    posted = models.BooleanField(default=False)
+
     # is_billed is status now
     is_billed = models.BooleanField(default=False)
     status = models.CharField(
@@ -58,38 +63,7 @@ class Approval(models.Model):
         return reverse("approval:approval_approval_detail", args=(self.pk,))
 
     def get_update_url(self):
-        if not self.posted:
-            return reverse("approval:approval_approval_update", args=(self.pk,))
-        else:
-            return self.get_absolute_url()
-
-    @transaction.atomic()
-    def post(self):
-        if not self.posted:
-            journal = Journal.objects.create(
-                journal_type="AP",
-                content_object=self,
-                desc=f"Approval {self.id}",
-            )
-            for i in self.items.all():
-                i.post(journal=journal)
-        self.posted = True
-        self.save(update_fields=["posted"])
-
-    @transaction.atomic()
-    def unpost(self):
-        # if is billed cant unpost
-        if self.posted and not self.is_billed:
-            # last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(
-                content_object=self,
-                journal_type="AP",
-                desc="approval revert",
-            )
-            for i in self.items.all():
-                i.unpost(jrnl)
-            self.posted = False
-            self.save(update_fields=["posted"])
+        return reverse("approval:approval_approval_update", args=(self.pk,))
 
     def update_status(self):
         print("in approval update_Status")
@@ -148,7 +122,8 @@ class ApprovalLine(models.Model):
         default="Pending",
         blank=True,
     )
-    journal = GenericRelation(Journal,related_query_name="approval_lineitems")
+    journal = GenericRelation(Journal, related_query_name="approval_lineitems")
+
     class Meta:
         ordering = ("approval",)
 
@@ -183,13 +158,11 @@ class ApprovalLine(models.Model):
 
     def get_returned_qty(self):
         # return the ReturnItem quanitty for thisapprovalline
-        return self.returnitem_set.aggregate(Sum('quantity'))['quantity_sum']
+        return self.returnitem_set.aggregate(Sum("quantity"))["quantity_sum"]
 
     def create_journal(self):
-        # create journals for this approvalline
-        # if not self.journals.exists():
         jrnl = Journal.objects.create(
-            journal_type="AP",
+            journal_type="SJ",
             content_object=self,
             desc=f"Approval {self.approval.id} - {self.product.barcode}",
         )
@@ -201,7 +174,7 @@ class ApprovalLine(models.Model):
     def delete_journals(self):
         # delete journals for this approvalline
         pass
-    
+
     def post(self, journal):
         self.product.transact(
             weight=self.weight,

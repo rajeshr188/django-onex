@@ -11,9 +11,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import (Flowable, Frame, Image, ListFlowable, ListItem,
-                                PageBreak, Paragraph, SimpleDocTemplate,
-                                Spacer, Table, TableStyle,KeepTogether)
+from reportlab.platypus import (Flowable, Frame, Image, KeepTogether,
+                                ListFlowable, ListItem, PageBreak, Paragraph,
+                                SimpleDocTemplate, Spacer, Table, TableStyle)
 
 from contact.models import Customer
 from girvi.models import Loan
@@ -318,6 +318,7 @@ def get_loan_pdf(loan):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
 
 # why does this takes too long to execute?
 def get_notice_pdf(selection=None):

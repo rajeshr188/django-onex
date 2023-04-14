@@ -46,7 +46,6 @@ class InvoiceTable(tables.Table):
             "gross_wt",
             "net_wt",
             "balance",
-            "posted",
             "is_gst",
             "status",
             "term",

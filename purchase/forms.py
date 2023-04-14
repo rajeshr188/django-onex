@@ -5,13 +5,11 @@ from crispy_forms.layout import (ButtonHolder, Column, Field, Fieldset, Layout,
                                  Row, Submit)
 from django import forms
 from django.db.models import Q
-from django.forms.models import inlineformset_factory
 from django.urls import reverse_lazy
 from django_select2.forms import Select2Widget
 
 from contact.models import Customer
 from product.models import ProductVariant
-# from crispy_bootstrap5.bootstrap5 import FloatingField
 from utils.custom_layout_object import *
 
 from .models import Invoice, InvoiceItem, Payment, PaymentAllocation
@@ -50,7 +48,6 @@ class InvoiceForm(forms.ModelForm):
             "supplier",
             "term",
             "status",
-            "posted",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -162,7 +159,7 @@ class PaymentForm(forms.ModelForm):
         fields = [
             "supplier",
             "created",
-            "type",
+            "payment_type",
             "rate",
             "total",
             "description",

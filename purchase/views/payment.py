@@ -72,17 +72,3 @@ def payment_allocate(request, pk):
     payment = get_object_or_404(Payment, id=pk)
     payment.allot()
     return redirect(payment)
-
-
-def post_payment(request, pk):
-    payment = get_object_or_404(Payment, id=pk)
-    # post to dea
-    payment.post()
-    return redirect(payment)
-
-
-def unpost_payment(request, pk):
-    payment = get_object_or_404(Payment, id=pk)
-    # unpost to dea
-    payment.unpost()
-    return redirect(payment)

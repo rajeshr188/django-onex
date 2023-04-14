@@ -313,20 +313,6 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 #     return render(request,'sales/balance_list.html',context)
 
 
-@transaction.atomic()
-def post_sales(request, pk):
-    sales_inv = Invoice.objects.get(id=pk)
-    sales_inv.post()
-    return redirect(sales_inv)
-
-
-@transaction.atomic()
-def unpost_sales(request, pk):
-    sales_inv = Invoice.objects.get(id=pk)
-    sales_inv.unpost()
-    return redirect(sales_inv)
-
-
 @login_required
 # not done yet
 def get_sale_price(request):

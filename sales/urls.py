@@ -38,12 +38,6 @@ urlpatterns += (
         views.sales_delete_view,
         name="sales_invoice_delete",
     ),
-    path("sales/invoice/<int:pk>/post/", views.post_sales, name="sales_invoice_post"),
-    path(
-        "sales/invoice/<int:pk>/unpost/",
-        views.unpost_sales,
-        name="sales_invoice_unpost",
-    ),
 )
 urlpatterns += (
     path("sales/", views.home, name="sales_home"),
@@ -93,12 +87,6 @@ urlpatterns += (
         "sales/receipt/delete/<int:pk>/",
         views.ReceiptDeleteView.as_view(),
         name="sales_receipt_delete",
-    ),
-    path("sales/receipt/<int:pk>/post/", views.post_receipt, name="sales_receipt_post"),
-    path(
-        "sales/receipt/<int:pk>/unpost/",
-        views.unpost_receipt,
-        name="sales_receipt_unpost",
     ),
     path(
         "sales/receipt/<int:pk>/allocate/",

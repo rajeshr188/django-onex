@@ -111,7 +111,10 @@ class LoanForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
-            Row(Column(FloatingField("loan_type"), css_class="form-group col-md-3 mb-0"),
+            Row(
+                Column(
+                    FloatingField("loan_type"), css_class="form-group col-md-3 mb-0"
+                ),
                 css_class="form-row",
             ),
             Row(
@@ -162,7 +165,14 @@ class LoanItemForm(forms.ModelForm):
 
     class Meta:
         model = LoanItem
-        fields = ["item", "qty", "weight", "loanamount", "interestrate", "interest"]
+        fields = [
+            "item",
+            "quantity",
+            "weight",
+            "loanamount",
+            "interestrate",
+            "interest",
+        ]
 
 
 class ReleaseForm(forms.ModelForm):

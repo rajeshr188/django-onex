@@ -29,12 +29,6 @@ class Year(Func):
 
 
 class SalesQueryset(models.QuerySet):
-    def posted(self):
-        return self.filter(posted=True)
-
-    def unposted(self):
-        return self.filter(posted=False)
-
     def gst(self):
         return self.filter(is_gst=True)
 
@@ -81,15 +75,12 @@ class Invoice(models.Model):
     )
     rate = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     is_gst = models.BooleanField(default=False)
-    posted = models.BooleanField(default=False)
-
     gross_wt = models.DecimalField(
         max_digits=14, decimal_places=4, default=0, null=True, blank=True
     )
     net_wt = models.DecimalField(
         max_digits=14, decimal_places=4, default=0, null=True, blank=True
     )
-
     total = models.DecimalField(
         max_digits=14, decimal_places=4, default=0.0, null=True, blank=True
     )
@@ -209,8 +200,6 @@ class Invoice(models.Model):
         return self.total
 
     def save(self, *args, **kwargs):
-        # if self.id and self.posted:
-        #     raise Http404
         if self.id:
             self.gross_wt = self.get_gross_wt()
             self.net_wt = self.get_net_wt()
@@ -221,7 +210,7 @@ class Invoice(models.Model):
         if self.is_gst:
             self.total += self.get_gst()
 
-        super(Invoice, self).save(*args, **kwargs)
+        return super(Invoice, self).save(*args, **kwargs)
 
     def update_bal(self):
         self.gross_wt = self.get_gross_wt()
@@ -241,84 +230,6 @@ class Invoice(models.Model):
         if self.is_gst:
             return (self.balance * 3) / 100
         return 0
-
-    @transaction.atomic()
-    def post(self):
-        if not self.posted:
-            if self.approval:
-                """
-                if any approval, return and bill
-                """
-                for i in self.approval.items.filter(status="Pending"):
-                    apr = ReturnItem.objects.create(
-                        line=i, quantity=i.quantity, weight=i.weight
-                    )
-                    apr.post()
-                    i.update_status()
-                self.approval.is_billed = True
-                self.approval.save()
-                self.approval.update_status()
-
-            jrnl = Journal.objects.create(
-                journal_type=JournalTypes.SJ,
-                content_object=self,
-                desc="sale",
-            )
-
-            inv = "GST INV" if self.is_gst else "Non-GST INV"
-            cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
-            money = Money(self.balance, self.balancetype)
-            tax = Money(self.get_gst(), "INR")
-            lt = [
-                {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
-                {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
-                {
-                    "ledgerno": "Output Igst",
-                    "ledgerno_dr": "Sundry Debtors",
-                    "amount": tax,
-                },
-            ]
-            at = [
-                {
-                    "ledgerno": "Sales",
-                    "xacttypecode": "Cr",
-                    "xacttypecode_ext": "CRSL",
-                    "account": self.customer.account,
-                    "amount": money + tax,
-                }
-            ]
-            jrnl.transact(lt, at)
-            for i in self.saleitems.all():
-                i.post(jrnl)
-            self.posted = True
-            self.save(update_fields=["posted"])
-
-    @transaction.atomic()
-    def unpost(self):
-        if self.posted:
-            try:
-                last_jrnl = self.journals.latest()
-            except:
-                Exception("No Last_jrnl found")
-            if self.approval:
-                self.approval.is_billed = False
-                for i in self.approval.items.all():
-                    i.unpost()
-                    i.product.add(i.weight, i.quantity, i, "A")
-                    i.update_status()
-                self.approval.save()
-                self.approval.update_status()
-
-            jrnl = Journal.objects.create(
-                content_object=self,
-                desc="sale-revert",
-                journal_type=JournalTypes.SJ,
-            )
-            jrnl.untransact(last_jrnl)
-            for i in self.saleitems.all():
-                i.unpost(jrnl)
-            self.posted = False
-            self.save(update_fields=["posted"])
 
     def create_journals(self):
         ledgerjournal = Journal.objects.create(
@@ -356,12 +267,6 @@ class Invoice(models.Model):
             self.approval.save()
             self.approval.update_status()
 
-        # jrnl = Journal.objects.create(
-        #     journal_type=JournalTypes.SJ,
-        #     content_object=self,
-        #     desc="sale",
-        # )
-
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
         money = Money(self.balance, self.balancetype)
@@ -384,27 +289,25 @@ class Invoice(models.Model):
                 "amount": money + tax,
             }
         ]
-        return lt,at
+        return lt, at
 
-    # must be abstracted
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-        
 
-# must be abstracted
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
         account_journal.untransact(at)
-        
+
+
 class InvoiceItem(models.Model):
     # Fields
     huid = models.CharField(max_length=6, null=True, blank=True, unique=True)

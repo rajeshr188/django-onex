@@ -27,12 +27,6 @@ urlpatterns += (
     path(
         "<int:id>/delete/", views.purchase_delete_view, name="purchase_invoice_delete"
     ),
-    path("invoice/<int:pk>/post/", views.post_purchase, name="purchase_invoice_post"),
-    path(
-        "invoice/<int:pk>/unpost/",
-        views.unpost_purchase,
-        name="purchase_invoice_unpost",
-    ),
 )
 urlpatterns += (
     # path('purchase/balance/',views.list_balance,name='purchase_balance'),
@@ -85,16 +79,6 @@ urlpatterns += (
         "purchase/payment/delete/<int:pk>/",
         views.payment_delete,
         name="purchase_payment_delete",
-    ),
-    path(
-        "purchase/payment/<int:pk>/post/",
-        views.post_payment,
-        name="purchase_payment_post",
-    ),
-    path(
-        "purchase/payment/<int:pk>/unpost/",
-        views.unpost_payment,
-        name="purchase_payment_unpost",
     ),
     path(
         "purchase/payment/<int:pk>/allocate/",

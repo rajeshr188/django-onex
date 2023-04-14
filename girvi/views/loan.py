@@ -9,6 +9,7 @@ from django.db.models import Count, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
@@ -22,14 +23,14 @@ from render_block import render_block_to_string
 
 from contact.models import Customer
 from notify.models import NoticeGroup, Notification
+from utils.htmx_utils import for_htmx
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
-from utils.htmx_utils import for_htmx
-from django.template.response import TemplateResponse
+
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
@@ -177,22 +178,6 @@ def next_loanid(request):
 
 
 @login_required
-def post_loan(request,pk):
-    loan = get_object_or_404(Loan, pk=pk)
-    if not loan.posted:
-        loan.post()
-    return redirect(loan)
-
-
-@login_required
-def unpost_loan(request,pk):
-    loan = get_object_or_404(Loan, pk=pk)
-    if loan.posted:
-        loan.unpost()
-    return redirect(loan)
-
-
-@login_required
 @for_htmx(use_block="loaninfo")
 def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
@@ -206,7 +191,9 @@ def loan_detail(request, pk):
         "next": loan.get_next(),
         "journals": loan.journals.all(),
         "previous": loan.get_previous,
-        "new_item_url": reverse("girvi:girvi_loanitem_create", kwargs={"parent_id": loan.id}),
+        "new_item_url": reverse(
+            "girvi:girvi_loanitem_create", kwargs={"parent_id": loan.id}
+        ),
     }
 
     return TemplateResponse(request, "girvi/loan_detail.html", context)
@@ -284,7 +271,10 @@ def deleteLoan(request):
     loans = Loan.objects.filter(id__in=id_list)
     for i in loans:
         i.delete()
-    filter = LoanFilter(request.GET, queryset=Loan.objects.with_due().with_current_value().with_is_overdue())
+    filter = LoanFilter(
+        request.GET,
+        queryset=Loan.objects.with_due().with_current_value().with_is_overdue(),
+    )
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
@@ -596,9 +586,7 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
         new_obj.save()
         context["object"] = new_obj
         if request.htmx:
-            return HttpResponse(
-                status=204, headers={"HX-Trigger": "loanChanged"}
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "loanChanged"})
         return render(request, "girvi/partials/item-inline.html", context)
 
     return render(request, "girvi/partials/item-form.html", context)
@@ -610,12 +598,13 @@ def get_loan_items(request, loan):
     return render(request, "", context={"items": items})
 
 
-def loanitem_delete(request, parent_id,id):
-    item = get_object_or_404(LoanItem, id=id,loan_id = parent_id)
+def loanitem_delete(request, parent_id, id):
+    item = get_object_or_404(LoanItem, id=id, loan_id=parent_id)
     item.delete()
     return HttpResponse(status=204, headers={"HX-Trigger": "loanChanged"})
 
+
 @login_required
-def loanitem_detail(request,pk):
-    item = get_object_or_404(LoanItem,pk =pk)
-    return render(request,'girvi/partials/item-inline.html',{'object':item})
+def loanitem_detail(request, pk):
+    item = get_object_or_404(LoanItem, pk=pk)
+    return render(request, "girvi/partials/item-inline.html", {"object": item})

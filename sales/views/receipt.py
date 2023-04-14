@@ -34,20 +34,6 @@ class ReceiptUpdateView(UpdateView):
     success_url = reverse_lazy("sales:sales_receipt_list")
 
 
-@transaction.atomic()
-def post_receipt(request, pk):
-    rcpt = Receipt.objects.get(id=pk)
-    rcpt.post()
-    return redirect(rcpt)
-
-
-@transaction.atomic()
-def unpost_receipt(request, pk):
-    rcpt = Receipt.objects.get(id=pk)
-    rcpt.unpost()
-    return redirect(rcpt)
-
-
 class ReceiptDetailView(DetailView):
     model = Receipt
 

@@ -35,7 +35,7 @@ class Payment(models.Model):
         )
         SILVER = "AUD", _("Silver")
 
-    type = models.CharField(
+    payment_type = models.CharField(
         max_length=30,
         verbose_name="Currency",
         choices=BType.choices,
@@ -54,14 +54,12 @@ class Payment(models.Model):
     status = models.CharField(
         max_length=18, choices=status_choices, default="Unallotted"
     )
-    posted = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
     journals = GenericRelation(Journal, related_query_name="payment_doc")
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="payments"
     )
-    invoices = models.ManyToManyField('purchase.Invoice', through="PaymentAllocation")
+    invoices = models.ManyToManyField("purchase.Invoice", through="PaymentAllocation")
 
     class Meta:
         ordering = ("-created",)
@@ -188,43 +186,6 @@ class Payment(models.Model):
             self.save()
         self.update_status()
 
-    def post(self):
-        if not self.posted:
-            jrnl = Journal.objects.create(
-                journal_type=JournalTypes.PY,
-                content_object=self,
-                desc="payment",
-            )
-
-            money = Money(self.total, self.type)
-            lt = [
-                {"ledgerno": "Cash", "ledgerno_dr": "Sundry Creditors", "amount": money}
-            ]
-            at = [
-                {
-                    "ledgerno": "Sundry Creditors",
-                    "xacttypecode": "Dr",
-                    "xacttypecode_ext": "PYT",
-                    "account": self.supplier.account,
-                    "amount": money,
-                }
-            ]
-            jrnl.transact(lt, at)
-            self.posted = True
-            self.save(update_fields=["posted"])
-
-    def unpost(self):
-        if self.posted:
-            last_jrnl = self.journals.latest()
-            jrnl = Journal.objects.create(
-                content_object=self,
-                desc="payment - unpost",
-            )
-            jrnl.untransact(last_jrnl)
-            self.deallot()
-            self.posted = False
-            self.save(update_fields=["posted"])
-
     def create_journals(self):
         ledgerjournal = LedgerJournal.objects.create(
             journal_type=JournalTypes.LJ,
@@ -250,15 +211,13 @@ class Payment(models.Model):
 
     def get_transactions(self):
         jrnl = Journal.objects.create(
-                journal_type=JournalTypes.PY,
-                content_object=self,
-                desc="payment",
-            )
+            journal_type=JournalTypes.PY,
+            content_object=self,
+            desc="payment",
+        )
 
         money = Money(self.total, self.type)
-        lt = [
-            {"ledgerno": "Cash", "ledgerno_dr": "Sundry Creditors", "amount": money}
-        ]
+        lt = [{"ledgerno": "Cash", "ledgerno_dr": "Sundry Creditors", "amount": money}]
         at = [
             {
                 "ledgerno": "Sundry Creditors",
@@ -271,31 +230,30 @@ class Payment(models.Model):
         jrnl.transact(lt, at)
         self.posted = True
         self.save(update_fields=["posted"])
-        return lt,at
+        return lt, at
 
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-        
 
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal,Account_journal = self.get_journals()
-        lt,at = self.get_transactions()
+        ledger_journal, Account_journal = self.get_journals()
+        lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
         account_journal.untransact(at)
-       
-       
+
+
 class PaymentAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
-    invoice = models.ForeignKey('purchase.Invoice', on_delete=models.CASCADE)
+    invoice = models.ForeignKey("purchase.Invoice", on_delete=models.CASCADE)
     allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):

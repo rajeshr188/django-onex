@@ -28,4 +28,4 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ["id", "created", "type", "status"]
+        fields = ["id", "created", "payment_type", "status"]

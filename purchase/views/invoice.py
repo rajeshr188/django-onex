@@ -4,10 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django_filters.views import FilterView
 from django_tables2.config import RequestConfig
-from django_tables2.export.views import ExportMixin
-from django_tables2.views import SingleTableMixin
 from num2words import num2words
 from render_block import render_block_to_string
 
@@ -17,7 +14,6 @@ from product.models import PricingTier, PricingTierProductPrice, ProductVariant
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-# from ..render import Render
 from ..tables import InvoiceTable
 
 
@@ -151,21 +147,6 @@ def purchase_item_delete_view(request, parent_id=None, id=None):
         return redirect(success_url)
     context = {"object": obj}
     return render(request, "purchase/invoice_confirm_delete.html", context)
-
-
-def post_purchase(request, pk):
-    # use get_objector404
-    purchase_inv = Invoice.objects.get(id=pk)
-    # post to dea & stock
-    purchase_inv.post()
-    return redirect(purchase_inv)
-
-
-def unpost_purchase(request, pk):
-    purchase_inv = Invoice.objects.get(id=pk)
-    # unpost to dea & stock
-    purchase_inv.unpost()
-    return redirect(purchase_inv)
 
 
 @login_required

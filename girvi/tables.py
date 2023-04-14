@@ -1,7 +1,9 @@
+from math import floor
+
 import django_tables2 as tables
 from django.utils.html import format_html
 from django_tables2.utils import A
-from math import floor
+
 from .models import Loan, Release
 
 
@@ -13,7 +15,7 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 class LoanTable(tables.Table):
     loanid = tables.Column(linkify=True)
-    
+
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
         accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False

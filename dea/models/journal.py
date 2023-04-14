@@ -5,11 +5,13 @@ from django.db import models, transaction
 from .account import AccountTransaction
 from .ledger import LedgerTransaction
 
+
 class JournalTypes(models.TextChoices):
     LJ = "LedgerJournal", "LedgerJournal"
     AJ = "AccountJournal", "AccountJournal"
     SJ = "StockJournal", "StockJournal"
-    
+
+
 class Journal(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -34,15 +36,18 @@ class Journal(models.Model):
         # check if the object.content_type is a invoice item
 
         if self.content_type and self.content_object:
-            
-            from sales.models import Invoice as sinv,InvoiceItem as si
-            from purchase.models import Invoice as pinv,InvoiceItem as pi
             from django.urls import reverse
+
+            from purchase.models import Invoice as pinv
+            from purchase.models import InvoiceItem as pi
+            from sales.models import Invoice as sinv
+            from sales.models import InvoiceItem as si
+
             si_ct = ContentType.objects.get_for_model(si)
             pi_ct = ContentType.objects.get_for_model(pi)
             sinv_ct = ContentType.objects.get_for_model(sinv)
             pinv_ct = ContentType.objects.get_for_model(pinv)
-            
+
             if self.content_type in [si_ct, pi_ct]:
                 print("is a invoice item")
                 # <!-- <a href="{% url ''|add:object.get_url_string pk=object.object_id %}"> -->
@@ -56,7 +61,10 @@ class Journal(models.Model):
                 )
             print("returning defaul model detail url")
             # return f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail"
-            return reverse(f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail", kwargs={"pk": self.object_id})
+            return reverse(
+                f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail",
+                kwargs={"pk": self.object_id},
+            )
         else:
             print("returning none")
             return None
@@ -91,7 +99,6 @@ class Journal(models.Model):
         # return True if all checks pass, False otherwise
         return True
 
-   
     @transaction.atomic()
     def untransact(self, txns):
         print("untransacting")
@@ -102,14 +109,14 @@ class Journal(models.Model):
                 print(f"txn:{i}")
                 print(f"cr: {i['ledgerno']} dr:{i['ledgerno_dr']}")
                 LedgerTransaction.objects.create_txn(
-                        self, i['ledgerno_dr'], i['ledgerno'], i['amount']
-                    )
+                    self, i["ledgerno_dr"], i["ledgerno"], i["amount"]
+                )
         elif self.journal_type == "AccountJournal":
             for i in txns:
                 xacttypecode = ""
                 xacttypecode_ext = ""
-                print(i['xacttypecode'])
-                if i['xacttypecode'] == "Cr":
+                print(i["xacttypecode"])
+                if i["xacttypecode"] == "Cr":
                     xacttypecode = "Dr"
                     xacttypecode_ext = "AC"
                 else:
@@ -117,9 +124,9 @@ class Journal(models.Model):
                     xacttypecode_ext = "AD"
                 AccountTransaction.objects.create_txn(
                     self,
-                    i['ledgerno'],
+                    i["ledgerno"],
                     xacttypecode,
                     xacttypecode_ext,
-                    i['account'],
-                    i['amount'],
+                    i["account"],
+                    i["amount"],
                 )

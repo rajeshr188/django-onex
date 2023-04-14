@@ -46,7 +46,6 @@ class InvoiceTable(tables.Table):
             "balance",
             "status",
             "is_gst",
-            # "posted",
             "term",
             "due_date",
         )
@@ -87,10 +86,9 @@ class PaymentTable(tables.Table):
             "id",
             "created",
             "supplier",
-            "type",
+            "payment_type",
             "total",
             "status",
-            "posted",
             "description",
         )
         attrs = {"class": "table table-striped table-bordered"}

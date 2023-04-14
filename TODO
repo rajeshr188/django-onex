@@ -1,6 +1,4 @@
-update voucher when item is update/saved
-remove post from everywhere
-bug in is_overdue queryste while filtering loan by id
+update voucher when item is update/saved/deleted
 printing loan notice group hangs
 stocklist isto be sourced from stockbalance db view
 handle stock journal when a lot is not associated with purchase

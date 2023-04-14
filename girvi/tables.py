@@ -47,8 +47,6 @@ class LoanTable(tables.Table):
         model = Loan
         fields = (
             "selection",
-            "id",
-            "loan_type",
             "loanid",
             "created",
             "customer",
@@ -58,7 +56,7 @@ class LoanTable(tables.Table):
             "total_interest",
             "total_due",
             "current_value",
-            "months_since_created",
+            "months_since_created","is_overdue",
         )
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {

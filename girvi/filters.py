@@ -43,11 +43,11 @@ class LoanFilter(django_filters.FilterSet):
     def universal_search(self, queryset, name, value):
         if value.replace(".", "", 1).isdigit():
             value = Decimal(value)
-            return Customer.objects.filter(
+            return Loan.objects.with_due().with_current_value().with_is_overdue().select_related('customer','release').prefetch_related('notifications','loanitems').filter(
                 Q(id=value) | Q(lid=value) | Q(loanamount=value)
             )
 
-        return Loan.objects.filter(
+        return Loan.objects.with_due().with_current_value().with_is_overdue().select_related('customer','release').prefetch_related('notifications','loanitems').filter(
             Q(id__icontains=value)
             | Q(lid__icontains=value)
             | Q(loanid__icontains=value)

@@ -49,8 +49,9 @@ class Loan(models.Model):
     # ----------------legacy---------------------------------
     itype = (("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze"))
     itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
-    itemdesc = models.TextField(max_length=100)
-    itemweight = models.DecimalField(max_digits=10, decimal_places=2)
+    itemdesc = models.TextField(max_length=100, blank=True, null=True, verbose_name="Description")
+    itemweight = models.DecimalField(max_digits=10, decimal_places=2,
+                                     verbose_name="Weight")
     itemvalue = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, verbose_name="Value"
     )
@@ -190,11 +191,7 @@ class Loan(models.Model):
         amount = Money(self.loanamount, "INR")
         interest = Money(self.interest_amt(), "INR")
         if self.loan_type == self.LoanType.TAKEN:
-            # if self.customer.type == "Su":
-
-            # jrnl = Journal.objects.create(
-            #     journal_type=JournalTypes.LJ, content_object=self, desc="Loan Taken"
-            # )
+            
             lt = [
                 {"ledgerno": "Loans", "ledgerno_dr": "Cash", "amount": amount},
                 {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
@@ -216,9 +213,7 @@ class Loan(models.Model):
                 },
             ]
         else:
-            # jrnl = Journal.objects.create(
-            #     journal_type=JournalTypes.LJ, content_object=self, desc="Loan Given"
-            # )
+            
             lt = [
                 {
                     "ledgerno": "Cash",
@@ -257,30 +252,13 @@ class Loan(models.Model):
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-        # jrnl.transact(lt, at)
-        # # create account transactions
-        # account_transactions = []
-        # # ... create account transactions based on the voucher and voucher items
-        # # create ledger transactions
-        # ledger_transactions = []
-        # # ... create ledger transactions based on the voucher and voucher items
-        # # save transactions to the journal
-        # self.journal.add_transactions(account_transactions + ledger_transactions)
-
+    
     def reverse_transactions(self):
         ledger_journal, Account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
         account_journal.untransact(at)
-        # # reverse account transactions
-        # account_transactions = []
-        # # ... reverse account transactions based on the voucher and voucher items
-        # # reverse ledger transactions
-        # ledger_transactions = []
-        # # ... reverse ledger transactions based on the voucher and voucher items
-        # # save reversed transactions to the journal
-        # self.journal.add_transactions(account_transactions + ledger_transactions)
 
     def save(self, *args, **kwargs):
         self.loanid = self.series.name + str(self.lid)

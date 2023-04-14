@@ -37,7 +37,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
     )
     customer = models.ForeignKey("contact.Customer", on_delete=models.CASCADE)
-    loans = models.ManyToManyField(Loan)
+    loans = models.ManyToManyField(Loan, related_name="notifications")
 
     # fields
 

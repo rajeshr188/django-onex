@@ -58,7 +58,7 @@ class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
 def loan_list(request):
     filter = LoanFilter(
         request.GET,
-        queryset=Loan.objects.with_due().with_current_value().with_is_overdue(),
+        queryset=Loan.objects.with_due().with_current_value().with_is_overdue().select_related('customer','release').prefetch_related('notifications','loanitems'),
     )
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}

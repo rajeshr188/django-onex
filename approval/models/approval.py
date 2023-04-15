@@ -65,16 +65,22 @@ class Approval(models.Model):
     def get_update_url(self):
         return reverse("approval:approval_approval_update", args=(self.pk,))
 
+    """
+    called when an return item is created with a line item referencing this approval/approvalline,
+     otherwise called from approvalline.save() ,by default stus is pending
+     """
     def update_status(self):
         print("in approval update_Status")
-        for i in self.items.all():
-            print(f"{i}-{i.status} ")
-        if any(i.status == "Pending" for i in self.items.all()):
+
+        # for i in self.items.all():
+        #     i.update_status()
+        if any(i.status in ['Pending','Partially Returned'] for i in self.items.all()):
             self.status = "Pending"
         else:
             self.status = "Complete"
         self.save()
 
+    # called when an invoice cis created with a line item referencing this approval/approvalline
     def update_billed_status(self):
         if any(i.status == "Billed" for i in self.items.all()):
             self.is_billed = True
@@ -97,7 +103,7 @@ class Approval(models.Model):
 
 class ApprovalLine(models.Model):
     product = models.ForeignKey(
-        StockLot, related_name="approval_lineitems", on_delete=models.CASCADE
+        StockLot, related_name="lineitems", on_delete=models.CASCADE
     )
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
@@ -113,6 +119,7 @@ class ApprovalLine(models.Model):
 
     status = models.CharField(
         max_length=30,
+        # onapproval or returned or billed
         choices=(
             ("Pending", "Pending"),
             ("Partially Returned", "Partially Returned"),
@@ -140,19 +147,28 @@ class ApprovalLine(models.Model):
     def balance(self):
         return (
             self.weight
-            - self.approvallinereturn_set.filter(posted=True).aggregate(
+            - self.approvallinereturn_set.aggregate(
                 t=Sum("weight")
             )["t"]
         )
 
+    # called when return item is created otherwise status is pending
     def update_status(self):
-        ret = self.approvallinereturn_set.filter(posted=True).aggregate(
-            qty=Sum("quantity"), wt=Sum("weight")
-        )
-        if self.quantity == ret["qty"] and self.weight == ret["wt"]:
+        ret = {"qty": 0, "wt": 0}
+        if self.return_items.exists():
+            ret = self.return_items.aggregate(
+                qty=Sum("quantity"), wt=Sum("weight")
+            )
+            print(ret)
+        if self.quantity - ret["qty"] > 0 and self.weight - ret["wt"] > 0:
+            self.status = "Partially Returned"
+            print("partially returned")
+        elif self.quantity - ret["qty"] == 0 and self.weight - ret["wt"] == 0:
             self.status = "Returned"
+            print("returned")
         else:
             self.status = "Pending"
+            print("pending")
         self.save()
         self.approval.update_status()
 
@@ -169,7 +185,7 @@ class ApprovalLine(models.Model):
         return jrnl
 
     def get_journal(self):
-        return self.journals.first()
+        return self.journal.first() if self.journal.exists() else create_journal()
 
     def delete_journals(self):
         # delete journals for this approvalline

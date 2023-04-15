@@ -24,18 +24,9 @@
         {% if object.is_billed %}
         <tr><td>Bill No</td><td><a href="{% url 'sales:sales_invoice_detail' object.bill %}">{{object.bill}}</a></td></tr>
         {%endif%}
-        <tr>
-            <td>Posted</td>
-            <td>
-            {%if object.posted%}
-            <a class="btn btn-danger" href="{% url 'approval:approval_unpost' object.pk%}">Unpost</a>
-            {%else%}
-            <a class ="btn btn-success" href="{% url 'approval:approval_post' object.pk%}">Post</a>
-            {%endif%}
-            </td>
-          </tr>
+     
         </table>
-        {% if object.status == 'Pending' and object.posted %}
+        {% if object.status == 'Pending' %}
         <form action="{% url 'sales:sales_invoice_create' %}" method="GET">
           {% csrf_token %}
           <input type="hidden" name="approvalid" value={{object.id}}>

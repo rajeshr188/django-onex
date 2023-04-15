@@ -285,8 +285,8 @@ class InvoiceItem(models.Model):
             stock_lot = StockLot.objects.create(
                 variant=self.product,
                 stock=stock,
-                wt=self.weight,
-                qty=self.quantity,
+                weight=self.weight,
+                quantity=self.quantity,
                 purchase_touch=self.touch,
                 purchase_rate=self.invoice.rate,
                 purchase=self.invoice,
@@ -313,22 +313,46 @@ class InvoiceItem(models.Model):
         add lot back to stock lot if item is_return,
         remove lot from stocklot if item is not return item"""
         if self.is_return:
-            self.product.stock_lots.get(
-                # variant=self.product,
-                purchase=self.invoice,
-            ).transact(
-                journal=journal,
-                weight=self.weight,
-                quantity=self.quantity,
-                movement_type="P",
-            )
+            try:
+                self.product.stock_lots.get(
+                    # variant=self.product,
+                    purchase=self.invoice,
+                ).transact(
+                    journal=journal,
+                    weight=self.weight,
+                    quantity=self.quantity,
+                    movement_type="PR",
+                )
+            except StockLot.DoesNotExist:
+                print("Oops!while Posting  there was no said stock.  Try again...")
+            # self.product.stock_lots.get(
+            #     # variant=self.product,
+            #     purchase=self.invoice,
+            # ).transact(
+            #     journal=journal,
+            #     weight=self.weight,
+            #     quantity=self.quantity,
+            #     movement_type="P",
+            # )
         else:
-            self.product.stock_lots.get(
-                # variant=self.product,
-                purchase=self.invoice,
-            ).transact(
-                journal=journal,
-                weight=self.weight,
-                quantity=self.quantity,
-                movement_type="PR",
-            )
+            try:
+                self.product.stock_lots.get(
+                    # variant=self.product,
+                    purchase=self.invoice,
+                ).transact(
+                    journal=journal,
+                    weight=self.weight,
+                    quantity=self.quantity,
+                    movement_type="P",
+                )
+            # self.product.stock_lots.get(
+            #     # variant=self.product,
+            #     purchase=self.invoice,
+            # ).transact(
+            #     journal=journal,
+            #     weight=self.weight,
+            #     quantity=self.quantity,
+            #     movement_type="PR",
+            # )
+            except StockLot.DoesNotExist:
+                print("Oops!while Unposting there was no said stock.  Try again...")

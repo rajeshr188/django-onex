@@ -103,6 +103,15 @@ class Loan(models.Model):
     def is_released(self):
         return hasattr(self, "release")
 
+    def get_loanamount(self):
+        adjustments = self.adjustments.filter(as_interest = False
+                        ).aggregate(
+                            Coalesce(Sum("amount_received"),0)
+                            )["amount_received__sum"]
+        items_total = self.loanitems.aggregate(Sum("amount"))["amount__sum"]
+        return items_total - adjustments
+        
+
     def get_total_adjustments(self):
         as_int = 0
         as_amt = 0
@@ -263,11 +272,10 @@ class Loan(models.Model):
     def save(self, *args, **kwargs):
         self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
-        self.loanamount = (
-            Sum("loanitems__loanamount") if self.loanamount == 0 else self.loanamount
-        )
+        self.loanamount = self.get_loanamount() if self.loanamount == 0 else self.loanamount
 
-        return super(Loan, self).save(*args, **kwargs)
+        super(Loan, self).save(*args, **kwargs)
+        return self
 
     @property
     def last_notified(self):
@@ -302,6 +310,11 @@ class LoanItem(models.Model):
             "girvi:girvi_loanitem_delete",
             kwargs={"id": self.id, "parent_id": self.loan.id},
         )
+
+    def save(self, *args, **kwargs):
+        
+        super(LoanItem, self).save(*args, **kwargs)
+        self.loan.save()
 
 
 class Adjustment(models.Model):

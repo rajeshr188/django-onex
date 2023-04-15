@@ -229,7 +229,7 @@ def returnitem_create_update(request, return_pk, pk=None):
         retitem = get_object_or_404(ReturnItem, pk=pk)
         url = retitem.get_hx_edit_url()
 
-    form = ReturnItemForm(request.POST or None, instance=retitem)
+    form = ReturnItemForm(request.POST or None, instance=retitem,return_obj=ret)
     if request.method == "POST" and form.is_valid():
         retitem = form.save(commit=False)
         retitem.return_obj = ret

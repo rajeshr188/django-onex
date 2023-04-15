@@ -64,7 +64,8 @@
           <table class="table table-sm table-striped table-bordered">
             <thead class="thead-dark">
               <tr>
-                <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th><th>Touch</th><th>Total</th>
+                <th>Return</th><th>Product</th><th>Quantity</th><th>Weight</th>
+                <th>Touch</th><th>Total</th><th>Journal</th>
               </tr>
             </thead>
             {% for i in object.purchaseitems.all %}
@@ -76,9 +77,9 @@
                 <td>{{i.touch}}</td>
                 <td>{{i.total}}</td>
                 <td>
-                  {%if i.journal%}
+                  {%if i.journal.exists%}
                     <a href="{% url 'dea_journal_detail' i.journal.first.id %}">Journal</a>
-                  {%else%}{{i.journal}}
+                  {%else%}{{i.journal.first}}
                   {%endif%}
                 </td>
               </tr>
@@ -124,7 +125,7 @@
     </h2>
     <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
       <div class="accordion-body">
-        {%if object.journals%}
+        {%if object.journals.exists%}
         <table>
           <thead>
 

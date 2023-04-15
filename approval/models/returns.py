@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from approval.models import ApprovalLine
 from contact.models import Customer
-from dea.models import Journal
+from dea.models import Journal,JournalTypes
 from product.models import StockLot
 
 """
@@ -42,7 +42,7 @@ class Return(models.Model):
     posted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Return #{self.id} for {self.contact}"
+        return f"Return #{self.id}"
 
     def get_absolute_url(self):
         return reverse("approval:approval_return_detail", args=(self.pk,))
@@ -56,8 +56,9 @@ class Return(models.Model):
 
 class ReturnItem(models.Model):
     return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
-    line_item = models.ForeignKey(ApprovalLine, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    line_item = models.ForeignKey(ApprovalLine, on_delete=models.CASCADE,
+                                  related_name="return_items")
+    quantity = models.IntegerField(default =0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -65,7 +66,7 @@ class ReturnItem(models.Model):
     journal = GenericRelation(Journal, related_query_name="approval_returnitem")
 
     def __str__(self):
-        return f"{self.quantity} x {self.line_item.product.name} ({self.line_item.price} each)"
+        return f"{self.quantity} x {self.line_item.product}"
 
     def get_absolute_url(self):
         return reverse("approval:approval_returnitem_detail", args=(self.pk,))
@@ -82,12 +83,12 @@ class ReturnItem(models.Model):
         )
 
     def get_journal(self):
-        return self.journal
+        return self.journal.first()
 
     def post(self, journal):
-        self.line.product.transact(self.weight, self.quantity, journal, "AR")
-        self.line.update_status()
+        self.line_item.product.transact(self.weight, self.quantity, journal, "AR")
+        self.line_item.update_status()
 
     def unpost(self, journal):
-        self.line.product.transact(self.weight, self.quantity, journal, "A")
-        self.line.update_status()
+        self.line_item.product.transact(self.weight, self.quantity, journal, "A")
+        self.line_item.update_status()

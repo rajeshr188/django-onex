@@ -21,7 +21,6 @@
             <td>weight</td>
             <td>Status</td>
             <td>Is billed</td>
-            <td>Posted</td>
             <td>Action</td>
         </tr>
       {% for object in filter.qs %}
@@ -33,7 +32,6 @@
           <td>{{ object.get_total_wt }}</td>
           <td>{{object.status}}</td>
           <td>{{object.is_billed}}</td>
-          <td>{{object.posted}}</td>
           <td><a class="btn btn-danger" href ="{% url 'approval:approval_approval_delete' object.pk%}">Delete</a></td>
       </tr>
       {% endfor %}

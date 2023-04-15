@@ -47,6 +47,8 @@ def merge_lot(request, pk):
 @for_htmx(use_block="content")
 def stock_list(request):
     context = {}
+    # st = StockBalance.objects.all().select_related('stock','stock__variant')
+    # stock_filter = StockFilter(request.GET,queryset = st)
     st = Stock.objects.all()
     stock_filter = StockFilter(request.GET, queryset=st)
     stock = []

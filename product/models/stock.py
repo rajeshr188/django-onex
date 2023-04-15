@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import OuterRef, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import reverse
 
@@ -223,10 +224,20 @@ class StockLot(models.Model):
     objects = StockLotManager()
 
     def __str__(self):
-        return f"{self.barcode} | {self.huid} | {self.variant}"
+        return f"{self.barcode} | {self.huid} | {self.variant} | {self.current_balance()}"
 
-    def save(self, *args, **kwargs):
-        super(StockLot, self).save(*args, **kwargs)
+    @classmethod
+    def with_balance(cls):
+        balance_subquery = (
+            StockLotBalance.objects.filter(stocklot_id=OuterRef('pk'))
+            .values('stocklot_id')
+            .annotate(total_balance=Coalesce(Sum('balance'), 0))
+            .values('total_balance')
+        )
+        queryset = cls.objects.annotate(balance=Subquery(balance_subquery))
+        return queryset
+
+    def generate_barcode(self):
         if not self.barcode:
             self.barcode = encode(self.pk)
             self.save()

@@ -26,7 +26,6 @@
       <td>Customer</td>
       <td>quantity</td>
       <td>weight</td>
-      <td>Posted</td>
       <td>Action</td>
   </tr>
     {%for object in object_list%}  
@@ -36,7 +35,6 @@
         <td><a href="{% url 'contact_customer_detail' object.contact.id%}">{{object.contact}}</a></td>
         <td>{{ object.total_qty }}</td>
         <td>{{ object.total_wt }}</td>
-        <td>{{object.posted}}</td>
         <td><a href ="{% url 'approval:approval_return_delete' object.pk%}">Delete</a></td>
             
     </tr>

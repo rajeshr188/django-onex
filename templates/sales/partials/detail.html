@@ -51,13 +51,6 @@
           <li>GST : {{object.is_gst}}</li>
           <li >Total :{{object.total}}</li>
           <li >Paid : {{object.get_allocations}}</li>
-          <li >
-            {%if object.posted%}
-            <a class="btn btn-danger" href="{% url 'sales:sales_invoice_unpost' object.pk%}">Unpost</a>
-            {%else%}
-            <a class="btn btn-success" href="{% url 'sales:sales_invoice_post' object.pk%}">Post</a>
-            {%endif%}
-          </li>
         </ul>
       </p>
     

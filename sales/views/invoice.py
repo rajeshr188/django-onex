@@ -27,10 +27,9 @@ from ..tables import InvoiceTable
 def home(request):
     context = {}
     qs = Invoice.objects
-    qs_posted = qs.posted()
 
     total = dict()
-    total["total"] = qs_posted.total_with_ratecut()
+    total["total"] = qs.total_with_ratecut()
     if total["total"]["cash"]:
         total["total"]["gmap"] = round(
             total["total"]["cash_g"] / total["total"]["cash_g_nwt"], 3
@@ -42,7 +41,7 @@ def home(request):
         total["total"]["gmap"] = 0
         total["total"]["smap"] = 0
 
-    total["gst"] = qs_posted.gst().total_with_ratecut()
+    total["gst"] = qs.gst().total_with_ratecut()
     if total["gst"]["cash"]:
         total["gst"]["gmap"] = round(
             total["gst"]["cash_g"] / total["gst"]["cash_g_nwt"], 3
@@ -54,7 +53,7 @@ def home(request):
         total["gst"]["gmap"] = 0
         total["gst"]["smap"] = 0
 
-    total["nongst"] = qs_posted.non_gst().total_with_ratecut()
+    total["nongst"] = qs.non_gst().total_with_ratecut()
     if total["nongst"]["cash"]:
         total["nongst"]["gmap"] = round(
             total["nongst"]["cash_g"] / total["nongst"]["cash_g_nwt"], 3
@@ -136,7 +135,7 @@ def sales_delete_view(request, id=None):
     #     raise Http404
     if request.method == "POST":
         obj.delete()
-        success_url = reverse("sales_invoice_list")
+        success_url = reverse("sales:sales_invoice_list")
         if request.htmx:
             headers = {"HX-Redirect": success_url}
             return HttpResponse("Success", headers=headers)

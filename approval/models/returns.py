@@ -85,10 +85,12 @@ class ReturnItem(models.Model):
     def get_journal(self):
         return self.journal.first()
 
+    @transaction.atomic
     def post(self, journal):
         self.line_item.product.transact(self.weight, self.quantity, journal, "AR")
         self.line_item.update_status()
 
+    @transaction.atomic
     def unpost(self, journal):
         self.line_item.product.transact(self.weight, self.quantity, journal, "A")
         self.line_item.update_status()

@@ -73,8 +73,7 @@ class Invoice(models.Model):
         blank=True,
         null=True,
     )
-    journals = GenericRelation(Journal, related_query_name="purchase_doc")
-    stock_txns = GenericRelation(StockTransaction)
+    journals = GenericRelation(Journal, related_query_name="purchase_doc",)
     objects = PurchaseQueryset.as_manager()
 
     class Meta:
@@ -229,9 +228,11 @@ class InvoiceItem(models.Model):
         ProductVariant, on_delete=models.CASCADE, related_name="products"
     )
     invoice = models.ForeignKey(
-        "purchase.Invoice", on_delete=models.CASCADE, related_name="purchaseitems"
+        "purchase.Invoice", on_delete=models.CASCADE, related_name="purchase_items"
     )
-    journal = GenericRelation(Journal, related_query_name="purchaseitems")
+    journal = GenericRelation(Journal, 
+                    # related_query_name="purchaseitems"
+                    )
 
     class Meta:
         ordering = ("-pk",)
@@ -253,13 +254,14 @@ class InvoiceItem(models.Model):
         rate = self.invoice.rate if self.invoice.rate > 0 else 0
         self.total = self.net_wt * rate + self.makingcharge
         return super(InvoiceItem, self).save(*args, **kwargs)
+        
 
-    def update(self, *args, **kwargs):
-        self.unpost()
-        self.net_wt = self.get_nettwt()
-        rate = self.invoice.rate if self.invoice.rate > 0 else 0
-        self.total = self.net_wt * rate + self.makingcharge
-        return super(InvoiceItem, self).update(*args, **kwargs)
+    # def update(self, *args, **kwargs):
+    #     self.unpost()
+    #     self.net_wt = self.get_nettwt()
+    #     rate = self.invoice.rate if self.invoice.rate > 0 else 0
+    #     self.total = self.net_wt * rate + self.makingcharge
+    #     return super(InvoiceItem, self).update(*args, **kwargs)
 
     def create_journal(self):
         stock_journal = Journal.objects.create(
@@ -270,7 +272,7 @@ class InvoiceItem(models.Model):
         return stock_journal
 
     def get_journal(self):
-        stock_journal = self.journal.filter(journal_type=JournalTypes.SJ)
+        stock_journal = self.journal
         if stock_journal.exists():
             return stock_journal.first()
         return self.create_journal()
@@ -289,7 +291,7 @@ class InvoiceItem(models.Model):
                 quantity=self.quantity,
                 purchase_touch=self.touch,
                 purchase_rate=self.invoice.rate,
-                purchase=self.invoice,
+                purchase_item=self,
             )
             stock_lot.transact(
                 weight=self.weight,
@@ -299,7 +301,9 @@ class InvoiceItem(models.Model):
             )
 
         else:
-            lot = StockLot.objects.get(stock__variant=self.product)
+            # each return item in purchase invoice item shall deduct same stock from any available lot
+            lot = StockLot.objects.get(stock__variant=self.product,purchase = self.invoice)
+            # lot = StockLotBalance.objects.get(Closing_wt__gte = self.weight,Closing_qty__gte = self.qty)
             lot.transact(
                 journal=journal,
                 weight=self.weight,
@@ -314,45 +318,23 @@ class InvoiceItem(models.Model):
         remove lot from stocklot if item is not return item"""
         if self.is_return:
             try:
-                self.product.stock_lots.get(
-                    # variant=self.product,
-                    purchase=self.invoice,
-                ).transact(
-                    journal=journal,
-                    weight=self.weight,
-                    quantity=self.quantity,
-                    movement_type="PR",
-                )
-            except StockLot.DoesNotExist:
-                print("Oops!while Posting  there was no said stock.  Try again...")
-            # self.product.stock_lots.get(
-            #     # variant=self.product,
-            #     purchase=self.invoice,
-            # ).transact(
-            #     journal=journal,
-            #     weight=self.weight,
-            #     quantity=self.quantity,
-            #     movement_type="P",
-            # )
-        else:
-            try:
-                self.product.stock_lots.get(
-                    # variant=self.product,
-                    purchase=self.invoice,
-                ).transact(
+                self.item_lots.first().transact(
                     journal=journal,
                     weight=self.weight,
                     quantity=self.quantity,
                     movement_type="P",
                 )
-            # self.product.stock_lots.get(
-            #     # variant=self.product,
-            #     purchase=self.invoice,
-            # ).transact(
-            #     journal=journal,
-            #     weight=self.weight,
-            #     quantity=self.quantity,
-            #     movement_type="PR",
-            # )
+            except StockLot.DoesNotExist:
+                print("Oops!while Posting  there was no said stock.  Try again...")
+        else:
+            try:
+
+                self.item_lots.first().transact(
+                    journal=journal,
+                    weight=self.weight,
+                    quantity=self.quantity,
+                    movement_type="PR",
+                )
+            
             except StockLot.DoesNotExist:
                 print("Oops!while Unposting there was no said stock.  Try again...")

@@ -21,13 +21,17 @@ class Journal(models.Model):
     desc = models.TextField(blank=True, null=True)
     # Below the mandatory fields for generic relation
     content_type = models.ForeignKey(
-        ContentType, blank=True, null=True, on_delete=models.SET_NULL
+        ContentType, 
+        on_delete=models.CASCADE,  
     )
-    object_id = models.PositiveIntegerField(blank=True, null=True)
+    object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
         get_latest_by = "id"
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
 
     def __str__(self):
         return f"{self.journal_type}{self.desc}"
@@ -49,17 +53,16 @@ class Journal(models.Model):
             pinv_ct = ContentType.objects.get_for_model(pinv)
 
             if self.content_type in [si_ct, pi_ct]:
-                print("is a invoice item")
+                
                 # <!-- <a href="{% url ''|add:object.get_url_string pk=object.object_id %}"> -->
                 # return f"{self.invoice.content_type.app_label}:{self.invoice.content_type.app_label}_{self.content_type.model}_detail"
                 model = sinv_ct if self.content_type is si_ct else pinv_ct
-                print(model)
-                print("returning invoice item detail")
+        
                 return reverse(
                     f"{self.content_type.app_label}:{self.content_type.app_label}_invoice_detail",
                     kwargs={"pk": self.content_object.invoice.pk},
                 )
-            print("returning defaul model detail url")
+            
             # return f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail"
             return reverse(
                 f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail",

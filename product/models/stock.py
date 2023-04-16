@@ -217,8 +217,9 @@ class StockLot(models.Model):
         "product.ProductVariant", on_delete=models.CASCADE, related_name="stock_lots"
     )
 
-    purchase = models.ForeignKey(
-        "purchase.Invoice", on_delete=models.SET_NULL, null=True, blank=True
+    purchase_item = models.ForeignKey(
+        "purchase.InvoiceItem", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="item_lots"
     )
 
     objects = StockLotManager()
@@ -238,6 +239,7 @@ class StockLot(models.Model):
         return queryset
 
     def generate_barcode(self):
+        print("generating barcode")
         if not self.barcode:
             self.barcode = encode(self.pk)
             self.save()
@@ -411,7 +413,7 @@ class StockTransaction(models.Model):
     lot = models.ForeignKey(StockLot, on_delete=models.CASCADE, default=1)
 
     journal = models.ForeignKey(
-        Journal, on_delete=models.CASCADE, null=True, blank=True, related_name="stxns"
+        Journal, on_delete=models.CASCADE, related_name="stxns"
     )
 
     class Meta:

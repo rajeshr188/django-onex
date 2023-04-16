@@ -2,7 +2,7 @@
 <tr >
     <td><input type="checkbox" name="approvalline" value={{item.id}}></td>
     <td>{{item.id}}</td>
-    <td> {{item.product}} </td>
+    <td> <a href="{% url 'product_stock_detail' item.product.stock.id%}">{{item.product.barcode}}</a> </td>
     <td> {{item.quantity}} </td>
     <td> {{item.weight}} </td>
     <td>{{item.touch}}</td>

@@ -253,7 +253,7 @@ class StockLotAdmin(admin.ModelAdmin):
         "quantity",
         "barcode",
         "huid",
-        "purchase",
+        "purchase_item",
         "purchase_rate",
         "purchase_touch",
     ]

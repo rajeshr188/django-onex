@@ -129,22 +129,19 @@ class Invoice(models.Model):
         null=True,
         related_name="sale_term",
     )
-    approval = models.OneToOneField(
+    # change to foreign
+    approval = models.ForeignKey(
         "approval.Approval",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name="bill",
+        related_name="sales",
     )
     journals = GenericRelation(
         Journal,
         related_query_name="sales_doc",
-        # content_type_field='journal',object_id_field='object_id'
     )
-    stock_txns = GenericRelation(
-        StockTransaction,
-        # content_type_field='content_type',object_id_field='object_id'
-    )
+ 
 
     class Meta:
         ordering = ("-created",)
@@ -193,6 +190,9 @@ class Invoice(models.Model):
     @property
     def overdue_days(self):
         return (timezone.now().date() - self.date_due).days
+
+    def get_total_receipts(self):
+        return self.receiptallocation_set.aggregate(t=Sum("allocated_amount"))["t"] or None
 
     def get_balance(self):
         if self.get_total_receipts() != None:
@@ -249,14 +249,16 @@ class Invoice(models.Model):
         accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
 
         if ledgerjournal.exists() and accountjournal.exists():
-            return ledgerjournal, accountjournal
+            return ledgerjournal.first(), accountjournal.first()
         return self.create_journals()
 
     def get_transactions(self):
+        """
         if self.approval:
-            """
+            
+            before 16/4/2023 this logic was used to create sale items from approval items
             if any approval, return and bill
-            """
+            
             for i in self.approval.items.filter(status="Pending"):
                 apr = ReturnItem.objects.create(
                     line=i, quantity=i.quantity, weight=i.weight
@@ -266,6 +268,8 @@ class Invoice(models.Model):
             self.approval.is_billed = True
             self.approval.save()
             self.approval.update_status()
+        """
+
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
@@ -330,9 +334,12 @@ class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
         "sales.Invoice", on_delete=models.CASCADE, related_name="saleitems"
     )
-    approval_item = models.ForeignKey(
-        "approval.ApprovalLine", on_delete=models.CASCADE, null=True, blank=True
+    approval_line = models.ForeignKey(
+        "approval.ApprovalLine", on_delete=models.CASCADE, null=True, blank=True,
+        related_name='sold_items'
     )
+    journal = GenericRelation(Journal, related_query_name="sale_items")
+    
 
     class Meta:
         ordering = ("-pk",)
@@ -381,14 +388,20 @@ class InvoiceItem(models.Model):
         return stock_journal
 
     def get_journal(self):
-        stock_journal = self.journals.filter(journal_type=JournalTypes.SJ)
+        stock_journal = self.journal.filter(journal_type=JournalTypes.SJ)
         if stock_journal.exists():
-            return stock_journal
+            return stock_journal.first()
         return self.create_journal()
 
     @transaction.atomic()
     def post(self, jrnl):
         if not self.is_return:
+            if self.approval_line:
+                # unpost the approval line to return the stocklot from approvalline
+                stock_journal = self.approval_line.get_journal()
+                self.approval_line.unpost(stock_journal)
+                self.approval_line.update_status()
+            # post the invoice item to deduct the stock from stocklot
             self.product.transact(self.weight, self.quantity, jrnl, "S")
         else:
             self.product.transact(self.weight, self.quantity, jrnl, "SR")
@@ -398,4 +411,9 @@ class InvoiceItem(models.Model):
         if self.is_return:
             self.product.transact(self.weight, self.quantity, jrnl, "S")
         else:
+            if self.approval_line:
+                # post the approval line to deduct the stock from invoiceitem
+                stock_journal = self.approval_line.get_journal()
+                self.approval_line.post(stock_journal)
+                self.approval_line.update_status()
             self.product.transact(self.weight, self.quantity, jrnl, "SR")

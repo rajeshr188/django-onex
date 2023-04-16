@@ -1,13 +1,9 @@
-update voucher when item is update/saved/deleted
 printing loan notice group hangs
-stocklist isto be sourced from stockbalance db view
 handle stock journal when a lot is not associated with purchase
 approval to sales
-handle orphan stocklots without purchase
 mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
-add validation on item forms 
 create sale-receipt and purchase-payment view from db view
 deployment
 add ledger codes

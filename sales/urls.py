@@ -17,8 +17,8 @@ urlpatterns = (
 
 urlpatterns += (
     # urls for Invoice
-    path("sales/invoice/", views.sales_list, name="sales_invoice_list"),
-    path("sales/invoice/create/", views.sale_create_view, name="sales_invoice_create"),
+    path("sales/", views.sales_list, name="sales_invoice_list"),
+    path("sales/create/", views.sale_create_view, name="sales_invoice_create"),
     path(
         "sales/detail/<int:pk>/", views.sales_detail_view, name="sales_invoice_detail"
     ),
@@ -29,12 +29,12 @@ urlpatterns += (
     #     name="sales_invoicepdf",
     # ),
     path(
-        "sales/invoice/update/<int:id>/",
+        "sales/update/<int:id>/",
         views.sale_update_view,
         name="sales_invoice_update",
     ),
     path(
-        "sales/invoice/delete/<int:id>/",
+        "sales/delete/<int:id>/",
         views.sales_delete_view,
         name="sales_invoice_delete",
     ),

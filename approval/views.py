@@ -19,17 +19,26 @@ from .filters import ApprovalFilter, ApprovalLineFilter
 from .forms import ApprovalForm, ApprovalLineForm, ReturnForm, ReturnItemForm
 from .models import Approval, ApprovalLine, Return, ReturnItem
 
-
+from django.db import transaction
 @login_required
+@transaction.atomic()
 def convert_sales(request, pk):
     # create sales invoice and invoice items from approval
     approval = get_object_or_404(Approval, pk=pk)
+    print("creating sales invoice for approval:", approval.id)
+    if not approval.status == "Pending":
+        print("approval status is not pending")
+        raise Http404("Approval is not pending")
+
     term = PaymentTerm.objects.first()
 
     sale = sinv.objects.create(
         created=datetime.now(), customer=approval.contact, approval=approval, term=term
     )
-    for item in approval.items.all():
+    print("created sales invoice:", sale.id)
+    approval_items = approval.items.exclude(status__in = ["Returned", "Billed"])
+    print("approval items:", approval_items)
+    for item in approval_items:
         i = sinvitem.objects.create(
             invoice=sale,
             product=item.product,
@@ -37,7 +46,10 @@ def convert_sales(request, pk):
             quantity=item.quantity,
             touch=item.touch,
             total=(item.weight * item.touch) / 100,
+            approval_line=item,
         )
+        item.status = "Billed"
+        item.save()
         i.save()
 
     sale.gross_wt = sale.get_gross_wt()

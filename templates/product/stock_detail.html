@@ -3,50 +3,39 @@
 <p><a class="btn btn-default" href="{% url 'product_stock_list' %}">Stock Listing</a>
 </p>
 <div class="row">
-  <div class="col-4">
+  <div class="col-md-4">
     <div class="card">
-      <div class="card-header">Detail</div>
-      <div class="card-body">
-        
-        <table class="table table-sm table-responsive">
-          <tbody>
-            <tr>
-              <td>Created</td>
-              <td>{{ object.created }}</td>
-            </tr>
-            <tr>
-              <td>Updated</td>
-              <td>{{ object.updated_on }}</td>
-            </tr>
-            <tr>
-              <td>Product</td>
-              <td>{{ object.variant }}</td>
-            </tr>
-            <tr>
-              <td>Weight</td>
-              <td>{{object.current_balance.wt}}</td>
-            </tr>
-            <tr>
-              <td>Quantity</td>
-              <td>{{ object.current_balance.qty}}</td>
-            </tr>
-            <tr>
-              <td>Status</td>
-              <td>{{object.status}}</td>
-            </tr>
-            <tr>
-              <td>Reorderat</td>
-              <td>{{ object.reorderat }}</td>
-            </tr>
-            <tr> 
-              <a class="btn btn-primary" href="{% url 'product_stock_merge' object.id%}">Merge</a>
-            </tr>
-            </table>
-          </tbody>
-      </div>
+      <table class="table table-sm table-responsive">
+        <tbody>
+          <tr>
+            <td>Created</td>
+            <td>{{ object.created }}</td>
+          </tr>
+          <tr>
+            <td>Updated</td>
+            <td>{{ object.updated_on }}</td>
+          </tr>
+          <tr>
+            <td>Product</td>
+            <td>{{ object.variant }}</td>
+          </tr>
+          <tr>
+            <td>Weight</td>
+            <td>{{object.current_balance.wt}}</td>
+          </tr>
+          <tr>
+            <td>Quantity</td>
+            <td>{{ object.current_balance.qty}}</td>
+          </tr>
+          <tr>
+            <td>Reorderat</td>
+            <td>{{ object.reorderat }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-  <div class="col">
+  <div class="col-md-8">
     <div class="accordion" id="accordionExample">
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
@@ -107,13 +96,21 @@
               <div class="card-body">
                 
                 {%if object.stockstatement_set%}
-                <ul class="list-group list-group-flush">
-                  {%for i in object.stockstatement_set.all%}
-                  <li class="list-group-item">
-                    {{i.created}} wt:{{i.Closing_wt}} qty:{{i.Closing_qty}}
-                  </li>
-                </ul>
-                {%endfor%}
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm">
+                    <thead>
+                      <th>id</th><th>Created</th><th>Weight</th><th>Quantity</th>
+                    </thead>
+                      {%for i in object.stockstatement_set.all%}
+                      <tr>
+                        <td>{{i.id}}</td>
+                        <td>{{i.created|date}}</td>
+                        <td>{{i.Closing_wt}}</td>
+                        <td>{{i.Closing_qty}}</td>
+                      </tr>
+                    {%endfor%}
+                  </table>
+                </div>
                 {%endif%}
               </div>
             </div>  
@@ -130,25 +127,26 @@
           <div class="accordion-body">
             <div class="card">
               <div class="card-body">
-                
+                <a class="btn btn-primary" href="{% url 'product_stock_merge' object.id%}">Merge</a>
                 {%if object.lots%}
-                <table class="table table-hover">
-                  <thead>
-                    <th>Created</th><th>Purchase</th><th>Barcode</th><th>Huid</th><th>current_balance</th>
-                  </thead>
-                  <tbody>
-                    {%for i in object.lots.all%}
-                    <tr>
-                      <td>{{i.created}}</td>
-                      <td><a href="{{i.puchase.get_absolute_url}}" >{{i.purchase}}</a></td>
-                      <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
-                      <td> {{i.huid}} </td>
-                      <td>{{i.current_balance}}</td>
-                    </tr>
-                   {%endfor%}
-                  </tbody>
-                </table>
-        
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <th>Created</th><th>Purchase</th><th>Barcode</th><th>Huid</th><th>current_balance</th>
+                    </thead>
+                    <tbody>
+                      {%for i in object.lots.all%}
+                      <tr>
+                        <td>{{i.created|date}}</td>
+                        <td><a href="{{i.puchase_item.invoice.get_absolute_url}}" >{{i.purchase_item.invoice}}</a></td>
+                        <td><a href="{% url 'product_stocklot_detail' i.id%}">{{i.barcode}}</a></td>
+                        <td> {{i.huid}} </td>
+                        <td>{{i.current_balance}}</td>
+                      </tr>
+                     {%endfor%}
+                    </tbody>
+                  </table>
+                </div>        
                 {%endif%}
               </div>
             </div>  

@@ -22,17 +22,28 @@
         <tr><td>Status</td><td>{{ object.status }}</td></tr>
         <tr><td>Is_billed</td><td>{{object.is_billed}}</td></tr>
         {% if object.is_billed %}
-        <tr><td>Bill No</td><td><a href="{% url 'sales:sales_invoice_detail' object.bill %}">{{object.bill}}</a></td></tr>
+        <tr>
+          {%for i in object.sales.all%}
+          <td>Bill No</td>
+          <td><a href="{% url 'sales:sales_invoice_detail' i.id %}">{{i}}</a></td>
+          {%endfor%}
+        </tr>
         {%endif%}
-     
+        <tr>
+          {%if not object.is_billed%}
+          <td>
+            <a class = "btn btn-success"
+              href="{% url 'approval:approval_convert_sale' object.id%}">Create Sale</a>
+          {%endif%}
+        </tr>
         </table>
-        {% if object.status == 'Pending' %}
+        <!-- {% if object.status == 'Pending' %}
         <form action="{% url 'sales:sales_invoice_create' %}" method="GET">
           {% csrf_token %}
           <input type="hidden" name="approvalid" value={{object.id}}>
           <input class = "btn btn-primary" type="submit" value='Create POS'>
         </form>
-        {%endif%}
+        {%endif%} -->
     </div>
     <div class="col-md-8">
       <p>

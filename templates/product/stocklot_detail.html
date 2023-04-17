@@ -105,8 +105,8 @@
                         <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
                         {%endif%}
                       </td>
-                      <td>{{i.weight}}</td>
-                      <td>{{i.quantity}}</td>
+                      <td>{{i.movement_type.direction}}{{i.weight}}</td>
+                      <td>{{i.movement_type.direction}}{{i.quantity}}</td>
                     </tr>
                     {%endfor%}
                   </tbody>

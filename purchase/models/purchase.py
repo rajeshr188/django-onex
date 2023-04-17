@@ -318,21 +318,22 @@ class InvoiceItem(models.Model):
         remove lot from stocklot if item is not return item"""
         if self.is_return:
             try:
-                self.item_lots.first().transact(
+                lot = self.item_lots.latest('created')
+                lot.transact(
                     journal=journal,
-                    weight=self.weight,
-                    quantity=self.quantity,
+                    weight=lot.weight,
+                    quantity=lot.quantity,
                     movement_type="P",
                 )
             except StockLot.DoesNotExist:
                 print("Oops!while Posting  there was no said stock.  Try again...")
         else:
             try:
-
-                self.item_lots.first().transact(
+                lot = self.item_lots.latest('created')
+                lot.transact(
                     journal=journal,
-                    weight=self.weight,
-                    quantity=self.quantity,
+                    weight=lot.weight,
+                    quantity=lot.quantity,
                     movement_type="PR",
                 )
             

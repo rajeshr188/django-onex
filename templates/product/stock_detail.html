@@ -55,6 +55,7 @@
                       <th>ID</th>
                       <th>movement</th>
                       <th>journal</th>
+                      <th>Lot</th>
                       <th>weight</th>
                       <th>quantity</th>
                     </tr>
@@ -72,6 +73,7 @@
                         <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
                         {%endif%}
                       </td>
+                      <td>{{i.lot.barcode}}</td>
                       <td>{{i.movement_type.direction}}{{i.weight}}</td>
                       <td>{{i.movement_type.direction}}{{i.quantity}}</td>
                     </tr>

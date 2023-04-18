@@ -1,0 +1,26 @@
+<tr>
+    <td></td>
+    <td></td>
+    <td>{{object.is_return}}</td>
+    <td>{{object.product}}</td>
+    <td>{{object.quantity}}</td>
+    <td>{{object.weight}}</td>
+    <td>{{object.touch}}</td>
+    <td>{{object.total}}</td>
+    <td>
+      {%if object.journal.exists%}
+        <a href="{% url 'dea_journal_detail' object.journal.first.id %}">Journal</a>
+      {%else%}{{object.journal.first}}
+      {%endif%}
+    </td>
+    <td>
+        <button class="btn btn-info" hx-trigger='click'     
+                hx-get='{{ object.get_hx_edit_url }}'>
+                <i class="fa fa-edit"></i></button>
+
+        <a class="btn btn-danger"hx-post='{{ object.get_delete_url }}' 
+                hx-confirm='Delete item?' hx-trigger='click' href='{{ object.get_delete_url }}'
+                >
+                <i class="fa fa-trash"></i></a>
+    </td>
+  </tr>

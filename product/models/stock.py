@@ -218,22 +218,27 @@ class StockLot(models.Model):
     )
 
     purchase_item = models.ForeignKey(
-        "purchase.InvoiceItem", on_delete=models.CASCADE, null=True, blank=True,
-        related_name="item_lots"
+        "purchase.InvoiceItem",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="item_lots",
     )
 
     objects = StockLotManager()
 
     def __str__(self):
-        return f"{self.barcode} | {self.huid} | {self.variant} | {self.current_balance()}"
+        return (
+            f"{self.barcode} | {self.huid or ''} | {self.variant} | {self.current_balance()}"
+        )
 
     @classmethod
     def with_balance(cls):
         balance_subquery = (
-            StockLotBalance.objects.filter(stocklot_id=OuterRef('pk'))
-            .values('stocklot_id')
-            .annotate(total_balance=Coalesce(Sum('balance'), 0))
-            .values('total_balance')
+            StockLotBalance.objects.filter(stocklot_id=OuterRef("pk"))
+            .values("stocklot_id")
+            .annotate(total_balance=Coalesce(Sum("balance"), 0))
+            .values("total_balance")
         )
         queryset = cls.objects.annotate(balance=Subquery(balance_subquery))
         return queryset
@@ -325,6 +330,14 @@ class StockLot(models.Model):
         bal["wt"] = Closing_wt + (in_txns["wt"] - out_txns["wt"])
         bal["qty"] = Closing_qty + (in_txns["qty"] - out_txns["qty"])
         return bal
+    
+    def get_total_sold(self):
+        return self.sold_items.aggregate(
+            qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),
+            wt=Coalesce(
+                models.Sum("weight", output_field=models.DecimalField()), Decimal(0.0)
+            ),
+        )
 
     def transact(self, weight, quantity, journal, movement_type):
         """
@@ -412,9 +425,7 @@ class StockTransaction(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     lot = models.ForeignKey(StockLot, on_delete=models.CASCADE, default=1)
 
-    journal = models.ForeignKey(
-        Journal, on_delete=models.CASCADE, related_name="stxns"
-    )
+    journal = models.ForeignKey(Journal, on_delete=models.CASCADE, related_name="stxns")
 
     class Meta:
         ordering = ("-created",)

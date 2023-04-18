@@ -327,7 +327,7 @@ def get_notice_pdf(selection=None):
     selected_loans = selection
     # get a list of unique customers for the selected loans
     customers = Customer.objects.filter(loan__in=selected_loans).distinct()
-    print(f"customers gathered")
+    print(f"customers gathered:{customers.count()}")
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
     # Create the PDF canvas
@@ -362,6 +362,8 @@ def get_notice_pdf(selection=None):
     spacer = Spacer(0, 0.25 * inch)
     # Loop through each customer
     print("looping through customers")
+    # loans = Loan.objects.filter(customer__in=customers).order_by("customer")
+    # grouped_loans = groupby(loans, lambda loan: loan.customer)
     for customer in customers:
         # Calculate the total loan amount for the customer
         # total_loan_amount = loans.aggregate(Sum('loanamount'))['loanamount__sum'] or 0

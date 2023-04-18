@@ -64,7 +64,8 @@ class Invoice(models.Model):
     is_active = models.BooleanField(default=True)
     # Relationship Fields
     supplier = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="purchases"
+        Customer, on_delete=models.CASCADE, related_name="purchases",
+        verbose_name=_("Supplier")
     )
     term = models.ForeignKey(
         PaymentTerm,
@@ -73,7 +74,10 @@ class Invoice(models.Model):
         blank=True,
         null=True,
     )
-    journals = GenericRelation(Journal, related_query_name="purchase_doc",)
+    journals = GenericRelation(
+        Journal,
+        related_query_name="purchase_doc",
+    )
     objects = PurchaseQueryset.as_manager()
 
     class Meta:
@@ -98,7 +102,7 @@ class Invoice(models.Model):
         return Invoice.objects.filter(id__lt=self.id).order_by("id").last()
 
     def get_invoiceitem_children(self):
-        return self.purchaseitems.all()
+        return self.purchase_items.all()
 
     def get_gross_wt(self):
         return self.purchaseitems.aggregate(t=Sum("weight"))["t"]
@@ -163,7 +167,7 @@ class Invoice(models.Model):
         accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
 
         if ledgerjournal.exists() and accountjournal.exists():
-            return ledgerjournal, accountjournal
+            return ledgerjournal.first(), accountjournal.first()
 
         return self.create_journals()
 
@@ -213,6 +217,8 @@ class Invoice(models.Model):
 
 
 class InvoiceItem(models.Model):
+    # TODO:if saved and lot has sold items this shouldnt/cant be edited
+
     # Fields
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
@@ -230,9 +236,10 @@ class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
         "purchase.Invoice", on_delete=models.CASCADE, related_name="purchase_items"
     )
-    journal = GenericRelation(Journal, 
-                    # related_query_name="purchaseitems"
-                    )
+    journal = GenericRelation(
+        Journal,
+        # related_query_name="purchaseitems"
+    )
 
     class Meta:
         ordering = ("-pk",)
@@ -241,10 +248,20 @@ class InvoiceItem(models.Model):
         return "%s" % self.pk
 
     def get_absolute_url(self):
-        return reverse("purchase:purchase_invoiceitem_detail", args=(self.pk,))
+        return reverse("purchase:purchase_purchaseitem_detail", args=(self.pk,))
 
     def get_update_url(self):
         return reverse("purchase:purchase_invoiceitem_update", args=(self.pk,))
+
+    def get_hx_edit_url(self):
+        kwargs = {"parent_id": self.invoice.id, "id": self.id}
+        return reverse("purchase:purchase_invoiceitem_detail", kwargs=kwargs)
+
+    def get_delete_url(self):
+        return reverse(
+            "purchase:purchase_invoiceitem_delete",
+            kwargs={"id": self.id, "parent_id": self.invoice.id},
+        )
 
     def get_nettwt(self):
         return (self.weight * self.touch) / 100
@@ -254,7 +271,6 @@ class InvoiceItem(models.Model):
         rate = self.invoice.rate if self.invoice.rate > 0 else 0
         self.total = self.net_wt * rate + self.makingcharge
         return super(InvoiceItem, self).save(*args, **kwargs)
-        
 
     # def update(self, *args, **kwargs):
     #     self.unpost()
@@ -302,7 +318,9 @@ class InvoiceItem(models.Model):
 
         else:
             # each return item in purchase invoice item shall deduct same stock from any available lot
-            lot = StockLot.objects.get(stock__variant=self.product,purchase = self.invoice)
+            lot = StockLot.objects.get(
+                stock__variant=self.product, purchase=self.invoice
+            )
             # lot = StockLotBalance.objects.get(Closing_wt__gte = self.weight,Closing_qty__gte = self.qty)
             lot.transact(
                 journal=journal,
@@ -318,7 +336,7 @@ class InvoiceItem(models.Model):
         remove lot from stocklot if item is not return item"""
         if self.is_return:
             try:
-                lot = self.item_lots.latest('created')
+                lot = self.item_lots.latest("created")
                 lot.transact(
                     journal=journal,
                     weight=lot.weight,
@@ -329,13 +347,13 @@ class InvoiceItem(models.Model):
                 print("Oops!while Posting  there was no said stock.  Try again...")
         else:
             try:
-                lot = self.item_lots.latest('created')
+                lot = self.item_lots.latest("created")
                 lot.transact(
                     journal=journal,
                     weight=lot.weight,
                     quantity=lot.quantity,
                     movement_type="PR",
                 )
-            
+
             except StockLot.DoesNotExist:
                 print("Oops!while Unposting there was no said stock.  Try again...")

@@ -1,13 +1,23 @@
-<li class="list-group-item" id="item-{{ object.id}}" >
-    {{ object.quantity }} {{ object.product }} - {{ object.weight }}
-    <button class="btn btn-info" hx-trigger='click'     
-            hx-get='{{ object.get_hx_edit_url }}' 
-            hx-target="#item-{{ object.id}}"
-            hx-swap="outerHTML" >
-            <i class="fa fa-edit"></i></button>
+<tr id="item-{{ object.id}}">
+        <td></td>
+        <td></td>
+        <td>{{object.is_return}}</td>
+        <td>{{object.product}}</td>
+        <td>{{object.quantity}}</td>
+        <td>{{object.weight}}</td>
+        <td>{{object.touch}}</td>
+        <td>{{object.total}}</td>
+        <td>
+                <button class="btn btn-info" hx-trigger='click'     
+                        hx-get='{{ object.get_hx_edit_url }}' 
+                        hx-target="#item-{{ object.id}}"
+                        hx-swap="outerHTML" >
+                        <i class="fa fa-edit"></i></button>
     
-    <a class="btn btn-danger"hx-post='{{ object.get_delete_url }}' 
-        hx-confirm='Delete item?' hx-trigger='click' href='{{ object.get_delete_url }}'
-        hx-target='#item-{{ object.id }}' hx-swap='outerHTML'>
-        <i class="fa fa-trash"></i></a>
-</li>
+                <a class="btn btn-danger"hx-post='{{ object.get_delete_url }}' 
+                        hx-confirm='Delete item?' hx-trigger='click' href='{{ object.get_delete_url }}'
+                        hx-target='#item-{{ object.id }}' hx-swap='outerHTML'>
+                        <i class="fa fa-trash"></i></a>
+        </td>
+</tr>
+

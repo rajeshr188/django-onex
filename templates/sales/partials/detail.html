@@ -67,14 +67,23 @@
     </h2>
     <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
       <div class="accordion-body">
-        {% if object.saleitems %}
-        <ul id="items-list" class="list-group list-group-flush">
-          {% for item in object.get_invoiceitem_children %}
-          {% include 'sales/partials/item-inline.html' with object=item %}
-          {% endfor %}
-          
-        </ul> 
-        {%endif%}
+        <div class="card">
+          <div class="table-responsive">
+            <a hx-get="{% url 'sales:sales_invoiceitem_create' object.id%}"
+            hx-target="#items" hx-swap="beforeend" class="btn btn-primary">
+         Add Items</a>
+            <table class="table table-striped table-sm">
+              <thead>
+                <th></th><th></th><th>Return</th><th>Product</th><th>Qty</th><th>weight</th><th>Touch</th><th>Total</th>
+              </thead>
+              <tbody id="items" hx-target = "closest tr" hx-swap="outerHTML">
+                {% for item in object.get_invoiceitem_children %}
+                {% include 'sales/partials/item-inline.html' with object=item %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>

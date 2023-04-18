@@ -54,22 +54,13 @@
                         <td>Customer</td>
                         <td>
                             <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
-                            {%if not object.posted %}
+                            
                             <a class="btn btn-info"
                                 href="{% url 'contact_customer_update' object.customer.id %}">Edit</a>
                         </td>
-                        {%endif%}
+                     
                     </tr>
-                    <tr>
-                        <td>Posted</td>
-                        <td>
-                            {%if object.posted%}
-                            <a class="btn btn-info" href="{% url 'girvi:girvi_loan_unpost' object.id %}">Unpost</a>
-                            {%else%}
-                            <a class="btn btn-info" href="{% url 'girvi:girvi_loan_post' object.id %}">Post</a>
-                            {%endif%}
-                        </td>
-                    </tr>
+                   
                     <tr>
                         <td>created</td>
                         <td>{{ object.created }}</td>

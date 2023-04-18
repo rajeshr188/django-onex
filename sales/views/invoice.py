@@ -161,7 +161,7 @@ def sale_item_delete_view(request, parent_id=None, id=None):
     if request.method == "POST":
         id = obj.id
         obj.delete()
-        success_url = reverse("hx-detail", kwargs={"id": parent_id})
+        success_url = reverse("sales:hx-detail", kwargs={"pk": parent_id})
         if request.htmx:
             return render(
                 request, "sales/partials/item-inline-delete-response.html", {"id": id}
@@ -232,7 +232,11 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 
     return render(request, "sales/partials/item-form.html", context)
 
-
+@login_required
+def saleitem_detail(request,pk):
+    obj = get_object_or_404(InvoiceItem,pk=pk)
+    context = {"object":obj}
+    return render(request,"sales/partials/item-inline.html",context)
 # from approval.models import Approval
 # class InvoiceCreateView(CreateView):
 #     model = Invoice
@@ -316,7 +320,7 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 # not done yet
 def get_sale_price(request):
     product = StockLot.objects.get(id=request.GET.get("product", "")).variant
-    contact = Customer.objects.get(id=request.GET.get("customer", ""))
+    contact = Customer.objects.get(id=request.GET.get("contact", ""))
 
     # Traverse the pricing tier hierarchy to get the effective selling price for the customer and product
     pricing_tier = contact.pricing_tier

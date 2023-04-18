@@ -1,9 +1,12 @@
 from django.db import models
 from django.db.models import (BooleanField, Case, DecimalField,
                               ExpressionWrapper, F, Func, Q, Sum, Value, When)
-from django.utils import timezone
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
-from product.models import Rate,RateSource
+from django.utils import timezone
+
+from product.models import Rate, RateSource
+
+
 class LoanQuerySet(models.QuerySet):
     def released(self):
         return self.filter(release__isnull=False)

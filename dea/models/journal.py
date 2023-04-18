@@ -21,8 +21,8 @@ class Journal(models.Model):
     desc = models.TextField(blank=True, null=True)
     # Below the mandatory fields for generic relation
     content_type = models.ForeignKey(
-        ContentType, 
-        on_delete=models.CASCADE,  
+        ContentType,
+        on_delete=models.CASCADE,
     )
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
@@ -53,16 +53,15 @@ class Journal(models.Model):
             pinv_ct = ContentType.objects.get_for_model(pinv)
 
             if self.content_type in [si_ct, pi_ct]:
-                
                 # <!-- <a href="{% url ''|add:object.get_url_string pk=object.object_id %}"> -->
                 # return f"{self.invoice.content_type.app_label}:{self.invoice.content_type.app_label}_{self.content_type.model}_detail"
                 model = sinv_ct if self.content_type is si_ct else pinv_ct
-        
+
                 return reverse(
                     f"{self.content_type.app_label}:{self.content_type.app_label}_invoice_detail",
                     kwargs={"pk": self.content_object.invoice.pk},
                 )
-            
+
             # return f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail"
             return reverse(
                 f"{self.content_type.app_label}:{self.content_type.app_label}_{self.content_type.model}_detail",

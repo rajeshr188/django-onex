@@ -119,9 +119,16 @@ def purchase_item_update_hx_view(request, parent_id=None, id=None):
             new_obj.invoice = parent_obj
         new_obj.save()
         context["object"] = new_obj
-        return render(request, "sales/partials/item-inline.html", context)
-    return render(request, "sales/partials/item-form.html", context)
+        return render(request, "purchase/item-inline.html", context)
+    return render(request, "purchase/item-form.html", context)
 
+@login_required
+def purchaseitem_detail(request,pk):
+    obj = InvoiceItem.objects.get(pk=pk)
+    context = {
+        "object": obj,
+    }
+    return render(request, "purchase/item-inline.html", context)
 
 @login_required
 def purchase_item_delete_view(request, parent_id=None, id=None):
@@ -139,7 +146,7 @@ def purchase_item_delete_view(request, parent_id=None, id=None):
     if request.method == "POST":
         id = obj.id
         obj.delete()
-        success_url = reverse("purchase_invoice_detail", kwargs={"id": parent_id})
+        success_url = reverse("purchase:purchase_invoice_detail", kwargs={"pk": parent_id})
         if request.htmx:
             return render(
                 request, "sales/partials/item-inline-delete-response.html", {"id": id}

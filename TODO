@@ -1,10 +1,16 @@
-printing loan notice group hangs
+update voucher on voucheritem update
+multicurrency voucher
+printing loan notice group hangs(generate pdf in background for each customer and stich them together)
+    caused by selectall element that doesnt select all from the filter.qs but all the unreleased objects
 handle stock journal when a lot is not associated with purchase
-approval to sales
 mr.htmx wordwide
+print stocktags with qr code from .prn to citizen cs630 label printer
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock
 create sale-receipt and purchase-payment view from db view
+SIMPLE UI LIKE KHATABOOK
+MAKE ROBUST,ADD TEST AND DOCS WITH THE HELP OF GITHUB COPILOT
 deployment
 add ledger codes
+export data to tally
 remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did

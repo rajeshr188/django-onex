@@ -150,7 +150,7 @@ class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"})
     )
-    supplier = forms.ModelChoiceField(
+    contact = forms.ModelChoiceField(
         queryset=Customer.objects.filter(customer_type="S"), widget=Select2Widget
     )
 

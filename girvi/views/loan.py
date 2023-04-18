@@ -58,7 +58,11 @@ class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
 def loan_list(request):
     filter = LoanFilter(
         request.GET,
-        queryset=Loan.objects.with_due().with_current_value().with_is_overdue().select_related('customer','release').prefetch_related('notifications','loanitems'),
+        queryset=Loan.objects.with_due()
+        .with_current_value()
+        .with_is_overdue()
+        .select_related("customer", "release")
+        .prefetch_related("notifications", "loanitems"),
     )
     table = LoanTable(filter.qs)
     context = {"filter": filter, "table": table}
@@ -292,25 +296,66 @@ def notify_print(request):
     selected_loans = None
 
     if all == "selected":
+        print("all selected")
         # get query parameters if all row selected and retrive queryset
-        filter = LoanFilter(request.GET, queryset=Loan.objects.unreleased().all())
+        print(request.GET)
+        filter = LoanFilter(request.GET, queryset=Loan.objects.with_due()
+                            .with_current_value()
+                            .with_is_overdue()
+                            .select_related("customer", "release")
+                            .prefetch_related("notifications", "loanitems"),
+                            )
 
         selected_loans = filter.qs.order_by("customer")
+        print(f"selected loans: {selected_loans.count()}")
     else:
+        print("partially selected")
         # get the selected loan ids from the request
         selection = request.POST.getlist("selection")
 
-        selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
+        selected_loans = Loan.objects.unreleased().filter(id__in=selection).order_by("customer")
 
+    # ng = NoticeGroup.objects.create(name=datetime.datetime.now())
+    # # optimise this
+    # customers = Customer.objects.filter(loan__in=selected_loans).distinct()
+    # for customer in customers:
+    #     try:
+    #         ni = Notification.objects.create(
+    #             group=ng,
+    #             customer=customer,
+    #         )
+    #         ni.loans.set(selected_loans.filter(customer=customer))
+    #         ni.save()
+    #     except IntegrityError:
+    #         print("Error adding notification for customer {}".format(customer.id))
     ng = NoticeGroup.objects.create(name=datetime.datetime.now())
+
+    # Get a queryset of customers with selected loans
     customers = Customer.objects.filter(loan__in=selected_loans).distinct()
+
+    # Create a list of Notification objects to create
+    notifications_to_create = []
     for customer in customers:
-        ni = Notification.objects.create(
-            group=ng,
-            customer=customer,
+        notifications_to_create.append(
+            Notification(
+                group=ng,
+                customer=customer,
+            )
         )
-        ni.loans.set(selected_loans.filter(customer=customer))
-        ni.save()
+
+    # Use bulk_create to create the notifications
+    try:
+        notifications = Notification.objects.bulk_create(notifications_to_create)
+    except IntegrityError:
+        print("Error adding notifications.")
+
+    # Add loans to the notifications
+    for notification in notifications:
+        loans = selected_loans.filter(customer=notification.customer)
+        notification.loans.set(loans)
+        notification.save()
+
+
     return HttpResponse(status=204)
 
 

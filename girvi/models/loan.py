@@ -49,9 +49,12 @@ class Loan(models.Model):
     # ----------------legacy---------------------------------
     itype = (("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze"))
     itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
-    itemdesc = models.TextField(max_length=100, blank=True, null=True, verbose_name="Description")
-    itemweight = models.DecimalField(max_digits=10, decimal_places=2,
-                                     verbose_name="Weight")
+    itemdesc = models.TextField(
+        max_length=100, blank=True, null=True, verbose_name="Description"
+    )
+    itemweight = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Weight"
+    )
     itemvalue = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, verbose_name="Value"
     )
@@ -104,13 +107,11 @@ class Loan(models.Model):
         return hasattr(self, "release")
 
     def get_loanamount(self):
-        adjustments = self.adjustments.filter(as_interest = False
-                        ).aggregate(
-                            Coalesce(Sum("amount_received"),0)
-                            )["amount_received__sum"]
+        adjustments = self.adjustments.filter(as_interest=False).aggregate(
+            Coalesce(Sum("amount_received"), 0)
+        )["amount_received__sum"]
         items_total = self.loanitems.aggregate(Sum("amount"))["amount__sum"]
         return items_total - adjustments
-        
 
     def get_total_adjustments(self):
         as_int = 0
@@ -200,7 +201,6 @@ class Loan(models.Model):
         amount = Money(self.loanamount, "INR")
         interest = Money(self.interest_amt(), "INR")
         if self.loan_type == self.LoanType.TAKEN:
-            
             lt = [
                 {"ledgerno": "Loans", "ledgerno_dr": "Cash", "amount": amount},
                 {"ledgerno": "Cash", "ledgerno_dr": "Interest Paid", "amount": amount},
@@ -222,7 +222,6 @@ class Loan(models.Model):
                 },
             ]
         else:
-            
             lt = [
                 {
                     "ledgerno": "Cash",
@@ -261,7 +260,7 @@ class Loan(models.Model):
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
-    
+
     def reverse_transactions(self):
         ledger_journal, Account_journal = self.get_journals()
         lt, at = self.get_transactions()
@@ -272,7 +271,9 @@ class Loan(models.Model):
     def save(self, *args, **kwargs):
         self.loanid = self.series.name + str(self.lid)
         self.interest = self.interestdue()
-        self.loanamount = self.get_loanamount() if self.loanamount == 0 else self.loanamount
+        self.loanamount = (
+            self.get_loanamount() if self.loanamount == 0 else self.loanamount
+        )
 
         super(Loan, self).save(*args, **kwargs)
         return self
@@ -312,7 +313,6 @@ class LoanItem(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        
         super(LoanItem, self).save(*args, **kwargs)
         self.loan.save()
 

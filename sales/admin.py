@@ -64,6 +64,7 @@ class InvoiceAdmin(ImportExportActionModelAdmin):
     list_display = [
         "id",
         "created",
+        "customer",
         "updated",
         "rate",
         "balancetype",

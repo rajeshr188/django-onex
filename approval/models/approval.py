@@ -31,8 +31,9 @@ If the approval is closed, the approval should be flagged as closed and no furth
 class Approval(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.status = 'pending'
+            self.status = "pending"
         super().save(*args, **kwargs)
+
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
     created_by = models.ForeignKey(
@@ -73,12 +74,13 @@ class Approval(models.Model):
     called when an return item is created with a line item referencing this approval/approvalline,
      otherwise called from approvalline.save() ,by default stus is pending
      """
+
     def update_status(self):
         print("in approval update_Status")
 
         # for i in self.items.all():
         #     i.update_status()
-        if any(i.status in ['Pending','Partially Returned'] for i in self.items.all()):
+        if any(i.status in ["Pending", "Partially Returned"] for i in self.items.all()):
             self.status = "Pending"
         else:
             self.status = "Complete"
@@ -93,12 +95,12 @@ class Approval(models.Model):
         self.save()
 
     def get_total_qty(self):
-        items =  self.items.filter(status__in = ['Pending','Partially Returned'])
+        items = self.items.filter(status__in=["Pending", "Partially Returned"])
         qty = 0 or sum([i.balance_qty() for i in items])
         return qty
 
     def get_total_wt(self):
-        items =  self.items.filter(status__in = ['Pending','Partially Returned'])
+        items = self.items.filter(status__in=["Pending", "Partially Returned"])
         wt = 0 or sum([i.balance_wt() for i in items])
         return wt
 
@@ -137,10 +139,11 @@ class ApprovalLine(models.Model):
         default="Pending",
         blank=True,
     )
-    journal = GenericRelation(Journal, 
-            related_query_name="approval_lineitems",
-            # content_type_field='content_type',object_id_field='object_id'
-            )
+    journal = GenericRelation(
+        Journal,
+        related_query_name="approval_lineitems",
+        # content_type_field='content_type',object_id_field='object_id'
+    )
 
     class Meta:
         ordering = ("approval",)
@@ -156,44 +159,33 @@ class ApprovalLine(models.Model):
         return reverse("approval:approval_approvalline_update", kwargs=kwargs)
 
     def balance_wt(self):
-        return (
-            self.weight or 0
-            - self.return_items.aggregate(
-                t=Sum("weight")
-            )["t"] or 0
-        )
+        return self.weight or 0 - self.return_items.aggregate(t=Sum("weight"))["t"] or 0
 
     def balance_qty(self):
         return (
-            self.quantity or 0
-            - self.return_items.aggregate(
-                t=Sum("quantity")
-            )["t"] or 0
+            self.quantity
+            or 0 - self.return_items.aggregate(t=Sum("quantity"))["t"]
+            or 0
         )
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        
-        
+
     # called when return item is created otherwise status is pending
     def update_status(self):
-        status = ''
+        status = ""
         ret = {"qty": 0, "wt": 0}
         sold = {"qty": 0, "wt": 0}
 
         if self.return_items.exists():
-            ret = self.return_items.aggregate(
-                qty=Sum("quantity"), wt=Sum("weight")
-            )
+            ret = self.return_items.aggregate(qty=Sum("quantity"), wt=Sum("weight"))
             print(ret)
 
         if self.sale.exists():
-            sold = self.sale.aggregate(
-                qty=Sum("quantity"), wt=Sum("weight")
-            )
+            sold = self.sale.aggregate(qty=Sum("quantity"), wt=Sum("weight"))
         total = {"qty": ret["qty"] + sold["qty"], "wt": ret["wt"] + sold["wt"]}
-            
-        if ret["qty"] - self.quantity > 0 and ret["wt"]-self.quantity > 0:
+
+        if ret["qty"] - self.quantity > 0 and ret["wt"] - self.quantity > 0:
             status = "Partially Returned"
             print("partially returned")
         elif self.quantity - ret["qty"] == 0 and self.weight - ret["wt"] == 0:
@@ -202,7 +194,7 @@ class ApprovalLine(models.Model):
         else:
             status = "Pending"
             print("pending")
-        
+
         return status
 
     def get_returned_qty(self):
@@ -223,7 +215,7 @@ class ApprovalLine(models.Model):
     def delete_journals(self):
         # delete journals for this approvalline
         pass
-    
+
     @transaction.atomic
     def post(self, journal):
         self.product.transact(
@@ -232,6 +224,7 @@ class ApprovalLine(models.Model):
             journal=self.get_journal(),
             movement_type="A",
         )
+
     @transaction.atomic
     def unpost(self, journal):
         # generally an approval/approval line shouldnt be edited onece the items are returned.

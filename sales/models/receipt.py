@@ -58,7 +58,8 @@ class Receipt(models.Model):
     journals = GenericRelation(Journal, related_query_name="receipt_doc")
     # Relationship Fields
     customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="receipts"
+        Customer, on_delete=models.CASCADE, related_name="receipts",
+        verbose_name="Customer"
     )
     invoices = models.ManyToManyField("sales.Invoice", through="ReceiptAllocation")
 

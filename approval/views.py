@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.http import HttpResponse
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,7 +20,7 @@ from .filters import ApprovalFilter, ApprovalLineFilter
 from .forms import ApprovalForm, ApprovalLineForm, ReturnForm, ReturnItemForm
 from .models import Approval, ApprovalLine, Return, ReturnItem
 
-from django.db import transaction
+
 @login_required
 @transaction.atomic()
 def convert_sales(request, pk):
@@ -36,7 +37,7 @@ def convert_sales(request, pk):
         created=datetime.now(), customer=approval.contact, approval=approval, term=term
     )
     print("created sales invoice:", sale.id)
-    approval_items = approval.items.exclude(status__in = ["Returned", "Billed"])
+    approval_items = approval.items.exclude(status__in=["Returned", "Billed"])
     print("approval items:", approval_items)
     for item in approval_items:
         i = sinvitem.objects.create(
@@ -141,7 +142,8 @@ def approvalline_create_update(request, approval_pk, pk=None):
     form = ApprovalLineForm(request.POST or None, instance=line)
     if request.method == "POST" and form.is_valid():
         approvalline = form.save(commit=False)
-        approvalline.approval = approval
+        if instance is None:
+            approvalline.approval = approval
         approvalline.save()
         if request.htmx:
             return HttpResponse(status=204, headers={"HX-Trigger": "approvalChanged"})
@@ -241,7 +243,7 @@ def returnitem_create_update(request, return_pk, pk=None):
         retitem = get_object_or_404(ReturnItem, pk=pk)
         url = retitem.get_hx_edit_url()
 
-    form = ReturnItemForm(request.POST or None, instance=retitem,return_obj=ret)
+    form = ReturnItemForm(request.POST or None, instance=retitem, return_obj=ret)
     if request.method == "POST" and form.is_valid():
         retitem = form.save(commit=False)
         retitem.return_obj = ret

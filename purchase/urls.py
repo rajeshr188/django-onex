@@ -47,6 +47,11 @@ urlpatterns += (
         name="purchase_invoiceitem_detail",
     ),
     path(
+        "purchase/item/<int:pk>/detail",
+        views.purchaseitem_detail,
+        name="purchase_purchaseitem_detail",
+    ),
+    path(
         "<int:parent_id>/invoiceitem/delete/<int:id>/",
         views.purchase_item_delete_view,
         name="purchase_invoiceitem_delete",

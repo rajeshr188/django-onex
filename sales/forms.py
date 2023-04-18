@@ -87,6 +87,8 @@ class InvoiceForm(forms.ModelForm):
 
 
 class InvoiceItemForm(forms.ModelForm):
+    # TODO filter only lots that has qty and wt > 0
+    # TODO add form validation
     product = forms.ModelChoiceField(
         queryset=StockLot.objects.all(),
         widget=StockWidget,
@@ -109,7 +111,7 @@ class InvoiceItemForm(forms.ModelForm):
         widgets = {
             "weight": forms.NumberInput(
                 attrs={
-                    "hx-include": "[name='customer'], [name='product']",
+                    "hx-include": "[name='contact'], [name='product']",
                     "hx-get": reverse_lazy("sales:sale_product_price"),
                     "hx-target": "#div_id_touch",
                     "hx-trigger": "change",

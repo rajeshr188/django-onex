@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from approval.models import ApprovalLine
 from contact.models import Customer
-from dea.models import Journal,JournalTypes
+from dea.models import Journal, JournalTypes
 from product.models import StockLot
 
 """
@@ -56,9 +56,10 @@ class Return(models.Model):
 
 class ReturnItem(models.Model):
     return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
-    line_item = models.ForeignKey(ApprovalLine, on_delete=models.CASCADE,
-                                  related_name="return_items")
-    quantity = models.IntegerField(default =0)
+    line_item = models.ForeignKey(
+        ApprovalLine, on_delete=models.CASCADE, related_name="return_items"
+    )
+    quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

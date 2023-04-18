@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save,post_delete,pre_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from approval.models import ApprovalLine, ReturnItem
@@ -21,10 +21,13 @@ def create_stock_journal(sender, instance, created, **kwargs):
     # instance.update_status()
     return instance
 
+
 @receiver(pre_save, sender=ApprovalLine)
 def update_approvalline_status(sender, instance, **kwargs):
     instance.status = instance.update_status()
     instance.approval.update_status()
+
+
 # receiver for predelete to run instance.line_item.unpost()
 @receiver(post_delete, sender=ReturnItem)
 def update_returnitem_status(sender, instance, **kwargs):

@@ -29,19 +29,30 @@
         <div class='{% if object.id %}col-12 col-md-6 {% else %} d-none {% endif %}'>
             <h3>Items</h3>
             total:{{ object.get_invoiceitem_children.count }}
-            <ul id="items-list" class="list-group list-group-flush">
-                {% for item in object.get_invoiceitem_children %}
-                {% include 'sales/partials/item-inline.html' with object=item %}
-                {% endfor %}
-                
-              </ul>
-            
-            {% if new_item_url %}
-                          
-            <button class=" btn btn-success" hx-get="{{ new_item_url }}" hx-trigger='click'
-                hx-target='#items-list' hx-swap='beforeend'>Add item</button>
-
-            {% endif %}
+            <div class="table-responsive">
+                {% if new_item_url %}
+                <a hx-get="{{ new_item_url }}" hx-trigger="click"
+                    hx-target="#items" hx-swap="beforeend" class="btn btn-success">
+                    Add Items</a>      
+                {% endif %}
+                <table class="table table-sm table-bordered table-hover table-striped">
+                    <thead>
+                        <th></th>
+                        <th></th>
+                        <th>Return</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>weight</th>
+                        <th>Touch</th>
+                        <th>Total</th>
+                    </thead>
+                    <tbody id="items" hx-target = "closest tr" hx-swap="outerHTML">
+                        {% for item in object.get_invoiceitem_children %}
+                        {% include 'sales/partials/item-inline.html' with object=item %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

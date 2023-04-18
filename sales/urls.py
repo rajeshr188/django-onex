@@ -58,6 +58,11 @@ urlpatterns += (
         name="hx-invoiceitem-detail",
     ),
     path(
+        "sales/invoiceitem/<int:pk>/detail/",
+        views.saleitem_detail,
+        name="sales_invoiceitem_detail",
+    ),
+    path(
         "sales/<int:parent_id>/invoiceitem/<int:id>/delete/",
         views.sale_item_delete_view,
         name="sales_invoiceitem_delete",

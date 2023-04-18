@@ -14,9 +14,11 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (Flowable, Frame, Image, KeepTogether,
                                 ListFlowable, ListItem, PageBreak, Paragraph,
                                 SimpleDocTemplate, Spacer, Table, TableStyle)
-
+from reportlab.platypus.doctemplate import PageTemplate
 from contact.models import Customer
 from girvi.models import Loan
+from itertools import groupby
+from reportlab.rl_config import defaultPageSize
 
 PAGESIZE = (140 * mm, 216 * mm)
 BASE_MARGIN = 5 * mm
@@ -320,19 +322,19 @@ def get_loan_pdf(loan):
     return pdf
 
 
-# why does this takes too long to execute?
 def get_notice_pdf(selection=None):
     # # get all loans with selected ids
-    # selected_loans = Loan.unreleased.filter(id__in=selection).order_by("customer")
     selected_loans = selection
     # get a list of unique customers for the selected loans
-    customers = Customer.objects.filter(loan__in=selected_loans).distinct()
+    customers = Customer.objects.filter(loan__in=selected_loans).select_related('loan').distinct()
+
+    grouped_loans = groupby(selected_loans, lambda loan: loan.customer)
     print(f"customers gathered:{customers.count()}")
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
-    # Create the PDF canvas
-    # pdf_canvas = canvas.Canvas(buffer, pagesize=A4)
+    # Create the PDF object, using the buffer as its "file."
     doc = SimpleDocTemplate(buffer)
+    doc.title = "Notice-Group"
     # Define styles for the paragraphs
     styles = getSampleStyleSheet()
     styles.add(
@@ -359,14 +361,18 @@ def get_notice_pdf(selection=None):
     title = styles["Title"]
     heading = styles["Heading1"]
     story = []
+    pages = []
     spacer = Spacer(0, 0.25 * inch)
-    # Loop through each customer
-    print("looping through customers")
-    # loans = Loan.objects.filter(customer__in=customers).order_by("customer")
-    # grouped_loans = groupby(loans, lambda loan: loan.customer)
-    for customer in customers:
-        # Calculate the total loan amount for the customer
-        # total_loan_amount = loans.aggregate(Sum('loanamount'))['loanamount__sum'] or 0
+    simple_tblstyle = TableStyle(
+            [
+                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+            ]
+        )
+    
+    for customer,loans in grouped_loans:
+        # loans = list(loans) :Use generators instead of lists: 
+        loans = (loan for loan in loans)
         story.append(spacer)
         story.append(Paragraph("TAMILNADU PAWNBROKERS ACT, 1943", top))
         story.append(spacer)
@@ -379,11 +385,7 @@ def get_notice_pdf(selection=None):
             {customer.name} {customer.relatedas} {customer.relatedto}<br/>
             {customer.Address}<br/>
             {customer.area}<br/>
-            {customer.contactno}
-
-        """
-            )
-        )
+            {customer.contactno}""",normal))
         story.append(spacer)
         story.append(
             Paragraph(
@@ -392,23 +394,14 @@ def get_notice_pdf(selection=None):
         at the Pawn Broker named below, and that unless the same is redeemed within<br/>
         30 days from the date hereof, it will be sold by public auction at the Pawn<br/>
         Broker's place of business, without further notice to the Pledger or his agent.<br/>
-        """
-            )
-        )
+        """))
         story.append(spacer)
         story.append(
             Paragraph(
                 f"""
         Name of Pawn Broker:J Champalal Pawn Brokers
-
-        """
-            )
-        )
+                """,normal))
         story.append(Paragraph("Description of Articles Pledged:"))
-
-        # Write the customer details to the PDF
-        # Get all loans for the current customer
-        loans = selected_loans.filter(customer=customer)
         width = 400
         height = 100
         x = 100
@@ -417,14 +410,8 @@ def get_notice_pdf(selection=None):
             [
                 [item.loanid, item.itemweight, item.created, item.itemdesc]
                 for item in loans
-            ]
-        )
-        simple_tblstyle = TableStyle(
-            [
-                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
+            ])
+        
         f.setStyle(simple_tblstyle)
         story.append(spacer)
         story.append(f)
@@ -433,12 +420,22 @@ def get_notice_pdf(selection=None):
     print("pdf generated")
     # Save the PDF and return the response
     print(f"story length: {len(story)}")
-    story = [KeepTogether(story)]
-    doc.build(story)
+    doc.build([KeepTogether(story)])
     print("doc built")
     pdf = buffer.getvalue()
     print("pdf ready")
     buffer.close()
-    print("buffer closed...hurray returning")
     print(f"pdf length: {pdf.__sizeof__()}")
     return pdf
+
+def print_noticegroup(selection = None):
+    pdf = get_notice_pdf(selection)
+    response = HttpResponse(pdf, content_type="application/pdf")
+    filename = "Notice-Group.pdf"
+    content = "inline; filename='%s'" % (filename)
+    download = request.GET.get("download")
+    if download:
+        content = "attachment; filename='%s'" % (filename)
+    response["Content-Disposition"] = content
+    return response
+

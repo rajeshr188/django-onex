@@ -1,6 +1,6 @@
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
-
+from django.shortcuts import reverse
 from girvi.models import Loan
 
 
@@ -16,10 +16,10 @@ class NoticeGroup(models.Model):
         return f"{self.id} {self.name}"
 
     def get_absolute_url(self):
-        return reverse("notify_groupnotice_detail", args=(self.pk,))
+        return reverse("notify_noticegroup_detail", args=(self.pk,))
 
     def get_update_url(self):
-        return reverse("notify_groupnotice_update", args=(self.pk,))
+        return reverse("notify_noticegroup_update", args=(self.pk,))
 
     def items_count(self):
         return self.notice_items.count()

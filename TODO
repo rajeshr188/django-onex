@@ -1,7 +1,5 @@
 update voucher on voucheritem update
 multicurrency voucher
-printing loan notice group hangs(generate pdf in background for each customer and stich them together)
-    caused by selectall element that doesnt select all from the filter.qs but all the unreleased objects
 handle stock journal when a lot is not associated with purchase
 mr.htmx wordwide
 print stocktags with qr code from .prn to citizen cs630 label printer

@@ -356,7 +356,8 @@ def notify_print(request):
         notification.save()
 
 
-    return HttpResponse(status=204)
+    # return HttpResponse(status=204)
+    return redirect(ng)
 
 
 @login_required

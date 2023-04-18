@@ -85,7 +85,7 @@ def noticegroup_print(request, pk):
     for i in items:
         for j in i.loans.all().select_related("customer"):
             selected_loans.append(j.id)
-    selected_loans = Loan.objects.unreleased().filter(id__in=selected_loans)
+    selected_loans = Loan.objects.unreleased().filter(id__in=selected_loans).order_by('customer')
     print("selected loans to print in this noticegroup")
     pdf = get_notice_pdf(selection=selected_loans)
     # Create a response object

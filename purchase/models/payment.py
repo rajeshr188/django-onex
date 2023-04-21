@@ -57,8 +57,10 @@ class Payment(models.Model):
     journals = GenericRelation(Journal, related_query_name="payment_doc")
     # Relationship Fields
     supplier = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="payments",
-        verbose_name=_("Supplier")
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="payments",
+        verbose_name=_("Supplier"),
     )
     invoices = models.ManyToManyField("purchase.Invoice", through="PaymentAllocation")
 

@@ -19,9 +19,9 @@ def delete_status(sender, instance, *args, **kwargs):
     inv.save()
 
 
-@receiver(post_save, sender=Invoice)
-@receiver(post_save, sender=Payment)
-def create_journal(sender, instance, created, **kwargs):
+# @receiver(post_save, sender=Invoice)
+# @receiver(post_save, sender=Payment)
+def create_purchase_journal(sender, instance, created, **kwargs):
     lt, at = instance.get_transactions()
     if created:
         lj, aj = instance.create_journals()
@@ -48,4 +48,6 @@ def create_stock_journal(sender, instance, created, **kwargs):
         sj = instance.get_journal()
         instance.unpost(sj)
         instance.post(sj)
+    # instance.invoice.update_balance()
+    instance.invoice.create_transactions()
     return instance

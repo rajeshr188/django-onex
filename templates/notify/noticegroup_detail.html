@@ -2,7 +2,7 @@
 {%load static%}
 {%load django_tables2%}
 {%block content%}
-<div class="">
+<div class="content">
     <p>
         <h1>Notice Group : {{object.name}}  count: {{items.count}}</h1><br/>
         <!-- <h3>Date From:{{object.date_range.lower}} To:{{object.date_range.upper}}</h3> -->
@@ -17,8 +17,8 @@
           </div>
         
     </p>
-    <div class="">
-        <table class="table">
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover">
             <thead>
               <tr>
                 <th></th>
@@ -43,10 +43,7 @@
             </tr>
             {%endfor%}
             </tbody>
-          </table>
-     
-       
+          </table>  
     </div>
-
 </div>
 {%endblock%}

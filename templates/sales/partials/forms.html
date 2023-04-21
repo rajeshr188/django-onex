@@ -10,9 +10,9 @@
         
        {% if object%}
         <p>
-            gross_wt : {{object.gross_wt}}
-            Nett_wt: {{object.net_wt}}
-            Balance : {{object.balance}}
+            gross_wt : {{object.get_gross_wt}}
+            Nett_wt: {{object.get_net_wt}}
+            Balance : cash:{{object.cash_balance}} gold:{{object.gold_balance}}
 
         {%endif%}
         {% if message %}

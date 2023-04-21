@@ -1,10 +1,17 @@
+three types of user who use this application,shop owner,his staff and his customer
+    shop owner can create staff and customer
+    staff can create customer
+    customers and staff are invite only to create account
+    anonymous user can browse products thats it
+    customers with account can view their vouchers and browse products
+
 update voucher on voucheritem update
 multicurrency voucher
+use qztray to print approval,stock labels,stock tags
 handle stock journal when a lot is not associated with purchase
 mr.htmx wordwide
-print stocktags with qr code from .prn to citizen cs630 label printer
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
-add treegraph to asset,liabilities,income,expense,Stocklot,Stock
+add treegraph to asset,liabilities,income,expense,Stocklot,Stock(hint use django-slick-reporting)
 create sale-receipt and purchase-payment view from db view
 SIMPLE UI LIKE KHATABOOK
 MAKE ROBUST,ADD TEST AND DOCS WITH THE HELP OF GITHUB COPILOT

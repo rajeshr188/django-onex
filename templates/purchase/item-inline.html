@@ -6,7 +6,10 @@
     <td>{{object.quantity}}</td>
     <td>{{object.weight}}</td>
     <td>{{object.touch}}</td>
-    <td>{{object.total}}</td>
+    <td>{{object.net_wt}}</td>
+    <td>{{object.rate}}</td>
+    <td>c:{{object.cash_balance}} g:{{object.metal_balance}}</td>
+    
     <td>
       {%if object.journal.exists%}
         <a href="{% url 'dea_journal_detail' object.journal.first.id %}">Journal</a>

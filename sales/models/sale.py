@@ -121,8 +121,10 @@ class Invoice(models.Model):
 
     # Relationship Fields
     customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="sales",
-        verbose_name="Customer"
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="sales",
+        verbose_name="Customer",
     )
     term = models.ForeignKey(
         PaymentTerm,

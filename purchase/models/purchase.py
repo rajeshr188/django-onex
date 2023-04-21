@@ -18,54 +18,41 @@ from product.models import (Attribute, ProductVariant, Stock, StockLot,
 from ..managers import PurchaseQueryset
 
 
-# multicurrency balance with balance field for ecery currency or a balance field with array of currency?
+# multicurrency balance with balance field for ecery currency
+#  or a balance field with array of currency?
+#  or a balance field with json of currency?
+#  or a balance field with json of currency and balance
+# or a seperate table for balance
 class Invoice(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now, db_index=True)
     updated = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="purchased",
+        null=True,  # cant be null
+        blank=True,  # cant be blank
+        related_name="purchases_created",
     )
-    rate = models.DecimalField(max_digits=10, decimal_places=3)
+
+    is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
-    gross_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
-    net_wt = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
-    total = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
-    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
-    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0.0)
+    is_active = models.BooleanField(default=True)
 
-    class BType(models.TextChoices):
-        CASH = (
-            "INR",
-            _("Cash"),
-        )
-        GOLD = (
-            "USD",
-            _("Gold"),
-        )
-        SILVER = "AUD", _("Silver")
-
-    metal_choices = (("Gold", "Gold"), ("Silver", "Silver"))
     status_choices = (
         ("Paid", "Paid"),
         ("PartiallyPaid", "PartiallyPaid"),
         ("Unpaid", "Unpaid"),
     )
     status = models.CharField(max_length=15, choices=status_choices, default="Unpaid")
-    balancetype = models.CharField(
-        max_length=30, choices=BType.choices, default=BType.CASH
-    )
-    metaltype = models.CharField(max_length=30, choices=metal_choices, default="Gold")
-    due_date = models.DateField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+
     # Relationship Fields
     supplier = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="purchases",
-        verbose_name=_("Supplier")
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="purchases",
+        verbose_name=_("Supplier"),
     )
     term = models.ForeignKey(
         PaymentTerm,
@@ -78,7 +65,7 @@ class Invoice(models.Model):
         Journal,
         related_query_name="purchase_doc",
     )
-    objects = PurchaseQueryset.as_manager()
+    # objects = PurchaseQueryset.as_manager()
 
     class Meta:
         ordering = (
@@ -105,10 +92,10 @@ class Invoice(models.Model):
         return self.purchase_items.all()
 
     def get_gross_wt(self):
-        return self.purchaseitems.aggregate(t=Sum("weight"))["t"]
+        return self.purchase_items.aggregate(t=Sum("weight"))["t"]
 
     def get_net_wt(self):
-        return self.purchaseitems.aggregate(t=Sum("net_wt"))["t"]
+        return self.purchase_items.aggregate(t=Sum("net_wt"))["t"]
 
     # @property
     # def outstanding_balance(self):
@@ -139,15 +126,32 @@ class Invoice(models.Model):
         return self.total
 
     def save(self, *args, **kwargs):
-        self.due_date = self.created + timedelta(days=self.term.due_days)
-        # if self.is_gst:
-        #     self.total += self.get_gst()
-        self.total = self.balance + self.get_gst()
+        if not self.due_date:
+            if self.term:
+                self.due_date = self.created + timedelta(days=self.term.due_days)
+
+        # self.cash_balance = self.cash_balance + self.get_gst()
 
         super(Invoice, self).save(*args, **kwargs)
 
+    def update_balance(self):
+        self.cash_balance = self.purchase_items.aggregate(t=Sum("cash_balance"))["t"]
+        # get gold balance from purchase_items if it is gold
+        self.gold_balance = self.purchase_items.aggregate(t=Sum("metal_balance"))["t"]
+        self.save()
+
+    @property
+    def balance(self):
+        try:
+            return (
+                self.purchase_balance.cash_balance,
+                self.purchase_balance.metal_balance,
+            )
+        except PurchaseBalance.DoesNotExist:
+            return Decimal(0), Decimal(0)
+
     def get_gst(self):
-        return (self.balance * 3) / 100 if self.is_gst else 0
+        return (self.cash_balance * 3) / 100 if self.is_gst else 0
 
     def create_journals(self):
         ledgerjournal = Journal.objects.create(
@@ -178,30 +182,88 @@ class Invoice(models.Model):
             self.supplier.save()
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
-        money = Money(self.balance, self.balancetype)
-        tax = Money(self.get_gst(), "INR")
-        lt = [
-            {"ledgerno": "Sundry Creditors", "ledgerno_dr": inv, "amount": money},
-            {
-                "ledgerno": "Sundry Creditors",
-                "ledgerno_dr": "Input Igst",
-                "amount": tax,
-            },
-        ]
-        at = [
-            {
-                "ledgerno": "Sundry Creditors",
-                "xacttypecode": "Dr",
-                "xacttypecode_ext": "CRPU",
-                "account": self.supplier.account,
-                "amount": money + tax if self.is_gst else money,
-            }
-        ]
+        # money = Money(self.balance, self.balancetype)
+        # tax = Money(self.get_gst(), "INR")
+        # lt = [
+        #     {"ledgerno": "Sundry Creditors", "ledgerno_dr": inv, "amount": money},
+        #     {
+        #         "ledgerno": "Sundry Creditors",
+        #         "ledgerno_dr": "Input Igst",
+        #         "amount": tax,
+        #     },
+        # ]
+        # at = [
+        #     {
+        #         "ledgerno": "Sundry Creditors",
+        #         "xacttypecode": "Dr",
+        #         "xacttypecode_ext": "CRPU",
+        #         "account": self.supplier.account,
+        #         "amount": money + tax if self.is_gst else money,
+        #     }
+        # ]
+        lt, at = [], []
+        cash_balance, gold_balance = self.balance
+        if self.is_ratecut:
+            lt.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "ledgerno_dr": inv,
+                    "amount": cash_balance,
+                }
+            )
+            at.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "xacttypecode": "Dr",
+                    "account": self.supplier.account,
+                    "xacttypecode_ext": "CRPU",
+                    "amount": cash_balance,
+                }
+            )
+            if self.is_gst:
+                lt.append(
+                    {
+                        "ledgerno": "Sundry Creditors",
+                        "ledgerno_dr": "Input Igst",
+                        "amount": tax,
+                    }
+                )
+                at.append(
+                    {
+                        "ledgerno": "Sundry Creditors",
+                        "xacttypecode": "Cr",
+                        "xacttypecode_ext": "CRPU",
+                        "account": self.supplier.account,
+                        "amount": tax,
+                    }
+                )
+        else:
+            if gold_balance != 0:
+                lt.append(
+                    {
+                        "ledgerno": "Sundry Creditors",
+                        "ledgerno_dr": inv,
+                        "amount": gold_balance,
+                    }
+                )
+                at.append(
+                    {
+                        "ledgerno": "Sundry Creditors",
+                        "xacttypecode": "Dr",
+                        "xacttypecode_ext": "CRPU",
+                        "account": self.supplier.account,
+                        "amount": gold_balance,
+                    }
+                )
+
+            # if self.silver_balance !=0:
+            #     lt.append({"ledgerno": "Sundry Creditors", "ledgerno_dr": inv, "amount": silver_balance})
+            #     at.append({"ledgerno": "Sundry Creditors", "xacttypecode": "Dr", "account": self.supplier.account, "amount": self.silver_balance})
         return lt, at
 
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        ledger_journal, account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
@@ -220,15 +282,21 @@ class InvoiceItem(models.Model):
     # TODO:if saved and lot has sold items this shouldnt/cant be edited
 
     # Fields
+    is_return = models.BooleanField(default=False, verbose_name="Return")
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
     touch = models.DecimalField(max_digits=10, decimal_places=3)
     net_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=3, blank=True)
-    is_return = models.BooleanField(default=False, verbose_name="Return")
-    makingcharge = models.DecimalField(
-        max_digits=10, decimal_places=3, blank=True, null=True
+    rate = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    making_charge = models.DecimalField(
+        max_digits=10, decimal_places=3, blank=True, null=True, default=0
     )
+    hallmark_charge = models.DecimalField(
+        max_digits=10, decimal_places=3, blank=True, null=True, default=0
+    )
+
+    metal_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cash_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="products"
@@ -264,20 +332,22 @@ class InvoiceItem(models.Model):
         )
 
     def get_nettwt(self):
-        return (self.weight * self.touch) / 100
+        print(self.weight * (self.touch / 100))
+        return self.weight * (self.touch / 100)
 
     def save(self, *args, **kwargs):
         self.net_wt = self.get_nettwt()
-        rate = self.invoice.rate if self.invoice.rate > 0 else 0
-        self.total = self.net_wt * rate + self.makingcharge
+        self.rate = self.rate or 5000
+        if self.invoice.is_ratecut:
+            self.cash_balance = (
+                self.net_wt * self.rate + self.making_charge + self.hallmark_charge
+            )
+            self.metal_balance = 0
+        else:
+            self.cash_balance = self.making_charge + self.hallmark_charge
+            self.metal_balance = self.net_wt
+            print(self.metal_balance)
         return super(InvoiceItem, self).save(*args, **kwargs)
-
-    # def update(self, *args, **kwargs):
-    #     self.unpost()
-    #     self.net_wt = self.get_nettwt()
-    #     rate = self.invoice.rate if self.invoice.rate > 0 else 0
-    #     self.total = self.net_wt * rate + self.makingcharge
-    #     return super(InvoiceItem, self).update(*args, **kwargs)
 
     def create_journal(self):
         stock_journal = Journal.objects.create(
@@ -306,7 +376,7 @@ class InvoiceItem(models.Model):
                 weight=self.weight,
                 quantity=self.quantity,
                 purchase_touch=self.touch,
-                purchase_rate=self.invoice.rate,
+                purchase_rate=self.rate,
                 purchase_item=self,
             )
             stock_lot.transact(
@@ -357,3 +427,18 @@ class InvoiceItem(models.Model):
 
             except StockLot.DoesNotExist:
                 print("Oops!while Unposting there was no said stock.  Try again...")
+
+
+class PurchaseBalance(models.Model):
+    voucher = models.OneToOneField(
+        Invoice,
+        on_delete=models.DO_NOTHING,
+        primary_key=True,
+        related_name="purchase_balance",
+    )
+    cash_balance = models.DecimalField(max_digits=10, decimal_places=2)
+    metal_balance = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        managed = False
+        db_table = "purchase_balance"

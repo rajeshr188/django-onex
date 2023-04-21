@@ -299,12 +299,14 @@ def notify_print(request):
         print("all selected")
         # get query parameters if all row selected and retrive queryset
         print(request.GET)
-        filter = LoanFilter(request.GET, queryset=Loan.objects.with_due()
-                            .with_current_value()
-                            .with_is_overdue()
-                            .select_related("customer", "release")
-                            .prefetch_related("notifications", "loanitems"),
-                            )
+        filter = LoanFilter(
+            request.GET,
+            queryset=Loan.objects.with_due()
+            .with_current_value()
+            .with_is_overdue()
+            .select_related("customer", "release")
+            .prefetch_related("notifications", "loanitems"),
+        )
 
         selected_loans = filter.qs.order_by("customer")
         print(f"selected loans: {selected_loans.count()}")
@@ -313,7 +315,9 @@ def notify_print(request):
         # get the selected loan ids from the request
         selection = request.POST.getlist("selection")
 
-        selected_loans = Loan.objects.unreleased().filter(id__in=selection).order_by("customer")
+        selected_loans = (
+            Loan.objects.unreleased().filter(id__in=selection).order_by("customer")
+        )
 
     # ng = NoticeGroup.objects.create(name=datetime.datetime.now())
     # # optimise this
@@ -354,7 +358,6 @@ def notify_print(request):
         loans = selected_loans.filter(customer=notification.customer)
         notification.loans.set(loans)
         notification.save()
-
 
     # return HttpResponse(status=204)
     return redirect(ng)

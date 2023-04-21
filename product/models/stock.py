@@ -228,9 +228,7 @@ class StockLot(models.Model):
     objects = StockLotManager()
 
     def __str__(self):
-        return (
-            f"{self.barcode} | {self.huid or ''} | {self.variant} | {self.current_balance()}"
-        )
+        return f"{self.barcode} | {self.huid or ''} | {self.variant} | {self.current_balance()}"
 
     @classmethod
     def with_balance(cls):
@@ -330,7 +328,7 @@ class StockLot(models.Model):
         bal["wt"] = Closing_wt + (in_txns["wt"] - out_txns["wt"])
         bal["qty"] = Closing_qty + (in_txns["qty"] - out_txns["qty"])
         return bal
-    
+
     def get_total_sold(self):
         return self.sold_items.aggregate(
             qty=Coalesce(models.Sum("quantity", output_field=models.IntegerField()), 0),

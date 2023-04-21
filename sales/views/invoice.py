@@ -232,11 +232,14 @@ def sale_item_update_hx_view(request, parent_id=None, id=None):
 
     return render(request, "sales/partials/item-form.html", context)
 
+
 @login_required
-def saleitem_detail(request,pk):
-    obj = get_object_or_404(InvoiceItem,pk=pk)
-    context = {"object":obj}
-    return render(request,"sales/partials/item-inline.html",context)
+def saleitem_detail(request, pk):
+    obj = get_object_or_404(InvoiceItem, pk=pk)
+    context = {"object": obj}
+    return render(request, "sales/partials/item-inline.html", context)
+
+
 # from approval.models import Approval
 # class InvoiceCreateView(CreateView):
 #     model = Invoice

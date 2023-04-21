@@ -1,5 +1,6 @@
 import io
 from io import BytesIO
+from itertools import groupby
 
 from num2words import num2words
 from reportlab.lib import colors
@@ -15,10 +16,10 @@ from reportlab.platypus import (Flowable, Frame, Image, KeepTogether,
                                 ListFlowable, ListItem, PageBreak, Paragraph,
                                 SimpleDocTemplate, Spacer, Table, TableStyle)
 from reportlab.platypus.doctemplate import PageTemplate
+from reportlab.rl_config import defaultPageSize
+
 from contact.models import Customer
 from girvi.models import Loan
-from itertools import groupby
-from reportlab.rl_config import defaultPageSize
 
 PAGESIZE = (140 * mm, 216 * mm)
 BASE_MARGIN = 5 * mm
@@ -323,10 +324,18 @@ def get_loan_pdf(loan):
 
 
 def get_notice_pdf(selection=None):
+    # TODO: paginate the pdf for better performance
+    # TODO: add a progress bar
+    # TODO: add page templates
+
     # # get all loans with selected ids
     selected_loans = selection
     # get a list of unique customers for the selected loans
-    customers = Customer.objects.filter(loan__in=selected_loans).select_related('loan').distinct()
+    customers = (
+        Customer.objects.filter(loan__in=selected_loans)
+        .select_related("loan")
+        .distinct()
+    )
 
     grouped_loans = groupby(selected_loans, lambda loan: loan.customer)
     print(f"customers gathered:{customers.count()}")
@@ -364,14 +373,14 @@ def get_notice_pdf(selection=None):
     pages = []
     spacer = Spacer(0, 0.25 * inch)
     simple_tblstyle = TableStyle(
-            [
-                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
-    
-    for customer,loans in grouped_loans:
-        # loans = list(loans) :Use generators instead of lists: 
+        [
+            ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+            ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+        ]
+    )
+
+    for customer, loans in grouped_loans:
+        # loans = list(loans) :Use generators instead of lists:
         loans = (loan for loan in loans)
         story.append(spacer)
         story.append(Paragraph("TAMILNADU PAWNBROKERS ACT, 1943", top))
@@ -385,7 +394,10 @@ def get_notice_pdf(selection=None):
             {customer.name} {customer.relatedas} {customer.relatedto}<br/>
             {customer.Address}<br/>
             {customer.area}<br/>
-            {customer.contactno}""",normal))
+            {customer.contactno}""",
+                normal,
+            )
+        )
         story.append(spacer)
         story.append(
             Paragraph(
@@ -394,13 +406,18 @@ def get_notice_pdf(selection=None):
         at the Pawn Broker named below, and that unless the same is redeemed within<br/>
         30 days from the date hereof, it will be sold by public auction at the Pawn<br/>
         Broker's place of business, without further notice to the Pledger or his agent.<br/>
-        """))
+        """
+            )
+        )
         story.append(spacer)
         story.append(
             Paragraph(
                 f"""
         Name of Pawn Broker:J Champalal Pawn Brokers
-                """,normal))
+                """,
+                normal,
+            )
+        )
         story.append(Paragraph("Description of Articles Pledged:"))
         width = 400
         height = 100
@@ -410,8 +427,9 @@ def get_notice_pdf(selection=None):
             [
                 [item.loanid, item.itemweight, item.created, item.itemdesc]
                 for item in loans
-            ])
-        
+            ]
+        )
+
         f.setStyle(simple_tblstyle)
         story.append(spacer)
         story.append(f)
@@ -428,7 +446,8 @@ def get_notice_pdf(selection=None):
     print(f"pdf length: {pdf.__sizeof__()}")
     return pdf
 
-def print_noticegroup(selection = None):
+
+def print_noticegroup(selection=None):
     pdf = get_notice_pdf(selection)
     response = HttpResponse(pdf, content_type="application/pdf")
     filename = "Notice-Group.pdf"
@@ -438,4 +457,3 @@ def print_noticegroup(selection = None):
         content = "attachment; filename='%s'" % (filename)
     response["Content-Disposition"] = content
     return response
-

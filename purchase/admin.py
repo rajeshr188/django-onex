@@ -47,9 +47,9 @@ class InvoiceResource(resources.ModelResource):
             "id",
             "supplier",
             "created",
-            "rate",
-            "balancetype",
-            "balance",
+            # "rate",
+            # "balancetype",
+            # "balance",
             "status",
         )
         skip_unchanged = True
@@ -64,9 +64,9 @@ class InvoiceAdmin(ImportExportActionModelAdmin):
         "created",
         "updated",
         "supplier",
-        "rate",
-        "balancetype",
-        "balance",
+        # "rate",
+        # "balancetype",
+        # "balance",
         "status",
     ]
 
@@ -82,7 +82,7 @@ class InvoiceItemAdminForm(forms.ModelForm):
 
 class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemAdminForm
-    list_display = ["weight", "touch", "total", "is_return", "quantity"]
+    list_display = ["weight", "touch", "is_return", "quantity"]
     list_filter = ("invoice",)
     search_fields = ("invoice__id",)
 

@@ -14,11 +14,17 @@ class InvoiceFilter(django_filters.FilterSet):
         widget=CustomerWidget,
     )
     created = django_filters.DateTimeFromToRangeFilter()
-    posted = django_filters.BooleanFilter(field_name="posted", lookup_expr="isnull")
+    # posted = django_filters.BooleanFilter(field_name="posted", lookup_expr="isnull")
 
     class Meta:
         model = Invoice
-        fields = ["id", "created", "is_gst", "balancetype", "status", "posted"]
+        fields = [
+            "id",
+            "created",
+            "is_gst",
+            # "balancetype",
+            "status",
+        ]
 
 
 class PaymentFilter(django_filters.FilterSet):

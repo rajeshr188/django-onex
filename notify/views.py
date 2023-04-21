@@ -1,7 +1,10 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.template.response import TemplateResponse
 
 from girvi.models import Loan
+from utils.htmx_utils import for_htmx
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from .forms import NoticeGroupForm, NotificationForm
@@ -26,6 +29,8 @@ def noticegroup_create(request):
     return render(request, "notify/noticegroup_form.html", context={"form": form})
 
 
+@login_required
+@for_htmx(use_block="content")
 def noticegroup_detail(request, pk):
     ng = get_object_or_404(NoticeGroup, pk=pk)
     # loans = Loan.objects.unreleased().filter(
@@ -36,7 +41,7 @@ def noticegroup_detail(request, pk):
         .prefetch_related("loans")
         .select_related("group", "customer")
     )
-    return render(
+    return TemplateResponse(
         request,
         "notify/noticegroup_detail.html",
         context={
@@ -85,7 +90,9 @@ def noticegroup_print(request, pk):
     for i in items:
         for j in i.loans.all().select_related("customer"):
             selected_loans.append(j.id)
-    selected_loans = Loan.objects.unreleased().filter(id__in=selected_loans).order_by('customer')
+    selected_loans = (
+        Loan.objects.unreleased().filter(id__in=selected_loans).order_by("customer")
+    )
     print("selected loans to print in this noticegroup")
     pdf = get_notice_pdf(selection=selected_loans)
     # Create a response object

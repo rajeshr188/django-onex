@@ -82,7 +82,7 @@ def purchase_delete_view(request, id=None):
     obj = Invoice.objects.get(id=id)
     if request.method == "POST":
         obj.delete()
-        success_url = reverse("purchase_invoice_list")
+        success_url = reverse("purchase:purchase_invoice_list")
         if request.htmx:
             headers = {"HX-Redirect": success_url}
             return HttpResponse("Success", headers=headers)
@@ -122,13 +122,15 @@ def purchase_item_update_hx_view(request, parent_id=None, id=None):
         return render(request, "purchase/item-inline.html", context)
     return render(request, "purchase/item-form.html", context)
 
+
 @login_required
-def purchaseitem_detail(request,pk):
+def purchaseitem_detail(request, pk):
     obj = InvoiceItem.objects.get(pk=pk)
     context = {
         "object": obj,
     }
     return render(request, "purchase/item-inline.html", context)
+
 
 @login_required
 def purchase_item_delete_view(request, parent_id=None, id=None):
@@ -146,7 +148,9 @@ def purchase_item_delete_view(request, parent_id=None, id=None):
     if request.method == "POST":
         id = obj.id
         obj.delete()
-        success_url = reverse("purchase:purchase_invoice_detail", kwargs={"pk": parent_id})
+        success_url = reverse(
+            "purchase:purchase_invoice_detail", kwargs={"pk": parent_id}
+        )
         if request.htmx:
             return render(
                 request, "sales/partials/item-inline-delete-response.html", {"id": id}

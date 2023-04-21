@@ -37,14 +37,9 @@ class InvoiceForm(forms.ModelForm):
         model = Invoice
         fields = [
             "created",
-            "rate",
             "is_gst",
-            "balancetype",
-            "metaltype",
-            "gross_wt",
-            "net_wt",
-            "total",
-            "balance",
+            "is_ratecut",
+            # "balance",
             "supplier",
             "term",
             "status",
@@ -71,30 +66,13 @@ class InvoiceForm(forms.ModelForm):
                 css_class="form-row",
             ),
             Row(
-                Column("balancetype", css_class="form-group col-md-3 mb-0"),
-                Column("metaltype", css_class="form-group col-md-3 mb-0"),
-                Column("rate", css_class="form-group col-md-3 mb-0"),
-                css_class="form-row",
-            ),
-            Fieldset("Add items", Formset("items")),
-            Row(
                 Column(
-                    Field("gross_wt", css_class="form-control"),
-                    css_class="form-group col-md-3 mb-0",
+                    Field("is_ratecut", css_class="form-control"),
                 ),
-                Column(
-                    Field("net_wt", css_class="form-control"),
-                    css_class="form-group col-md-3 mb-0",
-                ),
-                Column(
-                    Field("total", css_class="form-control"),
-                    css_class="form-group col-md-3 mb-0",
-                ),
-                css_class="form-row",
             ),
             Row(
                 Column("term", css_class="form-group col-md-3 mb-0"),
-                Column("balance", css_class="form-group col-md-3 mb-0"),
+                # Column("balance", css_class="form-group col-md-3 mb-0"),
                 Column("status", css_class="form-group col-md-3 mb-0"),
                 css_class="form-row",
             ),
@@ -118,12 +96,10 @@ class InvoiceItemForm(forms.ModelForm):
         fields = [
             "is_return",
             "product",
+            "quantity",
             "weight",
             "touch",
-            # "total",
-            "quantity",
-            # "invoice",
-            "makingcharge",
+            "making_charge",
             # "net_wt",
         ]
         widgets = {
@@ -138,12 +114,12 @@ class InvoiceItemForm(forms.ModelForm):
             )
         }
 
-    def save(self, commit=True):
-        instance = super(InvoiceItemForm, self).save(commit=False)
-        instance.total = self.cleaned_data["weight"] * self.cleaned_data["touch"]
-        if commit:
-            instance.save()
-        return instance
+    # def save(self, commit=True):
+    #     instance = super(InvoiceItemForm, self).save(commit=False)
+
+    #     if commit:
+    #         instance.save()
+    #     return instance
 
 
 class PaymentForm(forms.ModelForm):

@@ -1,15 +1,19 @@
 from datetime import date, timedelta
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import F, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
+from dea.models.moneyvalue import MoneyValueField
+from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
 from product.models import (Attribute, ProductVariant, Stock, StockLot,
@@ -35,7 +39,8 @@ class Invoice(models.Model):
         blank=True,  # cant be blank
         related_name="purchases_created",
     )
-
+    # determine and implement how the changes in is_ratecut and is_gst affects item balance calculation
+    # and which in turn affects vaoucher balance calculation
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -109,8 +114,8 @@ class Invoice(models.Model):
 
     # overdue_invoices = Invoice.with_outstanding_balance().filter(outstanding_balance__gt=0, due_date__lt=date.today())
 
-    def get_total_balance(self):
-        return self.purchaseitems.aggregate(t=Sum("total"))["t"]
+    # def get_total_balance(self):
+    #     return self.purchaseitems.aggregate(t=Sum("total"))["t"]
 
     def get_allocations(self):
         paid = self.paymentallocation_set.aggregate(t=Sum("allocated_amount"))
@@ -122,8 +127,10 @@ class Invoice(models.Model):
 
     def get_balance(self):
         if self.get_total_payments() != None:
-            return self.balance - self.get_total_payments()
-        return self.total
+            # refactor since self.balance() return Balance() in multicurrency
+            # self.get_total_payments() aslo return Balance() in multicurrency
+            return self.balance() - self.get_total_payments()
+        return self.balance()
 
     def save(self, *args, **kwargs):
         if not self.due_date:
@@ -134,21 +141,14 @@ class Invoice(models.Model):
 
         super(Invoice, self).save(*args, **kwargs)
 
-    def update_balance(self):
-        self.cash_balance = self.purchase_items.aggregate(t=Sum("cash_balance"))["t"]
-        # get gold balance from purchase_items if it is gold
-        self.gold_balance = self.purchase_items.aggregate(t=Sum("metal_balance"))["t"]
-        self.save()
-
     @property
     def balance(self):
+        purchase_balance = self.purchase_balance
         try:
-            return (
-                self.purchase_balance.cash_balance,
-                self.purchase_balance.metal_balance,
-            )
+            # this should return Balance() multicurrency
+            return Balance(purchase_balance.balances)
         except PurchaseBalance.DoesNotExist:
-            return Decimal(0), Decimal(0)
+            return None
 
     def get_gst(self):
         return (self.cash_balance * 3) / 100 if self.is_gst else 0
@@ -202,7 +202,12 @@ class Invoice(models.Model):
         #     }
         # ]
         lt, at = [], []
-        cash_balance, gold_balance = self.balance
+        balance = self.balance
+        cash_balance = balance.cash_balance or 0
+        gold_balance = balance.gold_balance or 0
+        silver_balance = balance.silver_balance or 0
+        print("balance:")
+        print(cash_balance, gold_balance, silver_balance)
         if self.is_ratecut:
             lt.append(
                 {
@@ -295,8 +300,8 @@ class InvoiceItem(models.Model):
         max_digits=10, decimal_places=3, blank=True, null=True, default=0
     )
 
-    metal_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    cash_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    metal_balance = MoneyField(max_digits=10, decimal_places=2, default_currency="USD")
+    cash_balance = MoneyField(max_digits=10, decimal_places=2, default_currency="INR")
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="products"
@@ -338,6 +343,9 @@ class InvoiceItem(models.Model):
     def save(self, *args, **kwargs):
         self.net_wt = self.get_nettwt()
         self.rate = self.rate or 5000
+        self.metal_balance_currency = (
+            "USD" if "gold" in self.product.product.category.name else "EUR"
+        )
         if self.invoice.is_ratecut:
             self.cash_balance = (
                 self.net_wt * self.rate + self.making_charge + self.hallmark_charge
@@ -348,6 +356,9 @@ class InvoiceItem(models.Model):
             self.metal_balance = self.net_wt
             print(self.metal_balance)
         return super(InvoiceItem, self).save(*args, **kwargs)
+
+    def balance(self):
+        return Balance([self.metal_balance, self.cash_balance])
 
     def create_journal(self):
         stock_journal = Journal.objects.create(
@@ -429,6 +440,40 @@ class InvoiceItem(models.Model):
                 print("Oops!while Unposting there was no said stock.  Try again...")
 
 
+"""
+ initial logic for purchase balance
+  SELECT purchase_invoice.id AS voucher_id,
+    sum(pi.cash_balance) AS cash_balance,
+    sum(pi.metal_balance) AS metal_balance
+   FROM purchase_invoice
+     JOIN purchase_invoiceitem pi ON pi.invoice_id = purchase_invoice.id
+  GROUP BY purchase_invoice.id;
+    --------------------------------------------
+  improved logic:
+  SELECT purchase_invoice.id AS voucher_id,
+    sum(pi.cash_balance) AS cash_balance,
+    sum(pi.metal_balance) FILTER(WHERE pi.metal_balance_currency = 'USD') AS gold_balance,
+    sum(pi.metal_balance) FILTER(WHERE pi.metal_balance_currency = 'EUR') AS silver_balance
+   FROM purchase_invoice
+     JOIN purchase_invoiceitem pi ON pi.invoice_id = purchase_invoice.id
+  GROUP BY 
+    purchase_invoice.id;
+  --------------------------------------------
+  SELECT
+    v.id,
+    v.code,
+    SUM(vi.balance_amount) FILTER (WHERE vi.balance_currency = 'USD') AS usd_balance,
+    SUM(vi.balance_amount) FILTER (WHERE vi.balance_currency = 'EUR') AS eur_balance
+FROM
+    voucher_voucher AS v
+    LEFT JOIN voucher_voucheritem AS vi ON v.id = vi.voucher_id
+GROUP BY
+    v.id,
+    v.code;
+
+  """
+
+
 class PurchaseBalance(models.Model):
     voucher = models.OneToOneField(
         Invoice,
@@ -437,7 +482,9 @@ class PurchaseBalance(models.Model):
         related_name="purchase_balance",
     )
     cash_balance = models.DecimalField(max_digits=10, decimal_places=2)
-    metal_balance = models.DecimalField(max_digits=10, decimal_places=2)
+    gold_balance = models.DecimalField(max_digits=10, decimal_places=2)
+    silver_balance = models.DecimalField(max_digits=10, decimal_places=2)
+    balances = ArrayField(MoneyValueField(null=True, blank=True))
 
     class Meta:
         managed = False

@@ -34,9 +34,7 @@
           <li>id <span>{{object.id}}</span></li>
           <li>Customer :{{object.customer}}</li>
           <li>created: {{object.created}}</li>
-          <li>updated {{object.last_updated}}</li>
-          <li>Metal : {{object.metaltype}}</li>
-          <li>BalanceType: {{object.balancetype}}</li>
+          <li>updated {{object.updated}}</li>
           <li>Status : {{object.status}}</li>
         </ol>
       
@@ -44,16 +42,14 @@
     <div class="col-md-6 px-1"> 
       <p class="lead my-1">
         <ol class="list-unstyled mb-0">
-          <li >Gross Wt: {{object.gross_wt}}</li>
-          <li >Net Wt: {{object.net_wt}}</li>
-          <li>Rate: {{object.rate}}</li>
-          <li >Balance :{{object.balance}}</li>
+          <li>Gross Wt: {{object.get_gross_wt}}</li>
+          <li>Net Wt: {{object.get_net_wt}}</li>
+          <li>Is_Ratecut: {{object.is_ratecut}}</li>
           <li>GST : {{object.is_gst}}</li>
-          <li >Total :{{object.total}}</li>
-          <li >Paid : {{object.get_allocations}}</li>
+          <li>Balance :{{object.balance}}</li>
+          <li>Paid : {{object.get_allocations}}</li>
         </ul>
       </p>
-    
     </div>
   </div>
 </div>

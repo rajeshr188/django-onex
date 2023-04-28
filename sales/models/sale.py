@@ -1,19 +1,25 @@
 from datetime import date, timedelta
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import Func, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from djmoney.models.fields import MoneyField
 from moneyed import Money
-from sympy import content
 
 from approval.models import ReturnItem
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
+from dea.models.moneyvalue import MoneyValueField
+from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
+
+# from sympy import content
+
 
 
 class Month(Func):
@@ -66,6 +72,7 @@ class Invoice(models.Model):
     # Fields
     created = models.DateTimeField(default=timezone.now, db_index=True)
     updated = models.DateTimeField(auto_now_add=True, editable=False)
+    due_date = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
@@ -73,32 +80,9 @@ class Invoice(models.Model):
         blank=True,
         related_name="sold",
     )
-    rate = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
-    gross_wt = models.DecimalField(
-        max_digits=14, decimal_places=4, default=0, null=True, blank=True
-    )
-    net_wt = models.DecimalField(
-        max_digits=14, decimal_places=4, default=0, null=True, blank=True
-    )
-    total = models.DecimalField(
-        max_digits=14, decimal_places=4, default=0.0, null=True, blank=True
-    )
-    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
-
-    class BType(models.TextChoices):
-        CASH = (
-            "INR",
-            _("Cash"),
-        )
-        GOLD = (
-            "USD",
-            _("Gold"),
-        )
-        SILVER = "AUD", _("Silver")
-
-    metal_choices = (("Gold", "Gold"), ("Silver", "Silver"))
+    is_active = models.BooleanField(default=True)
 
     status_choices = (
         ("Paid", "Paid"),
@@ -106,18 +90,6 @@ class Invoice(models.Model):
         ("Unpaid", "Unpaid"),
     )
     status = models.CharField(max_length=15, choices=status_choices, default="Unpaid")
-    balancetype = models.CharField(
-        max_length=30,
-        choices=BType.choices,
-        default=BType.CASH,
-        verbose_name="Bal_type",
-    )
-    metaltype = models.CharField(
-        max_length=30, choices=metal_choices, default="Gold", verbose_name="Currency"
-    )
-    due_date = models.DateField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    objects = SalesQueryset.as_manager()
 
     # Relationship Fields
     customer = models.ForeignKey(
@@ -144,6 +116,7 @@ class Invoice(models.Model):
         Journal,
         related_query_name="sales_doc",
     )
+    objects = SalesQueryset.as_manager()
 
     class Meta:
         ordering = ("-created",)
@@ -204,22 +177,18 @@ class Invoice(models.Model):
         return self.total
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.gross_wt = self.get_gross_wt()
-            self.net_wt = self.get_net_wt()
-            self.balance = self.get_total_balance()
-
-        self.due_date = self.created + timedelta(days=self.term.due_days)
-        self.total = self.balance
-        if self.is_gst:
-            self.total += self.get_gst()
+        if not self.due_date:
+            self.due_date = self.created + timedelta(days=self.term.due_days)
 
         return super(Invoice, self).save(*args, **kwargs)
 
-    def update_bal(self):
-        self.gross_wt = self.get_gross_wt()
-        self.net_wt = self.get_net_wt()
-        self.save()
+    @property
+    def balance(self):
+        sale_balance = self.sale_balance
+        try:
+            return Balance(sale_balance.balances)
+        except SaleBalance.DoesNotExist:
+            return None
 
     # def delete(self, *args, **kwargs):
     #     if self.approval:
@@ -276,31 +245,112 @@ class Invoice(models.Model):
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
-        money = Money(self.balance, self.balancetype)
+        # money = Money(self.balance, self.balancetype)
         tax = Money(self.get_gst(), "INR")
-        lt = [
-            {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
-            {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
-            {
-                "ledgerno": "Output Igst",
-                "ledgerno_dr": "Sundry Debtors",
-                "amount": tax,
-            },
-        ]
-        at = [
-            {
-                "ledgerno": "Sales",
-                "xacttypecode": "Cr",
-                "xacttypecode_ext": "CRSL",
-                "account": self.customer.account,
-                "amount": money + tax,
-            }
-        ]
+        # lt = [
+        #     {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
+        #     {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
+        #     {
+        #         "ledgerno": "Output Igst",
+        #         "ledgerno_dr": "Sundry Debtors",
+        #         "amount": tax,
+        #     },
+        # ]
+        # at = [
+        #     {
+        #         "ledgerno": "Sales",
+        #         "xacttypecode": "Cr",
+        #         "xacttypecode_ext": "CRSL",
+        #         "account": self.customer.account,
+        #         "amount": money + tax,
+        #     }
+        # ]
+        lt, at = [], []
+        balance = self.sale_balance
+        cash_balance = balance.cash_balance
+        gold_balance = balance.gold_balance
+        silver_balance = balance.silver_balance
+        if self.is_ratecut:
+            lt.append(
+                {
+                    "ledgerno": "Sales",
+                    "ledgerno_dr": "Sundry Debtors",
+                    "amount": cash_balance,
+                }
+            )
+            lt.append({"ledgerno": inv, "ledgerno_dr": cogs, "amount": cash_balance})
+            at.append(
+                {
+                    "ledgerno": "Sales",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "CRSL",
+                    "account": self.customer.account,
+                    "amount": cash_balance,
+                }
+            )
+            if self.is_gst:
+                lt.append(
+                    {
+                        "ledgerno": "Output Igst",
+                        "ledgerno_dr": "Sundry Debtors",
+                        "amount": tax,
+                    },
+                )
+                at.append(
+                    {
+                        "ledgerno": "Sales",
+                        "xacttypecode": "Cr",
+                        "xacttypecode_ext": "CRSL",
+                        "account": self.customer.account,
+                        "amount": tax,
+                    }
+                )
+        else:
+            if gold_balance != 0:
+                lt.append(
+                    {
+                        "ledgerno": "Sales",
+                        "ledgerno_dr": "Sundry Debtors",
+                        "amount": gold_balance,
+                    }
+                )
+                lt.append(
+                    {"ledgerno": inv, "ledgerno_dr": cogs, "amount": gold_balance}
+                )
+                at.append(
+                    {
+                        "ledgerno": "Sales",
+                        "xacttypecode": "Cr",
+                        "xacttypecode_ext": "CRSL",
+                        "account": self.customer.account,
+                        "amount": gold_balance,
+                    }
+                )
+            if silver_balance != 0:
+                lt.append(
+                    {
+                        "ledgerno": "Sales",
+                        "ledgerno_dr": "Sundry Debtors",
+                        "amount": silver_balance,
+                    }
+                )
+                lt.append(
+                    {"ledgerno": inv, "ledgerno_dr": cogs, "amount": silver_balance}
+                )
+                at.append(
+                    {
+                        "ledgerno": "Sales",
+                        "xacttypecode": "Cr",
+                        "xacttypecode_ext": "CRSL",
+                        "account": self.customer.account,
+                        "amount": silver_balance,
+                    }
+                )
         return lt, at
 
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        ledger_journal, account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
@@ -317,6 +367,7 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     # Fields
+    is_return = models.BooleanField(default=False, verbose_name="Return")
     huid = models.CharField(max_length=6, null=True, blank=True, unique=True)
     quantity = models.IntegerField()
     weight = models.DecimalField(max_digits=10, decimal_places=3)
@@ -327,9 +378,16 @@ class InvoiceItem(models.Model):
     touch = models.DecimalField(max_digits=10, decimal_places=3)
     wastage = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     net_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=3)
-    is_return = models.BooleanField(default=False, verbose_name="Return")
-    makingcharge = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    making_charge = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    hallmark_charge = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    metal_balance = MoneyField(
+        max_digits=14, decimal_places=3, default_currency="USD", default=0
+    )
+    cash_balance = MoneyField(
+        max_digits=14, decimal_places=3, default_currency="INR", default=0
+    )
+
     # Relationship Fields
     product = models.ForeignKey(
         StockLot, on_delete=models.CASCADE, related_name="sold_items"
@@ -369,20 +427,34 @@ class InvoiceItem(models.Model):
         return reverse("sales:hx-invoiceitem-detail", kwargs=kwargs)
 
     def get_nettwt(self):
-        if self.invoice.customer.type == "Re":
-            return self.weight + self.wastage / 100
-        else:
-            return (self.weight * self.touch) / 100
+        return (self.weight * self.touch) / 100
 
     @property
     def get_total(self):
-        if self.invoice.balancetype == "Cash":
+        if self.invoice.is_ratecut:
             return self.get_nettwt() * self.invoice.rate
         else:
             return self.get_nettwt()
 
     def save(self, *args, **kwargs):
-        super(InvoiceItem, self).save(*args, **kwargs)
+        self.net_wt = self.get_nettwt()
+        self.rate = self.rate
+        self.metal_balance_currency = (
+            "USD" if "gold" in self.product.variant.name else "EUR"
+        )
+        if self.invoice.is_ratecut:
+            self.cash_balance = (
+                self.net_wt * self.rate + self.making_charge + self.hallmark_charge
+            )
+            self.metal_balance = 0
+        else:
+            self.cash_balance = self.making_charge + self.hallmark_charge
+            self.metal_balance = self.net_wt
+            print(self.metal_balance)
+        return super(InvoiceItem, self).save(*args, **kwargs)
+
+    def balance(self):
+        return Balance([self.metal_balance, self.cash_balance])
 
     def create_journal(self):
         stock_journal = Journal.objects.create(
@@ -422,3 +494,45 @@ class InvoiceItem(models.Model):
                 self.approval_line.post(stock_journal)
                 self.approval_line.update_status()
             self.product.transact(self.weight, self.quantity, jrnl, "SR")
+
+
+class SaleBalance(models.Model):
+    """
+    SELECT sales_invoice.id AS voucher_id,
+        COALESCE(sum(pi.cash_balance), 0.0) AS cash_balance,
+        COALESCE(sum(pi.metal_balance) FILTER (WHERE pi.metal_balance_currency::text = 'USD'::text), 0.0) AS gold_balance,
+        COALESCE(sum(pi.metal_balance) FILTER (WHERE pi.metal_balance_currency::text = 'EUR'::text), 0.0) AS silver_balance,
+        ARRAY[ROW(COALESCE(sum(pi.cash_balance), 0.0)::numeric(14,0), 'INR'::character varying(3))::money_value, ROW(COALESCE(sum(pi.metal_balance) FILTER (WHERE pi.metal_balance_currency::text = 'USD'::text), 0.0)::numeric(14,0), 'USD'::character varying(3))::money_value, ROW(COALESCE(sum(pi.metal_balance) FILTER (WHERE pi.metal_balance_currency::text = 'EUR'::text), 0.0)::numeric(14,0), 'EUR'::character varying(3))::money_value] AS balances,
+        COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'INR'::text), 0.0) AS cash_received,
+        COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'USD'::text), 0.0) AS gold_received,
+        COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'EUR'::text), 0.0) AS silver_received,
+        ARRAY[ROW(COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'INR'::text), 0.0)::numeric(14,0), 'INR'::character varying(3))::money_value, ROW(COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'USD'::text), 0.0)::numeric(14,0), 'USD'::character varying(3))::money_value, ROW(COALESCE(sum(pa.allocated) FILTER (WHERE pa.allocated_currency::text = 'EUR'::text), 0.0)::numeric(14,0), 'EUR'::character varying(3))::money_value] AS received
+    FROM sales_invoice
+     JOIN sales_invoiceitem pi ON pi.invoice_id = sales_invoice.id
+     LEFT JOIN sales_receiptallocation pa ON pa.invoice_id = sales_invoice.id
+    GROUP BY sales_invoice.id;"""
+
+    voucher = models.OneToOneField(
+        "sales.Invoice",
+        on_delete=models.DO_NOTHING,
+        primary_key=True,
+        related_name="sale_balance",
+    )
+    cash_balance = models.DecimalField(max_digits=14, decimal_places=3)
+    gold_balance = models.DecimalField(max_digits=14, decimal_places=3)
+    silver_balance = models.DecimalField(max_digits=14, decimal_places=3)
+    balances = ArrayField(MoneyValueField(null=True, blank=True))
+    cash_received = models.DecimalField(max_digits=14, decimal_places=3)
+    gold_received = models.DecimalField(max_digits=14, decimal_places=3)
+    silver_received = models.DecimalField(max_digits=14, decimal_places=3)
+    received = ArrayField(MoneyValueField(null=True, blank=True))
+
+    class Meta:
+        managed = False
+        db_table = "sale_balance"
+
+    def __str__(self):
+        return f"Balance:{Balance([self.balances]) - Balance([self.received])}"
+
+    def balance(self):
+        return Balance([self.balances]) - Balance([self.received])

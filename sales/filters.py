@@ -16,7 +16,7 @@ class InvoiceFilter(django_filters.FilterSet):
 
     class Meta:
         model = Invoice
-        fields = ["id", "balancetype", "status"]
+        fields = ["id", "status"]
 
 
 class ReceiptFilter(django_filters.FilterSet):
@@ -26,4 +26,4 @@ class ReceiptFilter(django_filters.FilterSet):
 
     class Meta:
         model = Receipt
-        fields = ["id", "created", "receipt_type", "status"]
+        fields = ["id", "created", "status"]

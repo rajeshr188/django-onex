@@ -61,8 +61,8 @@ def payment_update(request, pk):
 
 
 @login_required
-def payment_delete(request):
-    payment = Payment.objects.get(id=request.POST.get("id"))
+def payment_delete(request, pk):
+    payment = get_object_or_404(Payment, id=pk)
     payment.delete()
     return redirect("purchase:purchase_payment_list")
 
@@ -70,5 +70,5 @@ def payment_delete(request):
 @login_required
 def payment_allocate(request, pk):
     payment = get_object_or_404(Payment, id=pk)
-    payment.allot()
+    payment.allocate()
     return redirect(payment)

@@ -120,7 +120,7 @@ class PaymentAdmin(ImportExportActionModelAdmin):
         "created",
         "updated",
         "supplier",
-        "payment_type",
+        # "payment_type",
         "total",
         "description",
         "status",

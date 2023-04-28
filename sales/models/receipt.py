@@ -1,19 +1,24 @@
 from datetime import date, timedelta
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import Func, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from djmoney.models.fields import MoneyField
 from moneyed import Money
-from sympy import content
 
 from approval.models import ReturnItem
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
+from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
+
+# from sympy import content
+
 
 
 class Receipt(models.Model):
@@ -23,28 +28,10 @@ class Receipt(models.Model):
     created_by = models.ForeignKey(
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
     )
-
-    class BType(models.TextChoices):
-        CASH = (
-            "INR",
-            _("Cash"),
-        )
-        GOLD = (
-            "USD",
-            _("Gold"),
-        )
-        SILVER = "AUD", _("Silver")
-
-    receipt_type = models.CharField(
-        max_length=30,
-        verbose_name="Currency",
-        choices=BType.choices,
-        default=BType.CASH,
-    )
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    total = MoneyField(max_digits=10, decimal_places=3, default_currency="INR")
     description = models.TextField(max_length=50, default="describe here")
     status_choices = (
         ("Allotted", "Allotted"),
@@ -193,6 +180,12 @@ class ReceiptAllocation(models.Model):
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE)
     allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    allocated = MoneyField(
+        max_digits=19,
+        decimal_places=4,
+        default_currency="INR",
+        default=0,  # default value
+    )
 
     def __str__(self):
         return "%s" % self.id

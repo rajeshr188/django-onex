@@ -41,11 +41,8 @@ class InvoiceTable(tables.Table):
             "id",
             "created",
             "customer",
-            "balancetype",
-            "metaltype",
             "gross_wt",
             "net_wt",
-            "balance",
             "is_gst",
             "status",
             "term",
@@ -89,6 +86,6 @@ class ReceiptTable(tables.Table):
 
     class Meta:
         model = Receipt
-        fields = ("id", "created", "customer", "type", "total", "description", "status")
+        fields = ("id", "created", "customer", "total", "description", "status")
         attrs = {"class": "table table-striped table-bordered"}
         empty_text = "No Receipts Found matching your search..."

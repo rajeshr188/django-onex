@@ -47,10 +47,8 @@ class InvoiceForm(forms.ModelForm):
         fields = [
             "created",
             "approval",
-            "rate",
+            "is_ratecut",
             "is_gst",
-            "balancetype",
-            "metaltype",
             "term",
             "customer",
         ]
@@ -71,9 +69,7 @@ class InvoiceForm(forms.ModelForm):
                 css_class="form-row",
             ),
             Row(
-                Column(Field("balancetype", css_class="form-control ")),
-                Column(Field("metaltype", css_class="form-control ")),
-                Column(Field("rate", css_class="form-control ")),
+                Column(Field("is_ratecut", css_class="form-control ")),
                 css_class="form-row",
             ),
             Row(
@@ -105,8 +101,8 @@ class InvoiceItemForm(forms.ModelForm):
             "net_wt",
             "touch",
             "wastage",
-            "makingcharge",
-            "total",
+            "rate",
+            "making_charge",
         ]
         widgets = {
             "weight": forms.NumberInput(
@@ -132,7 +128,6 @@ class ReceiptForm(forms.ModelForm):
         fields = [
             "created",
             "customer",
-            "receipt_type",
             "weight",
             "touch",
             "rate",

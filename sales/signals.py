@@ -2,24 +2,24 @@ from django.db.models import signals
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from dea.models import Journal
 from sales.models import Invoice, InvoiceItem, Receipt, ReceiptAllocation
 
+# @receiver(signals.post_delete, sender=ReceiptAllocation)
+# def delete_status(sender, instance, *args, **kwargs):
+#     print("deleting invoice status")
+#     inv = instance.invoice
+#     print(f"in bal :{inv.get_balance()}")
+#     if inv.get_balance() == inv.balance:
+#         inv.status = "Unpaid"
+#     else:
+#         inv.status = "PartialPaid"
+#     inv.save()
 
-@receiver(signals.post_delete, sender=ReceiptAllocation)
-def delete_status(sender, instance, *args, **kwargs):
-    print("deleting invoice status")
-    inv = instance.invoice
-    print(f"in bal :{inv.get_balance()}")
-    if inv.get_balance() == inv.balance:
-        inv.status = "Unpaid"
-    else:
-        inv.status = "PartialPaid"
-    inv.save()
 
-
-@receiver(post_save, sender=Invoice)
+# @receiver(post_save, sender=Invoice)
 @receiver(post_save, sender=Receipt)
-def create_journal(sender, instance, created, **kwargs):
+def create_sales_journal(sender, instance, created, **kwargs):
     lt, at = instance.get_transactions()
     if created:
         print("newly created journal")
@@ -48,4 +48,5 @@ def create_stock_journal(sender, instance, created, **kwargs):
         sj = instance.get_journal()
         instance.unpost(sj)
         instance.post(sj)
+    instance.invoice.create_transactions()
     return instance

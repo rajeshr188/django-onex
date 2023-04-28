@@ -22,7 +22,6 @@ class InvoiceFilter(django_filters.FilterSet):
             "id",
             "created",
             "is_gst",
-            # "balancetype",
             "status",
         ]
 
@@ -34,4 +33,4 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ["id", "created", "payment_type", "status"]
+        fields = ["id", "created", "total_currency", "status"]

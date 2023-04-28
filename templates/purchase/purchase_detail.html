@@ -40,10 +40,17 @@
           <li >Ratecut: {{object.is_ratecut}}</li>
           <li>GST : {{object.is_gst}}</li>
           <li >Balance :{{object.balance}}</li>
-          <li >Paid : {{object.get_total_payments}}</li>    
+          <li >Paid : {{object.get_allocations}}</li>    
         </ul>
       </p>
-    
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+        <label class="form-check-label" for="flexSwitchCheckDefault">is_gst</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+        <label class="form-check-label" for="flexSwitchCheckChecked">is_ratecut</label>
+      </div>
     </div>
   </div>
 </div>
@@ -100,7 +107,7 @@
           <tr>
             <td><a href="{% url 'purchase:purchase_payment_detail' i.payment.id %}">{{i.payment.id}}</a></td>
             <td>{{i.created}}</td>
-            <td>{{i.allocated_amount}}</td>
+            <td>{{i.allocated}}</td>
 
           </tr>
           {%endfor%}

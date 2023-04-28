@@ -100,6 +100,7 @@ class InvoiceItemForm(forms.ModelForm):
             "weight",
             "touch",
             "making_charge",
+            "rate",
             # "net_wt",
         ]
         widgets = {
@@ -126,8 +127,8 @@ class PaymentForm(forms.ModelForm):
     created = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"})
     )
-    contact = forms.ModelChoiceField(
-        queryset=Customer.objects.filter(customer_type="S"), widget=Select2Widget
+    supplier = forms.ModelChoiceField(
+        queryset=Customer.objects.all(), widget=Select2Widget
     )
 
     class Meta:
@@ -135,7 +136,9 @@ class PaymentForm(forms.ModelForm):
         fields = [
             "supplier",
             "created",
-            "payment_type",
+            # "payment_type",
+            "weight",
+            "touch",
             "rate",
             "total",
             "description",

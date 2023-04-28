@@ -49,9 +49,7 @@ class InvoiceResource(resources.ModelResource):
             "id",
             "customer",
             "created",
-            "rate",
-            "balancetype",
-            "balance",
+            "is_ratecut",
             "status",
         )
         skip_unchanged = True
@@ -66,9 +64,7 @@ class InvoiceAdmin(ImportExportActionModelAdmin):
         "created",
         "customer",
         "updated",
-        "rate",
-        "balancetype",
-        "balance",
+        "is_ratecut",
         "status",
     ]
 
@@ -84,7 +80,7 @@ class InvoiceItemAdminForm(forms.ModelForm):
 
 class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemAdminForm
-    list_display = ["weight", "touch", "total", "is_return", "quantity"]
+    list_display = ["weight", "touch", "is_return", "quantity"]
 
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
@@ -113,7 +109,6 @@ class ReceiptResource(resources.ModelResource):
             "customer",
             "created",
             "updated",
-            "receipt_type",
             "total",
             "description",
             "status",
@@ -130,7 +125,6 @@ class ReceiptAdmin(ImportExportActionModelAdmin):
         "customer",
         "created",
         "updated",
-        "receipt_type",
         "total",
         "description",
         "status",

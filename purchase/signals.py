@@ -5,22 +5,15 @@ from django.dispatch import receiver
 from dea.models import Journal
 from purchase.models import Invoice, InvoiceItem, Payment, PaymentAllocation
 
-
-@receiver(signals.pre_delete, sender=PaymentAllocation)
-def delete_status(sender, instance, *args, **kwargs):
-    print("deleting invoice status")
-    inv = instance.invoice
-    if inv.balance - instance.allocated_amount == 0:
-        inv.status = "Unpaid"
-    elif inv.balance - instance.allocated_amount > 0:
-        inv.status = "PartiallyPaid"
-    else:
-        inv.status = "Error"
-    inv.save()
+# @receiver(signals.pre_delete, sender=PaymentAllocation)
+# def delete_status(sender, instance, *args, **kwargs):
+#     print("updating purchase status")
+#     inv = instance.invoice
+#     inv.update_status()
 
 
 # @receiver(post_save, sender=Invoice)
-# @receiver(post_save, sender=Payment)
+@receiver(post_save, sender=Payment)
 def create_purchase_journal(sender, instance, created, **kwargs):
     lt, at = instance.get_transactions()
     if created:
@@ -37,7 +30,7 @@ def create_purchase_journal(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=InvoiceItem)
-# @receiver(post_save, sender=PaymentAllocation)
+# @receiver(post_save, sender=Payment)
 def create_stock_journal(sender, instance, created, **kwargs):
     if created:
         print("newly created stock journal")

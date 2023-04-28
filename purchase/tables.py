@@ -10,6 +10,10 @@ class InvoiceTable(tables.Table):
     paid = tables.Column(
         accessor="get_total_payments", verbose_name="Paid", orderable=False
     )
+    net_wt = tables.Column(
+        accessor="get_net_wt", verbose_name="Net Wt", orderable=False
+    )
+    # balance = tables.Column(accessor = "balance", verbose_name="Balance", orderable=False)
     edit = tables.Column(
         linkify=("purchase:purchase_invoice_update", [tables.A("pk")]),
         empty_values=(),
@@ -40,7 +44,7 @@ class InvoiceTable(tables.Table):
             "created",
             "supplier",
             "net_wt",
-            "balance",
+            # "balance",
             "status",
             "is_gst",
             "term",
@@ -83,7 +87,6 @@ class PaymentTable(tables.Table):
             "id",
             "created",
             "supplier",
-            "payment_type",
             "total",
             "status",
             "description",

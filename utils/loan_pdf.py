@@ -12,9 +12,20 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import (Flowable, Frame, Image, KeepTogether,
-                                ListFlowable, ListItem, PageBreak, Paragraph,
-                                SimpleDocTemplate, Spacer, Table, TableStyle)
+from reportlab.platypus import (
+    Flowable,
+    Frame,
+    Image,
+    KeepTogether,
+    ListFlowable,
+    ListItem,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 from reportlab.platypus.doctemplate import PageTemplate
 from reportlab.rl_config import defaultPageSize
 

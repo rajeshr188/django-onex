@@ -21,7 +21,6 @@ from product.models import StockLot, StockTransaction
 # from sympy import content
 
 
-
 class Month(Func):
     function = "EXTRACT"
     template = "%(function)s(MONTH from %(expressions)s)"
@@ -35,17 +34,18 @@ class Year(Func):
 
 
 class SalesQueryset(models.QuerySet):
-    def gst(self):
-        return self.filter(is_gst=True)
+    def is_gst(self, value):
+        return self.filter(is_gst=value)
 
-    def non_gst(self):
-        return self.filter(is_gst=False)
+    def is_ratecut(self, value):
+        return self.filter(is_ratecut=value)
 
-    def total(self):
-        return self.aggregate(
-            cash=Sum("balance", filter=Q(balancetype="INR")),
-            gold=Sum("balance", filter=Q(balancetype="USD")),
-            silver=Sum("balance", filter=Q(balancetype="AUD")),
+    def today(self):
+        return self.filter(created__date=date.today())
+
+    def cur_month(self):
+        return self.filter(
+            created__month=date.today().month, created__year=date.today().year
         )
 
     def total_with_ratecut(self):
@@ -59,12 +59,38 @@ class SalesQueryset(models.QuerySet):
             silver=Sum("balance", filter=Q(balancetype="AUD")),
         )
 
-    def today(self):
-        return self.filter(created__date=date.today())
+    def with_balance(self):
+        return self.annotate(
+            gold_balance=Sum(
+                "saleitem__metal_balance", filter=Q(metal_balance_currency="USD")
+            ),
+            silver_balance=Sum(
+                "saleitem__metal_balance", filter=Q(metal_balance_currency="EUR")
+            ),
+            cash_balance=Sum("saleitem__cash_balance"),
+        ).select_related("saleitem")
 
-    def cur_month(self):
-        return self.filter(
-            created__month=date.today().month, created__year=date.today().year
+    def with_allocated_payment(self):
+        return self.annotate(
+            gold_amount=Sum(
+                "receiptallocation__allocated",
+                filter=Q(receiptallocation__allocated_currency="USD"),
+            ),
+            silver_amount=Sum(
+                "receiptallocation__allocated",
+                filter=Q(receiptallocation__allocated_currency="EUR"),
+            ),
+            cash_amount=Sum(
+                "receiptallocation__allocated",
+                filter=Q(receiptallocation__allocated_currency="INR"),
+            ),
+        ).select_related("receiptallocation")
+
+    def with_outstanding_balance(self):
+        return self.annotate(
+            outstanding_gold_balance=F("gold_amount") - F("gold_balance"),
+            outstanding_silver_balance=F("silver_amount") - F("silver_balance"),
+            outstanding_cash_balance=F("cash_amount") - F("cash_balance"),
         )
 
 
@@ -152,35 +178,91 @@ class Invoice(models.Model):
     def get_net_wt(self):
         return self.saleitems.aggregate(t=Sum("net_wt"))["t"] or 0
 
-    def get_total_balance(self):
-        line_sum = self.saleitems.aggregate(t=Sum("total"))["t"] or 0
-        if self.balancetype == self.BType.CASH and line_sum > 0:
-            line_sum = self.rate * line_sum
-        return line_sum
-
-    def get_allocations(self):
-        paid = self.receiptallocation_set.aggregate(t=Sum("allocated_amount"))
-        return paid["t"]
-
     @property
     def overdue_days(self):
         return (timezone.now().date() - self.date_due).days
 
-    def get_total_receipts(self):
-        return (
-            self.receiptallocation_set.aggregate(t=Sum("allocated_amount"))["t"] or None
-        )
+    def deactivate(self):
+        self.is_active = False
+        self.save(update_fields=["self.is_active"])
 
-    def get_balance(self):
-        if self.get_total_receipts() != None:
-            return self.total - self.get_total_receipts()
-        return self.total
+    def get_gst(self):
+        if self.is_gst:
+            return (self.balance * 3) / 100
+        return 0
 
     def save(self, *args, **kwargs):
         if not self.due_date:
             self.due_date = self.created + timedelta(days=self.term.due_days)
 
         return super(Invoice, self).save(*args, **kwargs)
+
+    @classmethod
+    def with_outstanding_balance(cls):
+        return cls.objects.annotate(
+            total_allocated_cash=Coalesce(
+                Sum(
+                    "receiptallocation__allocated",
+                    filter=Q(receiptallocation__allocated_currency="INR"),
+                ),
+                0,
+                output_field=models.DecimalField(),
+            ),
+            total_allocated_gold=Coalesce(
+                Sum(
+                    "receiptallocation__allocated",
+                    filter=Q(receiptallocation__allocated_currency="USD"),
+                ),
+                0,
+                output_field=models.DecimalField(),
+            ),
+            total_allocated_silver=Coalesce(
+                Sum(
+                    "receiptallocation__allocated",
+                    filter=Q(receiptallocation__allocated_currency="EUR"),
+                ),
+                0,
+                output_field=models.DecimalField(),
+            ),
+        ).annotate(
+            outstanding_balance_cash=F("sales_balance__cash_balance")
+            - F("total_allocated_cash"),
+            outstanding_balance_gold=F("sales_balance__gold_balance")
+            - F("total_allocated_gold"),
+            outstanding_balance_silver=F("sales_balance__silver_balance")
+            - F("total_allocated_silver"),
+        )
+
+    def get_allocations(self):
+        if self.receiptallocation_set.exists():
+            paid = self.receiptallocation_set.aggregate(
+                cash=Coalesce(
+                    Sum("allocated", filter=Q(allocated_currency="INR")),
+                    0,
+                    output_field=models.DecimalField(),
+                ),
+                gold=Coalesce(
+                    Sum("allocated", filter=Q(allocated_currency="USD")),
+                    0,
+                    output_field=models.DecimalField(),
+                ),
+                silver=Coalesce(
+                    Sum("allocated", filter=Q(allocated_currency="EUR")),
+                    0,
+                    output_field=models.DecimalField(),
+                ),
+            )
+            return Balance(
+                [
+                    Money(paid["cash"], "INR"),
+                    Money(paid["gold"], "USD"),
+                    Money(paid["silver"], "EUR"),
+                ]
+            )
+        return Balance(0, "INR")
+
+    def get_balance(self):
+        return self.balance - self.get_allocations()
 
     @property
     def balance(self):
@@ -194,15 +276,6 @@ class Invoice(models.Model):
     #     if self.approval:
     #         self.approval.is_billed = False
     #     super(Invoice, self).delete(*args, **kwargs)
-
-    def deactivate(self):
-        self.is_active = False
-        self.save(update_fields=["self.is_active"])
-
-    def get_gst(self):
-        if self.is_gst:
-            return (self.balance * 3) / 100
-        return 0
 
     def create_journals(self):
         ledgerjournal = Journal.objects.create(
@@ -245,7 +318,6 @@ class Invoice(models.Model):
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
-        # money = Money(self.balance, self.balancetype)
         tax = Money(self.get_gst(), "INR")
         # lt = [
         #     {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
@@ -270,82 +342,76 @@ class Invoice(models.Model):
         cash_balance = balance.cash_balance
         gold_balance = balance.gold_balance
         silver_balance = balance.silver_balance
-        if self.is_ratecut:
+        lt.append(
+            {
+                "ledgerno": "Sales",
+                "ledgerno_dr": "Sundry Debtors",
+                "amount": cash_balance,
+            }
+        )
+        lt.append({"ledgerno": inv, "ledgerno_dr": cogs, "amount": cash_balance})
+        at.append(
+            {
+                "ledgerno": "Sales",
+                "xacttypecode": "Cr",
+                "xacttypecode_ext": "CRSL",
+                "account": self.customer.account,
+                "amount": cash_balance,
+            }
+        )
+        if self.is_gst:
             lt.append(
                 {
-                    "ledgerno": "Sales",
+                    "ledgerno": "Output Igst",
                     "ledgerno_dr": "Sundry Debtors",
-                    "amount": cash_balance,
-                }
+                    "amount": tax,
+                },
             )
-            lt.append({"ledgerno": inv, "ledgerno_dr": cogs, "amount": cash_balance})
             at.append(
                 {
                     "ledgerno": "Sales",
                     "xacttypecode": "Cr",
                     "xacttypecode_ext": "CRSL",
                     "account": self.customer.account,
-                    "amount": cash_balance,
+                    "amount": tax,
                 }
             )
-            if self.is_gst:
-                lt.append(
-                    {
-                        "ledgerno": "Output Igst",
-                        "ledgerno_dr": "Sundry Debtors",
-                        "amount": tax,
-                    },
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sales",
-                        "xacttypecode": "Cr",
-                        "xacttypecode_ext": "CRSL",
-                        "account": self.customer.account,
-                        "amount": tax,
-                    }
-                )
-        else:
-            if gold_balance != 0:
-                lt.append(
-                    {
-                        "ledgerno": "Sales",
-                        "ledgerno_dr": "Sundry Debtors",
-                        "amount": gold_balance,
-                    }
-                )
-                lt.append(
-                    {"ledgerno": inv, "ledgerno_dr": cogs, "amount": gold_balance}
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sales",
-                        "xacttypecode": "Cr",
-                        "xacttypecode_ext": "CRSL",
-                        "account": self.customer.account,
-                        "amount": gold_balance,
-                    }
-                )
-            if silver_balance != 0:
-                lt.append(
-                    {
-                        "ledgerno": "Sales",
-                        "ledgerno_dr": "Sundry Debtors",
-                        "amount": silver_balance,
-                    }
-                )
-                lt.append(
-                    {"ledgerno": inv, "ledgerno_dr": cogs, "amount": silver_balance}
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sales",
-                        "xacttypecode": "Cr",
-                        "xacttypecode_ext": "CRSL",
-                        "account": self.customer.account,
-                        "amount": silver_balance,
-                    }
-                )
+        if gold_balance != 0:
+            lt.append(
+                {
+                    "ledgerno": "Sales",
+                    "ledgerno_dr": "Sundry Debtors",
+                    "amount": gold_balance,
+                }
+            )
+            lt.append({"ledgerno": inv, "ledgerno_dr": cogs, "amount": gold_balance})
+            at.append(
+                {
+                    "ledgerno": "Sales",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "CRSL",
+                    "account": self.customer.account,
+                    "amount": gold_balance,
+                }
+            )
+        if silver_balance != 0:
+            lt.append(
+                {
+                    "ledgerno": "Sales",
+                    "ledgerno_dr": "Sundry Debtors",
+                    "amount": silver_balance,
+                }
+            )
+            lt.append({"ledgerno": inv, "ledgerno_dr": cogs, "amount": silver_balance})
+            at.append(
+                {
+                    "ledgerno": "Sales",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "CRSL",
+                    "account": self.customer.account,
+                    "amount": silver_balance,
+                }
+            )
         return lt, at
 
     @transaction.atomic()

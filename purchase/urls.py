@@ -16,7 +16,7 @@ urlpatterns = (
 )
 
 urlpatterns += (
-    # urls for Invoice
+    # urls for purchase
     # path('home/',views.home,name = 'purchase_home'),
     path("list/", views.purchase_list, name="purchase_invoice_list"),
     path("create/", views.purchase_create, name="purchase_invoice_create"),
@@ -26,6 +26,16 @@ urlpatterns += (
     path("<int:id>/update/", views.purchase_update, name="purchase_invoice_update"),
     path(
         "<int:id>/delete/", views.purchase_delete_view, name="purchase_invoice_delete"
+    ),
+    path(
+        "<int:id>/ratecut-change/",
+        views.purchase_ratecut_change,
+        name="purchase_ratecut_change",
+    ),
+    path(
+        "<int:id>/gst-change/",
+        views.purchase_gst_change,
+        name="purchase_gst_change",
     ),
 )
 urlpatterns += (

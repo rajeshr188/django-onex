@@ -164,16 +164,18 @@ class Customer(models.Model):
         return self.sales.all()
 
     def get_total_invoice_cash(self):
-        return self.sales.filter(balancetype="Cash").aggregate(
+        return self.sales.aggregate(
             total=Coalesce(
-                Sum("balance", output_field=models.DecimalField()), decimal.Decimal(0.0)
+                Sum("sale_balance__cash_balance", output_field=models.DecimalField()),
+                decimal.Decimal(0.0),
             )
         )["total"]
 
     def get_total_invoice_metal(self):
-        return self.sales.filter(balancetype="Gold").aggregate(
+        return self.sales.aggregate(
             total=Coalesce(
-                Sum("balance", output_field=models.DecimalField()), decimal.Decimal(0.0)
+                Sum("sale_balance__gold_balance", output_field=models.DecimalField()),
+                decimal.Decimal(0.0),
             )
         )
 
@@ -181,27 +183,19 @@ class Customer(models.Model):
         return self.sales.exclude(status="Paid")
 
     def get_unpaid_cash(self):
-        return (
-            self.get_unpaid()
-            .filter(balancetype="Cash")
-            .values("created", "id", "balance")
-        )
+        return self.get_unpaid().values("created", "id", "sale_balance")
 
     def get_unpaid_cash_total(self):
         return self.get_unpaid_cash().aggregate(
-            total=Coalesce(Sum("balance"), decimal.Decimal(0))
+            total=Coalesce(Sum("sale_balance__cash_balance"), decimal.Decimal(0))
         )["total"]
 
     def get_unpaid_metal(self):
-        return (
-            self.get_unpaid()
-            .filter(balancetype="Metal")
-            .values("created", "id", "balance")
-        )
+        return self.get_unpaid().values("created", "id", "sale_balance")
 
     def get_unpaid_metal_total(self):
         return self.get_unpaid_metal().aggregate(
-            total=Coalesce(Sum("balance"), decimal.Decimal(0))
+            total=Coalesce(Sum("sale_balance__gold_balance"), decimal.Decimal(0))
         )["total"]
 
     def get_total_invoice_paid_cash(self):

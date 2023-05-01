@@ -134,38 +134,6 @@ def customer_detail(request, pk=None):
     how_many_days = 30
     context["object"] = cust
     context["customer"] = cust
-    context["current"] = inv.filter(
-        created__gte=datetime.now() - timedelta(days=how_many_days)
-    ).aggregate(
-        tc=Sum("balance", filter=Q(balancetype="Cash")),
-        tm=Sum("balance", filter=Q(balancetype="Gold")),
-    )
-    context["past"] = inv.filter(
-        created__lte=datetime.now() - timedelta(days=how_many_days)
-    ).aggregate(
-        tc=Sum("balance", filter=Q(balancetype="Cash")),
-        tm=Sum("balance", filter=Q(balancetype="Gold")),
-    )
-    context["monthwise"] = (
-        inv.annotate(month=Month("created"))
-        .values("month")
-        .order_by("month")
-        .annotate(
-            tc=Sum("balance", filter=Q(balancetype="Cash")),
-            tm=Sum("balance", filter=Q(balancetype="Gold")),
-        )
-        .values("month", "tm", "tc")
-    )
-    context["monthwiserev"] = (
-        data.annotate(month=Month("created"))
-        .values("month")
-        .order_by("month")
-        .annotate(
-            tc=Sum("balance", filter=Q(balancetype="Cash")),
-            tm=Sum("balance", filter=Q(balancetype="Gold")),
-        )
-        .values("month", "tm", "tc")
-    )
 
     # if request.htmx:
     #     response = render_block_to_string(

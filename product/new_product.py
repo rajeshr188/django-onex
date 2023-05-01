@@ -17,8 +17,12 @@ from mptt.models import MPTTModel
 from versatileimagefield.fields import PPOIField, VersatileImageField
 
 from ..core.db.fields import SanitizedJSONField
-from ..core.models import (ModelWithMetadata, PublishableModel,
-                           PublishedQuerySet, SortableModel)
+from ..core.models import (
+    ModelWithMetadata,
+    PublishableModel,
+    PublishedQuerySet,
+    SortableModel,
+)
 from ..core.permissions import ProductPermissions
 from ..core.utils import build_absolute_uri
 from ..core.utils.draftjs import json_content_to_raw_text
@@ -263,8 +267,7 @@ class ProductVariantQueryset(models.QuerySet):
             product_ids.add(obj.product_id)
         product_ids = list(product_ids)
 
-        from .tasks import \
-            update_products_minimal_variant_prices_of_catalogues_task
+        from .tasks import update_products_minimal_variant_prices_of_catalogues_task
 
         update_products_minimal_variant_prices_of_catalogues_task.delay(
             product_ids=product_ids

@@ -64,3 +64,14 @@ class PurchaseQueryset(models.QuerySet):
             outstanding_silver_balance=F("silver_amount") - F("silver_balance"),
             outstanding_cash_balance=F("cash_amount") - F("cash_balance"),
         )
+
+    # def delete(self):
+    #     # add custom logic here
+    #     # for example, check if any of the objects can be deleted
+    #     deletable_objects = [obj for obj in self if obj.can_be_deleted()]
+    #     if deletable_objects:
+    #         # call the parent's delete method to actually delete the objects
+    #         super(MyModelQuerySet, deletable_objects).delete()
+    #     else:
+    #         # raise an exception or return a message to indicate that deletion is not allowed
+    #         raise Exception("Deletion not allowed for any of the objects")

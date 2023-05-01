@@ -17,9 +17,6 @@ from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
 
-# from sympy import content
-
-
 
 class Receipt(models.Model):
     # Fields
@@ -122,6 +119,77 @@ class Receipt(models.Model):
 
         self.update_status()
 
+    def amount_allotted(self):
+        if self.receiptallocation_set.exists():
+            amount_allotted = self.receiptallocation_set.aggregate(
+                amount=Sum("allocated"),
+            )
+            return Money(amount_allotted["amount"], self.total_currency)
+        else:
+            return None
+
+    def get_allocated_total(self):
+        return (
+            self.receiptallocation_set.aggregate(t=Sum("allocated"))["t"]
+            if self.receiptallocation_set.exists()
+            else None
+        )
+
+    def allocate(self):
+        # get all unpaid invoices associated with this payment's customer and this payments currency type
+        filters = {}
+        filters["customer"] = self.customer
+        print(f"total:{self.total_currency}")
+        if self.total_currency == "INR":
+            filters["outstanding_balance_cash__gt"] = 0
+        elif self.total_currency == "USD":
+            filters["outstanding_balance_gold__gt"] = 0
+        elif self.total_currency == "AUD":
+            filters["outstanding_balance_silver__gt"] = 0
+        filter_q = Q(**filters)
+        print(f"filter_q:{filter_q}")
+        unpaid_invoices = (
+            Invoice.with_outstanding_balance().filter(filter_q).order_by("created")
+        )
+        print(f"unpaid_invoices:{unpaid_invoices}")
+        # iterate over the unpaid invoices and allocate payment in order
+        amount_remaining = (
+            self.total.amount
+            if self.get_allocated_total() is None
+            else self.total.amount - self.get_allocated_total()
+        )
+        for invoice in unpaid_invoices:
+            if amount_remaining <= 0:
+                break
+
+            # calculate the amount to allocate to this invoice
+            if self.total_currency == "INR":
+                amount_due = invoice.outstanding_balance_cash
+            elif self.total_currency == "USD":
+                amount_due = invoice.outstanding_balance_gold
+            elif self.total_currency == "AUD":
+                amount_due = invoice.outstanding_balance_silver
+            # amount_due = invoice.outstanding_balance
+            print(f"amount_due:{amount_due}")
+            print(f"amount_remaining:{amount_remaining}")
+            amount_to_allocate = min(amount_due, amount_remaining)
+
+            # create a PaymentAllocation object for this invoice and payment
+            allocation = ReceiptAllocation.objects.create(
+                receipt=self,
+                invoice=invoice,
+                allocated=Money(amount_to_allocate, self.total_currency),
+            )
+
+            # update the amount remaining to allocate
+            amount_remaining -= amount_to_allocate
+
+        # mark the payment as fully allocated if there is no amount remaining
+        # if amount_remaining <= 0:
+        #     self.status = "Allotted"
+        #     self.save()
+        self.update_status()
+
     def create_journals(self):
         ledgerjournal = LedgerJournal.objects.create(
             content_object=self,
@@ -140,19 +208,20 @@ class Receipt(models.Model):
         accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
 
         if ledgerjournal.exists() and accountjournal.exists():
-            return ledgerjournal, accountjournal
+            return ledgerjournal.first(), accountjournal.first()
         return self.create_journals()
 
     def get_transactions(self):
-        money = Money(self.total, self.type)
-        lt = [{"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": money}]
+        lt = [
+            {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": self.total}
+        ]
         at = [
             {
                 "ledgerno": "Sundry Debtors",
                 "xacttypecode": "Dr",
                 "xacttypecode_ext": "RCT",
                 "account": self.customer.account,
-                "amount": money,
+                "amount": self.total,
             }
         ]
         return lt, at
@@ -179,7 +248,7 @@ class ReceiptAllocation(models.Model):
     last_updated = models.DateTimeField(default=timezone.now)
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE)
-    allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    # allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allocated = MoneyField(
         max_digits=19,
         decimal_places=4,

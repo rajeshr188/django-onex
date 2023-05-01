@@ -44,6 +44,7 @@
             hx-get="{% url 'customer_address_form' customer.id%}" 
             hx-target="#address-list"
             hx-swap="beforeend">Add</button>
+        <a href="{% url 'dea_account_detail' object.account.id%}">Account</a>
       </div>
     </div> 
   </div>

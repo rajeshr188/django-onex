@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
@@ -17,8 +18,7 @@ from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import (Attribute, ProductVariant, Stock, StockLot,
-                            StockTransaction)
+from product.models import Attribute, ProductVariant, Stock, StockLot, StockTransaction
 
 from ..managers import PurchaseQueryset
 
@@ -98,6 +98,31 @@ class Invoice(models.Model):
     def get_net_wt(self):
         return self.purchase_items.aggregate(t=Sum("net_wt"))["t"]
 
+    @property
+    def overdue_days(self):
+        return (timezone.now().date() - self.due_date).days
+
+    def get_gst(self):
+        amount = self.purchase_items.aggregate(t=Sum("cash_balance"))["t"] or 0
+        gst = Money(amount * Decimal(0.03), "INR")
+        return gst
+
+    def save(self, *args, **kwargs):
+        if not self.due_date:
+            if self.term:
+                self.due_date = self.created + timedelta(days=self.term.due_days)
+        super(Invoice, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # add custom logic here
+        # for example, check if the object can be deleted
+        if self.can_be_deleted():
+            # call the parent's delete method to actually delete the object
+            super(MyModel, self).delete(*args, **kwargs)
+        else:
+            # raise an exception or return a message to indicate that deletion is not allowed
+            raise Exception("Deletion not allowed for this object")
+
     # @property
     # def outstanding_balance(self):
     #     return self.balance - self.total_allocated_amount
@@ -168,19 +193,8 @@ class Invoice(models.Model):
             )
         return Balance(0, "INR")
 
-    @property
-    def overdue_days(self):
-        return (timezone.now().date() - self.due_date).days
-
     def get_balance(self):
         return self.balance - self.get_allocations()
-
-    def save(self, *args, **kwargs):
-        if not self.due_date:
-            if self.term:
-                self.due_date = self.created + timedelta(days=self.term.due_days)
-        # self.cash_balance = self.cash_balance + self.get_gst()
-        super(Invoice, self).save(*args, **kwargs)
 
     @property
     def balance(self):
@@ -189,9 +203,6 @@ class Invoice(models.Model):
             return Balance(purchase_balance.balances)
         except PurchaseBalance.DoesNotExist:
             return None
-
-    def get_gst(self):
-        return (self.cash_balance * 3) / 100 if self.is_gst else 0
 
     def create_journals(self):
         ledgerjournal = Journal.objects.create(
@@ -223,7 +234,7 @@ class Invoice(models.Model):
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         # money = Money(self.balance, self.balancetype)
-        # tax = Money(self.get_gst(), "INR")
+        tax = self.get_gst()  # Money(self.get_gst(), "INR")
         # lt = [
         #     {"ledgerno": "Sundry Creditors", "ledgerno_dr": inv, "amount": money},
         #     {
@@ -248,77 +259,76 @@ class Invoice(models.Model):
         silver_balance = balance.silver_balance
         print("balance:")
         print(cash_balance, gold_balance, silver_balance)
-        if self.is_ratecut:
+
+        lt.append(
+            {
+                "ledgerno": "Sundry Creditors",
+                "ledgerno_dr": inv,
+                "amount": cash_balance,
+            }
+        )
+        at.append(
+            {
+                "ledgerno": "Sundry Creditors",
+                "xacttypecode": "Dr",
+                "account": self.supplier.account,
+                "xacttypecode_ext": "CRPU",
+                "amount": cash_balance,
+            }
+        )
+        if self.is_gst:
+            lt.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "ledgerno_dr": "Input Igst",
+                    "amount": tax,
+                }
+            )
+            at.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "xacttypecode": "Cr",
+                    "xacttypecode_ext": "CRPU",
+                    "account": self.supplier.account,
+                    "amount": tax,
+                }
+            )
+
+        if gold_balance != 0:
             lt.append(
                 {
                     "ledgerno": "Sundry Creditors",
                     "ledgerno_dr": inv,
-                    "amount": cash_balance,
+                    "amount": gold_balance,
                 }
             )
             at.append(
                 {
                     "ledgerno": "Sundry Creditors",
                     "xacttypecode": "Dr",
-                    "account": self.supplier.account,
                     "xacttypecode_ext": "CRPU",
-                    "amount": cash_balance,
+                    "account": self.supplier.account,
+                    "amount": gold_balance,
                 }
             )
-            if self.is_gst:
-                lt.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "ledgerno_dr": "Input Igst",
-                        "amount": tax,
-                    }
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "xacttypecode": "Cr",
-                        "xacttypecode_ext": "CRPU",
-                        "account": self.supplier.account,
-                        "amount": tax,
-                    }
-                )
 
-        else:
-            if gold_balance != 0:
-                lt.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "ledgerno_dr": inv,
-                        "amount": gold_balance,
-                    }
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "xacttypecode": "Dr",
-                        "xacttypecode_ext": "CRPU",
-                        "account": self.supplier.account,
-                        "amount": gold_balance,
-                    }
-                )
-
-            if silver_balance != 0:
-                lt.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "ledgerno_dr": inv,
-                        "amount": silver_balance,
-                    }
-                )
-                at.append(
-                    {
-                        "ledgerno": "Sundry Creditors",
-                        "xacttypecode": "Dr",
-                        "xacttypecode_ext": "CRPU",
-                        "account": self.supplier.account,
-                        "amount": silver_balance,
-                    }
-                )
+        if silver_balance != 0:
+            lt.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "ledgerno_dr": inv,
+                    "amount": silver_balance,
+                }
+            )
+            at.append(
+                {
+                    "ledgerno": "Sundry Creditors",
+                    "xacttypecode": "Dr",
+                    "xacttypecode_ext": "CRPU",
+                    "account": self.supplier.account,
+                    "amount": silver_balance,
+                }
+            )
         return lt, at
 
     @transaction.atomic()
@@ -397,7 +407,7 @@ class InvoiceItem(models.Model):
 
     def save(self, *args, **kwargs):
         self.net_wt = self.get_nettwt()
-        self.rate = self.rate or 5000
+        self.rate = self.rate
         self.metal_balance_currency = (
             "USD" if "gold" in self.product.product.name else "EUR"
         )
@@ -405,6 +415,8 @@ class InvoiceItem(models.Model):
             self.cash_balance = (
                 self.net_wt * self.rate + self.making_charge + self.hallmark_charge
             )
+            if self.invoice.is_gst:
+                self.cash_balance += self.cash_balance * Decimal(0.03)
             self.metal_balance = 0
         else:
             self.cash_balance = self.making_charge + self.hallmark_charge

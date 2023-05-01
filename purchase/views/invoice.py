@@ -87,6 +87,47 @@ def purchase_delete_view(request, id=None):
             headers = {"HX-Redirect": success_url}
             return HttpResponse("Success", headers=headers)
         return redirect(success_url)
+
+    return render(request, "purchase/invoice_confirm_delete.html", {"object": obj})
+
+
+@login_required
+def purchase_ratecut_change(request, id):
+    obj = Invoice.objects.get(pk=id)
+    print(f"purchase_ratecut_change: {obj}")
+    print(f"purchase_ratecut_change: {obj.is_ratecut}")
+    if request.method == "POST":
+        obj.is_ratecut = not obj.is_ratecut
+        obj.save()
+        print(f"purchase_ratecut_changed: {obj.is_ratecut}")
+        for i in obj.purchase_items.all():
+            i.save()
+        success_url = reverse("purchase:purchase_invoice_list")
+        if request.htmx:
+            headers = {"HX-Redirect": success_url}
+            return HttpResponse("Success", headers=headers)
+        return redirect(success_url)
+    # this return is nonsense
+    return render(request, "purchase/invoice_confirm_delete.html", {"object": obj})
+
+
+@login_required
+def purchase_gst_change(request, id):
+    obj = Invoice.objects.get(pk=id)
+    print(f"purchase_gst_change: {obj}")
+    print(f"purchase_gst_change: {obj.is_gst}")
+    if request.method == "POST":
+        obj.is_gst = not obj.is_gst
+        obj.save()
+        print(f"purchase_gst_changed: {obj.is_gst}")
+        for i in obj.purchase_items.all():
+            i.save()
+        success_url = reverse("purchase:purchase_invoice_list")
+        if request.htmx:
+            headers = {"HX-Redirect": success_url}
+            return HttpResponse("Success", headers=headers)
+        return redirect(success_url)
+    # this return is nonsense
     return render(request, "purchase/invoice_confirm_delete.html", {"object": obj})
 
 

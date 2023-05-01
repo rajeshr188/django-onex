@@ -38,18 +38,23 @@
           <li >Gross Wt: {{object.get_gross_wt}}</li>
           <li >Net Wt: {{object.get_net_wt}}</li>
           <li >Ratecut: {{object.is_ratecut}}</li>
-          <li>GST : {{object.is_gst}}</li>
+          <li>GST : {{object.is_gst}} /{{object.get_gst}}</li>
           <li >Balance :{{object.balance}}</li>
           <li >Paid : {{object.get_allocations}}</li>    
         </ul>
       </p>
       <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-        <label class="form-check-label" for="flexSwitchCheckDefault">is_gst</label>
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
+        {% if object.is_ratecut %} checked {% endif %}  
+                hx-post="{% url 'purchase:purchase_ratecut_change' object.id%}">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Ratecut</label>
       </div>
+    
       <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-        <label class="form-check-label" for="flexSwitchCheckChecked">is_ratecut</label>
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
+                {% if object.is_gst %} checked {% endif %}  
+                hx-post="{% url 'purchase:purchase_gst_change' object.id%}">
+        <label class="form-check-label" for="flexSwitchCheckDefault">is_gst</label>
       </div>
     </div>
   </div>

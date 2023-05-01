@@ -13,13 +13,18 @@ from openpyxl import load_workbook
 from render_block import render_block_to_string
 
 from contact.models import Customer
-from product.models import (PricingTier, PricingTierProductPrice,
-                            ProductVariant, StockLot)
+from product.models import (
+    PricingTier,
+    PricingTierProductPrice,
+    ProductVariant,
+    StockLot,
+)
 
 from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
+
 # from ..render import Render
 from ..tables import InvoiceTable
 

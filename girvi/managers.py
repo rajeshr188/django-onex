@@ -1,6 +1,16 @@
 from django.db import models
-from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, Func, Q, Sum, Value, When)
+from django.db.models import (
+    BooleanField,
+    Case,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Func,
+    Q,
+    Sum,
+    Value,
+    When,
+)
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.utils import timezone
 

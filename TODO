@@ -4,9 +4,9 @@ three types of user who use this application,shop owner,his staff and his custom
     customers and staff are invite only to create account
     anonymous user can browse products thats it
     customers with account can view their vouchers and browse products
-
-use qztray to print approval,stock labels,stock tags
+use qztray/cups pycups/esc/pos to print approval,stock labels,stock tags
 handle stock journal when a lot is not associated with purchase
+update status of vouchers
 mr.htmx wordwide
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock(hint use django-slick-reporting)

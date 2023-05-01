@@ -7,11 +7,19 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from dea.utils.currency import Balance
 
-from .forms import (AccountForm, AccountStatementForm, LedgerForm,
-                    LedgerStatementForm)
+from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
+
 # Create your views here.
-from .models import (Account, Accountbalance, AccountStatement, Journal,
-                     Ledger, Ledgerbalance, LedgerStatement, LedgerTransaction)
+from .models import (
+    Account,
+    Accountbalance,
+    AccountStatement,
+    Journal,
+    Ledger,
+    Ledgerbalance,
+    LedgerStatement,
+    LedgerTransaction,
+)
 
 
 def home(request):
@@ -27,7 +35,7 @@ def home(request):
     te = Balance()
     for i in lb:
         if i.AccountType == "Asset":
-            ta = ta + abs(i.get_currbal())
+            ta = ta + (i.get_currbal())
         elif i.AccountType == "Liability":
             tl = tl + abs(i.get_currbal())
         elif i.AccountType == "Income":

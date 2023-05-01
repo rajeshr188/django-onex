@@ -38,6 +38,16 @@ urlpatterns += (
         views.sales_delete_view,
         name="sales_invoice_delete",
     ),
+    path(
+        "<int:id>/ratecut-change/",
+        views.sales_ratecut_change,
+        name="sales_ratecut_change",
+    ),
+    path(
+        "<int:id>/gst-change/",
+        views.sales_gst_change,
+        name="sales_gst_change",
+    ),
 )
 urlpatterns += (
     path("sales/", views.home, name="sales_home"),

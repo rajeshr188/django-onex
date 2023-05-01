@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-
+from decimal import Decimal
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
@@ -164,7 +164,7 @@ class Invoice(models.Model):
         return reverse("sales:sales_invoice_delete", kwargs={"id": self.id})
 
     def get_invoiceitem_children(self):
-        return self.saleitems.all()
+        return self.sale_items.all()
 
     def get_next(self):
         return Invoice.objects.filter(id__gt=self.id).order_by("id").first()
@@ -173,10 +173,10 @@ class Invoice(models.Model):
         return Invoice.objects.filter(id__lt=self.id).order_by("id").last()
 
     def get_gross_wt(self):
-        return self.saleitems.aggregate(t=Sum("weight"))["t"] or 0
+        return self.sale_items.aggregate(t=Sum("weight"))["t"] or 0
 
     def get_net_wt(self):
-        return self.saleitems.aggregate(t=Sum("net_wt"))["t"] or 0
+        return self.sale_items.aggregate(t=Sum("net_wt"))["t"] or 0
 
     @property
     def overdue_days(self):
@@ -187,9 +187,9 @@ class Invoice(models.Model):
         self.save(update_fields=["self.is_active"])
 
     def get_gst(self):
-        if self.is_gst:
-            return (self.balance * 3) / 100
-        return 0
+        amount = self.sale_items.aggregate(t=Sum("cash_balance"))["t"] or 0
+        gst = Money(amount * Decimal(0.03), "INR")
+        return gst
 
     def save(self, *args, **kwargs):
         if not self.due_date:
@@ -318,7 +318,7 @@ class Invoice(models.Model):
 
         inv = "GST INV" if self.is_gst else "Non-GST INV"
         cogs = "GST COGS" if self.is_gst else "Non-GST COGS"
-        tax = Money(self.get_gst(), "INR")
+        tax = self.get_gst()
         # lt = [
         #     {"ledgerno": "Sales", "ledgerno_dr": "Sundry Debtors", "amount": money},
         #     {"ledgerno": inv, "ledgerno_dr": cogs, "amount": money},
@@ -459,7 +459,7 @@ class InvoiceItem(models.Model):
         StockLot, on_delete=models.CASCADE, related_name="sold_items"
     )
     invoice = models.ForeignKey(
-        "sales.Invoice", on_delete=models.CASCADE, related_name="saleitems"
+        "sales.Invoice", on_delete=models.CASCADE, related_name="sale_items"
     )
     approval_line = models.ForeignKey(
         "approval.ApprovalLine",
@@ -495,12 +495,12 @@ class InvoiceItem(models.Model):
     def get_nettwt(self):
         return (self.weight * self.touch) / 100
 
-    @property
-    def get_total(self):
-        if self.invoice.is_ratecut:
-            return self.get_nettwt() * self.invoice.rate
-        else:
-            return self.get_nettwt()
+    # @property
+    # def get_total(self):
+    #     if self.invoice.is_ratecut:
+    #         return self.get_nettwt() * self.invoice.rate
+    #     else:
+    #         return self.get_nettwt()
 
     def save(self, *args, **kwargs):
         self.net_wt = self.get_nettwt()
@@ -512,6 +512,8 @@ class InvoiceItem(models.Model):
             self.cash_balance = (
                 self.net_wt * self.rate + self.making_charge + self.hallmark_charge
             )
+            if self.invoice.is_gst:
+                self.cash_balance += self.cash_balance * Decimal(0.03)
             self.metal_balance = 0
         else:
             self.cash_balance = self.making_charge + self.hallmark_charge

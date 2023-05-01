@@ -50,6 +50,19 @@
           <li>Paid : {{object.get_allocations}}</li>
         </ul>
       </p>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
+        {% if object.is_ratecut %} checked {% endif %}  
+                hx-post="{% url 'sales:sales_ratecut_change' object.id%}">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Ratecut</label>
+      </div>
+    
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
+                {% if object.is_gst %} checked {% endif %}  
+                hx-post="{% url 'sales:sales_gst_change' object.id%}">
+        <label class="form-check-label" for="flexSwitchCheckDefault">is_gst</label>
+      </div>
     </div>
   </div>
 </div>

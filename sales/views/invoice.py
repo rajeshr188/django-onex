@@ -205,6 +205,43 @@ def sale_update_view(request, id=None):
         return render(request, "sales/partials/forms.html", context)
     return render(request, "sales/create_update.html", context)
 
+@login_required
+def sales_ratecut_change(request, id):
+    obj = Invoice.objects.get(pk=id)
+    
+    if request.method == "POST":
+        obj.is_ratecut = not obj.is_ratecut
+        obj.save()
+        
+        for i in obj.sale_items.all():
+            i.save()
+        success_url = reverse("sales:sales_invoice_list")
+        if request.htmx:
+            headers = {"HX-Redirect": success_url}
+            return HttpResponse("Success", headers=headers)
+        return redirect(success_url)
+    # this return is nonsense
+    return render(request, "sales/invoice_confirm_delete.html", {"object": obj})
+
+
+@login_required
+def sales_gst_change(request, id):
+    obj = Invoice.objects.get(pk=id)
+    
+    if request.method == "POST":
+        obj.is_gst = not obj.is_gst
+        obj.save()
+        
+        for i in obj.sale_items.all():
+            i.save()
+        success_url = reverse("sales:sales_invoice_list")
+        if request.htmx:
+            headers = {"HX-Redirect": success_url}
+            return HttpResponse("Success", headers=headers)
+        return redirect(success_url)
+    # this return is nonsense
+    return render(request, "purchase/invoice_confirm_delete.html", {"object": obj})
+
 
 @login_required
 def sale_item_update_hx_view(request, parent_id=None, id=None):

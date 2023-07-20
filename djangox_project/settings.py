@@ -182,7 +182,7 @@ LANGUAGES = (
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale/"),)
 TIME_ZONE = "Asia/Kolkata"
 
-USE_I18N = True
+# USE_I18N = True
 
 USE_L10N = True
 SHORT_DATETIME_FORMAT = "d-m-Y"

@@ -34,27 +34,47 @@
         {% include "filter.html"%}
       </div>
       <div class="col-sm-9" id="results">
-        <div hx-include="#checked-items" hx-target="#content">
-          <a class="btn btn-danger" hx-post="{% url 'girvi:girvi_loan_deletemultiple'%}"
-            hx-include="[name='selection']" hx-confirm = "sure?">
-            Delete</a>
-          <a class="btn btn-info" hx-get="{% url 'girvi:bulk_release'%}" 
-              hx-include="[name='selection']">
-            Release</a>
-          <a class="btn btn-info" hx-post="{% url 'girvi:girvi_create_notice'%}?{{request.GET.urlencode}}"
-                                  hx-include="[name='selection'],[name='selectall']">
-            Notify</a>
+        <nav>
+          <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Table</button>
+            <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Stats</button> 
+          </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+          <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+            <div hx-include="#checked-items" hx-target="#content">
+              <a class="btn btn-danger" hx-post="{% url 'girvi:girvi_loan_deletemultiple'%}"
+                hx-include="[name='selection']" hx-confirm = "sure?">
+                Delete</a>
+              <a class="btn btn-info" hx-get="{% url 'girvi:bulk_release'%}" 
+                  hx-include="[name='selection']">
+                Release</a>
+              <a class="btn btn-info" hx-post="{% url 'girvi:girvi_create_notice'%}?{{request.GET.urlencode}}"
+                                      hx-include="[name='selection'],[name='selectall']">
+                Notify</a>
+            </div>
+            <div class="form-check"> 
+              <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
+              <label class="form-check-label" for="flexCheckDefault">
+                Select All
+              </label>
+            </div>
+            <div id="table" class = "table-responsive">  
+              <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>
+              {% render_table table %}
+            </div>
+          </div>
+          <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+            <ul class="list-group">
+              <li class="list-group-item">{{stats.total_no_of_loans}}</li>
+              <li class="list-group-item">A second item</li>
+              <li class="list-group-item">A third item</li>
+              <li class="list-group-item">A fourth item</li>
+              <li class="list-group-item">And a fifth one</li>
+            </ul>
+          </div>
         </div>
-        <div class="form-check"> 
-          <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
-          <label class="form-check-label" for="flexCheckDefault">
-            Select All
-          </label>
-        </div>
-        <div id="table" class = "table-responsive">  
-          <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>
-          {% render_table table %}
-        </div>
+        
       </div>
   </div>
   </div>
@@ -64,7 +84,7 @@
   $('input[type=checkbox]').change(function() { 
     var all = document.getElementById("selectall");
     if (all.checked) {
-      $('#text').text({{table.paginator.count}}) 
+      $('#text').text({{table.paginator.count}})
     }
     else{
       $('#text').text($('input[name=selection]:checked').length)

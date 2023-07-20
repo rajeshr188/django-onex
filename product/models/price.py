@@ -64,11 +64,16 @@ class Price(models.Model):
     """
 
     product = models.ForeignKey("ProductVariant", on_delete=models.CASCADE)
-    contact = models.ForeignKey("contact.Customer", on_delete=models.CASCADE)
+    contact = models.ForeignKey(
+        "contact.Customer", on_delete=models.CASCADE, related_name="prices"
+    )
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     # not required ?
-    price_tier = models.ForeignKey(PricingTier, on_delete=models.CASCADE)
+    price_tier = models.ForeignKey(
+        PricingTier,
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return f"{self.product} : {self.selling_price} {self.purchase_price}"

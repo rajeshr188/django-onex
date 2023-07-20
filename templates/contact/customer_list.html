@@ -5,21 +5,17 @@
 
 {%block content%}
 
-<div id="customer-content" class="container">
+<div id="customer-content" class="container ">
  
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Customers</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
       <div class="btn-group mr-2">
         <a class="btn btn-primary mr-2" 
-            href="{% url 'contact_customer_create' %}" 
-            
+            href="{% url 'contact_customer_create' %}"   
             role="button">New Customer</a>
         <a class="btn btn-primary mr-2" 
-            
-            hx-get="{% url 'contact_customer_merge' %}" 
-            hx-target="#dialog" 
-            hx-swap="innerHTML"
+            href="{% url 'contact_customer_merge' %}" 
             role="button">Merge Customer</a>
       </div>
     </div>
@@ -29,7 +25,7 @@
     <div class="col-sm-3" id="filter">
       <div class="position-relative h-20" id ="filter">
         {% if filter %}
-        <div class="card  bg-light text-center">
+        <div class="card text-center">
             <div class="card-header">
                 Filter
             </div>
@@ -40,15 +36,11 @@
                         hx-target="#table"
                         hx-swap = "outerHTML"
                         class = "form-inline">
-                    
-                  
                     {%for field in filter.form%}
-                    
-                    <div class="form-floating mb-3">
+                      <div class="form-floating mb-3">
                         {%render_field field|add_class:"form-control"%}
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    </div>
-                    
+                      </div>
                     {%endfor%}
                 </form>
             </div>
@@ -56,21 +48,18 @@
         {% endif %}
       </div>
     </div>
-
-    <div id="modal" class="modal hide fade"   tabindex="-1" role="dialog"  data-focus="false" aria-hidden="true">
-      <div id="dialog" class="modal-dialog" hx-target="this"></div>
-    </div>
- 
     {%block table%}
-    <div class="col-sm-9 table-responsive" id = "table">
-      
-      <p>Results :{{table.paginator.count}} </p>
-      
-      {% render_table table %}
-      
+    <div class="col-sm-9 table-responsive" id = "table"> 
+      <p>Results :{{table.paginator.count}} </p> 
+      {% render_table table %} 
     </div>
     {%endblock%}
-</div>
+  </div>
+
+  <div id="modal" class="modal fade show"   tabindex="-1" role="dialog"  data-focus="true" aria-hidden="true">
+    <div id="dialog" class="modal-dialog" hx-target="this"></div>
+  </div>
+  
 </div>
 
 <script>

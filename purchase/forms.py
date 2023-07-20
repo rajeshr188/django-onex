@@ -1,15 +1,8 @@
 from datetime import datetime
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    ButtonHolder,
-    Column,
-    Field,
-    Fieldset,
-    Layout,
-    Row,
-    Submit,
-)
+from crispy_forms.layout import (ButtonHolder, Column, Field, Fieldset, Layout,
+                                 Row, Submit)
 from django import forms
 from django.db.models import Q
 from django.urls import reverse_lazy
@@ -34,11 +27,6 @@ class InvoiceForm(forms.ModelForm):
             }
         )
     )
-    # pull in rate from rate model
-    # rate = forms.NumberInput(
-    #     attrs={
-    #         "class": "form-control"
-    #     })
 
     class Meta:
         model = Invoice
@@ -46,7 +34,6 @@ class InvoiceForm(forms.ModelForm):
             "created",
             "is_gst",
             "is_ratecut",
-            # "balance",
             "supplier",
             "term",
             "status",
@@ -79,7 +66,6 @@ class InvoiceForm(forms.ModelForm):
             ),
             Row(
                 Column("term", css_class="form-group col-md-3 mb-0"),
-                # Column("balance", css_class="form-group col-md-3 mb-0"),
                 Column("status", css_class="form-group col-md-3 mb-0"),
                 css_class="form-row",
             ),
@@ -121,13 +107,6 @@ class InvoiceItemForm(forms.ModelForm):
                 }
             )
         }
-
-    # def save(self, commit=True):
-    #     instance = super(InvoiceItemForm, self).save(commit=False)
-
-    #     if commit:
-    #         instance.save()
-    #     return instance
 
 
 class PaymentForm(forms.ModelForm):

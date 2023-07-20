@@ -69,7 +69,7 @@ class Customer(models.Model):
         unique_together = ("name", "relatedas", "relatedto")
 
     def __str__(self):
-        return f"{self.name} {self.relatedas} {self.relatedto} {self.get_customer_type_display()} "
+        return f"{self.name} {self.get_relatedas_display()} {self.relatedto} {self.get_customer_type_display()} "
 
     def get_absolute_url(self):
         return reverse("contact_customer_detail", args=(self.pk,))
@@ -289,6 +289,35 @@ class Customer(models.Model):
         return txn_list
 
 
+# class RelationshipChoices(models.TextChoices):
+#     SON = 'Son', _('Son')
+#     DAUGHTER = 'Daughter', _('Daughter')
+#     HUSBAND = 'Husband', _('Husband')
+#     WIFE = 'Wife', _('Wife')
+
+
+class CustomerRelationship(models.Model):
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="customer_relationships"
+    )
+    related_customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="related_customer_relationships",
+    )
+    RELATIONSHIP_CHOICES = (
+        ("S", "S/o"),  # Son of
+        ("F", "F/o"),  # Father of
+        ("D", "D/o"),  # Daughter of
+        ("C", "C/o"),  # Child of
+        ("W", "W/o"),  # Wife of
+    )
+    relationship = models.CharField(max_length=2, choices=RELATIONSHIP_CHOICES)
+
+    def __str__(self):
+        return f"{self.customer.name} - {self.relationship.get_relationship_display()} - {self.related_customer.name}"
+
+
 class ContactScore(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     score = models.FloatField(default=0)
@@ -298,13 +327,15 @@ class ContactScore(models.Model):
 
 class Address(models.Model):
     # Relationships
-    Customer = models.ForeignKey("contact.Customer", on_delete=models.CASCADE)
+    Customer = models.ForeignKey(
+        "contact.Customer", on_delete=models.CASCADE, related_name="address"
+    )
 
     # Fields
-    area = models.CharField(max_length=30)
+    area = models.CharField(max_length=30, default="ChinaAllapuram")
     created = models.DateTimeField(auto_now_add=True, editable=False)
     doorno = models.CharField(max_length=30)
-    zipcode = models.CharField(max_length=6)
+    zipcode = models.CharField(max_length=6, default="632001")
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     street = models.TextField(max_length=100)
     city = models.CharField(max_length=30, default="Vellore")
@@ -313,7 +344,7 @@ class Address(models.Model):
         ordering = ("-created",)
 
     def __str__(self):
-        return str(self.pk)
+        return f"{self.doorno},{self.street},{self.area},{self.zipcode},{self.city}"
 
     def get_absolute_url(self):
         return reverse("Customer_Address_detail", args=(self.pk,))

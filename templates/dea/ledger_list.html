@@ -16,7 +16,7 @@
         <ul class="list-group list-group-flush p-3 root">
             {% recursetree node %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{node.AccountType}}
+                <!-- {{node.AccountType}} -->
                 <a href="{% url 'dea_ledger_detail' node.id%}">
                     {{ node.name }}
                 </a>

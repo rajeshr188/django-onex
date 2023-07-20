@@ -6,7 +6,7 @@
 
 CREATE TYPE public.money_value AS
 (
-	amount numeric(14,0),
+	amount numeric(14,3),
 	currency character varying(3)
 );
 

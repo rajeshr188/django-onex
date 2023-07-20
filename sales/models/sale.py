@@ -1,9 +1,10 @@
 from datetime import date, timedelta
 from decimal import Decimal
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
-from django.db.models import Func, Q, Sum
+from django.db.models import F, Func, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -88,9 +89,10 @@ class SalesQueryset(models.QuerySet):
 
     def with_outstanding_balance(self):
         return self.annotate(
-            outstanding_gold_balance=F("gold_amount") - F("gold_balance"),
-            outstanding_silver_balance=F("silver_amount") - F("silver_balance"),
-            outstanding_cash_balance=F("cash_amount") - F("cash_balance"),
+            outstanding_gold_balance=F("gold_amount") - F("sale_balance__gold_balance"),
+            outstanding_silver_balance=F("silver_amount")
+            - F("sale_balance__silver_balance"),
+            outstanding_cash_balance=F("cash_amount") - F("sale_balance__cash_balance"),
         )
 
 

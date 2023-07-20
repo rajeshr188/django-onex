@@ -10,6 +10,7 @@
             <tr>
                 <th>id</th>
                 <th>created</th>
+                <th>Journal Type</th>
                 <th>txn-type</th>
                 <th>doc</th>
                 <th>Action</th>
@@ -20,6 +21,7 @@
             <tr>
                 <td><a href="{% url 'dea_journal_detail' i.id%}">{{i.id}}</a></td>
                 <td>{{i.created|date}}</td>
+                <td>{{i.journal_type}}</td>
                 <td>{{i.desc}}</td>
                 <td>
                     {%if i.content_type %}

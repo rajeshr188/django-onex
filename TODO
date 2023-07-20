@@ -1,3 +1,9 @@
+every customer can be related to any customer ManyToManyField
+prevent release of loan if already released ,dont show release option in loan detail if already released
+
+purchase are not to be deleted
+    if by mistake the deelte along with items and stocks
+    
 three types of user who use this application,shop owner,his staff and his customer
     shop owner can create staff and customer
     staff can create customer
@@ -7,7 +13,7 @@ three types of user who use this application,shop owner,his staff and his custom
 use qztray/cups pycups/esc/pos to print approval,stock labels,stock tags
 handle stock journal when a lot is not associated with purchase
 update status of vouchers
-mr.htmx wordwide
+***************mr.htmx wordwide***************************
 pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock(hint use django-slick-reporting)
 SIMPLE UI LIKE KHATABOOK

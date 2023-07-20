@@ -7,11 +7,12 @@ urlpatterns = [
     path("dea/gl/", views.generalledger, name="dea_general_ledger"),
     path("daybook/", views.daybook, name="dea_daybook"),
     path("account/", views.AccountListView.as_view(), name="dea_account_list"),
-    path(
-        "account/<int:pk>/",
-        views.AccountDetailView.as_view(),
-        name="dea_account_detail",
-    ),
+    # path(
+    #     "account/<int:pk>/",
+    #     views.AccountDetailView.as_view(),
+    #     name="dea_account_detail",
+    # ),
+    path("account/<int:pk>/", views.account_detail, name="dea_account_detail"),
     path("account/add/", views.AccountCreateView.as_view(), name="dea_account_create"),
     path("account/<int:pk>/set-ob/", views.set_acc_ob, name="dea_account_setob"),
     path(

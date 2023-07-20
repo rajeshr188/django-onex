@@ -47,6 +47,7 @@ class LoanTable(tables.Table):
         model = Loan
         fields = (
             "selection",
+            "id",
             "loanid",
             "created",
             "customer",
@@ -61,10 +62,12 @@ class LoanTable(tables.Table):
         )
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {
-            "data-released": lambda record: record.is_released,
+            # "data-released": lambda record: record.is_released,
+            # "data-notworth": lambda record: record.is_overdue,
             # "data-notworth": lambda record: record.is_worth,
-            "data-notworth": lambda record: record.is_overdue,
-            # "class": lambda record: "table-success" if record.is_released else "
+            "class": lambda record: "table-success"
+            if record.is_released
+            else ("table-danger" if record.is_overdue else "table-secondary")
         }
         attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
         empty_text = "There are no loans matching the search criteria..."

@@ -202,8 +202,8 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-LOGIN_REDIRECT_URL = "home"
-ACCOUNT_LOGOUT_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "dashboard"
+ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 
 AUTHENTICATION_BACKENDS = (
     # 'graphql_jwt.backends.JSONWebTokenBackend',

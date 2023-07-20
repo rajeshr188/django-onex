@@ -8,12 +8,8 @@ from django.contrib.postgres.forms import DateRangeField
 from django.forms import DateTimeInput, modelformset_factory
 from django.urls import reverse_lazy
 from django_select2 import forms as s2forms
-from django_select2.forms import (
-    ModelSelect2Widget,
-    Select2Mixin,
-    Select2MultipleWidget,
-    Select2Widget,
-)
+from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
+                                  Select2MultipleWidget, Select2Widget)
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
@@ -95,6 +91,10 @@ class LoanForm(forms.ModelForm):
             "loanamount",
             "interestrate",
         ]
+        widgets = {
+            "itemdesc": forms.Textarea(attrs={"rows": 2}),
+            "series": forms.TextInput(attrs={"autofocus": True}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()

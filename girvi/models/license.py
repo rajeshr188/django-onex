@@ -56,27 +56,35 @@ class Series(models.Model):
         self.save(update_fields=["is_active"])
 
     def loan_count(self):
-        return self.loan_set.filter(release__isnull=True).count()
+        return self.loan_set.unreleased().count()
 
     def total_loan_amount(self):
-        return self.loan_set.filter(release__isnull=True).aggregate(t=Sum("loanamount"))
+        return self.loan_set.unreleased().aggregate(t=Sum("loanamount"))
 
     def total_gold_loan(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Gold").aggregate(
-            t=Sum("loanamount")
+        return (
+            self.loan_set.unreleased()
+            .filter(itemtype="Gold")
+            .aggregate(t=Sum("loanamount"))
         )
 
     def total_silver_loan(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Silver").aggregate(
-            t=Sum("loanamount")
+        return (
+            self.loan_set.unreleased()
+            .filter(itemtype="Silver")
+            .aggregate(t=Sum("loanamount"))
         )
 
     def total_gold_weight(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Gold").aggregate(
-            t=Sum("itemweight")
+        return (
+            self.loan_set.unreleased()
+            .filter(itemtype="Gold")
+            .aggregate(t=Sum("itemweight"))
         )
 
     def total_silver_weight(self):
-        return self.loan_set.filter(release__isnull=True, itemtype="Silver").aggregate(
-            t=Sum("itemweight")
+        return (
+            self.loan_set.unreleased()
+            .filter(itemtype="Silver")
+            .aggregate(t=Sum("itemweight"))
         )

@@ -133,7 +133,6 @@ class Ledger(MPTTModel):
         )
 
         bal = cb + d_bal - c_bal
-
         return bal
 
 
@@ -141,8 +140,6 @@ class LedgerTransactionManager(models.Manager):
     def create_txn(self, journal, ledgerno, ledgerno_dr, amount):
         dr = Ledger.objects.get(name=ledgerno_dr)
         cr = Ledger.objects.get(name=ledgerno)
-        print(f"cr:{cr}")
-        print(f"dr {dr}")
         txn = self.create(journal=journal, ledgerno=cr, ledgerno_dr=dr, amount=amount)
         return txn
 
@@ -196,7 +193,6 @@ class LedgerStatement(models.Model):
         # unique = True,
         auto_now_add=True
     )
-    # ClosingBalance = models.DecimalField(max_digits=13, decimal_places=3)
     ClosingBalance = ArrayField(MoneyValueField(null=True, blank=True))
 
     class Meta:
@@ -226,6 +222,7 @@ class Ledgerbalance(models.Model):
         managed = False
         # db_table = "ledger_balance"
         db_table = "ledger_balance_plain"
+        ordering = ["AccountType", "ledgerno__name"]
 
     def get_currbal(self):
         return self.get_cb() + self.get_dr() - self.get_cr()

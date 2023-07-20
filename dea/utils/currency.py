@@ -7,10 +7,7 @@ from moneyed import Money
 
 from . import defaults
 from .exceptions import (  # TradingAccountRequiredError,; InvalidFeeCurrency,
-    BalanceComparisonError,
-    CannotSimplifyError,
-    LossyCalculationError,
-)
+    BalanceComparisonError, CannotSimplifyError, LossyCalculationError)
 
 
 class Balance(object):

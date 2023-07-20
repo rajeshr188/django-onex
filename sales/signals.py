@@ -20,19 +20,23 @@ from sales.models import Invoice, InvoiceItem, Receipt, ReceiptAllocation
 # @receiver(post_save, sender=Invoice)
 @receiver(post_save, sender=Receipt)
 def create_sales_journal(sender, instance, created, **kwargs):
-    lt, at = instance.get_transactions()
+    # lt, at = instance.get_transactions()
     if created:
         print("newly created journal")
-        lj, aj = instance.create_journals()
-        lj.transact(lt)
-        aj.transact(at)
+        # lj, aj = instance.create_journals()
+        # lj.transact(lt)
+        # aj.transact(at)
+        instance.create_transactions()
+
     else:
         print("existing journal:appending txns")
-        lj, aj = instance.get_journals()
-        lj.untransact(lt)
-        aj.untransact(at)
-        lj.transact(lt)
-        aj.transact(at)
+        # lj, aj = instance.get_journals()
+        # lj.untransact(lt)
+        # aj.untransact(at)
+        # lj.transact(lt)
+        # aj.transact(at)
+        instance.reverse_transactions()
+        instance.create_transactions()
     return instance
 
 
@@ -43,10 +47,13 @@ def create_stock_journal(sender, instance, created, **kwargs):
         print("newly created stock journal")
         sj = instance.create_journal()
         instance.post(sj)
+        instance.invoice.create_transactions()
+
     else:
         print("existing stock journal:appending txns")
         sj = instance.get_journal()
         instance.unpost(sj)
         instance.post(sj)
-    instance.invoice.create_transactions()
+        instance.invoice.reverse_transactions()
+        instance.invoice.create_transactions()
     return instance

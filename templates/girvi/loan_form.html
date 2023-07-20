@@ -17,20 +17,12 @@
       </div>
 
      <div id="form">
-      <form action="." method ="post" class="modal-content">
+      <form action="." method ="post" >
         {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title">Add Loan</h5>
-        </div>
-        <div class="modal-body">
-            {% crispy form%}     
-        </div>
-        <div class="modal-footer">
-          <button type="button" data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
-          <button type="submit" class="btn btn-success">Save</button>
-        </div>
-    </form>
-      </div>
+        {% crispy form%}   
+        <button type="submit" class="btn btn-success">Save</button>
+       </form>
+    </div>
 </div>
 
 {% endblock %}

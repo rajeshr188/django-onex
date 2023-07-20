@@ -26,10 +26,9 @@
     </div>
    
 </div>
-
 <div class="card">
     <div class="card-body">
-        Opening Bal: {{ acc_stmt.get_cb}} | {{acc_stmt.created}}
+        Opening Bal: {{ ct.acc_stmt.get_cb}} | {{ct.acc_stmt.created}}
         <a href="{% url 'dea_account_setob' object.id%}">Set Op Bal</a>
 
     </div>
@@ -40,7 +39,7 @@
             <div class="card-body">
                 <h5 class="card-title">Debit </h5>
                 <p class="card-text">
-                    {% for i in raw%}
+                    {% for i in ct.raw%}
                     {%if i.XactTypeCode.XactTypeCode == 'Dr'%}
                     <li>{{i.amount}} | {{i.created|date}} To : {{i.ledgerno}} via : {{i.XactTypeCode_ext.description}}</li>
                     {%endif%}
@@ -54,7 +53,7 @@
             <div class="card-body">
                 <h5 class="card-title">Credit </h5>
                 <p class="card-text">
-                    {% for i in raw%}
+                    {% for i in ct.raw%}
                     {%if i.XactTypeCode.XactTypeCode == 'Cr'%}
                     <li>{{i.amount}} | {{i.created|date}} From : {{i.ledgerno}} Via : {{i.XactTypeCode_ext.description }} </li>
                     {%endif%}
@@ -85,15 +84,15 @@
         </thead>
         <tbody class="table-group-divider">
             <tr>
-                <td>{{ acc_stmt.created }}</td>
-                <td>{{acc_stmt}}</td>
+                <td>{{ ct.acc_stmt.created }}</td>
+                <td>{{ct.acc_stmt}}</td>
                 <td>Opening Balance</td>
                 <td></td>
                 <td></td>
-                <td>{{ acc_stmt.get_cb}}</td>
+                <td>{{ ct.acc_stmt.get_cb}}</td>
                 
             </tr>
-            {%for i in raw%}
+            {%for i in ct.raw%}
             <tr>
                 <td>{{i.created}}</td>
                 <td>

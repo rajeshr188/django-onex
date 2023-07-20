@@ -48,7 +48,8 @@ def home(request):
 def customer_list(request):
     context = {}
     f = CustomerFilter(
-        request.GET, queryset=Customer.objects.all().prefetch_related("contactno")
+        request.GET,
+        queryset=Customer.objects.all().prefetch_related("contactno", "address"),
     )
     table = CustomerTable(f.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
@@ -87,12 +88,6 @@ def customer_create(request):
             f.save()
 
             messages.success(request, messages.SUCCESS, f"created customer {f}")
-            # table = CustomerTable(data=Customer.objects.all())
-            # table.paginate(page=request.GET.get("page", 1), per_page=10)
-            # context = {"filter": CustomerFilter, "table": table}
-
-            # response = render_block_to_string("contact/customer_list.html",'content',context,request)
-            # return HttpResponse(response)
             return redirect("contact_customer_list")
 
         else:
@@ -101,12 +96,6 @@ def customer_create(request):
 
     else:
         form = CustomerForm()
-
-        # if request.htmx:
-        #     response = render_block_to_string(
-        #         "contact/customer_form.html", "content", {"form": form}, request
-        #     )
-        #     return HttpResponse(response)
 
         return render(request, "contact/customer_form.html", {"form": form})
 
@@ -121,7 +110,7 @@ def customer_merge(request):
             duplicate = form.cleaned_data["duplicate"]
             original.merge(duplicate)
             return redirect("contact_customer_list")
-    return render(request, "modal-form.html", context={"form": form})
+    return render(request, "contact/customer_merge.html", context={"form": form})
 
 
 @for_htmx(use_block="content")
@@ -134,12 +123,6 @@ def customer_detail(request, pk=None):
     how_many_days = 30
     context["object"] = cust
     context["customer"] = cust
-
-    # if request.htmx:
-    #     response = render_block_to_string(
-    #         "contact/customer_detail.html", "content", context, request
-    #     )
-    #     return HttpResponse(response)
     return render(request, "contact/customer_detail.html", context)
 
 
@@ -217,6 +200,18 @@ def contact_list(request, pk: int = None):
 
 
 @login_required
+def address_list(request, pk: int = None):
+    print(f"called")
+    customer = get_object_or_404(Customer, id=pk)
+    addresses = customer.address.all()
+    return render(
+        request,
+        "contact/address_list.html",
+        {"addresses": addresses, "customer_id": customer.id},
+    )
+
+
+@login_required
 def contact_detail(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     return render(request, "contact/contact_detail.html", context={"i": contact})
@@ -252,22 +247,16 @@ def address_create(request, pk=None):
     customer = get_object_or_404(Customer, pk=pk)
     form = AddressForm(request.POST or None)
 
-    if request.method == "POST":
-        print("in post")
-        if form.is_valid():
-            print("form is valid")
-            address = form.save(commit=False)
-            address.Customer = customer
+    if request.method == "POST" and form.is_valid():
+        address = form.save(commit=False)
+        address.Customer = customer
 
-            address.save()
-            # return HttpResponse(status=204, headers={"HX-Trigger": "addresslistChanged"})
-            return render(
-                request, "contact/address_detail.html", context={"i": address}
-            )
+        address.save()
+        return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
 
     return render(
         request,
-        "contact/partials/address_form.html",
+        "contact/partials/contact-form-model.html",
         context={"form": form, "customer": customer},
     )
 

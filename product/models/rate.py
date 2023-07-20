@@ -45,7 +45,13 @@ class Rate(models.Model):
         unique_together = ["metal", "currency", "timestamp", "purity"]
 
     def __str__(self):
-        return f" {self.timestamp.date()} {self.metal} {self.purity} {self.buying_rate} {self.selling_rate}"
+        return f" {self.timestamp.date()} {self.metal} {self.purity} {self.buying_rate}"
 
     def get_absolute_url(self):
         return reverse("rate_detail", kwargs={"pk": self.pk})
+
+    def for_purity(self, desired_purity):
+        # Calculate the rate for the desired purity
+        rate_for_purity = self.buying_rate * Decimal(desired_purity[1:]) / 24
+
+        return rate_for_purity

@@ -1,6 +1,8 @@
 from django import forms
 from django_select2 import forms as s2forms
 
+from product.models import PricingTier
+
 from .models import Address, Contact, Customer, Proof
 
 
@@ -14,7 +16,12 @@ class CustomerWidget(s2forms.ModelSelect2Widget):
 
 
 class CustomerForm(forms.ModelForm):
-    Address = forms.CharField(widget=forms.Textarea({"rows": 3}), help_text="address..")
+    pricing_tier = forms.ModelChoiceField(queryset=PricingTier.objects.all())
+    name = forms.CharField(
+        max_length=255,
+        #  forms ↓
+        widget=forms.TextInput(attrs={"autofocus": True}),
+    )
 
     class Meta:
         model = Customer
@@ -24,8 +31,7 @@ class CustomerForm(forms.ModelForm):
             "pic",
             "relatedas",
             "relatedto",
-            "Address",
-            "area",
+            "pricing_tier",
         ]
 
 
@@ -33,12 +39,15 @@ class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
         fields = [
-            "area",
             "doorno",
-            "zipcode",
             "street",
-            # "Customer",
+            "area",
+            "zipcode",
         ]
+        widgets = {
+            "street": forms.Textarea(attrs={"rows": 3}),
+            "doorno": forms.TextInput(attrs={"autofocus": True}),
+        }
 
     # def __init__(self, *args, **kwargs):
     #     super(AddressForm, self).__init__(*args, **kwargs)

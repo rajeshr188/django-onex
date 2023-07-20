@@ -10,18 +10,7 @@
 <tr><td>customer</td><td><a href="{% url 'contact_customer_detail' object.loan.customer.id %}">{{ object.loan.customer}}</a></td></tr>
 <tr><td>created</td><td>{{ object.created }}</td></tr>
 <tr><td>interestpaid</td><td>{{ object.interestpaid }}</td></tr>
-<tr>
-  <td>
-    Posted
-  </td>
-  <td>
-    {%if object.posted %}
-    <a class="btn btn-danger" href="{% url 'girvi:girvi_release_unpost' object.id%}">Unpost</a>
-    {%else %}
-    <a class="btn btn-success" href="{% url 'girvi:girvi_release_post' object.id%}">Post</a>
-    {%endif%}
-  </td>
-</tr>
+
 </table>
 
 {% endblock %}

@@ -13,18 +13,13 @@ from openpyxl import load_workbook
 from render_block import render_block_to_string
 
 from contact.models import Customer
-from product.models import (
-    PricingTier,
-    PricingTierProductPrice,
-    ProductVariant,
-    StockLot,
-)
+from product.models import (PricingTier, PricingTierProductPrice,
+                            ProductVariant, StockLot)
 
 from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
-
 # from ..render import Render
 from ..tables import InvoiceTable
 
@@ -205,14 +200,15 @@ def sale_update_view(request, id=None):
         return render(request, "sales/partials/forms.html", context)
     return render(request, "sales/create_update.html", context)
 
+
 @login_required
 def sales_ratecut_change(request, id):
     obj = Invoice.objects.get(pk=id)
-    
+
     if request.method == "POST":
         obj.is_ratecut = not obj.is_ratecut
         obj.save()
-        
+
         for i in obj.sale_items.all():
             i.save()
         success_url = reverse("sales:sales_invoice_list")
@@ -227,11 +223,11 @@ def sales_ratecut_change(request, id):
 @login_required
 def sales_gst_change(request, id):
     obj = Invoice.objects.get(pk=id)
-    
+
     if request.method == "POST":
         obj.is_gst = not obj.is_gst
         obj.save()
-        
+
         for i in obj.sale_items.all():
             i.save()
         success_url = reverse("sales:sales_invoice_list")

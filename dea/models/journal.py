@@ -68,7 +68,7 @@ class Journal(models.Model):
                 kwargs={"pk": self.object_id},
             )
         else:
-            print("returning none")
+            # print("returning none")
             return None
 
     @transaction.atomic()
@@ -80,7 +80,7 @@ class Journal(models.Model):
 
         if self.journal_type == "LedgerJournal":
             for i in txns:
-                print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
+                # print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
                 LedgerTransaction.objects.create_txn(
                     self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
                 )
@@ -103,13 +103,10 @@ class Journal(models.Model):
 
     @transaction.atomic()
     def untransact(self, txns):
-        print("untransacting")
-        print(txns)
-        print(f"\njournal type : {self.journal_type} \n")
         if self.journal_type == "LedgerJournal":
             for i in txns:
-                print(f"txn:{i}")
-                print(f"cr: {i['ledgerno']} dr:{i['ledgerno_dr']}")
+                # print(f"txn:{i}")
+                # print(f"cr: {i['ledgerno']} dr:{i['ledgerno_dr']}")
                 LedgerTransaction.objects.create_txn(
                     self, i["ledgerno_dr"], i["ledgerno"], i["amount"]
                 )
@@ -117,7 +114,6 @@ class Journal(models.Model):
             for i in txns:
                 xacttypecode = ""
                 xacttypecode_ext = ""
-                print(i["xacttypecode"])
                 if i["xacttypecode"] == "Cr":
                     xacttypecode = "Dr"
                     xacttypecode_ext = "AC"

@@ -2,6 +2,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.shortcuts import reverse
 from django.utils import timezone
+from moneyed import Money
 
 from contact.models import Customer
 from dea.models import Journal, JournalTypes
@@ -46,11 +47,11 @@ class Release(models.Model):
         return self.loan.loanamount + self.interestpaid
 
     def create_journals(self):
-        ledgerjournal = LedgerJournal.objects.create(
-            content_object=self, desc="Loan Released", journal_type=JournalType.LJ
+        ledgerjournal = Journal.objects.create(
+            content_object=self, desc="Loan Released", journal_type=JournalTypes.LJ
         )
-        accountjournal = AccountJournal.objects.create(
-            content_object=self, desc="Loan Released", journal_type=JournalType.AJ
+        accountjournal = Journal.objects.create(
+            content_object=self, desc="Loan Released", journal_type=JournalTypes.AJ
         )
         return ledgerjournal, accountjournal
 
@@ -60,10 +61,10 @@ class Release(models.Model):
     def get_journals(self):
         # return self.journals.all()
         ledgerjournal = self.journals.filter(
-            release_doc=self, journal_type=JournalType.LJ
+            release_doc=self, journal_type=JournalTypes.LJ
         )
         accountjournal = self.journals.filter(
-            release_doc=self, journal_type=JournalType.AJ
+            release_doc=self, journal_type=JournalTypes.AJ
         )
 
         if ledgerjournal.exists() and accountjournal.exists():
@@ -73,7 +74,11 @@ class Release(models.Model):
     def get_transactions(self):
         amount = Money(self.loan.loanamount, "INR")
         interest = Money(self.interestpaid, "INR")
-        if self.loan.loan_type == self.LoanType.TAKEN:
+        if not self.loan.customer.account:
+            s = self.loan.customer
+            s.customer.name += ""
+            s.save()
+        if self.loan.loan_type == self.loan.LoanType.TAKEN:
             # jrnl = Journal.objects.create(content_object=self, desc="Loan Repaid")
             lt = [
                 {"ledgerno": "Cash", "ledgerno_dr": "Loans", "amount": amount},
@@ -83,15 +88,15 @@ class Release(models.Model):
                 {
                     "ledgerno": "Loans",
                     "xacttypecode": "Cr",
-                    "xacttypecode_ext": "LP",
-                    "account": self.customer.account,
+                    "xacttypecode_ext": "LR",
+                    "account": self.loan.customer.account,
                     "amount": amount,
                 },
                 {
                     "ledgerno": "Interest Payable",
                     "xacttypecode": "Cr",
                     "xacttypecode_ext": "IP",
-                    "account": self.customer.account,
+                    "account": self.loan.customer.account,
                     "amount": amount,
                 },
             ]
@@ -114,14 +119,14 @@ class Release(models.Model):
                     "ledgerno": "Loans & Advances",
                     "xacttypecode": "Dr",
                     "xacttypecode_ext": "LR",
-                    "account": self.customer.account,
+                    "account": self.loan.customer.account,
                     "amount": amount,
                 },
                 {
                     "ledgerno": "Interest Received",
                     "xacttypecode": "Dr",
                     "xacttypecode_ext": "IR",
-                    "account": self.customer.account,
+                    "account": self.loan.customer.account,
                     "amount": interest,
                 },
             ]

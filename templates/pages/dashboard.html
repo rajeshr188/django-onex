@@ -1,57 +1,21 @@
 {% extends '_base.html' %}
-
 {% block title %}Dashboard page{% endblock %}
-
 {% block content %}
 <h1>Dashboard</h1>
-<div class="accordion" id="accordionExample">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingOne">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Contacts
-        </button>
-      </h2>
-      <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-        <div class="accordion-body">
-            <div class="row">
-                <div class="col-sm-3">
-                  <div class="card text-center text-bg-secondary ">
-                    <div class="card-body">
-                      <h5 class="card-title">Customers</h5>
-                      <p class="card-text">
-                        <ul class="list-group">
-                            {%for i in customer_count%}
-                            <li class="list-group-item">{{i.customer_type}} {{i.count}}</li>
-                            {%endfor%}
-                        </ul>
-                        
-                        </p>
-                      <a href="#" class="btn btn-primary">Go somewhere</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title">Special title treatment</h5>
-                      <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                      <a href="#" class="btn btn-primary">Go somewhere</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                    <div class="card">
-                      <div class="card-body">
-                        <h5 class="card-title">Special title treatment</h5>
-                        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                        <a href="#" class="btn btn-primary">Go somewhere</a>
-                      </div>
-                    </div>
-                  </div>
-              </div>
-        </div>
-      </div>
+<div class="box-container">
+  {%for i in customer_count%}
+  <div class="box">
+    <h3 class="box-title">Total {{i.customer_type}} Customers</h3>
+    <div class="box-content">
+        <span class="stat">{{i.count}}</span>
     </div>
+</div>
+  {%endfor%}
+</div>
+
+
+<div class="accordion" id="accordionExample">
+   
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingTwo">
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">

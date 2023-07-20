@@ -40,10 +40,10 @@ def daybook(request):
 
     sale = salesinvoice.objects.filter(
         created__year=today.year, created__month=today.month, created__day=today.day
-    ).total()
+    ).with_outstanding_balance()
     purchase = purchaseinvoice.objects.filter(
         created__year=today.year, created__month=today.month, created__day=today.day
-    ).total()
+    ).with_outstanding_balance()
 
     receipt = dict()
     rec = Receipt.objects.filter(

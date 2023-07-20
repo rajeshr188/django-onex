@@ -3,197 +3,209 @@
 {% load render_table from django_tables2 %}
 {% block content %}
 <div id="customer-content">
-  <div class="alert alert-secondary text-center" role="alert">
-    <p class="font-monospace">
-      {{customer.name|title}} {{customer.relatedas}} {{customer.relatedto|title}} 
-      {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.type}}
-    </p>
-    <div class="mb-3 ">
-      <div class="btn-toolbar" role="toolbar">
-        <div class="btn-group mr-2" role="group">
-          
-          <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.id%}" >Edit Customer</a>
-          <a class="btn btn-primary ml-2" role="button" href="{% url 'girvi:girvi_loan_create' customer.id %}">Add Loan</a>
-          {%if customer.account%}
-          <a class="btn btn-primary ml-2 " role="button" href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
-          {%endif%}
-      </div>
-      </div>
+  <div class="d-flex align-items-start">
+    <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+      <button class="nav-link active" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">Profile</button>
+      <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-messages" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false" >Account</button>
+      <button class="nav-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</button>
     </div>
-    <div class="row">
-      <div class="col-6">
-        <div id="contactno-list" 
-        hx-trigger = "revealed,listChanged from:body  delay:100ms"
-        hx-get = "{% url 'customer_contactno_list' customer.id%}"
-        hx-target ="#contactno-list"
-        hx-swap = "innerHTML">
-
-        </div>
-      </div>
-      <div class="col-6">
-        <ul class="list-group " id = "address-list">
-          <li class="list-group-item list-group-item-action active" aria-current="true">Address</li>
-          {%for i in customer.address_set.all%}
-          <li class="list-group-item" hx-target="this">
-            {% include 'contact/address_detail.html'%}
-          </li>
-          {%endfor%}
-          
-        </ul>
-        <button class = "btn btn-primary" type="button" 
-            hx-get="{% url 'customer_address_form' customer.id%}" 
-            hx-target="#address-list"
-            hx-swap="beforeend">Add</button>
-        <a href="{% url 'dea_account_detail' object.account.id%}">Account</a>
-      </div>
-    </div> 
-  </div>
-  
-  <div class="accordion" id="accordionExample">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingOne">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Balance
-        </button>
-      </h2>
-      <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-        <div class="accordion-body">
-          <div class="card-columns">
-    
-            <div class="card text-center">
-              <div class="card-header">
-              Invoice Balance
-              </div>
-              <div class="card-body">
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_cash}}</span></li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_metal}}</span>
-                </ul>
+    <div class="tab-content" id="v-pills-tabContent">   
+      <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
+        <div class="">
+          <p class="font-monospace">
+            {{customer.name|title}} {{customer.get_relatedas_display}} {{customer.relatedto|title}} 
+            {{customer.Address|capfirst}} {{customer.area|capfirst}} {{customer.type}}
+            <p>Pricing_tier : {{object.pricing_tier}}</p>
+          </p>
+          <div class="mb-3 ">
+            <div class="btn-toolbar" role="toolbar">
+              <div class="btn-group mr-2" role="group">
+                
+                <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.id%}" >Edit Customer</a>
+                <a class="btn btn-primary ml-2" role="button" href="{% url 'girvi:girvi_loan_create' customer.id %}">Add Loan</a>
+                {%if customer.account%}
+                <a class="btn btn-primary ml-2 " role="button" href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
+                {%endif%}
               </div>
             </div>
-            <div class="card text-center">
-              <div class="card-header">
-              UnPaid Cash Balance : {{customer.get_unpaid_cash_total}}
+          </div>
+          <div class="row">
+            <div class="col-md">
+              <div id="contactno-list" 
+                hx-trigger = "revealed,listChanged from:body  delay:100ms"
+                hx-get = "{% url 'customer_contactno_list' customer.id%}"
+                hx-target ="#contactno-list"
+                hx-swap = "innerHTML">
               </div>
             </div>
-            <div class="card text-center " >
-              <div class="card-header">
-              UnPaid Metal Balance : {{customer.get_unpaid_metal_total}}
+            <div class="col-md">
+              <div id="address-list" 
+                hx-trigger = "revealed,addresslistChanged from:body  delay:100ms"
+                hx-get = "{% url 'customer_address_list' customer.id%}"
+                hx-target ="#address-list"
+                hx-swap = "innerHTML">
               </div>
             </div>
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Unpaid Month-Wise</h5>
-                <div class="table-responsive">
-                <table class ="table table-sm table-striped table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {%for month in monthwise%}
-                    <tr>
-                      <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-                    </tr>
-                    {%endfor%}
-                  </tbody>
-                </table>
-                </div>
-              </div>
-            </div>
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Purchase Month-Wise</h5>
-                <div class="table-responsive">
-                <table class ="table table-sm table-striped table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {%for month in monthwiserev%}
-                    <tr>
-                      <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-                    </tr>
-                    {%endfor%}
-                  </tbody>
-                </table>
-                </div>
-              </div>
-            </div>
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Payment Expected</h5>
-                <div class="table-responsive">
-                <table class ="table table-sm table-striped table-bordered">
-                  <thead>
-                    <tr>
-                      <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
-                    </tr>
-                    <tr>
-                      <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                </div>
-              </div>
-            </div>
-          
           </div>
         </div>
+ 
       </div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingTwo">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Loans
-        </button>
-      </h2>
-      <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-        <div class="accordion-body">
-          <div class="card text-center">
-            <div class="card-header">
-            Loan
-            </div>
-            <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                Loans  <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_weight.gold}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge bg-primary rounded-pill">{{customer.get_weight.silver}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge bg-primary rounded-pill"></span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
-              </ul>
+      <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab" tabindex="0">
+        <div class="account" hx-get="{% url 'dea_account_detail' object.account.id%}" 
+                              hx-trigger="load,revealed" >
+                            </div>
+      </div>
+      <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab" tabindex="0">
+        <div class="">
+          <div class="accordion" id="accordionExample">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Balance
+                </button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                  <div class="card-columns">
+            
+                    <div class="card text-center">
+                      <div class="card-header">
+                      Invoice Balance
+                      </div>
+                      <div class="card-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_cash}}</span></li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_total_invoice_metal}}</span>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="card text-center">
+                      <div class="card-header">
+                      UnPaid Cash Balance : {{customer.get_unpaid_cash_total}}
+                      </div>
+                    </div>
+                    <div class="card text-center " >
+                      <div class="card-header">
+                      UnPaid Metal Balance : {{customer.get_unpaid_metal_total}}
+                      </div>
+                    </div>
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title">Unpaid Month-Wise</h5>
+                        <div class="table-responsive">
+                        <table class ="table table-sm table-striped table-bordered">
+                          <thead>
+                            <tr>
+                              <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {%for month in monthwise%}
+                            <tr>
+                              <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+                            </tr>
+                            {%endfor%}
+                          </tbody>
+                        </table>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title">Purchase Month-Wise</h5>
+                        <div class="table-responsive">
+                        <table class ="table table-sm table-striped table-bordered">
+                          <thead>
+                            <tr>
+                              <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {%for month in monthwiserev%}
+                            <tr>
+                              <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
+                            </tr>
+                            {%endfor%}
+                          </tbody>
+                        </table>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title">Payment Expected</h5>
+                        <div class="table-responsive">
+                        <table class ="table table-sm table-striped table-bordered">
+                          <thead>
+                            <tr>
+                              <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
+                            </tr>
+                            <tr>
+                              <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        </div>
+                      </div>
+                    </div>
+                  
+                  </div>
+                </div>
               </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Loans
+                </button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                  <div class="card text-center">
+                    <div class="card-header">
+                    Loan
+                    </div>
+                    <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Loans  <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_weight.gold}}</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge bg-primary rounded-pill">{{customer.get_weight.silver}}</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge bg-primary rounded-pill"></span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
+                      </ul>
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                  Notifications
+                </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                  {%for i in object.notification_set.all%}
+                  {{i}}
+                  {%endfor%}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingThree">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-          Notifications
-        </button>
-      </h2>
-      <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-        <div class="accordion-body">
-          {%for i in object.notification_set.all%}
-          {{i}}
-          {%endfor%}
-        </div>
+        
       </div>
     </div>
   </div>
-  
-</div>
+</div>  
 {% endblock %}

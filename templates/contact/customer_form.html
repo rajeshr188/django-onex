@@ -36,19 +36,20 @@
           <div class="col-md-4">
             {{form.relatedto|as_crispy_field}}
           </div>
-          <div class="col-md-4">
-            {{form.Address|as_crispy_field}}
-          </div>
-         
+        </div>
+        <div class="row g-3">
           <div class="col-md-4">
             {{form.customer_type|as_crispy_field}}
           </div>
           <div class="col-md-4">
-            {{form.area|as_crispy_field}}
+            {{form.pricing_tier|as_crispy_field}}
           </div>
           
+        </div>
+          
+        <div class="row g-3">
           <input type="hidden" id="image-data" name="image_data">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="camera">
               <video id="video">Video stream not available.</video>
               <button id="startbutton">Take photo</button>
@@ -56,14 +57,15 @@
             <canvas id="canvas"> </canvas>
             
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="output">
               <img id="photo" alt="The screen capture will appear in this box." />
             </div>
           </div>
-          <div class="col-md-3">
-            <button type="submit" class="btn btn-primary">Add</button>
-          </div>
+          
+        </div>
+        <div >
+          <button type="submit" class="btn btn-primary">Add</button>
         </div>
       </form>
       

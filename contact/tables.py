@@ -17,6 +17,8 @@ class ImageColumn(tables.Column):
 class CustomerTable(tables.Table):
     name = tables.Column(linkify=True)
     pic = ImageColumn()
+    address = tables.Column(verbose_name="Address", orderable=False, empty_values=())
+    add_address = tables.Column(orderable=False, empty_values=())
     add_contact = tables.Column(orderable=False, empty_values=())
     add_loan = tables.Column(orderable=False, empty_values=())
     # addloan = tables.LinkColumn(
@@ -44,14 +46,15 @@ class CustomerTable(tables.Table):
 
     # add a method to get name relatedas related to address phonenumber in one column
     def render_name(self, record):
-        return f"{record.name} {record.relatedas} {record.relatedto}"
+        return f"{record.name} {record.get_relatedas_display()} {record.relatedto}"
 
-    def render_Address(self, record):
+    def render_address(self, record):
         if record.contactno.exists():
             numbers = [no.phone_number.national_number for no in record.contactno.all()]
-            return f"{record.Address} {numbers}"
         else:
-            return f"{record.Address}"
+            numbers = "---"
+        address = record.address.first()
+        return f"{address} ph:{numbers}"
 
     # def render_addloan(self):
     #     return ""
@@ -65,6 +68,12 @@ class CustomerTable(tables.Table):
     def render_remove(self, record):
         return format_html(
             '<a hx-delete="/contact/customer/{}/delete/"  hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML swap:1s" class="btn fa-solid fa-trash" role="button"></a>',
+            record.pk,
+        )
+
+    def render_add_address(self, record):
+        return format_html(
+            '<a hx-disinherit="hx-confirm" hx-get="/contact/customer/{}/address/add/"  hx-target="#dialog" hx-swap="innerHTML" class="fa-solid fa-location-dot"></a>',
             record.pk,
         )
 
@@ -82,7 +91,7 @@ class CustomerTable(tables.Table):
 
     class Meta:
         model = Customer
-        fields = ("id", "pic", "name", "Address")
+        fields = ("id", "pic", "name")
         # row_attrs={"class":"collapse show"}
         attrs = {
             "class": "table table-sm text-center table-hover table-striped",

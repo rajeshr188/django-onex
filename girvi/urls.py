@@ -65,7 +65,7 @@ urlpatterns += (
 
 urlpatterns += (
     # urls for License
-    path("girvi/license/", views.LicenseListView.as_view(), name="girvi_license_list"),
+    path("girvi/license/", views.license_list, name="girvi_license_list"),
     path(
         "girvi/license/create/",
         views.LicenseCreateView.as_view(),
@@ -105,6 +105,8 @@ urlpatterns += (
     ),
     path("girvi/loan/detail/<int:pk>/", views.loan_detail, name="girvi_loan_detail"),
     path("girvi/loan/detail/<int:pk>/pdf", views.print_loan, name="loan_pdf"),
+    path("girvi/loan/detail/<int:pk>/o", views.generate_original, name="original"),
+    path("girvi/loan/detail/<int:pk>/d", views.generate_duplicate, name="duplicate"),
     path(
         "girvi/loan/update/<int:id>/",
         # views.LoanUpdateView.as_view(),

@@ -14,11 +14,8 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (
-    MonthArchiveView,
-    WeekArchiveView,
-    YearArchiveView,
-)
+from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
+                                        YearArchiveView)
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook
@@ -59,6 +56,7 @@ class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
 @login_required
 @for_htmx(use_block="content")
 def loan_list(request):
+    stats = {}
     filter = LoanFilter(
         request.GET,
         queryset=Loan.objects.with_due()
@@ -68,7 +66,8 @@ def loan_list(request):
         .prefetch_related("notifications", "loanitems"),
     )
     table = LoanTable(filter.qs)
-    context = {"filter": filter, "table": table}
+    stats["total_no_of_loans"] = filter.qs.count()
+    context = {"filter": filter, "table": table, "stats": stats}
 
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
     return TemplateResponse(request, "girvi/loan_list.html", context)
@@ -373,6 +372,138 @@ def print_loan(request, pk=None):
     # Create a response object
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
+    return response
+
+
+import textwrap
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import inch, landscape
+from reportlab.lib.units import cm, inch
+from reportlab.pdfgen import canvas
+
+
+def generate_original(request, pk=None):
+    loan = get_object_or_404(Loan, pk=pk)
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="reference_grid.pdf"'
+
+    page_width = 14.6 * cm
+    page_height = 21 * cm
+    c = canvas.Canvas(response, pagesize=(page_width, page_height))
+
+    # Grid spacing
+    grid_spacing = 1 * cm  # Adjust this value based on your preference
+
+    # # Calculate the number of lines
+    # num_horizontal_lines = int(page_height / grid_spacing)
+    # num_vertical_lines = int(page_width / grid_spacing)
+
+    # # Draw horizontal lines
+    # for i in range(num_horizontal_lines):
+    #     y = i * grid_spacing
+    #     c.line(0, y, page_width, y)
+
+    # # Draw vertical lines
+    # for i in range(num_vertical_lines):
+    #     x = i * grid_spacing
+    #     c.line(x, 0, x, page_height)
+
+    # # Add labels (optional)
+    # # You can customize the labels as per your requirements
+    # for i in range(num_horizontal_lines):
+    #     y = i * grid_spacing
+    #     c.drawString(5, y, f"y={y / cm:.2f} cm")
+
+    # for i in range(num_vertical_lines):
+    #     x = i * grid_spacing
+    #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
+    c.setFont("Courier", 10)
+    c.drawString(10 * cm, 18 * cm, f"{loan.lid}")
+    c.drawString(10 * cm, 17 * cm, f"{loan.created.date()}")
+    c.drawString(2 * cm, 16 * cm, f"{loan.customer}")
+    c.drawString(2 * cm, 15 * cm, f"{loan.customer.address.first()}")
+    c.drawString(2 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
+    c.drawString(9 * cm, 11 * cm, f"{loan.itemweight}")
+    c.drawString(9 * cm, 10 * cm, f"{loan.itemweight}")
+    c.drawString(9 * cm, 9 * cm, f"{loan.itemvalue}")
+    if len(loan.itemdesc) > 35:
+        wrap_text = textwrap.wrap(loan.itemdesc, width=35)
+        c.drawString(1 * cm, 11 * cm, wrap_text[0])
+        c.drawString(1 * cm, 10.5 * cm, wrap_text[1])
+    else:
+        c.drawString(1 * cm, 11 * cm, f"{loan.itemdesc}")
+
+    c.drawString(1 * cm, 6 * cm, f"{loan.loanamount}")
+    c.save()
+
+    return response
+
+
+def generate_duplicate(request, pk=None):
+    loan = get_object_or_404(Loan, pk=pk)
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="reference_grid.pdf"'
+
+    page_width = 14.6 * cm
+    page_height = 21 * cm
+    c = canvas.Canvas(response, pagesize=(page_width, page_height))
+
+    # Grid spacing
+    grid_spacing = 1 * cm  # Adjust this value based on your preference
+
+    # # Calculate the number of lines
+    # num_horizontal_lines = int(page_height / grid_spacing)
+    # num_vertical_lines = int(page_width / grid_spacing)
+
+    # # Draw horizontal lines
+    # for i in range(num_horizontal_lines):
+    #     y = i * grid_spacing
+    #     c.line(0, y, page_width, y)
+
+    # # Draw vertical lines
+    # for i in range(num_vertical_lines):
+    #     x = i * grid_spacing
+    #     c.line(x, 0, x, page_height)
+
+    # # Add labels (optional)
+    # # You can customize the labels as per your requirements
+    # for i in range(num_horizontal_lines):
+    #     y = i * grid_spacing
+    #     c.drawString(5, y, f"y={y / cm:.2f} cm")
+
+    # for i in range(num_vertical_lines):
+    #     x = i * grid_spacing
+    #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
+    c.drawString(2 * cm, 17 * cm, f"{loan.lid}")
+    c.drawString(11 * cm, 17 * cm, f"{loan.created.date()}")
+    c.drawString(5 * cm, 16.5 * cm, f"{loan.customer.name}")
+    c.drawString(5 * cm, 16 * cm, f"{loan.customer.relatedto}")
+    c.drawString(5 * cm, 15 * cm, f"{loan.customer.address.first()}")
+    c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
+    c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
+    c.drawString(5 * cm, 12.5 * cm, f"{num2words(loan.loanamount, lang='en_IN')}")
+    c.drawString(5 * cm, 12 * cm, f"{loan.itemtype}")
+    c.drawString(5 * cm, 10 * cm, f"{loan.itemdesc}")
+    if len(loan.itemdesc) > 35:
+        wrap_text = textwrap.wrap(loan.itemdesc, width=35)
+        c.drawString(5 * cm, 10 * cm, wrap_text[0])
+        c.drawString(5 * cm, 9.5 * cm, wrap_text[1])
+    else:
+        c.drawString(5 * cm, 10 * cm, f"{loan.itemdesc}")
+    c.drawString(3 * cm, 6.8 * cm, f"{loan.itemweight}")
+    c.drawString(12 * cm, 6.8 * cm, f"{loan.itemvalue}")
+    c.drawString(4 * cm, 3 * cm, f"{loan.lid }{ loan.created.date()}")
+    c.drawString(4 * cm, 2.5 * cm, f"{loan.loanamount} {loan.itemweight}")
+
+    if len(f"{loan.customer.name} {loan.itemdesc}") > 35:
+        wrap_text = textwrap.wrap(f"{loan.customer.name} {loan.itemdesc}", width=35)
+        c.drawString(4 * cm, 2 * cm, wrap_text[0])
+        c.drawString(4 * cm, 1.5 * cm, wrap_text[1])
+    else:
+        c.drawString(4 * cm, 2 * cm, f"{loan.itemdesc}")
+    c.save()
+
     return response
 
 

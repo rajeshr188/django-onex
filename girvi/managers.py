@@ -1,16 +1,8 @@
+import datetime
+
 from django.db import models
-from django.db.models import (
-    BooleanField,
-    Case,
-    DecimalField,
-    ExpressionWrapper,
-    F,
-    Func,
-    Q,
-    Sum,
-    Value,
-    When,
-)
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, Func, Q, Sum, Value, When)
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.utils import timezone
 
@@ -64,7 +56,7 @@ class LoanQuerySet(models.QuerySet):
                     ),
                     When(
                         itemtype="Silver",
-                        then=F("itemweight") * latest_silver_rate * 0.75,
+                        then=F("itemweight") * latest_silver_rate * 0.70,
                     ),
                     default=Value(0),
                     output_field=models.FloatField(),

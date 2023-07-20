@@ -8,26 +8,37 @@
       <a class="btn btn-default" href="{% url 'girvi:girvi_loan_list' %}">Loan Listing</a>
       <a class="btn btn-default" href="{% url 'girvi:girvi_loan_create' %}">Add new</a>
       <button class="btn btn-sm btn-outline-secondary">Export</button>
+      
     </div>
   </div>
 </div>
 {% block loaninfo%}
-<div id="content" class="" 
+<div id="content" class="" hx-target="this" 
     hx-trigger="loanChanged from:body" 
     hx-get="{% url 'girvi:girvi_loan_detail' object.id%}">
     <div class="btn-group justify-content-between mb-3" role="group" aria-label="Basic example">
         {%if previous%}
-        <a hx-get="{% url 'girvi:girvi_loan_detail' previous.pk %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+        <a hx-get="{% url 'girvi:girvi_loan_detail' previous.pk %}" 
+            hx-target="" hx-push-url="true" hx-swap="outerHTML"
             type="button" class="btn btn-primary">Previous
             {{previous.loanid}}</a>
         {%endif%}
         {%if next %}
-        <a hx-get="{% url 'girvi:girvi_loan_detail' next.id %}" hx-target="#data" hx-push-url="true" hx-swap="outerHTML"
+        <a hx-get="{% url 'girvi:girvi_loan_detail' next.id %}" hx-push-url="true" hx-swap="outerHTML"
             type="button" class="btn btn-primary">Next {{next.loanid}}</a>
         {%endif%}
         
         <a class="btn btn-secondary" href="{% url 'girvi:girvi_adjustment_create' object.id %}">Add Adjustment</a>
-        <a class="btn btn-secondary" href="{% url 'girvi:loan_pdf' loan.id %}">Print</a>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Print
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item"  href="{% url 'girvi:loan_pdf' loan.id %}">Both</a></li>
+              <li><a class="dropdown-item" href="{%url 'girvi:original' loan.id%}">Original</a></li>
+              <li><a class="dropdown-item" href="{%url 'girvi:duplicate' loan.id%}">Duplicate</a></li>
+            </ul>
+          </div>
         <a class="btn btn-secondary" href="{% url 'girvi:girvi_release_create' object.id %}">Release</a>
         <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_update' object.id %}">Update</a>
         <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_delete' object.id %}">Delete</a>

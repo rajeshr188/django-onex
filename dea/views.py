@@ -1,25 +1,20 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Case, F, IntegerField, Sum, Value, When, Window
 from django.db.models.query_utils import subclasses
 from django.shortcuts import HttpResponse, get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls.base import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from dea.utils.currency import Balance
+from utils.htmx_utils import for_htmx
 
-from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
-
+from .forms import (AccountForm, AccountStatementForm, LedgerForm,
+                    LedgerStatementForm)
 # Create your views here.
-from .models import (
-    Account,
-    Accountbalance,
-    AccountStatement,
-    Journal,
-    Ledger,
-    Ledgerbalance,
-    LedgerStatement,
-    LedgerTransaction,
-)
+from .models import (Account, Accountbalance, AccountStatement, Journal,
+                     Ledger, Ledgerbalance, LedgerStatement, LedgerTransaction)
 
 
 def home(request):
@@ -28,7 +23,10 @@ def home(request):
     context = {}
     balancesheet = {}
     balancesheet["assets"] = lb.filter(AccountType="Asset")
+    # Get the balance sheet data
+    # balancesheet = lb.balancesheet()
 
+    balancesheet["equity"] = lb.filter(AccountType="Equity")
     ta = Balance()
     tl = Balance()
     ti = Balance()
@@ -170,40 +168,77 @@ class AccountListView(ListView):
     # paginate_by = 10
 
 
-class AccountDetailView(DetailView):
-    model = Account
+@login_required
+@for_htmx(use_block="content")
+def account_detail(request, pk=None):
+    acc = get_object_or_404(Account, pk=pk)
+    ct = {}
 
-    def get_context_data(self, **kwargs):
-        ct = super().get_context_data(**kwargs)
-        acc = ct["object"]
+    if acc.accountstatements.exists():
+        acc_stmt = acc.accountstatements.latest()
+        ls_created = acc_stmt.created
+        txns = acc.txns(since=ls_created)
 
-        if acc.accountstatements.exists():
-            acc_stmt = acc.accountstatements.latest()
-            ls_created = acc_stmt.created
-            txns = acc.txns(since=ls_created)
+    else:
+        txns = acc.txns()
+        acc_stmt = None
 
-        else:
-            txns = acc.txns()
-            acc_stmt = None
+    ct["acc_stmt"] = acc_stmt
+    # op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
+    txns = txns.annotate(
+        credit_or_debit=Case(
+            When(XactTypeCode__XactTypeCode="Cr", then=Value(1)),
+            default=Value(-1),
+            output_field=IntegerField(),
+        ),
+        running_total=Window(
+            expression=Sum(F("amount") * F("credit_or_debit")),
+            partition_by=F("amount_currency"),
+            order_by="created",
+        ),
+    ).order_by("created")
+    # running_bal = op_bal
+    ct["raw"] = txns
+    ct["last"] = txns.last()
+    return TemplateResponse(
+        request, "dea/account_detail.html", {"object": acc, "ct": ct}
+    )
 
-        ct["acc_stmt"] = acc_stmt
-        # op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
-        txns = txns.annotate(
-            credit_or_debit=Case(
-                When(XactTypeCode__XactTypeCode="Cr", then=Value(1)),
-                default=Value(-1),
-                output_field=IntegerField(),
-            ),
-            running_total=Window(
-                expression=Sum(F("amount") * F("credit_or_debit")),
-                partition_by=F("amount_currency"),
-                order_by="created",
-            ),
-        ).order_by("created")
-        # running_bal = op_bal
-        ct["raw"] = txns
-        ct["last"] = txns.last()
-        return ct
+
+# class AccountDetailView(DetailView):
+#     model = Account
+
+#     def get_context_data(self, **kwargs):
+#         ct = super().get_context_data(**kwargs)
+#         acc = ct["object"]
+
+#         if acc.accountstatements.exists():
+#             acc_stmt = acc.accountstatements.latest()
+#             ls_created = acc_stmt.created
+#             txns = acc.txns(since=ls_created)
+
+#         else:
+#             txns = acc.txns()
+#             acc_stmt = None
+
+#         ct["acc_stmt"] = acc_stmt
+#         # op_bal = Balance() if acc_stmt is None else acc_stmt.get_cb()
+#         txns = txns.annotate(
+#             credit_or_debit=Case(
+#                 When(XactTypeCode__XactTypeCode="Cr", then=Value(1)),
+#                 default=Value(-1),
+#                 output_field=IntegerField(),
+#             ),
+#             running_total=Window(
+#                 expression=Sum(F("amount") * F("credit_or_debit")),
+#                 partition_by=F("amount_currency"),
+#                 order_by="created",
+#             ),
+#         ).order_by("created")
+#         # running_bal = op_bal
+#         ct["raw"] = txns
+#         ct["last"] = txns.last()
+#         return ct
 
 
 class AccountStatementCreateView(CreateView):
@@ -229,6 +264,7 @@ class LedgerListView(ListView):
     model = Ledger
 
 
+# optimise n+1 queries
 class LedgerDetailView(DetailView):
     model = Ledger
 

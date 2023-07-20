@@ -7,8 +7,14 @@ from .models import Rate
 # in case the rate needs tobe in cache
 class RateMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        rate = cache.get("latest_rate")
-        if not rate:
-            rate = Rate.objects.latest("timestamp")
-            cache.set("latest_rate", rate)
-        request.rate = rate
+        grate = cache.get("latest_gold_rate")
+        srate = cache.get("latest_silver_rate")
+
+        if not (grate and srate):
+            grate = Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp")
+            srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
+
+            cache.set("latest_gold_rate", grate)
+            cache.set("latest_silver_rate", srate)
+        request.grate = grate
+        request.srate = srate

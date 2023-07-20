@@ -18,7 +18,8 @@ from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import Attribute, ProductVariant, Stock, StockLot, StockTransaction
+from product.models import (Attribute, ProductVariant, Stock, StockLot,
+                            StockTransaction)
 
 from ..managers import PurchaseQueryset
 
@@ -35,8 +36,6 @@ class Invoice(models.Model):
         blank=True,  # cant be blank
         related_name="purchases_created",
     )
-    # determine and implement how the changes in is_ratecut and is_gst affects item balance calculation
-    # and which in turn affects vaoucher balance calculation
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -113,15 +112,15 @@ class Invoice(models.Model):
                 self.due_date = self.created + timedelta(days=self.term.due_days)
         super(Invoice, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        # add custom logic here
-        # for example, check if the object can be deleted
-        if self.can_be_deleted():
-            # call the parent's delete method to actually delete the object
-            super(MyModel, self).delete(*args, **kwargs)
-        else:
-            # raise an exception or return a message to indicate that deletion is not allowed
-            raise Exception("Deletion not allowed for this object")
+    # def delete(self, *args, **kwargs):
+    #     # add custom logic here
+    #     # for example, check if the object can be deleted
+    #     if self.can_be_deleted():
+    #         # call the parent's delete method to actually delete the object
+    #         super(MyModel, self).delete(*args, **kwargs)
+    #     else:
+    #         # raise an exception or return a message to indicate that deletion is not allowed
+    #         raise Exception("Deletion not allowed for this object")
 
     # @property
     # def outstanding_balance(self):
@@ -257,8 +256,6 @@ class Invoice(models.Model):
         cash_balance = balance.cash_balance
         gold_balance = balance.gold_balance
         silver_balance = balance.silver_balance
-        print("balance:")
-        print(cash_balance, gold_balance, silver_balance)
 
         lt.append(
             {
@@ -341,7 +338,7 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        ledger_journal, account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
@@ -364,9 +361,9 @@ class InvoiceItem(models.Model):
     hallmark_charge = models.DecimalField(
         max_digits=14, decimal_places=3, blank=True, null=True, default=0
     )
-
     metal_balance = MoneyField(max_digits=14, decimal_places=3, default_currency="USD")
     cash_balance = MoneyField(max_digits=14, decimal_places=3, default_currency="INR")
+
     # Relationship Fields
     product = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="products"
@@ -421,8 +418,7 @@ class InvoiceItem(models.Model):
         else:
             self.cash_balance = self.making_charge + self.hallmark_charge
             self.metal_balance = self.net_wt
-            print(self.metal_balance)
-        return super(InvoiceItem, self).save(*args, **kwargs)
+        super(InvoiceItem, self).save(*args, **kwargs)
 
     def balance(self):
         return Balance([self.metal_balance, self.cash_balance])

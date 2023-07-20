@@ -8,9 +8,11 @@ from ..models import Rate
 
 
 def get_latest_rate(request):
-    rate = Rate.objects.latest("timestamp")
+    grate = Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp")
+    srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
     return HttpResponse(
-        f"{rate.metal} {rate.purity} {rate.currency} {rate.buying_rate} {rate.timestamp}"
+        f"{grate.metal} {grate.purity} {grate.currency} {grate.buying_rate} {grate.timestamp}\
+           {srate.metal} {srate.purity} {srate.currency} {srate.buying_rate} {srate.timestamp} "
     )
 
 

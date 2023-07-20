@@ -1,5 +1,5 @@
 from django.db.models import signals
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from dea.models import Journal
@@ -15,32 +15,37 @@ from purchase.models import Invoice, InvoiceItem, Payment, PaymentAllocation
 # @receiver(post_save, sender=Invoice)
 @receiver(post_save, sender=Payment)
 def create_purchase_journal(sender, instance, created, **kwargs):
-    lt, at = instance.get_transactions()
     if created:
-        lj, aj = instance.create_journals()
-        lj.transact(lt)
-        aj.transact(at)
+        instance.create_transactions()
     else:
-        lj, aj = instance.get_journals()
-        lj.untransact(lt)
-        aj.untransact(at)
-        lj.transact(lt)
-        aj.transact(at)
+        instance.reverse_transactions()
+        instance.create_transactions()
     return instance
+
+
+@receiver(pre_save, sender=InvoiceItem)
+def pre_save_voucher(sender, instance, **kwargs):
+    print(f"Balance before update: {instance.cash_balance}")
+    print(f"Balance before update: {instance.metal_balance}")
 
 
 @receiver(post_save, sender=InvoiceItem)
 # @receiver(post_save, sender=Payment)
 def create_stock_journal(sender, instance, created, **kwargs):
+    print(f"Balance after update: {instance.cash_balance}")
+    print(f"Balance after update: {instance.metal_balance}")
     if created:
         print("newly created stock journal")
         sj = instance.create_journal()
         instance.post(sj)
+        instance.invoice.create_transactions()
     else:
         print("existing stock journal:appending txns")
         sj = instance.get_journal()
         instance.unpost(sj)
         instance.post(sj)
-    # instance.invoice.update_balance()
-    instance.invoice.create_transactions()
+        # instance.invoice.update_balance()
+        instance.invoice.reverse_transactions()
+        instance.invoice.create_transactions()
+
     return instance

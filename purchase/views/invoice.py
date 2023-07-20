@@ -51,6 +51,7 @@ def purchase_create(request):
 @login_required
 def purchase_update(request, id=None):
     obj = get_object_or_404(Invoice, pk=id)
+
     form = InvoiceForm(request.POST or None, instance=obj)
     new_item_url = reverse(
         "purchase:purchase_invoiceitem_create", kwargs={"parent_id": obj.id}
@@ -204,6 +205,7 @@ def purchase_item_delete_view(request, parent_id=None, id=None):
 @login_required
 # not done yet
 def get_product_price(request):
+    print(request.GET)
     product = ProductVariant.objects.get(id=request.GET.get("product", ""))
     contact = Customer.objects.get(id=request.GET.get("supplier", ""))
 

@@ -9,7 +9,7 @@
       {{form|crispy}}      
     </div>
     <div class="modal-footer">
-      <button type="button" data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
+      <button type="button" hx-get="{{current_url}}" hx-target="#content" hx-swap="innerHTML"data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
       <button type="submit" class="btn btn-success">Save</button>
     </div>
   </form>

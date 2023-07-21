@@ -74,7 +74,7 @@ class LoanForm(forms.ModelForm):
     )
 
     itemdesc = forms.CharField(
-        widget=forms.Textarea,
+        widget=forms.Textarea(attrs={"rows": "3"}),
     )
 
     class Meta:
@@ -116,37 +116,27 @@ class LoanForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
-                Column(
-                    FloatingField("loan_type"), css_class="form-group col-md-3 mb-0"
-                ),
-                css_class="form-row",
+                Column(FloatingField("loan_type"), css_class="col"),
+                Column(FloatingField("series"), css_class="col"),
+                Column(FloatingField("lid"), css_class="col"),
+                css_class="row g-3",
             ),
             Row(
-                Column(FloatingField("series"), css_class="form-group col-md-3 mb-0"),
-                Column(FloatingField("lid"), css_class="form-group col-md-3 mb-0"),
-                Column(
-                    FloatingField("created"), css_class="form-group col-md-3 mb-0 date"
-                ),
-                css_class="form-row",
+                Column("customer", css_class="col"),
+                Column(FloatingField("created"), css_class="col date"),
+                css_class="row g-2",
             ),
             Row(
-                Column("customer", css_class="form-group col-md-3 mb-0"),
-                Column(FloatingField("itemtype"), css_class="form-group col-md-3 mb-0"),
-                Column(
-                    FloatingField("interestrate"), css_class="form-group col-md-3 mb-0"
-                ),
-                css_class="form-row",
+                Column(FloatingField("itemtype"), css_class="col"),
+                Column(FloatingField("interestrate"), css_class="col"),
+                Column(FloatingField("itemweight"), css_class="col"),
+                Column(FloatingField("loanamount"), css_class="col"),
+                css_class="row g-4",
             ),
             Row(
-                Column(
-                    FloatingField("itemweight"), css_class="form-group col-md-3 mb-0"
-                ),
-                Column(
-                    FloatingField("loanamount"), css_class="form-group col-md-3 mb-0"
-                ),
-                Column(FloatingField("itemdesc"), css_class="form-group col-md-3 mb-0"),
-                css_class="form-row",
-            ),
+                Column(FloatingField("itemdesc"), css_class="col"),
+                css_class="row g-1",
+            )
             # Submit("submit", "Submit"),
         )
 

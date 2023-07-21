@@ -11,8 +11,12 @@ class RateMiddleware(MiddlewareMixin):
         srate = cache.get("latest_silver_rate")
 
         if not (grate and srate):
-            grate = Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp")
-            srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
+            if Rate.objects.exists():
+                grate = Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp")
+                srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
+            else:
+                grate = ""
+                srate = ""
 
             cache.set("latest_gold_rate", grate)
             cache.set("latest_silver_rate", srate)

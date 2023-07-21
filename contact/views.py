@@ -45,6 +45,7 @@ def home(request):
 
 @login_required
 @for_htmx(use_block="content")
+# @for_htmx(use_block_from_params=True)
 def customer_list(request):
     context = {}
     f = CustomerFilter(
@@ -88,16 +89,19 @@ def customer_create(request):
             f.save()
 
             messages.success(request, messages.SUCCESS, f"created customer {f}")
-            return redirect("contact_customer_list")
+            # return redirect('contact_customer_list')
+            return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
 
         else:
             messages.error(request, f"Error creating customer")
-            return render(request, "contact/customer_form.html", {"form": form})
+            return TemplateResponse(
+                request, "contact/customer_form.html", {"form": form}
+            )
 
     else:
         form = CustomerForm()
 
-        return render(request, "contact/customer_form.html", {"form": form})
+        return TemplateResponse(request, "contact/customer_form.html", {"form": form})
 
 
 @login_required
@@ -179,10 +183,11 @@ def contact_create(request, pk=None):
         f.save()
 
         return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
+        # return HttpResponse(status=204, headers={"HX-Redirect": reverse("contact_customer_list")})
 
     return render(
         request,
-        "contact/partials/contact-form-model.html",
+        "contact/partials/modal.html",
         context={"form": form, "customer": customer},
     )
 
@@ -256,7 +261,7 @@ def address_create(request, pk=None):
 
     return render(
         request,
-        "contact/partials/contact-form-model.html",
+        "contact/partials/modal.html",
         context={"form": form, "customer": customer},
     )
 

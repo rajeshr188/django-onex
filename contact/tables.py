@@ -73,19 +73,19 @@ class CustomerTable(tables.Table):
 
     def render_add_address(self, record):
         return format_html(
-            '<a hx-disinherit="hx-confirm" hx-get="/contact/customer/{}/address/add/"  hx-target="#dialog" hx-swap="innerHTML" class="fa-solid fa-location-dot"></a>',
+            '<a hx-disinherit="hx-confirm" data-bs-toggle="modal" data-bs-target="#modal" hx-get="/contact/customer/{}/address/add/" hx-target="#dialog" class="fa-solid fa-location-dot"></a>',
             record.pk,
         )
 
     def render_add_contact(self, record):
         return format_html(
-            '<a hx-disinherit="hx-confirm" hx-get="/contact/customer/{}/contactno/add/"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-address-book"></a>',
+            '<a hx-disinherit="hx-confirm" data-bs-toggle="modal" data-bs-target="#modal" hx-get="/contact/customer/{}/contactno/add/"  hx-target="#dialog" class="fa-regular fa-address-book"></a>',
             record.pk,
         )
 
     def render_add_loan(self, record):
         return format_html(
-            '<a hx-disinherit="hx-confirm" hx-get="/girvi/girvi/loan/create/{}"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-file"></a>',
+            '<a hx-disinherit="hx-confirm" data-bs-toggle="modal" data-bs-target="#modal" hx-get="/girvi/girvi/loan/create/{}"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-file"></a>',
             record.pk,
         )
 

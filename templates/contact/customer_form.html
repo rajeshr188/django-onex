@@ -8,7 +8,7 @@
 {%endblock%}
 
 {%block content%}
-<div id="customer-content">
+<div id="customer-content" hx-trigger="listChanged from:body" hx-get="{% url 'contact_customer_list'%}" hx-target="this">
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     {% if customer%}
       <h1 class="h2">Update Customer</h1>
@@ -72,4 +72,5 @@
     </div>
 
 </div>
+
 {%endblock%}

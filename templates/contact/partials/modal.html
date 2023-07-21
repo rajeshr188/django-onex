@@ -1,0 +1,17 @@
+{% load crispy_forms_tags %}
+{{form.media}}
+<form hx-post="{{ request.path }}" class="modal-content">
+    {% csrf_token %}
+    <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+      
+    </div>
+    <div class="modal-body">
+      {{ form|crispy }}
+    </div>
+    <div class="modal-footer">
+      <button class = "btn btn-danger" type="button" data-bs-dismiss="modal">Cancel</button>
+      <button class = "btn btn-success" type="submit">Save</button>
+    </div>
+  </form>
+ 

@@ -427,8 +427,10 @@ def generate_original(request, pk=None):
     c.drawString(10 * cm, 11.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 9.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 8 * cm, f"{loan.itemvalue}")
-    c.drawString(6.5*cm,12.2*cm,f"{loan.itemtype}")
-    c.drawString(2*cm,6*cm,f"{num2words(loan.loanamount, lang='en_IN')} rupees only")
+    c.drawString(6.5 * cm, 12.2 * cm, f"{loan.itemtype}")
+    c.drawString(
+        2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
+    )
     if len(loan.itemdesc) > 0:
         wrap_text = textwrap.wrap(loan.itemdesc, width=35)
         c.drawString(2.2 * cm, 11 * cm, wrap_text[0])
@@ -476,14 +478,16 @@ def generate_duplicate(request, pk=None):
     # for i in range(num_vertical_lines):
     #     x = i * grid_spacing
     #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
-    c.drawString(3 * cm, 17.5* cm, f"{loan.lid}")
+    c.drawString(3 * cm, 17.5 * cm, f"{loan.lid}")
     c.drawString(11 * cm, 17 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
     c.drawString(5 * cm, 16.8 * cm, f"{loan.customer.name}")
     c.drawString(5 * cm, 15.8 * cm, f"{loan.customer.relatedto}")
     c.drawString(5 * cm, 15 * cm, f"{loan.customer.address.first()}")
     c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
     c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
-    c.drawString(5 * cm, 13 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only")
+    c.drawString(
+        5 * cm, 13 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
+    )
     c.drawString(5 * cm, 12.5 * cm, f"{loan.itemtype}")
     # c.drawString(5 * cm, 10 * cm, f"{loan.itemdesc}")
     if len(loan.itemdesc) > 35:

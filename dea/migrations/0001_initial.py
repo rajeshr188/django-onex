@@ -17,6 +17,22 @@ class Migration(migrations.Migration):
         ("contenttypes", "0002_remove_content_type_name"),
         ("contact", "0001_initial"),
     ]
+
+    def create_custom_type(apps, schema_editor):
+        # Replace 'your_custom_postgres_type' with the actual name of your custom type
+        custom_type_sql = """
+            CREATE TYPE public.money_value AS
+                        (
+                            amount numeric(14,0),
+                            currency character varying(3)
+                        );
+            """
+        schema_editor.execute(custom_type_sql)
+
+    def drop_custom_type(apps, schema_editor):
+        drop_type_sql = "DROP TYPE IF EXISTS public.money_value;"
+        schema_editor.execute(drop_type_sql)
+
     money_field = """
                     -- Type: money_value
 
@@ -33,6 +49,7 @@ class Migration(migrations.Migration):
                     """
     operations = [
         # migrations.RunSQL(money_field),
+        migrations.RunSQL(create_custom_type, drop_custom_type),
         migrations.CreateModel(
             name="Account",
             fields=[

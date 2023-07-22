@@ -1,21 +1,9 @@
 from django.urls import include, path
-from rest_framework import routers
 
-from . import api, views
-
-router = routers.DefaultRouter()
-router.register(r"invoice", api.InvoiceViewSet)
-router.register(r"invoiceitem", api.InvoiceItemViewSet)
-router.register(r"payment", api.PaymentViewSet)
+from . import views
 
 app_name = "purchase"
-
 urlpatterns = (
-    # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
-)
-
-urlpatterns += (
     # urls for purchase
     # path('home/',views.home,name = 'purchase_home'),
     path("list/", views.purchase_list, name="purchase_invoice_list"),

@@ -43,12 +43,8 @@ INSTALLED_APPS = [
     "django_select2",
     "allauth",
     "allauth.account",  # new
-    # "invitations",
     "crispy_forms",
     "crispy_bootstrap5",
-    "import_export",
-    # "versatileimagefield",  # new
-    "rest_framework",
     "mptt",
     "phonenumber_field",
     "django_tables2",

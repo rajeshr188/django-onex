@@ -1,21 +1,9 @@
 from django.urls import include, path
-from rest_framework import routers
 
-from . import api, views
-
-router = routers.DefaultRouter()
-router.register(r"contact", api.ContactViewSet)
-router.register(r"chit", api.ChitViewSet)
-router.register(r"collection", api.CollectionViewSet)
-router.register(r"allotment", api.AllotmentViewSet)
+from . import views
 
 
 urlpatterns = (
-    # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
-)
-
-urlpatterns += (
     # urls for Contact
     path("contact/", views.ContactListView.as_view(), name="contact_list"),
     path("contact/create/", views.ContactCreateView.as_view(), name="contact_create"),

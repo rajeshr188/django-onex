@@ -1,4 +1,3 @@
-from autocomplete import HTMXAutoComplete
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -23,8 +22,6 @@ urlpatterns = [
     path("sea/", include("sea.urls")),
     path("notify/", include("notify.urls")),
     path("select2/", include("django_select2.urls")),
-    path("api-auth/", include("rest_framework.urls")),
-    path("invitations/", include("invitations.urls", namespace="invitations")),
 ]
 
 if settings.DEBUG:

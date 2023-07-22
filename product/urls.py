@@ -1,22 +1,9 @@
 from django.urls import include, path
-from rest_framework import routers
-
-from . import api, views
-
-router = routers.DefaultRouter()
-router.register(r"category", api.CategoryViewSet)
-router.register(r"producttype", api.ProductTypeViewSet)
-router.register(r"product", api.ProductViewSet)
-router.register(r"productvariant", api.ProductVariantViewSet)
-router.register(r"attribute", api.AttributeViewSet)
-router.register(r"attributevalue", api.AttributeValueViewSet)
-router.register(r"productimage", api.ProductImageViewSet)
-router.register(r"variantimage", api.VariantImageViewSet)
+from . import views
 
 
 urlpatterns = (
     # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
     path("", views.home, name="product_product_home"),
 )
 

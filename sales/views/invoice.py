@@ -13,13 +13,18 @@ from openpyxl import load_workbook
 from render_block import render_block_to_string
 
 from contact.models import Customer
-from product.models import (PricingTier, PricingTierProductPrice,
-                            ProductVariant, StockLot)
+from product.models import (
+    PricingTier,
+    PricingTierProductPrice,
+    ProductVariant,
+    StockLot,
+)
 
-from ..admin import InvoiceResource, ReceiptResource
+# from ..admin import InvoiceResource, ReceiptResource
 from ..filters import InvoiceFilter
 from ..forms import InvoiceForm, InvoiceItemForm
 from ..models import Invoice, InvoiceItem
+
 # from ..render import Render
 from ..tables import InvoiceTable
 
@@ -399,92 +404,92 @@ def sales_count_by_month(request):
     return JsonResponse(list(data), safe=False)
 
 
-def simple_upload(request):
-    if request.method == "POST" and request.FILES["myfile"]:
-        myfile = request.FILES["myfile"]
-        # fs = FileSystemStorage()
-        # filename = fs.save(myfile.name, myfile)
-        # uploaded_file_url = fs.url(filename)
-        wb = load_workbook(myfile, read_only=True)
-        sheet = wb.active
+# def simple_upload(request):
+#     if request.method == "POST" and request.FILES["myfile"]:
+#         myfile = request.FILES["myfile"]
+#         # fs = FileSystemStorage()
+#         # filename = fs.save(myfile.name, myfile)
+#         # uploaded_file_url = fs.url(filename)
+#         wb = load_workbook(myfile, read_only=True)
+#         sheet = wb.active
 
-        inv = tablib.Dataset(
-            headers=[
-                "id",
-                "customer",
-                "created",
-                "description",
-                "balancetype",
-                "balance",
-            ]
-        )
-        rec = tablib.Dataset(
-            headers=[
-                "id",
-                "customer",
-                "created",
-                "description",
-                "type",
-                "total",
-            ]
-        )
-        bal = tablib.Dataset(headers=["customer", "cash_balance", "metal_balance"])
-        pname = None
-        for row in sheet.rows:
-            if row[0].value is not None and "Sundry Debtors" in row[0].value:
-                pname = re.search(r"\)\s([^)]+)", row[0].value).group(1).strip()
-            elif pname is not None and row[0].value is None:
-                if row[1].value is not None:
-                    date = pytz.utc.localize(row[1].value)
-                    # id = re.search(r'\:\s([^)]+)', row[3].value).group(1).strip()
-                    if row[4].value is not None:
-                        inv_list = ["", pname, date, row[2].value, "Cash", row[4].value]
-                        inv.append(inv_list)
-                    if row[9].value is not None:
-                        rec_list = ["", pname, date, row[2].value, "Cash", row[9].value]
-                        rec.append(rec_list)
-                    if row[22].value is not None:
-                        inv_list = [
-                            "",
-                            pname,
-                            date,
-                            row[2].value,
-                            "Gold",
-                            row[22].value,
-                        ]
-                        inv.append(inv_list)
-                    if row[24].value is not None:
-                        rec_list = [
-                            "",
-                            pname,
-                            date,
-                            row[2].value,
-                            "Gold",
-                            row[24].value,
-                        ]
-                        rec.append(rec_list)
-                elif row[1].value is None and (
-                    row[4].value and row[16].value and row[26].value is not None
-                ):
-                    bal_list = [pname, row[16].value, row[26].value]
-                    bal.append(bal_list)
-        # print(bal.export('csv'))
-        inv_r = InvoiceResource()
-        rec_r = ReceiptResource()
+#         inv = tablib.Dataset(
+#             headers=[
+#                 "id",
+#                 "customer",
+#                 "created",
+#                 "description",
+#                 "balancetype",
+#                 "balance",
+#             ]
+#         )
+#         rec = tablib.Dataset(
+#             headers=[
+#                 "id",
+#                 "customer",
+#                 "created",
+#                 "description",
+#                 "type",
+#                 "total",
+#             ]
+#         )
+#         bal = tablib.Dataset(headers=["customer", "cash_balance", "metal_balance"])
+#         pname = None
+#         for row in sheet.rows:
+#             if row[0].value is not None and "Sundry Debtors" in row[0].value:
+#                 pname = re.search(r"\)\s([^)]+)", row[0].value).group(1).strip()
+#             elif pname is not None and row[0].value is None:
+#                 if row[1].value is not None:
+#                     date = pytz.utc.localize(row[1].value)
+#                     # id = re.search(r'\:\s([^)]+)', row[3].value).group(1).strip()
+#                     if row[4].value is not None:
+#                         inv_list = ["", pname, date, row[2].value, "Cash", row[4].value]
+#                         inv.append(inv_list)
+#                     if row[9].value is not None:
+#                         rec_list = ["", pname, date, row[2].value, "Cash", row[9].value]
+#                         rec.append(rec_list)
+#                     if row[22].value is not None:
+#                         inv_list = [
+#                             "",
+#                             pname,
+#                             date,
+#                             row[2].value,
+#                             "Gold",
+#                             row[22].value,
+#                         ]
+#                         inv.append(inv_list)
+#                     if row[24].value is not None:
+#                         rec_list = [
+#                             "",
+#                             pname,
+#                             date,
+#                             row[2].value,
+#                             "Gold",
+#                             row[24].value,
+#                         ]
+#                         rec.append(rec_list)
+#                 elif row[1].value is None and (
+#                     row[4].value and row[16].value and row[26].value is not None
+#                 ):
+#                     bal_list = [pname, row[16].value, row[26].value]
+#                     bal.append(bal_list)
+#         # print(bal.export('csv'))
+#         inv_r = InvoiceResource()
+#         rec_r = ReceiptResource()
 
-        print("running  inv wet run")
-        inv_result = inv_r.import_data(inv, dry_run=False)  # Test the data import
-        print("running  rec wet run")
-        rec_result = rec_r.import_data(rec, dry_run=False)
-        print("succesfuly imported")
-        # if not inv_result.has_errors():
-        #     print("running wet")
-        #     inv_r.import_data(inv, dry_run=False)  # Actually import now
-        # else :
-        #     print("error occured")
-        # if not rec_result.has_errors():
-        #     rec_r.import_data(dataset, dry_run=False)  # Actually import now
+#         print("running  inv wet run")
+#         inv_result = inv_r.import_data(inv, dry_run=False)  # Test the data import
+#         print("running  rec wet run")
+#         rec_result = rec_r.import_data(rec, dry_run=False)
+#         print("succesfuly imported")
+#         # if not inv_result.has_errors():
+#         #     print("running wet")
+#         #     inv_r.import_data(inv, dry_run=False)  # Actually import now
+#         # else :
+#         #     print("error occured")
+#         # if not rec_result.has_errors():
+#         #     rec_r.import_data(dataset, dry_run=False)  # Actually import now
 
-        return render(request, "sales/simpleupload.html")
+#         return render(request, "sales/simpleupload.html")
 
-    return render(request, "sales/simpleupload.html")
+#     return render(request, "sales/simpleupload.html")

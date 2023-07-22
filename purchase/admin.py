@@ -2,30 +2,31 @@ import decimal
 
 from django import forms
 from django.contrib import admin
-from import_export import fields, resources
-from import_export.admin import (ImportExportActionModelAdmin,
-                                 ImportExportModelAdmin)
-from import_export.widgets import DecimalWidget, ForeignKeyWidget
+
+# from import_export import fields, resources
+# from import_export.admin import (ImportExportActionModelAdmin,
+#                                  ImportExportModelAdmin)
+# from import_export.widgets import DecimalWidget, ForeignKeyWidget
 
 from contact.models import Customer
 
 from .models import Invoice, InvoiceItem, Payment
 
 
-class CustomDecimalWidget(DecimalWidget):
-    """
-    Widget for converting decimal fields.
-    """
+# class CustomDecimalWidget(DecimalWidget):
+#     """
+#     Widget for converting decimal fields.
+#     """
 
-    def clean(self, value, row=None):
-        if self.is_empty(value):
-            return None
-        return decimal.Decimal(str(value))
+#     def clean(self, value, row=None):
+#         if self.is_empty(value):
+#             return None
+#         return decimal.Decimal(str(value))
 
 
-class supplierWidget(ForeignKeyWidget):
-    def clean(self, value, row=None, *args, **kwargs):
-        return self.model.objects.get_or_create(name=value, type="Wh")[0]
+# class supplierWidget(ForeignKeyWidget):
+#     def clean(self, value, row=None, *args, **kwargs):
+#         return self.model.objects.get_or_create(name=value, type="Wh")[0]
 
 
 class InvoiceAdminForm(forms.ModelForm):
@@ -34,31 +35,32 @@ class InvoiceAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class InvoiceResource(resources.ModelResource):
-    supplier = fields.Field(
-        column_name="supplier",
-        attribute="supplier",
-        widget=supplierWidget(Customer, "name"),
-    )
+# class InvoiceResource(resources.ModelResource):
+#     supplier = fields.Field(
+#         column_name="supplier",
+#         attribute="supplier",
+#         widget=supplierWidget(Customer, "name"),
+#     )
 
-    class Meta:
-        model = Invoice
-        fields = (
-            "id",
-            "supplier",
-            "created",
-            # "rate",
-            # "balancetype",
-            # "balance",
-            "status",
-        )
-        skip_unchanged = True
-        report_skipped = False
+#     class Meta:
+#         model = Invoice
+#         fields = (
+#             "id",
+#             "supplier",
+#             "created",
+#             # "rate",
+#             # "balancetype",
+#             # "balance",
+#             "status",
+#         )
+#         skip_unchanged = True
+#         report_skipped = False
 
 
-class InvoiceAdmin(ImportExportActionModelAdmin):
+# class InvoiceAdmin(ImportExportActionModelAdmin):
+class InvoiceAdmin(admin.ModelAdmin):
     form = InvoiceAdminForm
-    resource_class = InvoiceResource
+    # resource_class = InvoiceResource
     list_display = [
         "id",
         "created",
@@ -96,25 +98,26 @@ class PaymentAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class PaymentResourse(resources.ModelResource):
-    supplier = fields.Field(
-        column_name="supplier",
-        attribute="supplier",
-        widget=ForeignKeyWidget(Customer, "name"),
-    )
-    total = fields.Field(
-        column_name="total", attribute="total", widget=CustomDecimalWidget()
-    )
+# class PaymentResourse(resources.ModelResource):
+#     supplier = fields.Field(
+#         column_name="supplier",
+#         attribute="supplier",
+#         widget=ForeignKeyWidget(Customer, "name"),
+#     )
+#     total = fields.Field(
+#         column_name="total", attribute="total", widget=CustomDecimalWidget()
+#     )
 
-    class Meta:
-        model = Payment
-        skip_unchanged = True
-        report_skipped = False
+#     class Meta:
+#         model = Payment
+#         skip_unchanged = True
+#         report_skipped = False
 
 
-class PaymentAdmin(ImportExportActionModelAdmin):
+# class PaymentAdmin(ImportExportActionModelAdmin):
+class PaymentAdmin(admin.ModelAdmin):
     form = PaymentAdminForm
-    resource_class = PaymentResourse
+    # resource_class = PaymentResourse
     list_display = [
         "id",
         "created",

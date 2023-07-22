@@ -1,21 +1,10 @@
 from django.urls import include, path
-from rest_framework import routers
 
-from . import api, views
-
-router = routers.DefaultRouter()
-router.register(r"invoice", api.InvoiceViewSet)
-router.register(r"invoiceitem", api.InvoiceItemViewSet)
-router.register(r"receipt", api.ReceiptViewSet)
+from . import views
 
 app_name = "sales"
 
 urlpatterns = (
-    # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
-)
-
-urlpatterns += (
     # urls for Invoice
     path("sales/", views.sales_list, name="sales_invoice_list"),
     path("sales/create/", views.sale_create_view, name="sales_invoice_create"),
@@ -51,7 +40,7 @@ urlpatterns += (
 )
 urlpatterns += (
     path("sales/", views.home, name="sales_home"),
-    path("sales/upload/", views.simple_upload, name="simpleupload"),
+    # path("sales/upload/", views.simple_upload, name="simpleupload"),
     # path('sales/balance/',views.list_balance,name='sales_balance'),
 )
 urlpatterns += (

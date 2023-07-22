@@ -1,17 +1,7 @@
 from django.urls import include, path
-from rest_framework import routers
-
-from . import api, views
-
-router = routers.DefaultRouter()
-router.register(r"customer", api.CustomerViewSet)
+from . import views
 
 urlpatterns = (
-    # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
-)
-
-urlpatterns += (
     # urls for Customer
     path("", views.home, name="contact_home"),
     path("customer/", views.customer_list, name="contact_customer_list"),

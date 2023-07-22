@@ -14,8 +14,11 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
-                                        YearArchiveView)
+from django.views.generic.dates import (
+    MonthArchiveView,
+    WeekArchiveView,
+    YearArchiveView,
+)
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook

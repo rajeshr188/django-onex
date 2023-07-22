@@ -7,7 +7,7 @@ from django.utils.text import slugify
 from django_extensions.db.fields import AutoSlugField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
-from versatileimagefield.fields import PPOIField, VersatileImageField
+
 
 from product.attributes import get_product_attributes_data
 
@@ -22,7 +22,7 @@ class Category(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
-    background_image = VersatileImageField(
+    background_image = models.ImageField(
         upload_to="category-backgrounds", blank=True, null=True
     )
 
@@ -245,8 +245,8 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Product, related_name="images", on_delete=models.CASCADE
     )
-    image = VersatileImageField(upload_to="product/", ppoi_field="ppoi", blank=False)
-    ppoi = PPOIField("Image PPOI")
+    image = models.ImageField(upload_to="product/", blank=False)
+
     alt = models.CharField(max_length=128, blank=True)
 
     class Meta:

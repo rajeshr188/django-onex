@@ -1,23 +1,10 @@
 from django.urls import include, path
 from django.views.generic.dates import ArchiveIndexView
-from rest_framework import routers
 
-from . import api, views
+from . import views
 from .models import Loan
 
-router = routers.DefaultRouter()
-router.register(r"license", api.LicenseViewSet)
-router.register(r"loan", api.LoanViewSet)
-router.register(r"release", api.ReleaseViewSet)
-
-app_name = "girvi"
-
 urlpatterns = (
-    # urls for Django Rest Framework API
-    path("api/v1/", include(router.urls)),
-)
-
-urlpatterns += (
     path("", views.home, name="girvi-home"),
     path("multirelease/", views.multirelease, name="girvi-multirelease"),
     path("deletemultiple/", views.deleteLoan, name="girvi_loan_deletemultiple"),

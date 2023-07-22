@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib import admin
-from import_export import fields, resources
-from import_export.admin import (ImportExportActionModelAdmin,
-                                 ImportExportModelAdmin)
-from import_export.widgets import ForeignKeyWidget
+
+# from import_export import fields, resources
+# from import_export.admin import (ImportExportActionModelAdmin,
+#                                  ImportExportModelAdmin)
+# from import_export.widgets import ForeignKeyWidget
 
 from sea.models import Account, Statement, Transaction, drs
 
@@ -14,16 +15,16 @@ class AccountAdmin(admin.ModelAdmin):
     list_display = ["name"]
 
 
-class TransactionResource(resources.ModelResource):
-    account = fields.Field(
-        column_name="account",
-        attribute="account",
-        widget=ForeignKeyWidget(Account, "name"),
-    )
+# class TransactionResource(resources.ModelResource):
+#     account = fields.Field(
+#         column_name="account",
+#         attribute="account",
+#         widget=ForeignKeyWidget(Account, "name"),
+#     )
 
-    class Meta:
-        model = Transaction
-        fields = ["id", "account", "date", "txn_type", "amount"]
+#     class Meta:
+#         model = Transaction
+#         fields = ["id", "account", "date", "txn_type", "amount"]
 
 
 class TransactionAdminForm(forms.ModelForm):
@@ -32,9 +33,10 @@ class TransactionAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class TransactionAdmin(ImportExportActionModelAdmin):
+# class TransactionAdmin(ImportExportActionModelAdmin):
+class TransactionAdmin(admin.ModelAdmin):
     form = TransactionAdminForm
-    resource_class = TransactionResource
+    # resource_class = TransactionResource
     list_display = ["id", "account", "date", "txn_type", "amount"]
 
 

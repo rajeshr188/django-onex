@@ -1,14 +1,15 @@
 from django import forms
 from django.contrib import admin
-from import_export import resources
-from import_export.admin import ImportExportActionModelAdmin
+
+# from import_export import resources
+# from import_export.admin import ImportExportActionModelAdmin
 
 from .models import Address, Contact, Customer, Proof
 
 
-class CustomerResource(resources.ModelResource):
-    class Meta:
-        model = Customer
+# class CustomerResource(resources.ModelResource):
+#     class Meta:
+#         model = Customer
 
 
 class CustomerAdminForm(forms.ModelForm):
@@ -17,9 +18,10 @@ class CustomerAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class CustomerAdmin(ImportExportActionModelAdmin):
+# class CustomerAdmin(ImportExportActionModelAdmin):
+class CustomerAdmin(admin.ModelAdmin):
     form = CustomerAdminForm
-    resource_class = CustomerResource
+    # resource_class = CustomerResource
     search_fields = ["id", "name", "relatedto", "Address"]
     list_display = [
         "name",

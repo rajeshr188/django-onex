@@ -1,5 +1,4 @@
 import os
-
 import environ
 from django.contrib import messages
 from django.contrib.messages import constants as messages
@@ -19,12 +18,7 @@ SECRET_KEY = "43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j"
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "*",
-    "192.168.1.100",
-    "192.168.1.101",
-    "192.168.102",
-    "localhost",
-    "127.0.0.1",
+    "*"
 ]
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Application definition
@@ -89,22 +83,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "djangox_project.middleware.HtmxMessageMiddleware",
 ]
-REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    "DEFAULT_PERMISSION_CLASSES": [
-        # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
-        "rest_framework.permissions.AllowAny",
-    ],
-    "DEFAULT_FILTER_BACKENDS": [
-        "django_filters.rest_framework.DjangoFilterBackend",
-        "rest_framework.filters.SearchFilter",
-        "rest_framework.filters.OrderingFilter",
-    ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    # 'PAGE_SIZE': 10
-}
+
 # CACHE_MIDDLEWARE_ALIAS = 'default'
 # CACHE_MIDDLEWARE_SECONDS = 604800
 # CACHE_MIDDLEWARE_KEY_PREFIX = 'jsk'

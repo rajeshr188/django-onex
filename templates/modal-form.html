@@ -1,6 +1,7 @@
 {% load crispy_forms_tags %}
 {{form.media}}
-<form hx-post="{{request.path}}" class="modal-content"> 
+<div class="form">
+  <form hx-post="{{request.path}}" class="modal-content"> 
     {% csrf_token %}
     <div class="modal-header">
       <h5 class="modal-title">Add  for {{customer.name}}</h5>
@@ -13,3 +14,15 @@
       <button type="submit" class="btn btn-success">Save</button>
     </div>
 </form>
+</div>
+
+<script>
+  
+  $('.modal').on('shown.bs.modal', function (e) {
+    
+    $(this).find('#id_customer').djangoSelect2({
+        dropdownParent: $(this).find('.modal-content')       
+    }); 
+
+})
+</script> 

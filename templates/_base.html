@@ -208,11 +208,8 @@
         {% if user.is_authenticated %}
         
         <li class="nav-item active">
-           <a class="nav-link" href=""
-                hx-get="{% url 'contact_customer_list' %}"
-                hx-target="#content" 
-                hx-swap="innerHTML" 
-                hx-push-url="true">Customer </a>
+           <a class="nav-link" href="{% url 'contact_customer_list' %}"
+                >Customer </a>
         </li>
         
         <li class="nav-item dropdown">
@@ -220,16 +217,11 @@
             Girvi
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href=""
-                hx-get="{% url 'girvi:girvi_license_list'%}"
-                hx-target="#content"
-                hx-swap="innerHTML transition:true"
-                hx-push-url="true">License</a></li>
+            <li><a class="dropdown-item" href="{% url 'girvi:girvi_license_list'%}"
+                >License</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" 
-                hx-get="{% url 'girvi:girvi_loan_list'%}"
-                hx-target="#content" 
-                hx-swap="innerHTML transition:true" hx-push-url = "true">Loan</a></li>
+            <li><a class="dropdown-item" href="{% url 'girvi:girvi_loan_list'%}"
+                >Loan</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'girvi:girvi_release_list'%}" >Release</a></li>
             <li><hr class="dropdown-divider"></li>
@@ -379,7 +371,7 @@
   </div>
 </nav>
 
-<div class="container sample-transition" id="content"> 
+<div class="container " id="content"> 
   
   {% include "toasts.html" %}
   {% block content %}
@@ -402,7 +394,7 @@
   <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous" async></script>
   <script src="https://unpkg.com/hyperscript.org@0.9.9"></script>
   <script src="{% static 'js/htmx-1.9.2.min.js'%}"></script>
-  <script src="{% static 'js/dialog.js' %}"></script>
+  
   <script src="{% static 'js/toasts.js' %}"></script>
   <script src="{% static 'js/sidebars.js' %}"></script>
 

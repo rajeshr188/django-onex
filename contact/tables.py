@@ -85,7 +85,7 @@ class CustomerTable(tables.Table):
 
     def render_add_loan(self, record):
         return format_html(
-            '<a hx-disinherit="hx-confirm" data-bs-toggle="modal" data-bs-target="#modal" hx-get="/girvi/girvi/loan/create/{}"  hx-target="#dialog" hx-swap="innerHTML" class="fa-regular fa-file"></a>',
+            '<a hx-disinherit="hx-confirm" data-bs-toggle="modal" data-bs-target="#modal" hx-get="/girvi/girvi/loan/create/{}"  hx-target="#dialog" class="fa-regular fa-file"></a>',
             record.pk,
         )
 

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         ("product", "0001_initial"),
         ("invoice", "0001_initial"),
         ("contact", "0001_initial"),
-        ("approval", "0002_initial"),
+        ("approval", "0001_initial"),
     ]
 
     operations = [

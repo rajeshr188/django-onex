@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                     """
     operations = [
         # migrations.RunSQL(money_field),
-        migrations.RunSQL(create_custom_type, drop_custom_type),
+        # migrations.RunSQL(create_custom_type, drop_custom_type),
         migrations.CreateModel(
             name="Account",
             fields=[

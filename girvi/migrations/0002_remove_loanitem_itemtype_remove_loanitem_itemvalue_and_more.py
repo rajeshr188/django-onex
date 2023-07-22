@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("product", "0012_alter_pricingtierproductprice_pricing_tier"),
+        ("product", "0001_initial"),
         ("girvi", "0001_initial"),
     ]
 

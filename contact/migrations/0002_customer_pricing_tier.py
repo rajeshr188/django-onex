@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("product", "0007_remove_pricingtier_contact_pricingtier_description_and_more"),
+        
         ("contact", "0001_initial"),
     ]
 

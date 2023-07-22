@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("product", "0015_rename_qty_stocklot_quantity_and_more"),
         ("approval", "0008_remove_approval_posted_remove_returnitem_posted"),
     ]
 

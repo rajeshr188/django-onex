@@ -9,40 +9,14 @@ import mptt.fields
 
 
 class Migration(migrations.Migration):
-    replaces = [
-        ("product", "0001_initial"),
-        ("product", "0004_alter_stocklot_status"),
-        ("product", "0005_stocklot_purchase_stocklot_sale"),
-        ("product", "0006_remove_stocklot_sale"),
-        ("product", "0007_remove_pricingtier_contact_pricingtier_description_and_more"),
-        ("product", "0008_rename_parent_tier_pricingtier_parent"),
-        ("product", "0009_rename_pricint_tier_pricingtierproductprice_pricing_tier"),
-        ("product", "0010_ratesource_rate"),
-        ("product", "0011_rename_rate_rate_buying_rate_rate_selling_rate"),
-        ("product", "0012_alter_pricingtierproductprice_pricing_tier"),
-        ("product", "0013_alter_stocklot_stock_code"),
-        ("product", "0014_alter_rate_currency_alter_rate_metal_and_more"),
-        ("product", "0015_rename_qty_stocklot_quantity_and_more"),
-        ("product", "0016_alter_stocktransaction_journal"),
-        ("product", "0017_alter_stocklot_purchase"),
-        ("product", "0018_remove_stocklot_purchase_stocklot_purchase_item"),
-        ("product", "0019_alter_stocklot_purchase_item"),
-        ("product", "0020_alter_stocklot_purchase_item"),
-        ("product", "0021_alter_stocklot_purchase_item"),
-        ("product", "0022_remove_productimage_ppoi_and_more"),
-    ]
-
+   
     initial = True
 
     dependencies = [
-        ("purchase", "0006_rename_type_payment_payment_type_and_more"),
-        ("contact", "0001_initial"),
-        ("sales", "0001_initial"),
-        ("dea", "0001_initial"),
-        ("purchase", "0014_remove_paymentallocation_allocated_amount_and_more"),
-        ("contact", "0003_alter_address_customer_alter_address_area_and_more"),
-        ("purchase", "0001_initial"),
-        ("purchase", "0007_alter_invoiceitem_invoice"),
+       
+        ("contact", "0001_initial"),   
+        ("dea", "0001_initial"),  
+        ("contact", "0003_alter_address_customer_alter_address_area_and_more"),  
         ("dea", "0008_alter_journal_content_type"),
     ]
 

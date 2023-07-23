@@ -1,6 +1,6 @@
 from django.urls import include, path
-from . import views
 
+from . import views
 
 urlpatterns = (
     # urls for Django Rest Framework API

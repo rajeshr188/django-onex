@@ -1,14 +1,14 @@
 from django import forms
 from django.contrib import admin
 
-# from import_export import fields, resources
-# from import_export.admin import ImportExportModelAdmin
-# from import_export.widgets import ForeignKeyWidget
-
 from contact.models import Customer
 
 from .forms import LoanForm
 from .models import Adjustment, License, Loan, Release, Series
+
+# from import_export import fields, resources
+# from import_export.admin import ImportExportModelAdmin
+# from import_export.widgets import ForeignKeyWidget
 
 
 class LicenseAdminForm(forms.ModelForm):

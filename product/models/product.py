@@ -8,7 +8,6 @@ from django_extensions.db.fields import AutoSlugField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
-
 from product.attributes import get_product_attributes_data
 
 from .stock import StockTransaction

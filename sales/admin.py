@@ -3,14 +3,14 @@ import decimal
 from django import forms
 from django.contrib import admin
 
+from contact.models import Customer
+
+from .models import Invoice, InvoiceItem, Receipt
+
 # from import_export import fields, resources
 # from import_export.admin import (ImportExportActionModelAdmin,
 #                                  ImportExportModelAdmin)
 # from import_export.widgets import DecimalWidget, ForeignKeyWidget
-
-from contact.models import Customer
-
-from .models import Invoice, InvoiceItem, Receipt
 
 
 # class CustomDecimalWidget(DecimalWidget):

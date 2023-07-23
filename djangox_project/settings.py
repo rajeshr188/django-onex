@@ -1,4 +1,5 @@
 import os
+
 import environ
 from django.contrib import messages
 from django.contrib.messages import constants as messages
@@ -17,9 +18,7 @@ SECRET_KEY = "43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "*"
-]
+ALLOWED_HOSTS = ["*"]
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Application definition
 
@@ -115,7 +114,7 @@ WSGI_APPLICATION = "djangox_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "fresh",
+        "NAME": "onex",
         "USER": "postgres",
         "PASSWORD": "kanchan",
         "HOST": "localhost",
@@ -187,7 +186,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SITE_ID = 1
-ACCOUNT_ADAPTER = "invitations.models.InvitationsAdapter"
+# ACCOUNT_ADAPTER = "invitations.models.InvitationsAdapter"
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False

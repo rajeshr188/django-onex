@@ -2,7 +2,6 @@ from django.urls import include, path
 
 from . import views
 
-
 urlpatterns = (
     # urls for Contact
     path("contact/", views.ContactListView.as_view(), name="contact_list"),

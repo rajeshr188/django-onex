@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib import admin
 
+from .models import Address, Contact, Customer, Proof
+
 # from import_export import resources
 # from import_export.admin import ImportExportActionModelAdmin
-
-from .models import Address, Contact, Customer, Proof
 
 
 # class CustomerResource(resources.ModelResource):

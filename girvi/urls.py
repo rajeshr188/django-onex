@@ -3,7 +3,8 @@ from django.views.generic.dates import ArchiveIndexView
 
 from . import views
 from .models import Loan
-app_name="girvi"
+
+app_name = "girvi"
 urlpatterns = (
     path("", views.home, name="girvi-home"),
     path("multirelease/", views.multirelease, name="girvi-multirelease"),

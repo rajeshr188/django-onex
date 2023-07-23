@@ -115,7 +115,7 @@ WSGI_APPLICATION = "djangox_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "onex",
+        "NAME": "fresh",
         "USER": "postgres",
         "PASSWORD": "kanchan",
         "HOST": "localhost",

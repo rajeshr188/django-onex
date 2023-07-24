@@ -14,11 +14,8 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (
-    MonthArchiveView,
-    WeekArchiveView,
-    YearArchiveView,
-)
+from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
+                                        YearArchiveView)
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook
@@ -422,10 +419,29 @@ def generate_original(request, pk=None):
     #     x = i * grid_spacing
     #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
     # c.setFont("Courier", 10)
+
     c.drawString(12 * cm, 18.5 * cm, f"{loan.lid}")
     c.drawString(11.5 * cm, 17.5 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
-    c.drawString(2 * cm, 16 * cm, f"{loan.customer}")
-    c.drawString(2 * cm, 15 * cm, f"{loan.customer.address.first()}")
+
+    # Wrap the text if its length is greater than 35 characters
+    customer = (
+        f"{loan.customer.name} {loan.customer.relatedas} {loan.customer.relatedto}"
+    )
+    lines = textwrap.wrap(customer, width=35)
+    # Draw the wrapped text on the canvas
+    y = 16 * cm
+    for line in lines:
+        c.drawString(2 * cm, y, line)
+        y -= 0.5 * cm
+
+    address = f"{loan.customer.address.first()}"
+    lines = textwrap.wrap(address, width=35)
+    # Draw the wrapped text on the canvas
+    y = 15 * cm
+    for line in lines:
+        c.drawString(2 * cm, y, line)
+        y -= 0.5 * cm
+
     c.drawString(2 * cm, 14 * cm, f"Ph: {loan.customer.contactno.first()}")
     c.drawString(10 * cm, 11.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 9.8 * cm, f"{loan.itemweight}")
@@ -434,12 +450,14 @@ def generate_original(request, pk=None):
     c.drawString(
         2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
     )
-    if len(loan.itemdesc) > 0:
-        wrap_text = textwrap.wrap(loan.itemdesc, width=35)
-        c.drawString(2.2 * cm, 11 * cm, wrap_text[0])
-        c.drawString(2.2 * cm, 10.5 * cm, wrap_text[1])
-    else:
-        c.drawString(2.2 * cm, 11 * cm, f"{loan.itemdesc}")
+
+    # Wrap the text if its length is greater than 35 characters
+    lines = textwrap.wrap(loan.itemdesc, width=35)
+    # Draw the wrapped text on the canvas
+    y = 11 * cm
+    for line in lines:
+        c.drawString(2.2 * cm, y, line)
+        y -= 0.5 * cm
 
     c.save()
 
@@ -481,6 +499,7 @@ def generate_duplicate(request, pk=None):
     # for i in range(num_vertical_lines):
     #     x = i * grid_spacing
     #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
+
     c.drawString(3 * cm, 17.5 * cm, f"{loan.lid}")
     c.drawString(11 * cm, 17 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
     c.drawString(5 * cm, 16.8 * cm, f"{loan.customer.name}")
@@ -488,31 +507,40 @@ def generate_duplicate(request, pk=None):
     c.drawString(5 * cm, 15 * cm, f"{loan.customer.address.first()}")
     c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
     c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
-    c.drawString(
-        5 * cm, 13 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
+
+    lines = textwrap.wrap(
+        f"{num2words(loan.loanamount, lang='en_IN')} rupees only", width=35
     )
+    # Draw the wrapped text on the canvas
+    y = 13 * cm
+    for line in lines:
+        c.drawString(5 * cm, y, line)
+        y -= -0.5 * cm
+
     c.drawString(5 * cm, 12.5 * cm, f"{loan.itemtype}")
-    # c.drawString(5 * cm, 10 * cm, f"{loan.itemdesc}")
-    if len(loan.itemdesc) > 35:
-        wrap_text = textwrap.wrap(loan.itemdesc, width=35)
-        c.drawString(3 * cm, 10 * cm, wrap_text[0])
-        c.drawString(3 * cm, 9.5 * cm, wrap_text[1])
-    else:
-        c.drawString(3 * cm, 10 * cm, f"{loan.itemdesc}")
+
+    # Wrap the text if its length is greater than 35 characters
+    lines = textwrap.wrap(loan.itemdesc, width=35)
+    # Draw the wrapped text on the canvas
+    y = 10 * cm
+    for line in lines:
+        c.drawString(3 * cm, y, line)
+        y -= 0.5 * cm
 
     c.drawString(3 * cm, 6.8 * cm, f"{loan.itemweight}")
     c.drawString(12 * cm, 6.8 * cm, f"{loan.itemvalue}")
-
     c.drawString(4 * cm, 3 * cm, f"{loan.lid }{ loan.created.strftime('%d/%m%y')}")
     c.drawString(4 * cm, 2.5 * cm, f"{loan.loanamount} {loan.itemweight}")
-    if len(f"{loan.customer.name} {loan.itemdesc}") > 35:
-        wrap_text = textwrap.wrap(f"{loan.customer.name} {loan.itemdesc}", width=35)
-        c.drawString(4 * cm, 2 * cm, wrap_text[0])
-        c.drawString(4 * cm, 1.5 * cm, wrap_text[1])
-    else:
-        c.drawString(4 * cm, 2 * cm, f"{loan.itemdesc}")
-    c.save()
 
+    # Wrap the text if its length is greater than 35 characters
+    lines = textwrap.wrap(f"{loan.customer.name} {loan.itemdesc}", width=35)
+    # Draw the wrapped text on the canvas
+    y = 2 * cm
+    for line in lines:
+        c.drawString(4 * cm, y, line)
+        y -= 0.5 * cm
+
+    c.save()
     return response
 
 

@@ -18,7 +18,8 @@ from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import Attribute, ProductVariant, Stock, StockLot, StockTransaction
+from product.models import (Attribute, ProductVariant, Stock, StockLot,
+                            StockTransaction)
 
 from ..managers import PurchaseQueryset
 

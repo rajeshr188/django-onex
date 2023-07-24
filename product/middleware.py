@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.deprecation import MiddlewareMixin
 
 from .models import Rate
@@ -10,15 +11,18 @@ class RateMiddleware(MiddlewareMixin):
         grate = cache.get("latest_gold_rate")
         srate = cache.get("latest_silver_rate")
 
-        if not (grate and srate):
-            if Rate.objects.exists():
+        if not grate:
+            try:
                 grate = Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp")
-                srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
-            else:
-                grate = ""
-                srate = ""
-
-            cache.set("latest_gold_rate", grate)
-            cache.set("latest_silver_rate", srate)
+                cache.set("latest_gold_rate", grate)
+            except ObjectDoesNotExist:
+                grate = None
         request.grate = grate
+
+        if not srate:
+            try:
+                srate = Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp")
+                cache.set("latest_silver_rate", srate)
+            except ObjectDoesNotExist:
+                srate = None
         request.srate = srate

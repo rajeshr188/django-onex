@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import ButtonHolder, Column, Field, Layout, Row, Submit
+from crispy_forms.layout import (ButtonHolder, Column, Field, Layout, Row,
+                                 Submit)
 from django import forms
 from django.urls import reverse_lazy
 from django_select2.forms import Select2Widget

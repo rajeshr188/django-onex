@@ -1,18 +1,9 @@
 import datetime
 
 from django.db import models
-from django.db.models import (
-    BooleanField,
-    Case,
-    DecimalField,
-    ExpressionWrapper,
-    F,
-    Func,
-    Q,
-    Sum,
-    Value,
-    When,
-)
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, FloatField, Func, Q, Sum,
+                              Value, When)
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.utils import timezone
 
@@ -52,26 +43,31 @@ class LoanQuerySet(models.QuerySet):
 
     def with_current_value(self):
         latest_gold_rate = (
-            Rate.objects.filter(metal=Rate.Metal.GOLD).latest("timestamp").buying_rate
+            Rate.objects.filter(metal=Rate.Metal.GOLD).order_by("-timestamp").first()
         )
         latest_silver_rate = (
-            Rate.objects.filter(metal=Rate.Metal.SILVER).latest("timestamp").buying_rate
+            Rate.objects.filter(metal=Rate.Metal.SILVER).order_by("-timestamp").first()
         )
 
         return self.annotate(
             current_value=ExpressionWrapper(
                 Case(
                     When(
-                        itemtype="Gold", then=F("itemweight") * latest_gold_rate * 0.75
+                        itemtype="Gold",
+                        then=F("itemweight") * latest_gold_rate.buying_rate * 0.75
+                        if latest_gold_rate is not None
+                        else Value(0),
                     ),
                     When(
                         itemtype="Silver",
-                        then=F("itemweight") * latest_silver_rate * 0.70,
+                        then=F("itemweight") * latest_silver_rate.buying_rate * 0.70
+                        if latest_silver_rate is not None
+                        else Value(0),
                     ),
                     default=Value(0),
-                    output_field=models.FloatField(),
+                    output_field=FloatField(),
                 ),
-                output_field=models.FloatField(),
+                output_field=FloatField(),
             )
         )
 

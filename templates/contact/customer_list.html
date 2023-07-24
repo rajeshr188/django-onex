@@ -16,10 +16,8 @@
     <div class="btn-toolbar mb-2 mb-md-0">
       <div class="btn-group mr-2">
         <a class="btn btn-primary mr-2" 
-            hx-get="{% url 'contact_customer_create' %}"   
-            hx-target="#customer-content"
-            hx-push-url="true"
-            hx-swap="outerHTML"
+            href="{% url 'contact_customer_create' %}"   
+            
             role="button">New Customer</a>
         <a class="btn btn-primary mr-2" 
             href="{% url 'contact_customer_merge' %}" 

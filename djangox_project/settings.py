@@ -238,8 +238,8 @@ TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = env("TWILIO_NUMBER")
 
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 """ crontab() Execute every minute.
 crontab(minute=0, hour=0) Execute daily at midnight.
 crontab(minute=0, hour='*/3') Execute every three hours: midnight, 3am, 6am, 9am, noon, 3pm, 6pm, 9pm.

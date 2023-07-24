@@ -9,8 +9,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j"
@@ -146,6 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
+
 from django.utils.translation import gettext_lazy as _
 
 LANGUAGES = (
@@ -153,6 +152,7 @@ LANGUAGES = (
     ("fr", _("French")),
     ("hi", _("Hindi")),
 )
+
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale/"),)
 TIME_ZONE = "Asia/Kolkata"
 
@@ -180,13 +180,11 @@ LOGIN_REDIRECT_URL = "dashboard"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 
 AUTHENTICATION_BACKENDS = (
-    # 'graphql_jwt.backends.JSONWebTokenBackend',
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
 SITE_ID = 1
-# ACCOUNT_ADAPTER = "invitations.models.InvitationsAdapter"
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False

@@ -122,9 +122,9 @@ def customer_merge(request):
 def customer_detail(request, pk=None):
     context = {}
     cust = get_object_or_404(Customer, pk=pk)
-    data = cust.sales.all()
-    inv = data.exclude(status="Paid")
-    how_many_days = 30
+    # data = cust.sales.all()
+    # inv = data.exclude(status="Paid")
+    # how_many_days = 30
     context["object"] = cust
     context["customer"] = cust
     return render(request, "contact/customer_detail.html", context)

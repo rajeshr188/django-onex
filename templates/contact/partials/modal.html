@@ -3,8 +3,7 @@
 <form hx-post="{{ request.path }}" class="modal-content">
     {% csrf_token %}
     <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-      
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Add</h1>
     </div>
     <div class="modal-body">
       {{ form|crispy }}

@@ -386,7 +386,7 @@ from reportlab.pdfgen import canvas
 def generate_original(request, pk=None):
     loan = get_object_or_404(Loan, pk=pk)
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="reference_grid.pdf"'
+    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'" 
 
     page_width = 14.6 * cm
     page_height = 21 * cm
@@ -425,7 +425,7 @@ def generate_original(request, pk=None):
 
     # Wrap the text if its length is greater than 35 characters
     customer = (
-        f"{loan.customer.name} {loan.customer.relatedas} {loan.customer.relatedto}"
+        f"{loan.customer.name} {loan.customer.get_relatedas_display()} {loan.customer.relatedto}"
     )
     lines = textwrap.wrap(customer, width=35)
     # Draw the wrapped text on the canvas
@@ -467,12 +467,12 @@ def generate_original(request, pk=None):
 def generate_duplicate(request, pk=None):
     loan = get_object_or_404(Loan, pk=pk)
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="reference_grid.pdf"'
+    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'"
 
     page_width = 14.6 * cm
     page_height = 21 * cm
     c = canvas.Canvas(response, pagesize=(page_width, page_height))
-
+    c.setFont("Helvetica-Bold",10)
     # Grid spacing
     grid_spacing = 1 * cm  # Adjust this value based on your preference
 

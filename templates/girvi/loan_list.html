@@ -79,26 +79,37 @@
   </div>
   </div>
 </div>
+<!-- This code seems to assume that the necessary CSS and JS libraries (e.g., Bootstrap, jQuery) are loaded in the HTML file. -->
 
 <script language="JavaScript">
-  $('input[type=checkbox]').change(function() { 
+
+  // Attach a change event handler to all input elements of type "checkbox"
+  $('input[type=checkbox]').change(function() {
+    // Get the element with the ID "selectall"
     var all = document.getElementById("selectall");
+    
+    // If the checkbox with ID "selectall" is checked
     if (all.checked) {
+      // Set the text content of the element with ID "text" to {{table.paginator.count}}
+      // Note: This part contains an expression {{table.paginator.count}} which looks like template language,
+      //       but it's not valid JavaScript. This might be part of some templating engine or framework.
+      //       In JavaScript, you would typically use template literals with backticks (``) for similar purposes.
       $('#text').text({{table.paginator.count}})
-    }
-    else{
+    } else {
+      // If the "selectall" checkbox is not checked,
+      // set the text content of the element with ID "text" to the number of checked checkboxes with name "selection"
       $('#text').text($('input[name=selection]:checked').length)
     }
-    
   });
 
+  // Function to toggle the state of all checkboxes based on a source checkbox
   function toggle(source) {
-      checkboxes = document.getElementsByName('selection');
-      for(var i in checkboxes)
-          checkboxes[i].checked = source.checked;      
-      
+    checkboxes = document.getElementsByName('selection');
+    for (var i in checkboxes)
+      checkboxes[i].checked = source.checked;
   }
-  </script>
+</script>
+
   
 {% endblock %}
 

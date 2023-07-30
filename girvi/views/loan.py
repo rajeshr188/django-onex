@@ -515,7 +515,7 @@ def generate_duplicate(request, pk=None):
     y = 13 * cm
     for line in lines:
         c.drawString(5 * cm, y, line)
-        y -= -0.5 * cm
+        y -= 0.5 * cm
 
     c.drawString(5 * cm, 12.5 * cm, f"{loan.itemtype}")
 

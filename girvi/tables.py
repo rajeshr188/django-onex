@@ -26,6 +26,8 @@ class LoanTable(tables.Table):
         return record.created
 
     # remove = tables.Column(orderable=False, empty_values=())
+    def render_customer(self,record):
+        return format_html('<p class="muted"><a href="#" data-bs-toggle="tooltip" data-bs-title="{}">{}</a></p>',record.customer,record.customer.name)
 
     # def render_remove(self, record):
     #     return format_html(

@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib import admin
-
+from django.urls import reverse
 from contact.models import Customer
-
+from django.utils.html import format_html
 from .forms import LoanForm
 from .models import Adjustment, License, Loan, Release, Series
 
@@ -79,6 +79,24 @@ class LoanAdminForm(forms.ModelForm):
 
 # class LoanAdmin(ImportExportModelAdmin):
 class LoanAdmin(admin.ModelAdmin):
+    def print(self, obj):
+        original_url = reverse('girvi:original', args=[obj.id])
+        duplicate_url = reverse('girvi:duplicate', args=[obj.id])
+        return format_html(
+            """
+            <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                <div class="btn-group" role="group">
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{0}">Original</a></li>
+                        <li><a class="dropdown-item" href="{1}">Duplicate</a></li>
+                    </ul>
+                </div>
+            </div>
+            """,
+            original_url,
+            duplicate_url,
+        )
+    print.short_description = 'Print Options'
     form = LoanAdminForm
     # resource_class = LoanResource
     list_display = [
@@ -94,6 +112,7 @@ class LoanAdmin(admin.ModelAdmin):
         "itemvalue",
         "loanamount",
         "interestrate",
+        "print",
     ]
     search_fields = ["customer__name", "series"]
     autocomplete_fields = ["customer"]

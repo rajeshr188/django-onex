@@ -3,8 +3,11 @@
         <div class="card-body" style="background-color: #eee;">
             <form method="post" hx-post="{% url 'customer_contact_form' customer.id%}">
                 {{form|crispy}}
-            <button type="submit" class="btn btn-success" >Save</button>
-            <button type="button" hx-get="{{current_url}}" hx-target="#content" hx-swap="innerHTML"data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
+            <button type="submit" class = "btn btn-success" >Save</button>
+            <button type="button" hx-get = "{% url 'customer_contactno_list' customer.id%}" 
+                                    hx-target = "#contactno-list" 
+                                    hx-swap = "innerHTML" 
+                                    class = "btn btn-danger" >Cancel</button>
             </form> 
         </div>
     </div>

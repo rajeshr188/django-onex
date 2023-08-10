@@ -63,11 +63,12 @@ def customer_list(request):
 @require_http_methods(["DELETE"])
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
+    print(customer)
+    messages.success(request, messages.DEBUG, f"Deleted customer {customer.name}")
     customer.delete()
     return HttpResponse("")
 
 
-@for_htmx(use_block="content")
 @login_required
 def customer_create(request):
     if request.method == "POST":
@@ -88,10 +89,34 @@ def customer_create(request):
 
             f.save()
 
-            messages.success(request, messages.SUCCESS, f"created customer {f}")
-            # return redirect('contact_customer_list')
-            return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
+            messages.success(request, messages.SUCCESS, f"created customer {f.name}")
+            if "add" in request.POST:
+                response = render_block_to_string(
+                    "contact/customer_form.html",
+                    "content",
+                    {"form": CustomerForm()},
+                    request,
+                )
+                return HttpResponse(
+                    response,
+                    headers={"Hx-Push-Url": reverse("contact_customer_create")},
+                )
 
+            else:
+                response = render_block_to_string(
+                    "contact/customer_detail.html",
+                    "content",
+                    {"customer": f, "object": f},
+                    request,
+                )
+                return HttpResponse(
+                    response,
+                    headers={
+                        "Hx-Push-Url": reverse(
+                            "contact_customer_detail", kwargs={"pk": f.id}
+                        )
+                    },
+                )
         else:
             messages.error(request, f"Error creating customer")
             return TemplateResponse(
@@ -101,10 +126,17 @@ def customer_create(request):
     else:
         form = CustomerForm()
 
+        if request.htmx:
+            response = render_block_to_string(
+                "contact/customer_form.html", "content", {"form": form}, request
+            )
+            return HttpResponse(response)
+
         return TemplateResponse(request, "contact/customer_form.html", {"form": form})
 
 
 @login_required
+@for_htmx(use_block="content")
 def customer_merge(request):
     form = CustomerMergeForm(request.POST or None)
     if request.method == "POST":
@@ -113,8 +145,10 @@ def customer_merge(request):
             original = form.cleaned_data["original"]
             duplicate = form.cleaned_data["duplicate"]
             original.merge(duplicate)
-            return redirect("contact_customer_list")
-    return render(request, "contact/customer_merge.html", context={"form": form})
+            return HttpResponseRedirect("contact_customer_list")
+    return TemplateResponse(
+        request, "contact/customer_merge.html", context={"form": form}
+    )
 
 
 @for_htmx(use_block="content")
@@ -127,9 +161,10 @@ def customer_detail(request, pk=None):
     # how_many_days = 30
     context["object"] = cust
     context["customer"] = cust
-    return render(request, "contact/customer_detail.html", context)
+    return TemplateResponse(request, "contact/customer_detail.html", context)
 
 
+@for_htmx(use_block="content")
 @login_required
 def customer_edit(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
@@ -151,9 +186,11 @@ def customer_edit(request, pk):
         f.save()
         messages.success(request, messages.SUCCESS, f"updated customer {f}")
 
-        return redirect("contact_customer_list")
+        return TemplateResponse(
+            request, "contact/customer_detail.html", {"customer": f, "object": f}
+        )
 
-    return render(
+    return TemplateResponse(
         request, "contact/customer_form.html", {"form": form, "customer": customer}
     )
 
@@ -187,7 +224,7 @@ def contact_create(request, pk=None):
 
     return render(
         request,
-        "contact/partials/modal.html",
+        "contact/partials/contact_form.html",
         context={"form": form, "customer": customer},
     )
 
@@ -261,7 +298,7 @@ def address_create(request, pk=None):
 
     return render(
         request,
-        "contact/partials/modal.html",
+        "contact/partials/address_form.html",
         context={"form": form, "customer": customer},
     )
 

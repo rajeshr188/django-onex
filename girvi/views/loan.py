@@ -1,6 +1,3 @@
-import datetime
-import math
-
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -14,8 +11,11 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
-                                        YearArchiveView)
+from django.views.generic.dates import (
+    MonthArchiveView,
+    WeekArchiveView,
+    YearArchiveView,
+)
 from django_tables2.config import RequestConfig
 from num2words import num2words
 from openpyxl import load_workbook
@@ -30,6 +30,12 @@ from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
+import datetime
+import math
+import textwrap
+from reportlab.lib.pagesizes import inch, landscape
+from reportlab.lib.units import cm, inch
+from reportlab.pdfgen import canvas
 
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
@@ -59,7 +65,8 @@ def loan_list(request):
     stats = {}
     filter = LoanFilter(
         request.GET,
-        queryset=Loan.objects.with_due()
+        queryset=Loan.objects.order_by("-id")
+        .with_due()
         .with_current_value()
         .with_is_overdue()
         .select_related("customer", "release")
@@ -74,6 +81,7 @@ def loan_list(request):
 
 
 @login_required
+@for_htmx(use_block="content")
 def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)
 
@@ -81,65 +89,33 @@ def create_loan(request, pk=None):
         if form.is_valid():
             l = form.save(commit=False)
             l.created_by = request.user
-            last_loan = l.save()
-            messages.success(request, f"last loan id is {last_loan.lid}")
-            if request.htmx:
-                print(f"returning 204")
-                return HttpResponse(status=204)
+            l.save()
+            messages.success(request, f"last loan id is {l}")
+            # save/save & add more save&view
+            if "view" in request.POST:
+                return HttpResponseRedirect(
+                    reverse("girvi:girvi_loan_detail", kwargs={"pk": l.pk})
+                )
             else:
-                print("redirecting after succesful creation")
-                return redirect("girvi:girvi_loan_create")
+                return HttpResponseRedirect(reverse("girvi:girvi_loan_create"))
+
         else:
             messages.warning(request, "Please correct the error below.")
-            if request.htmx:
-                return render(request, "modal-form.html", {"form": form})
-            else:
-                return render(request, "girvi/loan_form.html", {"form": form})
+            return TemplateResponse(request, "girvi/loan_form.html", {"form": form})
     else:
         if pk:
             customer = get_object_or_404(Customer, pk=pk)
             form = LoanForm(initial={"customer": customer, "created": ld})
         else:
             form = LoanForm(initial={"created": ld})
-    if request.htmx:
-        return render(request, "modal-form.html", {"form": form})
-    return render(
+
+    return TemplateResponse(
         request,
         "girvi/loan_form.html",
         {
             "form": form,
         },
     )
-
-
-# class LoanCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-#     model = Loan
-#     form_class = LoanForm
-#     success_url = reverse_lazy("girvi_loan_create")
-
-#     def get_template_names(self) -> List[str]:
-#         if self.request.htmx:
-#             self.template_name = "contact/partials/contact-form-model.html"
-#         return super().get_template_names()
-
-#     def get_success_message(self, cleaned_data):
-#         return format_html(
-#             'created loan {} <a href="/girvi/girvi/loan/detail/{}/"  class="btn btn-outline-info" >{}</a>',
-#             self.success_message,
-#             self.object.pk,
-#             self.object,
-#         )
-
-#     def get_initial(self):
-#         if self.kwargs:
-#             customer = Customer.objects.get(id=self.kwargs["pk"])
-#             return {"customer": customer, "created": ld}
-#         else:
-#             return {"created": ld}
-
-#     def form_valid(self, form):
-#         form.instance.created_by = self.request.user
-#         return super().form_valid(form)
 
 
 @login_required
@@ -375,18 +351,10 @@ def print_loan(request, pk=None):
     return response
 
 
-import textwrap
-
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import inch, landscape
-from reportlab.lib.units import cm, inch
-from reportlab.pdfgen import canvas
-
-
 def generate_original(request, pk=None):
     loan = get_object_or_404(Loan, pk=pk)
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'" 
+    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'"
 
     page_width = 14.6 * cm
     page_height = 21 * cm
@@ -394,42 +362,16 @@ def generate_original(request, pk=None):
 
     # Grid spacing
     grid_spacing = 1 * cm  # Adjust this value based on your preference
-
-    # # Calculate the number of lines
-    # num_horizontal_lines = int(page_height / grid_spacing)
-    # num_vertical_lines = int(page_width / grid_spacing)
-
-    # # Draw horizontal lines
-    # for i in range(num_horizontal_lines):
-    #     y = i * grid_spacing
-    #     c.line(0, y, page_width, y)
-
-    # # Draw vertical lines
-    # for i in range(num_vertical_lines):
-    #     x = i * grid_spacing
-    #     c.line(x, 0, x, page_height)
-
-    # # Add labels (optional)
-    # # You can customize the labels as per your requirements
-    # for i in range(num_horizontal_lines):
-    #     y = i * grid_spacing
-    #     c.drawString(5, y, f"y={y / cm:.2f} cm")
-
-    # for i in range(num_vertical_lines):
-    #     x = i * grid_spacing
-    #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
-    # c.setFont("Courier", 10)
-
-    c.drawString(12 * cm, 18.5 * cm, f"{loan.lid}")
-    c.drawString(11.5 * cm, 17.5 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
+    c.setFillColorRGB(0, 0, 0)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(12 * cm, 18.2 * cm, f"{loan.lid}")
+    c.drawString(11.5 * cm, 17.2 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
 
     # Wrap the text if its length is greater than 35 characters
-    customer = (
-        f"{loan.customer.name} {loan.customer.get_relatedas_display()} {loan.customer.relatedto}"
-    )
+    customer = f"{loan.customer.name} {loan.customer.get_relatedas_display()} {loan.customer.relatedto}"
     lines = textwrap.wrap(customer, width=35)
     # Draw the wrapped text on the canvas
-    y = 16 * cm
+    y = 15.5 * cm
     for line in lines:
         c.drawString(2 * cm, y, line)
         y -= 0.5 * cm
@@ -441,12 +383,14 @@ def generate_original(request, pk=None):
     for line in lines:
         c.drawString(2 * cm, y, line)
         y -= 0.5 * cm
-
+    c.setFont("Helvetica", 12)
     c.drawString(2 * cm, 14 * cm, f"Ph: {loan.customer.contactno.first()}")
     c.drawString(10 * cm, 11.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 9.8 * cm, f"{loan.itemweight}")
-    c.drawString(10 * cm, 8 * cm, f"{loan.itemvalue}")
-    c.drawString(6.5 * cm, 12.2 * cm, f"{loan.itemtype}")
+    c.drawString(10 * cm, 8 * cm, f"{loan.loanamount +500}")
+    c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(8 * cm, 6.5 * cm, f"{loan.loanamount}")
     c.drawString(
         2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
     )
@@ -456,11 +400,10 @@ def generate_original(request, pk=None):
     # Draw the wrapped text on the canvas
     y = 11 * cm
     for line in lines:
-        c.drawString(2.2 * cm, y, line)
+        c.drawString(2.5 * cm, y, line)
         y -= 0.5 * cm
 
     c.save()
-
     return response
 
 
@@ -472,44 +415,24 @@ def generate_duplicate(request, pk=None):
     page_width = 14.6 * cm
     page_height = 21 * cm
     c = canvas.Canvas(response, pagesize=(page_width, page_height))
-    c.setFont("Helvetica-Bold",10)
+    c.setFont("Helvetica-Bold", 12)
     # Grid spacing
     grid_spacing = 1 * cm  # Adjust this value based on your preference
 
-    # # Calculate the number of lines
-    # num_horizontal_lines = int(page_height / grid_spacing)
-    # num_vertical_lines = int(page_width / grid_spacing)
-
-    # # Draw horizontal lines
-    # for i in range(num_horizontal_lines):
-    #     y = i * grid_spacing
-    #     c.line(0, y, page_width, y)
-
-    # # Draw vertical lines
-    # for i in range(num_vertical_lines):
-    #     x = i * grid_spacing
-    #     c.line(x, 0, x, page_height)
-
-    # # Add labels (optional)
-    # # You can customize the labels as per your requirements
-    # for i in range(num_horizontal_lines):
-    #     y = i * grid_spacing
-    #     c.drawString(5, y, f"y={y / cm:.2f} cm")
-
-    # for i in range(num_vertical_lines):
-    #     x = i * grid_spacing
-    #     c.drawString(x, 5, f"x={x / cm:.2f} cm")
-
-    c.drawString(3 * cm, 17.5 * cm, f"{loan.lid}")
+    c.drawString(3 * cm, 17 * cm, f"{loan.lid}")
     c.drawString(11 * cm, 17 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
-    c.drawString(5 * cm, 16.8 * cm, f"{loan.customer.name}")
-    c.drawString(5 * cm, 15.8 * cm, f"{loan.customer.relatedto}")
+    c.drawString(5 * cm, 16.5 * cm, f"{loan.customer.name}")
+    c.drawString(
+        5 * cm,
+        16 * cm,
+        f"{loan.customer.get_relatedas_display()} {loan.customer.relatedto}",
+    )
     c.drawString(5 * cm, 15 * cm, f"{loan.customer.address.first()}")
     c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
     c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
 
     lines = textwrap.wrap(
-        f"{num2words(loan.loanamount, lang='en_IN')} rupees only", width=35
+        f"{num2words(loan.loanamount, lang='en_IN')} rupees only", width=45
     )
     # Draw the wrapped text on the canvas
     y = 13 * cm
@@ -517,7 +440,7 @@ def generate_duplicate(request, pk=None):
         c.drawString(5 * cm, y, line)
         y -= 0.5 * cm
 
-    c.drawString(5 * cm, 12.5 * cm, f"{loan.itemtype}")
+    c.drawString(5 * cm, 12.1 * cm, f"{loan.itemtype}")
 
     # Wrap the text if its length is greater than 35 characters
     lines = textwrap.wrap(loan.itemdesc, width=35)
@@ -527,17 +450,19 @@ def generate_duplicate(request, pk=None):
         c.drawString(3 * cm, y, line)
         y -= 0.5 * cm
 
-    c.drawString(3 * cm, 6.8 * cm, f"{loan.itemweight}")
-    c.drawString(12 * cm, 6.8 * cm, f"{loan.itemvalue}")
-    c.drawString(4 * cm, 3 * cm, f"{loan.lid }{ loan.created.strftime('%d/%m%y')}")
-    c.drawString(4 * cm, 2.5 * cm, f"{loan.loanamount} {loan.itemweight}")
-
+    c.drawString(5 * cm, 7 * cm, f"{loan.itemweight}")
+    c.drawString(8 * cm, 7 * cm, f"{loan.itemweight}")
+    c.drawString(12 * cm, 7 * cm, f"{loan.itemvalue}")
+    c.drawString(1 * cm, 3.5 * cm, f"{loan.lid}")
+    c.drawString(1 * cm, 3 * cm, f"{loan.created.strftime('%d/%m/%y')}")
+    c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {loan.itemweight} gm")
+    c.drawString(1 * cm, 2 * cm, f"{loan.customer.name}")
     # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(f"{loan.customer.name} {loan.itemdesc}", width=35)
+    lines = textwrap.wrap(f"{loan.itemdesc}", width=35)
     # Draw the wrapped text on the canvas
-    y = 2 * cm
+    y = 1.5 * cm
     for line in lines:
-        c.drawString(4 * cm, y, line)
+        c.drawString(1 * cm, y, line)
         y -= 0.5 * cm
 
     c.save()

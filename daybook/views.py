@@ -38,24 +38,33 @@ def daybook(request):
     release["total"] = releases.aggregate(t=Sum("interestpaid"))
     release["releaseamount"] = releases.aggregate(t=Sum("loan__loanamount"))
 
-    sale = salesinvoice.objects.filter(
-        created__year=today.year, created__month=today.month, created__day=today.day
-    ).with_outstanding_balance()
-    purchase = purchaseinvoice.objects.filter(
-        created__year=today.year, created__month=today.month, created__day=today.day
-    ).with_outstanding_balance()
+    sale = (
+        salesinvoice.objects.filter(
+            created__year=today.year, created__month=today.month, created__day=today.day
+        )
+        .with_allocated_payment()
+        .with_outstanding_balance()
+    )
+    purchase = (
+        purchaseinvoice.objects.filter(
+            created__year=today.year, created__month=today.month, created__day=today.day
+        )
+        .with_balance()
+        .with_allocated_payment()
+        .with_outstanding_balance()
+    )
 
     receipt = dict()
     rec = Receipt.objects.filter(
         created__year=today.year, created__month=today.month, created__day=today.day
-    ).values("type", "total")
+    ).values("total")
     receipt["rec_total"] = rec.annotate(t=Sum("total"))
 
     payment = dict()
     pay = Payment.objects.filter(
         created__year=today.year, created__month=today.month, created__day=today.day
-    ).order_by("type")
-    payment["pay_total"] = pay.annotate(t=Sum("total")).order_by("type")
+    )
+    payment["pay_total"] = pay.annotate(t=Sum("total"))
 
     daybook = dict()
     daybook["yesterday"] = yesterday

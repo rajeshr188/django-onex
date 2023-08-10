@@ -2,26 +2,27 @@
 {% load crispy_forms_tags%}
 {{form.media}}
 {% block content %}
-<div id="loan-content">
-    {% if last_loan%}
-    {{last_loan}}
-    {%endif%}
+
+<div id="loan-content" hx-target="this" hx-swap="innerHTML transition:true">
+  
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
         <h1 class="h2">Create Loan</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
-            <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_list' %}"
+            <a class="btn btn-primary" href="" hx-get="{% url 'girvi:girvi_loan_list' %}"
+              hx-push-url="true"
             role="button">Loan List</a>
+           
           </div>
         </div>
       </div>
 
       <div id="form">
-        <form action="." method ="post" >
+        <form action="." method ="post" hx-target="loan-content">
           {% csrf_token %}
           {% crispy form%}   
-          <button type="submit" class="btn btn-success">Save & Add More</button>
-          <button type="submit" class="btn btn-success" hx-vals = "{}">Save & View</button>
+          <button name="add" type="submit" class="btn btn-success">Save & Add More</button>
+          <button name="view" type="submit" class="btn btn-success">Save & View</button>
          </form>
       </div>
 </div>

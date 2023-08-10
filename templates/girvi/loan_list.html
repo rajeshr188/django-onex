@@ -3,13 +3,15 @@
 {%load django_tables2%}
 
 {% block content %}
-<div id="loan-content">
+<div id="loan-content" hx-target="this" hx-swap="innerHTML transition:true">
   <div id="head">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
       <h1 class="h2">Loan</h1>
       <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-          <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_create' %}" 
+          <a class="btn btn-primary" href="" hx-get="{% url 'girvi:girvi_loan_create' %}" 
+              hx-push-url="true"
+              hx-trigger="click, keyup[shiftKey&&key=='N'] from:body"
             role="button">New Loan</a>
           <a class="btn btn-primary" href="{% url 'girvi:bulk_release' %}" 
             role="button">Bulk Release</a>
@@ -80,7 +82,13 @@
   </div>
 </div>
 <!-- This code seems to assume that the necessary CSS and JS libraries (e.g., Bootstrap, jQuery) are loaded in the HTML file. -->
+<script type="text/javascript">
+  // Select all elements with the attribute data-bs-toggle="tooltip" (Bootstrap tooltip trigger)
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 
+// Convert the NodeList to an array and create Bootstrap tooltips for each element
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
 <script language="JavaScript">
 
   // Attach a change event handler to all input elements of type "checkbox"

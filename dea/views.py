@@ -10,11 +10,19 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView
 from dea.utils.currency import Balance
 from utils.htmx_utils import for_htmx
 
-from .forms import (AccountForm, AccountStatementForm, LedgerForm,
-                    LedgerStatementForm)
+from .forms import AccountForm, AccountStatementForm, LedgerForm, LedgerStatementForm
+
 # Create your views here.
-from .models import (Account, Accountbalance, AccountStatement, Journal,
-                     Ledger, Ledgerbalance, LedgerStatement, LedgerTransaction)
+from .models import (
+    Account,
+    Accountbalance,
+    AccountStatement,
+    Journal,
+    Ledger,
+    Ledgerbalance,
+    LedgerStatement,
+    LedgerTransaction,
+)
 
 
 def home(request):
@@ -76,7 +84,7 @@ def home(request):
 
 def generalledger(request):
     context = {}
-    context["lt"] = LedgerTransaction.objects.all().order_by("-created")
+    context["lt"] = LedgerTransaction.objects.all().order_by("-created")[:10]
     return render(request, "dea/gl.html", {"data": context})
 
 
@@ -145,6 +153,7 @@ def audit_ledger(request):
 
 class JournalListView(ListView):
     queryset = Journal.objects.all().select_related("content_type")
+    paginate_by = 10
 
 
 class JournalDetailView(DetailView):

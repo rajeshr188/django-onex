@@ -4,26 +4,28 @@ from django.db.models import Count, FloatField, Sum
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import render
 from django.views.generic import TemplateView
-
+from django.contrib.auth.decorators import login_required
 from contact.models import Customer
 from girvi.models import Loan
 
 
-class HomePageView(TemplateView):
-    template_name = "pages/home.html"
+@login_required
+def HomePageView(request):
+    return render(request, "pages/home.html")
 
 
 class AboutPageView(TemplateView):
     template_name = "pages/about.html"
 
 
+@login_required
 def Dashboard(request):
     context = {}
     from purchase.models import Invoice as Pinv
     from sales.models import Invoice as Sinv
 
-    pinv = Pinv.objects
-    sinv = Sinv.objects
+    # pinv = Pinv.objects
+    # sinv = Sinv.objects
 
     # total_pbal = pinv.filter(balancetype="Gold").aggregate(
     #     net_wt=Coalesce(Cast(Sum("net_wt"), output_field=FloatField()), 0.0),
@@ -70,6 +72,9 @@ def Dashboard(request):
     )
     unreleased = Loan.objects.unreleased()
     context["loan"] = Loan.objects
+    context["loan_progress"] = round(
+        Loan.objects.released().count() / Loan.objects.count() * 100, 2
+    )
     context["loan_count"] = unreleased.count()
     context["total_loan_amount"] = unreleased.with_total_loanamount()
     context["total_interest"] = unreleased.with_total_interest()

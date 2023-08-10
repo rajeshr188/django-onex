@@ -6,7 +6,6 @@
   <div class="d-flex align-items-start">
     <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
       <button class="nav-link active" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">Profile</button>
-      <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-messages" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false" >Account</button>
       <button class="nav-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</button>
     </div>
     <div class="tab-content" id="v-pills-tabContent">   
@@ -21,9 +20,22 @@
             <div class="btn-toolbar" role="toolbar">
               <div class="btn-group mr-2" role="group">
                 
-                <a class="btn btn-primary ml-2" role="button" href="{% url 'contact_customer_update' object.id%}" >Edit Customer</a>
-                <a class="btn btn-primary ml-2" role="button" href="{% url 'girvi:girvi_loan_create' customer.id %}">Add Loan</a>
+                <a class="btn btn-primary ml-2" role="button" href="" 
+                    hx-get="{% url 'contact_customer_update' object.id%}" 
+                    hx-target="#content"
+                    hx-push-url="true"
+                    hx-swap="innerHTML transition:true">Edit Customer</a>
+                <a class="btn btn-primary ml-2" role="button" href="" 
+                    hx-get="{% url 'girvi:girvi_loan_create' customer.id %}"
+                    hx-target="#content"
+                    hx-push-url="true"
+                    hx-swap="innerHTML transition:true">Add Loan</a>
                 {%if customer.account%}
+                <a class="btn btn-primary ml-2" role="button" href="" 
+                    hx-get="{% url 'dea_account_detail' object.account.id%}"
+                    hx-target="#content"
+                    hx-push-url="true"
+                    hx-swap="innerHTML transition:true">Account</a>
                 <a class="btn btn-primary ml-2 " role="button" href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
                 {%endif%}
               </div>
@@ -40,7 +52,7 @@
             </div>
             <div class="col-md">
               <div id="address-list" 
-                hx-trigger = "revealed,addresslistChanged from:body  delay:100ms"
+                hx-trigger = "revealed,listChanged from:body  delay:100ms"
                 hx-get = "{% url 'customer_address_list' customer.id%}"
                 hx-target ="#address-list"
                 hx-swap = "innerHTML">
@@ -50,12 +62,8 @@
         </div>
  
       </div>
-      <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab" tabindex="0">
-        <div class="account" hx-get="{% url 'dea_account_detail' object.account.id%}" 
-                              hx-trigger="load,revealed" >
-                            </div>
-      </div>
-      <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab" tabindex="0">
+      
+      <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab" tabindex="2">
         <div class="">
           <div class="accordion" id="accordionExample">
             <div class="accordion-item">

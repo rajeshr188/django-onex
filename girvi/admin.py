@@ -80,8 +80,8 @@ class LoanAdminForm(forms.ModelForm):
 # class LoanAdmin(ImportExportModelAdmin):
 class LoanAdmin(admin.ModelAdmin):
     def print(self, obj):
-        original_url = reverse('girvi:original', args=[obj.id])
-        duplicate_url = reverse('girvi:duplicate', args=[obj.id])
+        original_url = reverse("girvi:original", args=[obj.id])
+        duplicate_url = reverse("girvi:duplicate", args=[obj.id])
         return format_html(
             """
             <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
@@ -96,7 +96,8 @@ class LoanAdmin(admin.ModelAdmin):
             original_url,
             duplicate_url,
         )
-    print.short_description = 'Print Options'
+
+    print.short_description = "Print Options"
     form = LoanAdminForm
     # resource_class = LoanResource
     list_display = [

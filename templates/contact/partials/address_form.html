@@ -4,6 +4,10 @@
             <form method="post" hx-post="{% url 'customer_address_form' customer.id%}">
                 {{form|crispy}}
             <button type="submit" class="btn btn-success" >Save</button>
+            <button type="button" hx-get = "{% url 'customer_address_list' customer.id%}" 
+                                    hx-target = "#address-list" 
+                                    hx-swap = "innerHTML" 
+                                    class = "btn btn-danger" >Cancel</button>
             </form> 
         </div>
     </div>

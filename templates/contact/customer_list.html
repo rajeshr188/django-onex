@@ -5,22 +5,23 @@
 {{filter.form.media}}
 
 {%block content%}
-<!-- Modal -->
-<div id="modal" class="modal fade" >
-  <div id="dialog" class="modal-dialog" hx-target="this" ></div>
-</div>
-<div id="customer-content" class="container ">
 
+<div id="customer-content" class="container mx-auto p-4 py-md-5" hx-target="this" hx-get="{% url 'contact_customer_list'%}" hx-trigger="listChanged from:body">
+ 
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Customers</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
       <div class="btn-group mr-2">
         <a class="btn btn-primary mr-2" 
-            href="{% url 'contact_customer_create' %}"   
-            
+            hx-get="{% url 'contact_customer_create' %}" 
+            hx-push-url="true"
+            hx-target = "#customer-content"
+            hx-swap="innerHTML transition:true"
+            hx-trigger="click, keyup[shiftKey&&key=='N'] from:body"
             role="button">New Customer</a>
         <a class="btn btn-primary mr-2" 
-            href="{% url 'contact_customer_merge' %}" 
+            hx-get="{% url 'contact_customer_merge' %}" 
+            hx-push-url="true"
             role="button">Merge Customer</a>
       </div>
     </div>
@@ -55,15 +56,13 @@
       </div>
     </div>
     {%block table%}
-    <div class="col-sm-9 table-responsive" id = "table"> 
+    <div class="col table-responsive" id = "table"> 
       <p>Results :{{table.paginator.count}} </p> 
       {% render_table table %} 
     </div>
     {%endblock%}
-  </div> 
-  <script src="{% static 'js/dialog.js' %}"></script>
-
-  
+  </div>
+</div>
 
 
 {%endblock%}

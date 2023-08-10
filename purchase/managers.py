@@ -34,13 +34,15 @@ class PurchaseQueryset(models.QuerySet):
     def with_balance(self):
         return self.annotate(
             gold_balance=Sum(
-                "purchaseitem__metal_balance", filter=Q(metal_balance_currency="USD")
+                "purchase_items__metal_balance",
+                filter=Q(purchase_items__metal_balance_currency="USD"),
             ),
             silver_balance=Sum(
-                "purchaseitem__metal_balance", filter=Q(metal_balance_currency="EUR")
+                "purchase_items__metal_balance",
+                filter=Q(purchase_items__metal_balance_currency="EUR"),
             ),
-            cash_balance=Sum("purchaseitem__cash_balance"),
-        ).select_related("purchaseitem")
+            cash_balance=Sum("purchase_items__cash_balance"),
+        ).select_related("purchase_items")
 
     def with_allocated_payment(self):
         return self.annotate(

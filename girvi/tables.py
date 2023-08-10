@@ -14,36 +14,41 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 
 class LoanTable(tables.Table):
-    loanid = tables.Column(linkify=True)
+    loanid = tables.Column(verbose_name="Loan Id")
 
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
         accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
     )
     notified = tables.Column(accessor="last_notified")
+    months_since_created = tables.Column(verbose_name="Months")
 
     def render_notified(self, value, record):
         return record.created
 
-    # remove = tables.Column(orderable=False, empty_values=())
-    def render_customer(self,record):
-        return format_html('<p class="muted"><a href="#" data-bs-toggle="tooltip" data-bs-title="{}">{}</a></p>',record.customer,record.customer.name)
+    def render_customer(self, record):
+        return format_html(
+            """
+                <p class="muted">
+                <a href="" hx-get="/contact/customer/detail/{}" data-bs-toggle="tooltip" data-bs-title="{}">{}</a></p>""",
+            record.customer.pk,
+            record.customer,
+            record.customer.name,
+        )
 
-    # def render_remove(self, record):
-    #     return format_html(
-    #         '<a hx-post="/girvi/girvi/loan/{}/delete/" class="btn btn-outline-danger" role="button">Delete</a>',
-    #         record.pk,
-    #     )
+    def render_loanid(self, record):
+        return format_html(
+            """
+            <a href ="" hx-get="/girvi/girvi/loan/detail/{}/"
+                        hx-target="#loan-content" hx-swap="innerHTML transition:true"
+                        hx-push-url="true">{}</a>
+            """,
+            record.id,
+            record.lid,
+        )
 
     def render_created(self, value):
         return value.date
-
-    # def render_id(self, value, column, record):
-    #     if record.is_released:
-    #         column.attrs = {"td": {"bgcolor": "lightgreen"}}
-    #     else:
-    #         column.attrs = {"td": {}}
-    #     return value
 
     class Meta:
         model = Loan

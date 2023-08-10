@@ -15,8 +15,7 @@ from dea.models import Journal, JournalTypes
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
-from product.models import (Attribute, ProductVariant, Stock, StockLot,
-                            StockTransaction)
+from product.models import Attribute, ProductVariant, Stock, StockLot, StockTransaction
 from purchase.models.purchase import Invoice
 
 

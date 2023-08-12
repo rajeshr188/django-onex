@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
-from contact.models import Customer
 from django.utils.html import format_html
+
+from contact.models import Customer
+
 from .forms import LoanForm
 from .models import Adjustment, License, Loan, Release, Series
 

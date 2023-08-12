@@ -1,3 +1,7 @@
+import datetime
+import math
+import textwrap
+
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -11,15 +15,16 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (
-    MonthArchiveView,
-    WeekArchiveView,
-    YearArchiveView,
-)
+from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
+                                        YearArchiveView)
 from django_tables2.config import RequestConfig
+from django_tables2.export.export import TableExport
 from num2words import num2words
 from openpyxl import load_workbook
 from render_block import render_block_to_string
+from reportlab.lib.pagesizes import inch, landscape
+from reportlab.lib.units import cm, inch
+from reportlab.pdfgen import canvas
 
 from contact.models import Customer
 from notify.models import NoticeGroup, Notification
@@ -30,12 +35,6 @@ from ..filters import LoanFilter, LoanStatementFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm, PhysicalStockForm
 from ..models import License, Loan, LoanItem, LoanStatement, Release, Series
 from ..tables import LoanTable
-import datetime
-import math
-import textwrap
-from reportlab.lib.pagesizes import inch, landscape
-from reportlab.lib.units import cm, inch
-from reportlab.pdfgen import canvas
 
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
@@ -73,10 +72,13 @@ def loan_list(request):
         .prefetch_related("notifications", "loanitems"),
     )
     table = LoanTable(filter.qs)
-    stats["total_no_of_loans"] = filter.qs.count()
-    context = {"filter": filter, "table": table, "stats": stats}
+    context = {"filter": filter, "table": table}
 
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
+    export_format = request.GET.get("_export", None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table, exclude_columns=("selection"))
+        return exporter.response(f"table.{export_format}")
     return TemplateResponse(request, "girvi/loan_list.html", context)
 
 

@@ -14,7 +14,7 @@
       {%endif%}
     </div>
     {{ form|as_crispy_errors }}
-    <form hx-post="{% url 'contact_customer_create'%}" enctype="multipart/form-data" hx-target="#form">
+    <form hx-post="." enctype="multipart/form-data" hx-target="#form">
       {% csrf_token %}
       <div class="row g-3">
         <div class="col-md-4">

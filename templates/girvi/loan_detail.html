@@ -6,33 +6,45 @@
   <h1 class="h2">Loan Detail</h1>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group mr-2">
-      <a class="btn btn-default" href="{% url 'girvi:girvi_loan_list' %}">Loan Listing</a>
-      <a class="btn btn-default" href="{% url 'girvi:girvi_loan_create' %}">Add new</a>
-      <button class="btn btn-sm btn-outline-secondary">Export</button>
-      
+      <a class="btn btn-default" hx-get="{% url 'girvi:girvi_loan_list' %}"
+        hx-trigger="click" hx-target="#content" hx-swap="innerHTML transition:true"
+        hx-push-url="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+      </svg></a>
+      <a class="btn btn-success" href="{% url 'girvi:girvi_loan_create' %}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+      </svg></a>
     </div>
   </div>
 </div>
 {% block loaninfo%}
-<div id="content" class="" hx-target="this" 
+<div id="content" class="container-fluid" hx-target="this" 
     hx-trigger="loanChanged from:body" 
     hx-get="{% url 'girvi:girvi_loan_detail' object.id%}">
-    <div class="btn-group justify-content-between mb-3" role="group" aria-label="Basic example">
+    <div class="btn-group flex-wrap justify-content-between mb-3" role="group" aria-label="Basic example">
         {%if previous%}
         <a hx-get="{% url 'girvi:girvi_loan_detail' previous.pk %}" 
             hx-target="" hx-push-url="true" hx-swap="outerHTML"
-            type="button" class="btn btn-primary">Previous
+            type="button" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+              </svg>
             {{previous.loanid}}</a>
         {%endif%}
         {%if next %}
         <a hx-get="{% url 'girvi:girvi_loan_detail' next.id %}" hx-push-url="true" hx-swap="outerHTML"
-            type="button" class="btn btn-primary">Next {{next.loanid}}</a>
+            type="button" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+              </svg> {{next.loanid}}</a>
         {%endif%}
         
-        <a class="btn btn-secondary" href="{% url 'girvi:girvi_adjustment_create' object.id %}">Add Adjustment</a>
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Print
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                  </svg>
             </button>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item"  href="{% url 'girvi:loan_pdf' loan.id %}">Both</a></li>
@@ -40,15 +52,26 @@
               <li><a class="dropdown-item" href="{%url 'girvi:duplicate' loan.id%}">Duplicate</a></li>
             </ul>
           </div>
+        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_update' object.id %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+          </svg></a>
+        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_delete' object.id %}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+          </svg></a>
+        <a class="btn btn-secondary" href="{% url 'girvi:girvi_adjustment_create' object.id %}">Adjustment <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg></a>
         <a class="btn btn-secondary" href="{% url 'girvi:girvi_release_create' object.id %}">Release</a>
-        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_update' object.id %}">Update</a>
-        <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_delete' object.id %}">Delete</a>
         <a class="btn btn-primary" href="{% url 'girvi:girvi_loan_renew' object.id %}">Renew</a>
     </div>
     
-    <div class="row">
-        <div class="col-md-4">
-            <table class="table table-sm table-bordered table-striped {%if not sunken%}table-danger{%endif%} ">
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        <div class="col table-responsive">
+            <table class="table table-sm table-striped-columns {%if not sunken%}table-danger{%endif%} ">
                 <tbody>
                     <tr>
                         <td>
@@ -65,10 +88,17 @@
                     <tr>
                         <td>Customer</td>
                         <td>
-                            <a href="{% url 'contact_customer_detail' object.customer.id %}">{{ object.customer }}</a>
+                            <a href="" hx-get="{% url 'contact_customer_detail' object.customer.id %}"
+                                hx-target="#content" hx-swap="innerHTML transition:true"
+                                hx-push-url="true" hx-trigger="click">{{ object.customer }}</a>
                             
                             <a class="btn btn-info"
-                                href="{% url 'contact_customer_update' object.customer.id %}">Edit</a>
+                                hx-get="{% url 'contact_customer_update' object.customer.id %}"
+                                hx-trigger="click" hx-target="#content" hx-swap="innerHTML transition:true"
+                                hx-push-url="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                                  </svg></a>
                         </td>
                      
                     </tr>
@@ -79,7 +109,7 @@
                     </tr>
                     <tr>
                         <td>last_updated</td>
-                        <td>{{ object.last_updated }}</td>
+                        <td>{{ object.updated }}</td>
                     </tr>
                     <tr>
                         <td>itemtype</td>
@@ -110,9 +140,9 @@
                         <td>{{ object.current_value }}</td>
                     </tr>
                 </tbody>
-            </table>
+                </table>
         </div>
-        <div class="col-md-8">
+        <div class="col">
             <div class="accordion" id="accordionExample">      
                 <div class="accordion-item">
                   <h2 class="accordion-header">
@@ -213,6 +243,14 @@
                     </div>
                   </div>     
               </div>
+        </div>
+      </div>
+    <div class="row">
+        <div class="col-md-4">
+           
+        </div>
+        <div class="col-md-8">
+            
         </div>
     </div>  
 </div>

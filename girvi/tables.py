@@ -14,7 +14,7 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 
 class LoanTable(tables.Table):
-    loanid = tables.Column(verbose_name="Loan Id")
+    loanid = tables.Column(verbose_name="Loan")
 
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
@@ -28,13 +28,15 @@ class LoanTable(tables.Table):
 
     def render_customer(self, record):
         return format_html(
-            """
-                <p class="muted">
-                <a href="" hx-get="/contact/customer/detail/{}" data-bs-toggle="tooltip" data-bs-title="{}">{}</a></p>""",
+            """<a href="" hx-get="/contact/customer/detail/{}" hx-push-url="true"
+                        hx-target="#content" hx-swap="innerHTML transition:true">
+            {}</a>""",
             record.customer.pk,
-            record.customer,
             record.customer.name,
         )
+
+    def value_customer(self, record):
+        return record.customer
 
     def render_loanid(self, record):
         return format_html(
@@ -44,11 +46,40 @@ class LoanTable(tables.Table):
                         hx-push-url="true">{}</a>
             """,
             record.id,
-            record.lid,
+            record.loanid,
         )
+
+    def value_loanid(self, record):
+        return record.loanid
 
     def render_created(self, value):
         return value.date
+
+    def value_created(self, record):
+        return record.created.date()
+
+    is_overdue = tables.Column(verbose_name="Overdue?")
+
+    total_interest = tables.Column(
+        verbose_name="Interest",
+        # footer=lambda table: sum(x.total_interest for x in table.data)
+    )
+    total_due = tables.Column(
+        verbose_name="Due",
+        # footer=lambda table: sum(x.total_interest_due for x in table.data)
+    )
+    loanamount = tables.Column(
+        verbose_name="Amount",
+        # footer=lambda table: sum(x.loanamount for x in table.data)
+    )
+    current_value = tables.Column(
+        verbose_name="Value",
+        # footer = lambda table:sum(x.current_value for x in table.data)
+    )
+    itemweight = tables.Column(
+        verbose_name="Wt",
+        # footer = lambda table:sum(x.itemweight for x in table.data)
+    )
 
     class Meta:
         model = Loan
@@ -69,9 +100,6 @@ class LoanTable(tables.Table):
         )
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {
-            # "data-released": lambda record: record.is_released,
-            # "data-notworth": lambda record: record.is_overdue,
-            # "data-notworth": lambda record: record.is_worth,
             "class": lambda record: "table-success"
             if record.is_released
             else ("table-danger" if record.is_overdue else "table-secondary")

@@ -1,10 +1,9 @@
 {% load static %}
 {% load i18n %}
 <!doctype html>
-<html lang="en" >
+<html lang="en" data-bs-theme="dark">
   <head>
-    <script src="{% static 'js/color-modes.js'%}"></script>
-
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="htmx-config" content='{"historyCacheSize": 15}'>
@@ -20,12 +19,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link href = "{% static 'css/stats.css'%}" rel = "stylesheet">
     <link rel="stylesheet" href="{% static 'css/camera.css' %}" type="text/css" media="all">
-
     {% endblock %}
    
     {% block extra_js %}
     <script src="{% static 'js/jquery.js' %}"></script>
-  
     {% endblock%}
     
   </head>
@@ -71,7 +68,7 @@
                 <li><a class="dropdown-item" href="{%url 'notify_noticegroup_list' %}">Notice Group</a></li>
               </ul>
             </li>
-            <li class="nav-item dropdown">
+            <!-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Product
               </a>
@@ -97,8 +94,8 @@
                 <li><a class="dropdown-item" href="{%url 'product_pricingtier_list' %}"
                   >Pricing Tier</a></li>  
               </ul>
-            </li>
-            <li class="nav-item dropdown">
+            </li> -->
+            <!-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Sales
               </a>
@@ -109,8 +106,8 @@
                 <li><a class="dropdown-item" href="{% url 'sales:sales_receipt_list'%}"  
                   >Receipt</a></li>
               </ul>
-            </li>
-            <li class="nav-item dropdown">
+            </li> -->
+            <!-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Approval
               </a>
@@ -119,8 +116,8 @@
                 <li><hr class="dropdown-divider"></li>
                 <a class="dropdown-item" href="{%url 'approval:approval_return_list'%}">Approval Return</a>
               </ul>
-            </li>
-            <li class="nav-item dropdown">
+            </li> -->
+            <!-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Purchase
               </a>
@@ -137,7 +134,7 @@
                     hx-swap="innerHTML"
                     hx-push-url="true">Payment</a></li>
               </ul>
-            </li>
+            </li> -->
             <!-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                 Chit</a>
@@ -176,10 +173,7 @@
               </ul>
             
             </li>  
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'product_rate_list'%}">{{request.grate}} {{request.srate}}</a>
-            </li>
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown d-flex">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ user.email }}
               </a>
@@ -194,11 +188,7 @@
               </ul>
             </li>
           </ul>
-          <form class="d-flex" role="search">
-            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-            
-          </form>
+          
           {%else%}
           <form class="d-flex" role="search">
             
@@ -210,8 +200,10 @@
       </div>
     </nav>
     
-
-    <div id="content" class="container mb-5 sample-transition"> 
+    <div class="container mt-2 mb-2" id="rate">
+      <a class="nav-link" href="{% url 'product_rate_list'%}">{{request.grate}} {{request.srate}}</a>
+    </div>
+    <div id="content" class="container mb-2 sample-transition"> 
       
       {% include "toasts.html" %}
       {% block content %}

@@ -1,10 +1,11 @@
 import datetime
 
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, FloatField, Sum
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.contrib.auth.decorators import login_required
+
 from contact.models import Customer
 from girvi.models import Loan
 
@@ -26,7 +27,6 @@ def Dashboard(request):
 
     # pinv = Pinv.objects
     # sinv = Sinv.objects
-
     # total_pbal = pinv.filter(balancetype="Gold").aggregate(
     #     net_wt=Coalesce(Cast(Sum("net_wt"), output_field=FloatField()), 0.0),
     #     gwt=Coalesce(Cast(Sum("gross_wt"), output_field=FloatField()), 0.0),
@@ -37,7 +37,6 @@ def Dashboard(request):
     #     gwt=Coalesce(Cast(Sum("gross_wt"), output_field=FloatField()), 0.0),
     #     bal=Coalesce(Cast(Sum("balance"), output_field=FloatField()), 0.0),
     # )
-
     # total_pbal_ratecut = pinv.filter(balancetype="Cash").aggregate(
     #     net_wt=Coalesce(Cast(Sum("net_wt"), output_field=FloatField()), 0.0),
     #     gwt=Coalesce(Cast(Sum("gross_wt"), output_field=FloatField()), 0.0),
@@ -48,7 +47,6 @@ def Dashboard(request):
     #     gwt=Coalesce(Cast(Sum("gross_wt"), output_field=FloatField()), 0.0),
     #     bal=Coalesce(Cast(Sum("balance"), output_field=FloatField()), 0.0),
     # )
-
     # context["total_pbal"] = total_pbal
     # context["total_sbal"] = total_sbal
     # context["pbal"] = total_pbal["bal"] - total_sbal["bal"]
@@ -64,7 +62,6 @@ def Dashboard(request):
     #     )
     # except ZeroDivisionError:
     #     context["p_map"] = 0.0
-
     # context['s_map'] = round(total_sbal_ratecut['bal']/total_sbal_ratecut['net_wt'],3)
 
     context["customer_count"] = Customer.objects.values("customer_type").annotate(

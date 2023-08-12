@@ -82,7 +82,7 @@ def customer_create(request):
             if image_data:
                 image_file = ContentFile(
                     base64.b64decode(image_data.split(",")[1]),
-                    name=f"{f.name}_{f.relatedto}.jpg",
+                    name=f"{f.name}_{f.relatedto}_{f.id}.jpg",
                 )
 
                 f.pic = image_file

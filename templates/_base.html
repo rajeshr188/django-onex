@@ -201,7 +201,11 @@
     </nav>
     
     <div class="container mt-2 mb-2" id="rate">
-      <a class="nav-link" href="{% url 'product_rate_list'%}">{{request.grate}} {{request.srate}}</a>
+      <a class="nav-link" href="{% url 'product_rate_list'%}">
+        <ul>
+          <li>{{request.grate}}</li><li>{{request.srate}}</li>
+        </ul>
+      </a>
     </div>
     <div id="content" class="container mb-2 sample-transition"> 
       

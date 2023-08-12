@@ -104,7 +104,7 @@ class LoanTable(tables.Table):
             if record.is_released
             else ("table-danger" if record.is_overdue else "table-secondary")
         }
-        attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
+        attrs = {"class": "table table-sm table-striped table-hover"}
         empty_text = "There are no loans matching the search criteria..."
         template_name = "table_htmx.html"
 
@@ -115,6 +115,6 @@ class ReleaseTable(tables.Table):
     class Meta:
         model = Release
         fields = ("id", "releaseid", "created", "loan", "interestpaid")
-        attrs = {"class": "table table-sm table-striped table-bordered table-hover"}
+        attrs = {"class": "table table-sm table-striped table-hover"}
         empty_text = "There are no release matching the search criteria..."
         template_name = "django_tables2/bootstrap5.html"

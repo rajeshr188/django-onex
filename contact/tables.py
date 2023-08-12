@@ -78,7 +78,7 @@ class CustomerTable(tables.Table):
         fields = ("id", "pic", "name")
         # row_attrs={"class":"collapse show"}
         attrs = {
-            "class": "table table-sm text-center table-hover table-striped",
+            "class": "table table-sm text-center table-hover table-striped-columns",
         }
         empty_text = "There are no customers matching the search criteria..."
         # template_name='django_tables2/bootstrap5.html'

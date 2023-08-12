@@ -83,7 +83,7 @@ def loan_list(request):
 
 
 @login_required
-@for_htmx(use_block="content")
+# @for_htmx(use_block="content")
 def create_loan(request, pk=None):
     form = LoanForm(request.POST or None)
 
@@ -95,11 +95,39 @@ def create_loan(request, pk=None):
             messages.success(request, f"last loan id is {l}")
             # save/save & add more save&view
             if "view" in request.POST:
-                return HttpResponseRedirect(
-                    reverse("girvi:girvi_loan_detail", kwargs={"pk": l.pk})
+                # return HttpResponseRedirect(
+                #     reverse("girvi:girvi_loan_detail", kwargs={"pk": l.pk})
+                # )
+                response = render_block_to_string(
+                    "girvi/loan_detail.html",
+                    "content",
+                    {"loan": l, "object": l},
+                    request,
+                )
+                return HttpResponse(
+                    response,
+                    headers={
+                        "Hx-Push-Url": reverse(
+                            "girvi:girvi_loan_detail", kwargs={"pk": l.id}
+                        )
+                    },
                 )
             else:
-                return HttpResponseRedirect(reverse("girvi:girvi_loan_create"))
+                # return HttpResponseRedirect(reverse("girvi:girvi_loan_create"))
+                response = render_block_to_string(
+                    "girvi/loan_form.html",
+                    "content",
+                    {"form": LoanForm()},
+                    request,
+                )
+                return HttpResponse(
+                    response,
+                    headers={
+                        "Hx-Push-Url": reverse(
+                            "girvi:girvi_loan_create"
+                        )
+                    },
+                )
 
         else:
             messages.warning(request, "Please correct the error below.")
@@ -110,7 +138,11 @@ def create_loan(request, pk=None):
             form = LoanForm(initial={"customer": customer, "created": ld})
         else:
             form = LoanForm(initial={"created": ld})
-
+        if request.htmx:
+                response = render_block_to_string(
+                    "girvi/loan_form.html", "content", {"form": form}, request
+                )
+                return HttpResponse(response)
     return TemplateResponse(
         request,
         "girvi/loan_form.html",

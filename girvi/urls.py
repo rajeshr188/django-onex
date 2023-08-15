@@ -171,7 +171,7 @@ urlpatterns += (
 
 urlpatterns += (
     # urls for Release
-    path("girvi/release/", views.ReleaseListView.as_view(), name="girvi_release_list"),
+    path("girvi/release/", views.release_list, name="girvi_release_list"),
     path(
         "girvi/release/create/",
         views.ReleaseCreateView.as_view(),

@@ -19,13 +19,12 @@ class LoanFilter(django_filters.FilterSet):
     )
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     created = django_filters.DateFromToRangeFilter()
-    # till_date = django_filters.DateFilter("created", lookup_expr="lte",label="Date Upto:")
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
-    loan_type = django_filters.ChoiceFilter(
-        choices=Loan.LoanType.choices, empty_label="Select Loan Type"
-    )
+    # loan_type = django_filters.ChoiceFilter(
+    #     choices=Loan.LoanType.choices, empty_label="Select Loan Type"
+    # )
     sunk = django_filters.BooleanFilter(method="sunken", label="sunken")
 
     def filter_status(self, queryset, name, value):
@@ -90,7 +89,6 @@ class AdjustmentFilter(django_filters.FilterSet):
 
 
 class ReleaseFilter(django_filters.FilterSet):
-    query = django_filters.CharFilter(method="universal_search", label="Search")
     loan = django_filters.ModelChoiceFilter(
         widget=LoansWidget, queryset=Loan.released.all()
     )

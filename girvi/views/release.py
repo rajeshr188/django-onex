@@ -1,13 +1,19 @@
 from typing import List
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 from django_filters.views import FilterView
+from django_tables2.config import RequestConfig
+from django_tables2.export.export import TableExport
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin
+
+from utils.htmx_utils import for_htmx
 
 from ..filters import ReleaseFilter
 from ..forms import BulkReleaseForm, ReleaseForm
@@ -22,17 +28,23 @@ def increlid():
     return str(int(last.releaseid) + 1)
 
 
-class ReleaseListView(LoginRequiredMixin, ExportMixin, SingleTableMixin, FilterView):
-    table_class = ReleaseTable
-    model = Release
-    filterset_class = ReleaseFilter
-    template_name = "girvi/release_list.html"
-    paginate_by = 10
+@login_required
+@for_htmx(use_block="content")
+def release_list(request):
+    stats = {}
+    filter = ReleaseFilter(
+        request.GET,
+        queryset=Release.objects.order_by("-id").select_related("created_by"),
+    )
+    table = ReleaseTable(filter.qs)
+    context = {"filter": filter, "table": table}
 
-    def get_template_names(self) -> List[str]:
-        if self.request.META.get("HTTP_HX_REQUEST"):
-            self.template_name = "girvi/partials/release_list_view.html"
-        return super().get_template_names()
+    RequestConfig(request, paginate={"per_page": 10}).configure(table)
+    export_format = request.GET.get("_export", None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table, exclude_columns=())
+        return exporter.response(f"table.{export_format}")
+    return TemplateResponse(request, "girvi/release_list.html", context)
 
 
 class ReleaseCreateView(LoginRequiredMixin, CreateView):

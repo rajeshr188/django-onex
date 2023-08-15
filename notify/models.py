@@ -36,6 +36,7 @@ class Notification(models.Model):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
+        # related_name='notices'
     )
     customer = models.ForeignKey("contact.Customer", on_delete=models.CASCADE)
     loans = models.ManyToManyField(Loan, related_name="notifications")

@@ -1,11 +1,11 @@
 {%extends "_base.html"%}
 {%load static%}
 {%block content%}
-<div class="" id="notification_list">
+<div class="container-fluid" id="notification_list">
     <h2>Notification List</h2><br/>
     <a class="btn btn-secondary" href="{% url 'notify_notification_create'%}">Create New</a>
-    <table class="table">
-        <thead>
+    <table class="table table-hover">
+        <thead class="table-group-divider">
           <tr>
             <th scope="col">id</th>
             <th scope="col">To</th>

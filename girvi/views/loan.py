@@ -405,7 +405,7 @@ def generate_original(request, pk=None):
     for line in lines:
         c.drawString(2 * cm, y, line)
         y -= 0.5 * cm
-
+    c.setFont("Helvetica", 12)
     address = f"{loan.customer.address.first()}"
     lines = textwrap.wrap(address, width=35)
     # Draw the wrapped text on the canvas
@@ -418,13 +418,10 @@ def generate_original(request, pk=None):
     c.drawString(10 * cm, 11.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 9.8 * cm, f"{loan.itemweight}")
     c.drawString(10 * cm, 8 * cm, f"{loan.loanamount +500}")
-    c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
+    
     c.setFont("Helvetica-Bold", 12)
+    c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
     c.drawString(8 * cm, 6.5 * cm, f"{loan.loanamount}")
-    c.drawString(
-        2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
-    )
-
     # Wrap the text if its length is greater than 35 characters
     lines = textwrap.wrap(loan.itemdesc, width=35)
     # Draw the wrapped text on the canvas
@@ -432,6 +429,13 @@ def generate_original(request, pk=None):
     for line in lines:
         c.drawString(2.5 * cm, y, line)
         y -= 0.5 * cm
+
+    c.setFont("Helvetica", 12)
+    c.drawString(
+        2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
+    )
+
+    
 
     c.save()
     return response
@@ -445,7 +449,7 @@ def generate_duplicate(request, pk=None):
     page_width = 14.6 * cm
     page_height = 21 * cm
     c = canvas.Canvas(response, pagesize=(page_width, page_height))
-    c.setFont("Helvetica-Bold", 12)
+    c.setFont("Helvetica", 12)
     # Grid spacing
     grid_spacing = 1 * cm  # Adjust this value based on your preference
 
@@ -489,6 +493,7 @@ def generate_duplicate(request, pk=None):
     c.drawString(5 * cm, 7 * cm, f"{loan.itemweight}")
     c.drawString(8 * cm, 7 * cm, f"{loan.itemweight}")
     c.drawString(12 * cm, 7 * cm, f"{loan.itemvalue}")
+    c.setFont("Helvetica-Bold", 12)
     c.drawString(1 * cm, 3.5 * cm, f"{loan.lid}")
     c.drawString(1 * cm, 3 * cm, f"{loan.created.strftime('%d/%m/%y')}")
     c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {loan.itemweight} gm")

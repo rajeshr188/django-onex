@@ -4,10 +4,23 @@
 <div class="" id="noticegroup_list">
     <h2>NoticeGroup List : {{items.count}}</h2><br/>
     <a class="btn btn-success" href="{% url 'notify_noticegroup_create'%}">Create New</a>
-    <ul class="list-group">
-        {%for i in objects%}
-            <li class="list-group-item"><a href="{% url 'notify_noticegroup_detail' i.id%}">{{i}}</a> <button>Edit</button><button>Delete</button></li>
-        {%endfor%}
-    </ul>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr><th>Id</th><th>Name</th><th>Items</th><th>Actions</th></tr>
+            </thead>
+            <tbody class="table-group-divider">
+                {%for i in objects%}
+                <tr>
+                    <td>{{i.id}}</td>
+                    <td><a href="{% url 'notify_noticegroup_detail' i.id%}">{{i}}</a></td>
+                    <td>{{i.notification_set.all.count}}</td>
+                    <td><button>Edit</button><button>Delete</button></td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+    </div>
+  
 </div>
 {%endblock%}

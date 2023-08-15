@@ -6,7 +6,7 @@
 {% block table.thead %}
 
   {% if table.show_header %}
-      <thead {{ table.attrs.thead.as_html }} >
+      <thead {{ table.attrs.thead.as_html }} class="table-group-divider">
       <tr>
           {% for column in table.columns %}
             {%if column.orderable%}
@@ -31,7 +31,7 @@
   {% endif %}
 {% endblock table.thead %}
 {% block table.tbody %}
-                <tbody {{ table.attrs.tbody.as_html }} id="tbody">
+                <tbody {{ table.attrs.tbody.as_html }} id="tbody" class="table-group-divider">
                 {% for row in table.paginated_rows %}
                     {% block table.tbody.row %}
                     <tr {{ row.attrs.as_html }}>

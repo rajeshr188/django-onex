@@ -1,6 +1,9 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
+<div class="div" hx-trigger="loanChanged from:body" hx-get="{% url 'girvi:girvi_loan_detail' loan.id %}"
+    hx-target="#content" hx-swap="innerHTML transition:true"
+    hx-trigger ="click" hx-vals='{"use_block":"content"}'>
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Loan Detail</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
@@ -249,4 +252,6 @@
           </div>
     </div>
   {%endblock%}
+</div>
+  
 {% endblock %}

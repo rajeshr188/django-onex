@@ -26,7 +26,7 @@
     {% endblock%}
     
   </head>
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' >
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
       <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard' %}">OneX</a>
@@ -42,7 +42,7 @@
                                   hx-target="#content"
                                   hx-swap="innerHTML transition:true"
                                   hx-push-url="true"
-                                  hx-trigger="click, keyup[shiftKey&&key=='C'] from:body"
+                                  hx-trigger="click, keyup[altKey&&shiftKey&&key=='C'] from:body"
                     >Customer </a>
             </li>
             <li class="nav-item dropdown">
@@ -57,10 +57,10 @@
                     >License</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="" hx-get="{% url 'girvi:girvi_loan_list'%}"
-                  hx-target="#content"
+                                  hx-target="#content"
                                   hx-swap="innerHTML transition:true"
                                   hx-push-url="true"
-                                  hx-trigger="click, keyup[shiftKey&&key=='L'] from:body"
+                                  hx-trigger="click, keyup[altKey&&shiftKey&&key=='L'] from:body"
                     >Loan</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{% url 'girvi:girvi_release_list'%}" >Release</a></li>
@@ -147,7 +147,16 @@
               </ul>
             </li> -->
             <li class="nav-item active">
-              <a class="nav-link" href="{% url 'daybook' %}">Daybook <span class="sr-only">(current)</span></a>
+              <a class="nav-link" href="{% url 'daybook' %}">Daybook </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                Rate
+              </a>
+              <ul class="dropdown-menu">
+                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.grate}}</a></li>
+                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.srate}}</a></li>
+              </ul>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
@@ -199,15 +208,8 @@
         </div>
       </div>
     </nav>
-    
-    <div class="container mt-2 mb-2" id="rate">
-      <a class="nav-link" href="{% url 'product_rate_list'%}">
-        <ul>
-          <li>{{request.grate}}</li><li>{{request.srate}}</li>
-        </ul>
-      </a>
-    </div>
-    <div id="content" class="container mb-2 sample-transition"> 
+  
+    <div id="content" class="container-fluid mb-2 sample-transition"> 
       
       {% include "toasts.html" %}
       {% block content %}

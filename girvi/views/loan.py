@@ -122,11 +122,7 @@ def create_loan(request, pk=None):
                 )
                 return HttpResponse(
                     response,
-                    headers={
-                        "Hx-Push-Url": reverse(
-                            "girvi:girvi_loan_create"
-                        )
-                    },
+                    headers={"Hx-Push-Url": reverse("girvi:girvi_loan_create")},
                 )
 
         else:
@@ -139,10 +135,10 @@ def create_loan(request, pk=None):
         else:
             form = LoanForm(initial={"created": ld})
         if request.htmx:
-                response = render_block_to_string(
-                    "girvi/loan_form.html", "content", {"form": form}, request
-                )
-                return HttpResponse(response)
+            response = render_block_to_string(
+                "girvi/loan_form.html", "content", {"form": form}, request
+            )
+            return HttpResponse(response)
     return TemplateResponse(
         request,
         "girvi/loan_form.html",
@@ -194,7 +190,7 @@ def next_loanid(request):
 
 
 @login_required
-@for_htmx(use_block="loaninfo")
+@for_htmx(use_block_from_params=True)
 def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
     print(loan.total() < loan.current_value())
@@ -461,7 +457,13 @@ def generate_duplicate(request, pk=None):
         16 * cm,
         f"{loan.customer.get_relatedas_display()} {loan.customer.relatedto}",
     )
-    c.drawString(5 * cm, 15 * cm, f"{loan.customer.address.first()}")
+    address = textwrap.wrap(f"{loan.customer.address.first()}")
+    # Draw the wrapped text on the canvas
+    y = 15 * cm
+    for line in address:
+        c.drawString(5 * cm, y, line)
+        y -= 0.5 * cm
+
     c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
     c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
 

@@ -42,7 +42,8 @@ class LoanTable(tables.Table):
         return format_html(
             """
             <a href ="" hx-get="/girvi/girvi/loan/detail/{}/"
-                        hx-target="#loan-content" hx-swap="innerHTML transition:true"
+                        hx-target="#content" hx-swap="innerHTML transition:true"
+                        hx-vals='{{"use_block":"content"}}'
                         hx-push-url="true">{}</a>
             """,
             record.id,
@@ -104,7 +105,7 @@ class LoanTable(tables.Table):
             if record.is_released
             else ("table-danger" if record.is_overdue else "table-secondary")
         }
-        attrs = {"class": "table table-sm table-striped table-hover"}
+        attrs = {"class": "table table-striped table-hover"}
         empty_text = "There are no loans matching the search criteria..."
         template_name = "table_htmx.html"
 

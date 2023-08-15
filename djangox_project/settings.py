@@ -98,7 +98,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                
             ],
         },
     },
@@ -162,7 +161,7 @@ TIME_ZONE = "Asia/Kolkata"
 USE_L10N = True
 SHORT_DATETIME_FORMAT = "d-m-Y"
 DATETIME_INPUT_FORMATS = [
-    "%d/%m/%Y %I:%M %p",
+    "%d/%m/%Y %H:%M:%S",
 ]
 USE_TZ = True
 

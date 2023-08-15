@@ -16,7 +16,7 @@ class ImageColumn(tables.Column):
 
 class CustomerTable(tables.Table):
     name = tables.Column(verbose_name="Name")
-    pic = ImageColumn()
+    # pic = ImageColumn()
     address = tables.Column(verbose_name="Address", orderable=False, empty_values=())
     actions = tables.Column(orderable=False, empty_values=())
 
@@ -43,8 +43,7 @@ class CustomerTable(tables.Table):
         return f"{address} ph:{numbers}"
 
     # never define render_delete it will delete all
-    # def render_remove(self):
-    #     return ""
+
     def render_actions(self, record):
         return format_html(
             """
@@ -75,7 +74,7 @@ class CustomerTable(tables.Table):
 
     class Meta:
         model = Customer
-        fields = ("id", "pic", "name")
+        fields = ("id", "name")
         # row_attrs={"class":"collapse show"}
         attrs = {
             "class": "table table-sm text-center table-hover table-striped-columns",

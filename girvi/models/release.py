@@ -20,7 +20,7 @@ class Release(models.Model):
     created_by = models.ForeignKey(
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
     )
-    releaseid = models.CharField(max_length=255, unique=True)
+    releaseid = models.CharField(max_length=255, unique=True, null=True, blank=True)
     interestpaid = models.IntegerField(default=0)
 
     # Relationship Fields

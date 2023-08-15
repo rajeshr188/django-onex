@@ -64,7 +64,7 @@ class ReleaseUpdateView(LoginRequiredMixin, UpdateView):
 
 class ReleaseDeleteView(LoginRequiredMixin, DeleteView):
     model = Release
-    success_url = reverse_lazy("girvi_release_list")
+    success_url = reverse_lazy("girvi:girvi_release_list")
 
 
 from django.db import IntegrityError

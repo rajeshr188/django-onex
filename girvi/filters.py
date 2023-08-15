@@ -18,8 +18,8 @@ class LoanFilter(django_filters.FilterSet):
         widget=CustomerWidget(empty_label="Customer"),
     )
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
-    from_date = django_filters.DateFilter("created", lookup_expr="gte")
-    till_date = django_filters.DateFilter("created", lookup_expr="lte")
+    created = django_filters.DateFromToRangeFilter()
+    # till_date = django_filters.DateFilter("created", lookup_expr="lte",label="Date Upto:")
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
@@ -90,6 +90,7 @@ class AdjustmentFilter(django_filters.FilterSet):
 
 
 class ReleaseFilter(django_filters.FilterSet):
+    query = django_filters.CharFilter(method="universal_search", label="Search")
     loan = django_filters.ModelChoiceFilter(
         widget=LoansWidget, queryset=Loan.released.all()
     )

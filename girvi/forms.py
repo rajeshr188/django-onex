@@ -1,25 +1,32 @@
+from datetime import datetime
+from decimal import Decimal
+
 from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import AutocompleteSelect
-from django.contrib.postgres.forms import DateRangeField
-from django.forms import DateTimeInput, modelformset_factory
+from django.forms import DateTimeInput
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django_select2 import forms as s2forms
 from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
                                   Select2MultipleWidget, Select2Widget)
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
-from product.models import ProductVariant
+from product.models import ProductVariant, Rate
 
 from .models import Adjustment, License, Loan, LoanItem, Release, Series
 
 
 class LoansWidget(s2forms.ModelSelect2Widget):
     search_fields = ["loanid__icontains"]
+
+
+class SeriesWidget(s2forms.ModelSelect2Widget):
+    search_fields = ["name__icontains"]
 
 
 class MultipleLoansWidget(s2forms.ModelSelect2MultipleWidget):
@@ -53,15 +60,16 @@ class LoanForm(forms.ModelForm):
     #     attrs={'data-dropdown-auto-width': 'true'}
     #     )
     # )
+
     series = forms.ModelChoiceField(
         queryset=Series.objects.exclude(is_active=False),
-        # widget = ModelSelect2Widget(
         widget=forms.Select(
             attrs={
                 "hx-get": reverse_lazy("girvi:girvi_series_next_loanid"),
                 "hx-target": "#div_id_lid",
                 "hx-trigger": "change",
                 "hx-swap": "innerHTML",
+                "autofocus": True,
             }
         ),
     )
@@ -69,12 +77,12 @@ class LoanForm(forms.ModelForm):
     created = forms.DateTimeField(
         input_formats=["%d/%m/%Y %H:%M"],
         widget=forms.TextInput(
-            attrs={"type": "datetime-local", "data-date-format": "DD MMMM YYYY"}
+            attrs={
+                "type": "datetime-local",
+                "data-date-format": "DD MMMM YYYY",
+                "max": datetime.now().date(),
+            }
         ),
-    )
-
-    itemdesc = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": "3"}),
     )
 
     class Meta:
@@ -83,27 +91,33 @@ class LoanForm(forms.ModelForm):
             "loan_type",
             "series",
             "customer",
+            "pic",
             "lid",
             "created",
-            "itemtype",
-            "itemdesc",
-            "itemweight",
-            "loanamount",
-            "interestrate",
         ]
-        widgets = {
-            "itemdesc": forms.Textarea(attrs={"rows": 2}),
-            "series": forms.TextInput(attrs={"autofocus": True}),
-        }
+
+    def clean_created(self):
+        cleaned_data = super().clean()
+        my_date = cleaned_data.get("created")
+
+        if my_date and my_date > timezone.now():
+            raise forms.ValidationError("Date cannot be in the future.")
+
+        return my_date
 
     def clean(self):
         cleaned_data = super().clean()
 
-        # generate loan id when creted
+        if not self.cleaned_data["series"].is_active:
+            raise forms.ValidationError(
+                f"Series {self.cleaned_data['series'].name}Inactive"
+            )
+
+        # generate loan id when created
         loanid = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
             self.cleaned_data["lid"]
         )
-        # in update mode, check if loanid is changed
+        # # in update mode, check if loanid is changed
         if self.instance.loanid and self.instance.loanid == loanid:
             return cleaned_data
         # when created, check if loanid already exists
@@ -114,30 +128,22 @@ class LoanForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.help_text_inline = True
         self.helper.layout = Layout(
             Row(
-                Column(FloatingField("loan_type"), css_class="col"),
-                Column(FloatingField("series"), css_class="col"),
-                Column(FloatingField("lid"), css_class="col"),
-                css_class="row g-3",
+                Column(FloatingField("loan_type"), css_class="col-md"),
+                Column(FloatingField("created"), css_class="col-md date"),
+                css_class="row",
             ),
             Row(
-                Column("customer", css_class="col"),
-                Column(FloatingField("created"), css_class="col date"),
-                css_class="row g-2",
+                Column(FloatingField("series"), css_class="col-md"),
+                Column(FloatingField("lid"), css_class="col-md"),
+                css_class="row",
             ),
             Row(
-                Column(FloatingField("itemtype"), css_class="col"),
-                Column(FloatingField("interestrate"), css_class="col"),
-                Column(FloatingField("itemweight"), css_class="col"),
-                Column(FloatingField("loanamount"), css_class="col"),
-                css_class="row g-4",
+                Column("customer", css_class="col-md"),
+                css_class="row",
             ),
-            Row(
-                Column(FloatingField("itemdesc"), css_class="col"),
-                css_class="row g-1",
-            )
-            # Submit("submit", "Submit"),
         )
 
 
@@ -147,26 +153,60 @@ class LoanRenewForm(forms.Form):
 
 
 class LoanItemForm(forms.ModelForm):
-    item = forms.ModelChoiceField(
-        queryset=ProductVariant.objects.all(),
-        widget=ModelSelect2Widget(
-            search_fields=["name__icontains"],
-            select2_options={
-                "width": "100%",
-            },
+    # item = forms.ModelChoiceField(
+    #     queryset=ProductVariant.objects.all(),
+    #     widget=ModelSelect2Widget(
+    #         search_fields=["name__icontains"],
+    #         select2_options={
+    #             "width": "100%",
+    #         },
+    #     ),
+    # )
+    itemtype = forms.ChoiceField(
+        choices=(("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze")),
+        widget=forms.Select(
+            attrs={
+                "hx-get": reverse_lazy("girvi:girvi_get_interestrate"),
+                "hx-target": "#div_id_interestrate",
+                "hx-trigger": "change,load",
+                "hx-swap": "innerHTML",
+            }
         ),
     )
 
     class Meta:
         model = LoanItem
         fields = [
-            "item",
+            "pic",
+            "itemdesc",
+            "itemtype",
             "quantity",
             "weight",
+            "purity",
             "loanamount",
             "interestrate",
-            "interest",
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        loanamount = self.cleaned_data["loanamount"]
+        weight = self.cleaned_data["weight"]
+        purity = self.cleaned_data["purity"]
+        itemtype = self.cleaned_data["itemtype"]
+        rate = (
+            Rate.objects.filter(metal=itemtype).latest("timestamp").buying_rate
+            if Rate.objects.filter(metal=itemtype).exists()
+            else 0
+        )
+        value = round(weight * purity * Decimal(0.01) * rate)
+
+        if value < loanamount:
+            raise forms.ValidationError(
+                f"Loan amount {loanamount} cannot exceed items value {value}."
+            )
+
+        return cleaned_data
 
 
 class ReleaseForm(forms.ModelForm):
@@ -182,6 +222,15 @@ class ReleaseForm(forms.ModelForm):
             "loan",
             "interestpaid",
         ]
+
+    def clean_created(self):
+        cleaned_data = super().clean()
+        my_date = cleaned_data.get("created")
+
+        if my_date and my_date > timezone.now():
+            raise forms.ValidationError("Date cannot be in the future.")
+
+        return my_date
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

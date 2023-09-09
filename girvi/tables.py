@@ -7,6 +7,15 @@ from django_tables2.utils import A
 from .models import Loan, Release
 
 
+class ImageColumn(tables.Column):
+    def render(self, value):
+        return format_html(
+            '<img src="{}" width="50" height="50" class="img-fluid img-thumbnail" alt={}/>',
+            value.url,
+            value.name,
+        )
+
+
 class CheckBoxColumnWithName(tables.CheckBoxColumn):
     @property
     def header(self):
@@ -15,13 +24,14 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 class LoanTable(tables.Table):
     loanid = tables.Column(verbose_name="Loan")
-
+    # pic = ImageColumn()
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
         accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
     )
     notified = tables.Column(accessor="last_notified")
     months_since_created = tables.Column(verbose_name="Months")
+    total_weight = tables.Column(verbose_name="wt", empty_values=())
 
     def render_notified(self, value, record):
         return record.created
@@ -37,6 +47,9 @@ class LoanTable(tables.Table):
 
     def value_customer(self, record):
         return record.customer
+
+    def render_total_weight(self, record):
+        return f"G:{record.total_gold_weight} S:{record.total_silver_weight} O:{record.total_bronze_weight}"
 
     def render_loanid(self, record):
         return format_html(
@@ -59,28 +72,21 @@ class LoanTable(tables.Table):
     def value_created(self, record):
         return record.created.date()
 
-    is_overdue = tables.Column(verbose_name="Overdue?")
-
-    total_interest = tables.Column(
-        verbose_name="Interest",
-        # footer=lambda table: sum(x.total_interest for x in table.data)
-    )
-    total_due = tables.Column(
-        verbose_name="Due",
-        # footer=lambda table: sum(x.total_interest_due for x in table.data)
-    )
-    loanamount = tables.Column(
-        verbose_name="Amount",
-        # footer=lambda table: sum(x.loanamount for x in table.data)
-    )
-    current_value = tables.Column(
-        verbose_name="Value",
-        # footer = lambda table:sum(x.current_value for x in table.data)
-    )
-    itemweight = tables.Column(
-        verbose_name="Wt",
-        # footer = lambda table:sum(x.itemweight for x in table.data)
-    )
+    # is_overdue = tables.Column(verbose_name="Overdue?")
+    # total_loan_amount = tables.Column(
+    #     verbose_name="Amount",
+    #     footer = lambda table: sum(x.loanamount for x in table.data)
+    # )
+    # total_interest = tables.Column(
+    #     verbose_name="Interest",
+    #     # footer=lambda table: sum(x.total_interest for x in table.data)
+    # )
+    # total_due = tables.Column(
+    #     verbose_name= "Due"
+    # )
+    # current_value = tables.Column(
+    #     verbose_name = "Value"
+    # )
 
     class Meta:
         model = Loan
@@ -90,14 +96,15 @@ class LoanTable(tables.Table):
             "loanid",
             "created",
             "customer",
+            # "pic",
             "itemdesc",
-            "itemweight",
+            "total_weight",
             "loanamount",
             "total_interest",
             "total_due",
             "current_value",
             "months_since_created",
-            "is_overdue",
+            # "is_overdue",
         )
         # https://stackoverflow.com/questions/37513463/how-to-change-color-of-django-tables-row
         row_attrs = {

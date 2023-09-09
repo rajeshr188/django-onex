@@ -2,7 +2,6 @@ import datetime
 from decimal import Decimal
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
-from math import floor
 
 import qrcode
 import qrcode.image.svg
@@ -11,7 +10,7 @@ from django.contrib.postgres.fields import DateRangeField
 from django.db import models, transaction
 from django.db.models import (BooleanField, Case, DecimalField,
                               ExpressionWrapper, F, Func, Q, Sum, Value, When)
-from django.db.models.functions import ExtractMonth, ExtractYear
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
 from moneyed import Money
@@ -38,33 +37,52 @@ class Loan(models.Model):
     lid = models.IntegerField(blank=True, null=True)
     loanid = models.CharField(max_length=255, unique=True)
     has_collateral = models.BooleanField(default=False)
+    pic = models.ImageField(upload_to="loan_pics/", null=True, blank=True)
 
     class LoanType(models.TextChoices):
         TAKEN = "Taken", "Taken"
         GIVEN = "Given", "Given"
 
     loan_type = models.CharField(
-        max_length=10, choices=LoanType.choices, default=LoanType.GIVEN
-    )
-    # ----------------legacy---------------------------------
-    itype = (("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze"))
-    itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
-    itemdesc = models.TextField(
-        max_length=100, blank=True, null=True, verbose_name="Item"
-    )
-    itemweight = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Weight"
-    )
-    itemvalue = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, verbose_name="Value"
-    )
-    # --------------------mustgo--------------------------------------
-    loanamount = models.PositiveIntegerField(verbose_name="Amount")
-    interestrate = models.PositiveSmallIntegerField(default=2, verbose_name="ROI")
-    interest = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
+        max_length=10,
+        choices=LoanType.choices,
+        default=LoanType.GIVEN,
+        null=True,
+        blank=True,
     )
 
+    itemdesc = models.TextField(
+        max_length=100,
+        verbose_name="Item",
+        blank=True,
+        null=True,
+    )
+
+    # ----------------legacy---------------------------------
+    itype = (
+        ("Gold", "Gold"),
+        ("Silver", "Silver"),
+        ("Bronze", "Bronze"),
+        ("Mixed", "Mixed"),
+    )
+    itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
+
+    itemweight = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Weight",
+        null=True,
+        blank=True,
+    )
+    # --------------------mustgo--------------------------------------
+    loanamount = models.PositiveIntegerField(
+        verbose_name="Amount", default=0, null=True, blank=True
+    )
+
+    interest = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, null=True, blank=True
+    )
     series = models.ForeignKey(
         "girvi.Series",
         on_delete=models.CASCADE,
@@ -83,6 +101,7 @@ class Loan(models.Model):
 
     class Meta:
         ordering = ("series", "lid")
+        get_latest_by = "id"
 
     def __str__(self):
         return f"{self.loanid} - {self.loanamount} - {self.created.date()}"
@@ -92,6 +111,32 @@ class Loan(models.Model):
 
     def get_update_url(self):
         return reverse("girvi:girvi_loan_update", args=(self.pk,))
+
+    def get_total_weight(self):
+        total_gold_weight = (
+            self.loanitems.filter(itemtype="Gold").aggregate(models.Sum("weight"))[
+                "weight__sum"
+            ]
+            or 0
+        )
+        total_silver_weight = (
+            self.loanitems.filter(itemtype="Silver").aggregate(models.Sum("weight"))[
+                "weight__sum"
+            ]
+            or 0
+        )
+        total_bronze_weight = (
+            self.loanitems.filter(itemtype="Bronze").aggregate(models.Sum("weight"))[
+                "weight__sum"
+            ]
+            or 0
+        )
+        weight = {
+            "gold": float(total_gold_weight),
+            "silver": float(total_silver_weight),
+            "bronze": float(total_bronze_weight),
+        }
+        return weight
 
     @property
     def get_qr(self):
@@ -108,9 +153,10 @@ class Loan(models.Model):
 
     def get_loanamount(self):
         adjustments = self.adjustments.filter(as_interest=False).aggregate(
-            Coalesce(Sum("amount_received"), 0)
-        )["amount_received__sum"]
-        items_total = self.loanitems.aggregate(Sum("amount"))["amount__sum"]
+            total=Coalesce(Sum("amount_received"), 0)
+        )["total"]
+        items_total = self.loanitems.aggregate(Sum("loanamount"))["loanamount__sum"]
+        print(f"adjustments:{adjustments} items_total:{items_total}")
         return items_total - adjustments
 
     def get_total_adjustments(self):
@@ -129,22 +175,18 @@ class Loan(models.Model):
         nom = (cd.year - self.created.year) * 12 + cd.month - self.created.month
         return 1 if nom <= 0 else nom - 1
 
-    def interest_amt(self):
-        return round(Decimal(self.loanamount * (self.interestrate) / 100), 3)
-
     def interestdue(self, date=datetime.datetime.now(timezone.utc)):
-        if self.is_released:
-            return Decimal(0)
-        else:
-            return round(self.interest_amt() * self.noofmonths(date))
+        return round(self.interest * self.noofmonths(date))
 
     def current_value(self):
-        rate = (
-            Rate.objects.filter(metal=self.itemtype).latest("timestamp").buying_rate
-            if Rate.objects.filter(metal=self.itemtype).exists()
-            else 0
-        )
-        return round(self.itemweight * Decimal(0.75) * rate)
+        loan_items = self.loanitems.all()
+        total_current_value = sum(loan_item.current_value() for loan_item in loan_items)
+        return total_current_value
+
+    # def calculate_total_current_value(self):
+    #     loan_items = self.loanitem_set.all()
+    #     total_current_value = sum(loan_item.current_value() for loan_item in loan_items)
+    #     return total_current_value
 
     def total(self):
         return self.interestdue() + self.loanamount
@@ -259,14 +301,14 @@ class Loan(models.Model):
     def create_transactions(self):
         # get contact.Account
 
-        ledger_journal, Account_journal = self.get_journals()
+        ledger_journal, account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.transact(lt)
         account_journal.transact(at)
 
     def reverse_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        ledger_journal, account_journal = self.get_journals()
         lt, at = self.get_transactions()
 
         ledger_journal.untransact(lt)
@@ -274,13 +316,7 @@ class Loan(models.Model):
 
     def save(self, *args, **kwargs):
         self.loanid = self.series.name + str(self.lid)
-        self.interest = self.interestdue()
-        self.loanamount = (
-            self.get_loanamount() if self.loanamount == 0 else self.loanamount
-        )
-
         super(Loan, self).save(*args, **kwargs)
-        return self
 
     @property
     def last_notified(self):
@@ -290,18 +326,28 @@ class Loan(models.Model):
 
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="loanitems")
-    item = models.ForeignKey(
-        "product.ProductVariant", on_delete=models.SET_NULL, null=True
-    )
-    quantity = models.PositiveIntegerField()
+    # item = models.ForeignKey(
+    #                 "product.ProductVariant", on_delete=models.SET_NULL,
+    #                 null=True,blank =True)
+    pic = models.ImageField(upload_to="loan_pics/", null=True, blank=True)
+    itype = (("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze"))
+    itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
+    quantity = models.PositiveIntegerField(default=1)
     weight = models.DecimalField(max_digits=10, decimal_places=3)
-
+    purity = models.DecimalField(
+        max_digits=10, decimal_places=2, default=75, blank=True, null=True
+    )
     loanamount = models.DecimalField(max_digits=10, decimal_places=2)
     interestrate = models.DecimalField(max_digits=10, decimal_places=2)
-    interest = models.DecimalField(max_digits=10, decimal_places=2)
+    interest = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, blank=True, null=True
+    )
+    itemdesc = models.TextField(
+        max_length=100, blank=True, null=True, verbose_name="Item"
+    )
 
     def __str__(self):
-        return f"{self.item} - {self.quantity}"
+        return f"{self.itemdesc} - {self.quantity}"
 
     def get_absolute_url(self):
         return reverse("girvi:girvi_loanitem_detail", args=(self.pk,))
@@ -316,9 +362,18 @@ class LoanItem(models.Model):
             kwargs={"id": self.id, "parent_id": self.loan.id},
         )
 
+    def current_value(self):
+        rate = (
+            Rate.objects.filter(metal=self.itemtype).latest("timestamp").buying_rate
+            if Rate.objects.filter(metal=self.itemtype).exists()
+            else 0
+        )
+        return round(self.weight * self.purity * Decimal(0.01) * rate)
+
     def save(self, *args, **kwargs):
-        super(LoanItem, self).save(*args, **kwargs)
-        self.loan.save()
+        self.interest = (self.interestrate / 100) * self.loanamount
+        super().save(*args, **kwargs)
+        # Update related Loan's total interest
 
 
 class Adjustment(models.Model):

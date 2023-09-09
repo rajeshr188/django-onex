@@ -4,7 +4,7 @@
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
-
+    {%if user.is_superuser%}
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
       <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
@@ -43,9 +43,9 @@
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                              Loans</div>
+                              Interest Due</div>
                           <div class="h5 mb-0 font-weight-bold text-gray-800">
-                           {{total_loan_amount}}
+                           {{total_interest.total}}
                           </div>
                       </div>
                       <div class="col-auto">
@@ -55,6 +55,95 @@
               </div>
           </div>
       </div>
+      <div class="col-xl-5 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Assets:  {{loan_count}}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <table class="table table-sm">
+                                <thead>
+                                    <th></th>
+                                    <th>Gold</th>
+                                    <th>Silver</th>
+                                    <th>Bronze</th>
+                                    <th>Total</th>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Weight</td><td>{{weight.gold}}</td><td>{{weight.silver}}</td><td>{{weight.bronze}}</td><td></td></tr>
+                                    <tr><td>Pure</td><td>{{pure_weight.gold}}</td><td>{{pure_weight.silver}}</td><td>{{pure_weight.bronze}}</td><td></td></tr>
+                                    <tr><td>Loan Amt</td><td>{{assets.gold_loanamount}}</td><td>{{assets.silver_loanamount}}</td><td>{{assets.bronze_loanamount}}</td><td>{{total_loan_amount.total}}</td></tr>
+                                    <tr><td>Value</td><td>{{itemwise_value.gold}}</td><td>{{itemwise_value.silver}}</td><td></td><td>{{current_value.total}}</td></tr>
+                                </tbody>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                         
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                           Sunken :{{sunken.loan_count}}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <table class="table table-sm">
+                                <thead>
+                                    <th></th>
+                                    <th>Gold</th>
+                                    <th>Silver</th>
+                                    <th>Bronze</th>
+                                    <th>Total</th>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Weight</td><td>{{sunken.weight.gold}}</td><td>{{sunken.weight.silver}}</td><td>{{sunken.weight.bronze}}</td><td></td></tr>
+                                    <tr><td>Pure</td><td>{{sunken.pure_weight.gold}}</td><td>{{sunken.pure_weight.silver}}</td><td>{{sunken.pure_weight.bronze}}</td><td></td></tr>
+                                    <tr><td>Loan Amt</td><td>{{sunken.assets.gold_loanamount}}</td><td>{{sunken.assets.silver_loanamount}}</td><td>{{sunken.assets.bronze_loanamount}}</td><td>{{sunken.total_loan_amount.total}}</td></tr>
+                                    <tr><td>Value</td><td>{{sunken.itemwise_value.gold}}</td><td>{{subken.itemwise_value.silver}}</td><td></td><td>{{sunken.current_value.total}}</td></tr>
+                                </tbody>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Assets value</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                         {{current_value}}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
       <!-- Earnings (Monthly) Card Example -->
       <div class="col-xl-3 col-md-6 mb-4">
@@ -381,6 +470,12 @@
 
       </div>
   </div>
+  {%else%}
+  <h1> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-lock2" viewBox="0 0 16 16">
+    <path d="M8 5a1 1 0 0 1 1 1v1H7V6a1 1 0 0 1 1-1zm2 2.076V6a2 2 0 1 0-4 0v1.076c-.54.166-1 .597-1 1.224v2.4c0 .816.781 1.3 1.5 1.3h3c.719 0 1.5-.484 1.5-1.3V8.3c0-.627-.46-1.058-1-1.224z"/>
+    <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+  </svg> You are not authorized to view this page.contact admin</h1>
+  {%endif%}
 
 </div>
 {% endblock content %}

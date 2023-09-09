@@ -9,7 +9,7 @@
 </p>
 
   <div class="row">
-    <div class="col-4">
+    <div class="col-md-4">
       <table class="table table-striped table-bordered table-sm">
       <tr><td>name</td><td>{{ object.name }}</td></tr>
       <tr><td>id</td><td>{{ object.id }}</td></tr>
@@ -22,7 +22,7 @@
       <tr><td>propreitor</td><td>{{ object.propreitor }}</td></tr>
       </table>
     </div>
-    <div class="col-8">
+    <div class="col-md-8">
       <div class="accordion" id="accordionExample">
         {%for item in object.series_set.all%}
         <div class="accordion-item">

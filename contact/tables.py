@@ -40,7 +40,7 @@ class CustomerTable(tables.Table):
         else:
             numbers = "---"
         address = record.address.first()
-        return f"{address} ph:{numbers}"
+        return f"{address} \n ph:{numbers}"
 
     # never define render_delete it will delete all
 

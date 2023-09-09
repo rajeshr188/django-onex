@@ -19,6 +19,11 @@ urlpatterns = (
     path(
         "girvi/series/next-loanid/", views.next_loanid, name="girvi_series_next_loanid"
     ),
+    path(
+        "girvi/loan/get-interestrate/",
+        views.get_interestrate,
+        name="girvi_get_interestrate",
+    ),
     # Example: /2012/week/23/
     path("girvi/notice/", views.notice, name="notice"),
     path("girvi/outdatedloans/notify/", views.notify_print, name="girvi_create_notice"),
@@ -78,6 +83,11 @@ urlpatterns += (
         "license/series/create/",
         views.SeriesCreateView.as_view(),
         name="girvi_series_create",
+    ),
+    path(
+        "license/series/detail/<int:id>/",
+        views.SeriesDetailView.as_view(),
+        name="girvi_series_detail",
     ),
 )
 

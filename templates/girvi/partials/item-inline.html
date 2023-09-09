@@ -1,13 +1,27 @@
-<tr id="#item-{{ object.id }}">
-        <td></td>
-        <td>{{object.item}}</td>
-        <td>{{object.qty}}</td>
+<tr id="#item-{{object.id}}" >
+        <td>{% if object.pic %}
+                <img src="/media/{{object.pic}}" alt="{{ object.itemdesc }}'s Profile Picture" 
+                  class="profile-img img-fluid" width="100" height="100"
+                  >
+            {% else %}
+                <img src="/media/customer_pics/profile-pic.jpg" alt="Default Profile Picture" 
+                width="200" height="200"
+                class="profile-img img-fluid px-3 px-sm-4 mt-3 mb-4" >
+            {% endif %}
+            <br>
+            {{object.itemdesc}}
+        </td>
+        <td>{{object.itemtype}}</td>
+        <td>{{object.quantity}}</td>
         <td>{{object.weight}}</td>
+        <td>{{object.purity}}</td>
+        <td>{{object.loanamount}}</td>
+        <td>{{object.current_value}}</td> 
         <td>{{object.interestrate}}</td>
-        <td>{{object.loanamount}}</td> 
         <td>{{object.interest}}</td>
         <td>
-                <button class="btn btn-info" hx-trigger='click'     
+                <button class="btn btn-info" hx-trigger='click' 
+                           
                         hx-get='{{ object.get_hx_edit_url }}'>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -15,7 +29,8 @@
                               </svg></button>
                 <a class="btn btn-danger"
                         hx-post='{{ object.get_delete_url }}' 
-                        hx-confirm='Delete item?' hx-trigger='click' 
+                        hx-confirm='Delete item?' hx-trigger='click'
+                         
                         >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                 <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>

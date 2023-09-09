@@ -48,9 +48,10 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_celery_results",
     # Local
+    # 'actstream',
     "users",
     "pages",
-    "contact",
+    "contact.apps.ContactConfig",
     "product",
     "girvi",
     "invoice",

@@ -82,7 +82,7 @@ def customer_create(request):
             if image_data:
                 image_file = ContentFile(
                     base64.b64decode(image_data.split(",")[1]),
-                    name=f"{f.name}_{f.relatedto}_{f.id}.jpg",
+                    name=f"{f.name}_{f.relatedas.replace('/','-')}_{f.relatedto}_{f.id}.jpg",
                 )
 
                 f.pic = image_file
@@ -119,9 +119,10 @@ def customer_create(request):
                 )
         else:
             messages.error(request, f"Error creating customer")
-            return TemplateResponse(
-                request, "contact/customer_form.html", {"form": form}
+            response = render_block_to_string(
+                "contact/customer_form.html", "content", {"form": form}, request
             )
+            return HttpResponse(response)
 
     else:
         form = CustomerForm()
@@ -178,7 +179,7 @@ def customer_edit(request, pk):
         if image_data:
             image_file = ContentFile(
                 base64.b64decode(image_data.split(",")[1]),
-                name=f"{f.name}_{f.relatedas.replace('/','-')}_{f.relatedto}.jpg",
+                name=f"{f.name}_{f.relatedas.replace('/','-')}_{f.relatedto}_{f.id}.jpg",
             )
 
             f.pic = image_file

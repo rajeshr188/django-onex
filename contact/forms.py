@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import NON_FIELD_ERRORS
 from django_select2 import forms as s2forms
 
 from product.models import PricingTier
@@ -18,8 +19,6 @@ class CustomerWidget(s2forms.ModelSelect2Widget):
 class CustomerForm(forms.ModelForm):
     pricing_tier = forms.ModelChoiceField(queryset=PricingTier.objects.all())
     name = forms.CharField(
-        max_length=255,
-        #  forms ↓
         widget=forms.TextInput(attrs={"autofocus": True}),
     )
 
@@ -33,6 +32,11 @@ class CustomerForm(forms.ModelForm):
             "relatedto",
             "pricing_tier",
         ]
+        error_messages = {
+            NON_FIELD_ERRORS: {
+                "unique_together": "%(model_name)s's %(field_labels)s are not unique.",
+            }
+        }
 
 
 class AddressForm(forms.ModelForm):

@@ -18,8 +18,12 @@ function initializeCamera() {
     // console.error("One or more required HTML elements are missing.");
     return;
   }
-
-  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+  const constraints = {
+    video: true,
+    facingMode: { ideal: 'environment' }, // Rear camera preference
+    audio: false
+  };
+  navigator.mediaDevices.getUserMedia(constraints)
     .then(function(stream) {
       mediaStream = stream;
       video.srcObject = stream;

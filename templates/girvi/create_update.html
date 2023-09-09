@@ -1,7 +1,8 @@
 {% extends "_base.html"%}
 {% load crispy_forms_tags%}
-{{form.media}}
+
 {% block content %}
+{{form.media}}
 <div class="container" id = "loan-content">
     <div class='row'>
         <div class='{% if object.id %}col-12 col-md-6 {% else %} col-md-6 mx-auto {% endif %}'>
@@ -19,17 +20,32 @@
 
         <div class='{% if object.id %}col-12 col-md-6 {% else %} d-none {% endif %}'>
             <h3>Items</h3>
-            <ul id="items-list" class="list-group list-group-flush">
-                {% for item in object.loanitems.all %}
-                {% include 'girvi/partials/item-inline.html' with object=item %}
-                {% endfor %}
-                
-              </ul>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <th>Item</th>
+                        <th>qty</th>
+                        <th>Wt</th>
+                        <th>Type</th>
+                        <th>InterestRate</th>
+                        <th>Amount</th>
+                        <th>Interest</th>
+                    </thead>
+                    <tbody id="items" hx-target = "closest tr" hx-swap="outerHTML">
+                        <tr>
+                            {% for item in object.loanitems.all %}
+                            {% include 'girvi/partials/item-inline.html' with object=item %}
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
             
             {% if new_item_url %}
                           
             <button class=" btn btn-success" hx-get="{{ new_item_url }}" hx-trigger='click'
-                hx-target='#items-list' hx-swap='beforeend'>Add item</button>
+                hx-target='#items' hx-swap='beforeend'>Add item</button>
 
             {% endif %}
         </div>

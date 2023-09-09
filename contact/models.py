@@ -59,7 +59,6 @@ class Customer(models.Model):
     relatedto = models.CharField(max_length=30, blank=True)
     area = models.CharField(max_length=50, blank=True)
     active = models.BooleanField(blank=True, default=True)
-    # rank =models.IntegerField(verbose_name='Rank')
     pricing_tier = models.ForeignKey(
         "product.PricingTier", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -317,13 +316,6 @@ class CustomerRelationship(models.Model):
 
     def __str__(self):
         return f"{self.customer.name} - {self.relationship.get_relationship_display()} - {self.related_customer.name}"
-
-
-class ContactScore(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    score = models.FloatField(default=0)
-    contact = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    desc = models.TextField(verbose_name="description")
 
 
 class Address(models.Model):

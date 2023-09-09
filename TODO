@@ -1,5 +1,29 @@
 every customer can be related to any customer ManyToManyField
-prevent release of loan if already released ,dont show release option in loan detail if already released
+add whatsapp:
+    communicate:
+        user Initiated:
+            list pending bills:
+                get due for each bill
+        business Initiated:
+            templates:
+                onboarding:customer verify
+                new loan/release created
+                interest overdue everymonth
+                loan expiry
+                notice
+                final notice
+add settings:
+    interest Rate:
+        gold:2
+        silver:4
+        other:8
+    loan-haircut% :75%
+    loan Pdf :
+
+add permissions:
+    admin:can do all add|edit|delete|view
+    staff:add|edit|view
+    user: only view
 
 purchase are not to be deleted
 need ledgerstatement detail page  

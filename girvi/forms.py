@@ -52,11 +52,7 @@ class SeriesForm(forms.ModelForm):
 class LoanForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
         queryset=Customer.objects.all(),
-        widget=CustomerWidget(
-            select2_options={
-                "width": "100%",
-            }
-        ),
+        widget=CustomerWidget(),
     )
     # customer = forms.ModelChoiceField(
     #     queryset=Customer.objects.all(),
@@ -80,11 +76,11 @@ class LoanForm(forms.ModelForm):
 
     created = forms.DateTimeField(
         input_formats=["%d/%m/%Y %H:%M"],
-        widget=forms.TextInput(
+        widget=forms.DateTimeInput(
             attrs={
                 "type": "datetime-local",
                 "data-date-format": "DD MMMM YYYY",
-                "max": datetime.now().date(),
+                "max": datetime.now(),
             }
         ),
     )

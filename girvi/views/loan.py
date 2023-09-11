@@ -133,21 +133,15 @@ def create_loan(request, pk=None):
             # return TemplateResponse(request, "girvi/loan_form.html", {"form": form})
     else:
         series = Loan.objects.latest().series
-        created = ld
         lid = series.loan_set.last().lid + 1
+        initial = {
+            "created": datetime.datetime.now(),
+            "series": series,
+            "lid": lid,
+        }
         if pk:
             # creating loan for the given customer
-            customer = get_object_or_404(Customer, pk=pk)
-            initial = {
-                "customer": customer,
-                "created": created,
-                "series": series,
-                "lid": lid,
-            }
-
-        else:
-            # brand new loan form
-            initial = {"created": created, "series": series, "lid": lid}
+            initial["customer"] = get_object_or_404(Customer, pk=pk)
 
         form = LoanForm(initial=initial)
         if request.htmx:

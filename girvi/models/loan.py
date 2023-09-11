@@ -39,7 +39,7 @@ from ..managers import LoanManager, LoanQuerySet, ReleasedManager, UnReleasedMan
 
 class Loan(models.Model):
     # Fields
-    created = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=datetime.datetime.now)
     updated = models.DateTimeField(auto_now=True, editable=False)
     created_by = models.ForeignKey(
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True

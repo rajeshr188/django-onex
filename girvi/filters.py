@@ -15,7 +15,7 @@ class LoanFilter(django_filters.FilterSet):
     query = django_filters.CharFilter(method="universal_search", label="Search")
     customer = django_filters.ModelChoiceFilter(
         queryset=Customer.objects.all(),
-        widget=CustomerWidget(empty_label="Customer"),
+        widget=CustomerWidget(),
     )
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
     created = django_filters.DateFromToRangeFilter()

@@ -218,14 +218,30 @@ def next_loanid(request):
 @for_htmx(use_block_from_params=True)
 def loan_detail(request, pk):
     loan = get_object_or_404(Loan, pk=pk)
+    result = []
+    for item in loan.get_weight:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["total_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
 
+    # Join the results into a single string
+    weight = " ".join(result)
+    result = []
+    for item in loan.get_pure:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["pure_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
+
+    # Join the results into a single string
+    pure = " ".join(result)
     context = {
         "object": loan,
         "sunken": loan.total() < loan.current_value(),
         "items": loan.loanitems.all(),
         "statements": loan.loanstatement_set.all(),
         "loan": loan,
-        "weight": loan.get_total_weight(),
+        "weight": weight,  # loan.get_total_weight(),
+        "pure": pure,
         "next": loan.get_next(),
         "journals": loan.journals.all(),
         "previous": loan.get_previous,

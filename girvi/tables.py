@@ -49,7 +49,15 @@ class LoanTable(tables.Table):
         return record.customer
 
     def render_total_weight(self, record):
-        return f"G:{record.total_gold_weight} S:{record.total_silver_weight} O:{record.total_bronze_weight}"
+        result = []
+        for item in record.get_weight:
+            item_type = item["itemtype"]
+            total_weight_purity = round(item["total_weight"])
+            result.append(f"{item_type}:{total_weight_purity}")
+
+        # Join the results into a single string
+        pure = " gms,".join(result)
+        return f"{pure} gms"
 
     def render_loanid(self, record):
         return format_html(

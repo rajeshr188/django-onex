@@ -844,9 +844,9 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
             if request.htmx:
                 return HttpResponse(status=204, headers={"HX-Trigger": "loanChanged"})
             return render(request, "girvi/partials/item-inline.html", context)
-        else:
-            context = {"url": url, "form": form, "object": instance}
-            return render(request, "girvi/partials/item-form.html", context)
+        # else:
+        #     context = {"url": url, "form": form, "object": instance}
+        #     return render(request, "girvi/partials/item-form.html", context)
 
     else:
         form = LoanItemForm(instance=instance)

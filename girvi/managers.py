@@ -1,11 +1,20 @@
 import datetime
 
 from django.db import models
-from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, FloatField, Func, Q, Sum,
-                              Value, When)
-from django.db.models.functions import (Coalesce, ExtractMonth, ExtractYear,
-                                        Round)
+from django.db.models import (
+    BooleanField,
+    Case,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    FloatField,
+    Func,
+    Q,
+    Sum,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, Round
 from django.utils import timezone
 
 from product.models import Rate, RateSource

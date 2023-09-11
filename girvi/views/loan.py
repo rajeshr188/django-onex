@@ -17,8 +17,11 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
 from django.views.generic import DeleteView
-from django.views.generic.dates import (MonthArchiveView, WeekArchiveView,
-                                        YearArchiveView)
+from django.views.generic.dates import (
+    MonthArchiveView,
+    WeekArchiveView,
+    YearArchiveView,
+)
 from django_tables2.config import RequestConfig
 from django_tables2.export.export import TableExport
 from num2words import num2words
@@ -131,6 +134,7 @@ def create_loan(request, pk=None):
     else:
         series = Loan.objects.latest().series
         created = ld
+        lid = series.loan_set.last().lid + 1
         if pk:
             # creating loan for the given customer
             customer = get_object_or_404(Customer, pk=pk)
@@ -138,11 +142,11 @@ def create_loan(request, pk=None):
                 "customer": customer,
                 "created": created,
                 "series": series,
+                "lid": lid,
             }
 
         else:
             # brand new loan form
-            lid = series.loan_set.last().lid + 1
             initial = {"created": created, "series": series, "lid": lid}
 
         form = LoanForm(initial=initial)

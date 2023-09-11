@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
 
@@ -8,8 +9,18 @@ import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models, transaction
-from django.db.models import (BooleanField, Case, DecimalField,
-                              ExpressionWrapper, F, Func, Q, Sum, Value, When)
+from django.db.models import (
+    BooleanField,
+    Case,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Func,
+    Q,
+    Sum,
+    Value,
+    When,
+)
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
@@ -19,8 +30,7 @@ from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from product.models import Rate
 
-from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
-                        UnReleasedManager)
+from ..managers import LoanManager, LoanQuerySet, ReleasedManager, UnReleasedManager
 
 # sinked_loans = Loan.objects.with_due().with_current_value().with_is_overdue().filter(is_overdue = True)
 # sinked_loans.filter(created__year_gt = 2021)

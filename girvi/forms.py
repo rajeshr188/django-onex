@@ -11,8 +11,12 @@ from django.forms import DateTimeInput
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django_select2 import forms as s2forms
-from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
-                                  Select2MultipleWidget, Select2Widget)
+from django_select2.forms import (
+    ModelSelect2Widget,
+    Select2Mixin,
+    Select2MultipleWidget,
+    Select2Widget,
+)
 
 from contact.forms import CustomerWidget
 from contact.models import Customer

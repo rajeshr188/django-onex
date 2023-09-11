@@ -208,6 +208,20 @@ class Loan(models.Model):
     def is_worth(self):
         return self.current_value() < self.total()
 
+    @property
+    def get_pure(self):
+        return self.loanitems.values("itemtype").annotate(
+            pure_weight=Sum(
+                ExpressionWrapper(
+                    F("weight") * F("purity") * 0.01, output_field=DecimalField()
+                )
+            )
+        )
+
+    @property
+    def get_weight(self):
+        return self.loanitems.values("itemtype").annotate(total_weight=Sum("weight"))
+
     def get_next(self):
         return (
             Loan.objects.filter(series=self.series, lid__gt=self.lid)

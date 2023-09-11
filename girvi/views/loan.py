@@ -444,12 +444,30 @@ def generate_original(request, pk=None):
         y -= 0.5 * cm
     c.setFont("Helvetica", 12)
     c.drawString(2 * cm, 14 * cm, f"Ph: {loan.customer.contactno.first()}")
-    c.drawString(10 * cm, 11.8 * cm, f"{loan.itemweight}")
-    c.drawString(10 * cm, 9.8 * cm, f"{loan.itemweight}")
-    c.drawString(10 * cm, 8 * cm, f"{loan.loanamount +500}")
 
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
+    result = []
+    for item in loan.get_weight:
+        item_type = item["itemtype"]
+        total_weight_purity = item["total_weight"]
+        result.append(f"{item_type}:{total_weight_purity}")
+
+    # Join the results into a single string
+    weight = " ".join(result)
+
+    c.setFont("Helvetica", 8)
+    c.drawString(10 * cm, 11.8 * cm, f"{weight}gms ")
+    result = []
+    for item in loan.get_pure:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["pure_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
+    # Join the results into a single string
+    pure = " ".join(result)
+    c.drawString(10 * cm, 9.8 * cm, f"{pure} gms ")
+    c.drawString(10 * cm, 8 * cm, f"{loan.current_value()}")
+
+    c.setFont("Helvetica-Bold", 14)
+    # c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
     c.drawString(8 * cm, 6.5 * cm, f"{loan.loanamount}")
     # Wrap the text if its length is greater than 35 characters
     lines = textwrap.wrap(loan.itemdesc, width=30)
@@ -517,13 +535,31 @@ def generate_duplicate(request, pk=None):
         c.drawString(3 * cm, y, line)
         y -= 0.5 * cm
 
-    c.drawString(5 * cm, 7 * cm, f"{loan.itemweight}")
-    c.drawString(8 * cm, 7 * cm, f"{loan.itemweight}")
-    c.drawString(12 * cm, 7 * cm, f"{loan.itemvalue}")
+    c.setFont("Helvetica", 8)
+    result = []
+    for item in loan.get_weight:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["total_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
+
+    # Join the results into a single string
+    weight = " ".join(result)
+    c.drawString(3 * cm, 7 * cm, f"{weight}gms")
+    result = []
+    for item in loan.get_pure:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["pure_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
+
+    # Join the results into a single string
+    pure = " ".join(result)
+    c.drawString(7 * cm, 7 * cm, f"{pure}")
+    c.setFont("Helvetica", 12)
+    c.drawString(12 * cm, 7 * cm, f"{loan.current_value()}")
     c.setFont("Helvetica-Bold", 12)
     c.drawString(1 * cm, 3.5 * cm, f"{loan.lid}")
     c.drawString(1 * cm, 3 * cm, f"{loan.created.strftime('%d/%m/%y')}")
-    c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {loan.itemweight} gm")
+    c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {weight}")
     c.drawString(1 * cm, 2 * cm, f"{loan.customer.name}")
     # Wrap the text if its length is greater than 35 characters
     lines = textwrap.wrap(f"{loan.itemdesc}", width=35)

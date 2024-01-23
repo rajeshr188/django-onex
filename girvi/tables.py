@@ -27,11 +27,16 @@ class LoanTable(tables.Table):
     # pic = ImageColumn()
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
-        accessor="pk", attrs={"th__input": {"onclick": "toggle(this)"}}, orderable=False
+        accessor="pk",
+        attrs={"th__input": {"onclick": "toggle(this)"}},
+        orderable=False,
+        exclude_from_export=True,
     )
-    notified = tables.Column(accessor="last_notified")
-    months_since_created = tables.Column(verbose_name="Months")
-    total_weight = tables.Column(verbose_name="wt", empty_values=())
+    notified = tables.Column(accessor="last_notified", exclude_from_export=True)
+    months_since_created = tables.Column(
+        verbose_name="Months", exclude_from_export=True
+    )
+    total_weight = tables.Column(verbose_name="Weight", empty_values=())
 
     def render_notified(self, value, record):
         return record.created
@@ -85,16 +90,12 @@ class LoanTable(tables.Table):
     #     verbose_name="Amount",
     #     footer = lambda table: sum(x.loanamount for x in table.data)
     # )
-    # total_interest = tables.Column(
-    #     verbose_name="Interest",
-    #     # footer=lambda table: sum(x.total_interest for x in table.data)
-    # )
-    # total_due = tables.Column(
-    #     verbose_name= "Due"
-    # )
-    # current_value = tables.Column(
-    #     verbose_name = "Value"
-    # )
+    total_interest = tables.Column(
+        verbose_name="Interest",
+        # footer=lambda table: sum(x.total_interest for x in table.data)
+    )
+    total_due = tables.Column(verbose_name="Due")
+    current_value = tables.Column(verbose_name="Value")
 
     class Meta:
         model = Loan
@@ -120,18 +121,45 @@ class LoanTable(tables.Table):
             if record.is_released
             else ("table-danger" if record.is_overdue else "table-secondary")
         }
-        attrs = {"class": "table table-striped table-hover"}
+        attrs = {
+            "class": "table table-sm table-bordered table-striped-columns table-hover"
+        }
         empty_text = "There are no loans matching the search criteria..."
         template_name = "table_htmx.html"
 
 
 class ReleaseTable(tables.Table):
     releaseid = tables.Column(linkify=True)
+    loan = tables.Column(linkify=True)
+
+    def render_loan(self, record):
+        return format_html(
+            """
+            <a href ="" hx-get="/girvi/girvi/loan/detail/{}/"
+                        hx-target="#content" hx-swap="innerHTML transition:true"
+                        hx-vals='{{"use_block":"content"}}'
+                        hx-push-url="true">{}</a>
+            """,
+            record.loan.id,
+            record.loan.loanid,
+        )
+
+    def render_releaseid(self, record):
+        return format_html(
+            """
+            <a href ="" hx-get="/girvi/girvi/release/detail/{}/"
+                        hx-target="#content" hx-swap="innerHTML transition:true"
+                        
+                        hx-push-url="true">{}</a>
+            """,
+            record.id,
+            record.releaseid,
+        )
 
     class Meta:
         model = Release
         fields = ("id", "releaseid", "created", "loan", "interestpaid")
-        attrs = {"class": "table table-striped-columns table-hover"}
+        attrs = {"class": "table table-sm table-striped-columns table-hover"}
         empty_text = "There are no release matching the search criteria..."
         # template_name = "django_tables2/bootstrap5.html"
         template_name = "table_htmx.html"

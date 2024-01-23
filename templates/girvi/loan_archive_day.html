@@ -1,0 +1,27 @@
+{% extends '_base.html'%}
+{% load static %}
+{% block content %}
+<h1>{{ day }}</h1>
+
+<!-- <ul>
+    {% for article in object_list %}
+        <li>{{ article.created|date:"F j, Y" }}: {{ article.loanid }}</li>
+    {% endfor %}
+</ul> -->
+{% if object_list%}
+<ul>
+    {% for loan in object_list %}
+        <li><a href="{%url 'girvi:girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
+    {% endfor %}
+</ul>
+{%endif%}
+<p>
+    {% if previous_day %}
+        <a href="{% url 'girvi:archive_day' previous_day|date:"Y" previous_day|date:"M" previous_day|date:"j" %}">Previous Day: {{ previous_day }}</a>
+    {% endif %}
+    {% if previous_day and next_day %}--{% endif %}
+    {% if next_day %}
+        <a href="{% url 'girvi:archive_day' next_day|date:"Y" next_day|date:"M" next_day|date:"j" %}">Next Day: {{ next_day }}</a>
+    {% endif %}
+</p>
+{% endblock %}

@@ -2,21 +2,31 @@
 {%load static%}
 {%load django_tables2%}
 {%block content%}
-<div class="content">
-    <p>
-        <h1>Notice Group : {{object.name}}  count: {{items.count}}</h1><br/>
-        <!-- <h3>Date From:{{object.date_range.lower}} To:{{object.date_range.upper}}</h3> -->
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Notify
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">Print</a></li>
-              <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">MSG</a></li>
-            </ul>
-          </div>
-        
-    </p>
+<div class="container col-md-8">
+  <h1>Notice Group : {{object.name}}  </h1><br/>
+  <div class="card">
+    <ul class="list-group">
+      <li class="list-group-item">
+        Notification: {{items.count}}
+      </li>
+      <li class="list-group-item">
+        Customers:{{customers}}
+      </li>
+      <li class="list-group-item">
+        Loans:{{loans}}
+      </li>
+    </ul>
+  </div>
+  <!-- <h3>Date From:{{object.date_range.lower}} To:{{object.date_range.upper}}</h3> -->
+  <div class="btn-group" role="group">
+      <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Notify
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">Print</a></li>
+        <li><a class="dropdown-item" href="{% url 'notify_noticegroup_print' object.id%}">MSG</a></li>
+      </ul>
+    </div>
     <div class="table-responsive">
         <table class="table table-sm table-striped table-hover">
             <thead>
@@ -34,11 +44,11 @@
              <tr>
                 <td><input type="checkbox" name="selected" id=""></td>
                 <td><a href="{% url 'notify_notification_detail' i.id%}">{{i.id}}</a></td>
-                <td><a href="{% url 'contact_customer_detail' i.customer.id%}">{{i.customer}}</a></td>
-                <td>{{i.medium_type}}</td>
+                <td><a href="{% url 'contact_customer_detail' i.customer.id%}">{{i.customer.name}} {{i.customer.get_relatedas_display}} {{i.customer.relatedto}}</a></td>
+                <td>{{i.get_medium_type_display}}</td>
                 <td>{{i.loans.count}}</td>
                 <td>
-                    <a class="btn btn-danger" href="">Delete</a>
+                    <a class="btn btn-danger" hx-delete="{% url 'notify_notification_delete' i.id %}">Delete</a>
                 </td>
             </tr>
             {%endfor%}

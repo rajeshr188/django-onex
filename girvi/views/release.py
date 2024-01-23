@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import List
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -22,10 +23,13 @@ from ..tables import ReleaseTable
 
 
 def increlid():
-    last = Release.objects.all().order_by("id").last()
-    if not last:
+    try:
+        last = Release.objects.latest("id")
+        return str(int(last.releaseid) + 1)
+    except Release.DoesNotExist:
         return "1"
-    return str(int(last.releaseid) + 1)
+    except (ValueError, TypeError):
+        return "1"
 
 
 @login_required
@@ -44,29 +48,53 @@ def release_list(request):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table, exclude_columns=())
         return exporter.response(f"table.{export_format}")
-    return TemplateResponse(request, "girvi/release_list.html", context)
+    return TemplateResponse(request, "girvi/release/release_list.html", context)
 
 
-class ReleaseCreateView(LoginRequiredMixin, CreateView):
-    model = Release
-    form_class = ReleaseForm
+@login_required
+@for_htmx(use_block="content")
+def release_create(request, pk=None):
+    if request.POST:
+        form = ReleaseForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+            # return HttpResponse(status = 200,headers={"HX-Trigger":loanChanged})
+            response = redirect("girvi:girvi_loan_detail", pk=form.instance.loan.pk)
+            response["HX-Push-Url"] = reverse(
+                "girvi:girvi_loan_detail", kwargs={"pk": form.instance.loan.pk}
+            )
+            return response
+    else:
+        loan = None
+        if pk:
+            loan = get_object_or_404(Loan, pk=pk)
+            form = ReleaseForm(
+                initial={
+                    "releaseid": increlid,
+                    "loan": loan,
+                    "created": datetime.now(),
+                    "interestpaid": loan.interestdue,
+                }
+            )
+        else:
+            form = ReleaseForm(
+                initial={
+                    "releaseid": increlid,
+                    "created": datetime.now(),
+                }
+            )
+    return TemplateResponse(
+        request, "girvi/release/release_form.html", context={"form": form}
+    )
 
-    def get_initial(self):
-        if self.kwargs:
-            loan = Loan.objects.get(id=self.kwargs["pk"])
-            return {
-                "releaseid": increlid,
-                "loan": loan,
-                "interestpaid": loan.interestdue,
-            }
 
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super().form_valid(form)
-
-
-class ReleaseDetailView(LoginRequiredMixin, DetailView):
-    model = Release
+@login_required
+@for_htmx(use_block="content")
+def release_detail(request, pk):
+    release = get_object_or_404(Release, pk=pk)
+    return TemplateResponse(
+        request, "girvi/release/release_detail.html", {"object": release}
+    )
 
 
 class ReleaseUpdateView(LoginRequiredMixin, UpdateView):
@@ -77,11 +105,13 @@ class ReleaseUpdateView(LoginRequiredMixin, UpdateView):
 class ReleaseDeleteView(LoginRequiredMixin, DeleteView):
     model = Release
     success_url = reverse_lazy("girvi:girvi_release_list")
+    template_name = "girvi/release/release_confirm_delete.html"
 
 
 from django.db import IntegrityError
 
 
+@for_htmx(use_block="content")
 def bulk_release(request):
     # if this is a POST request we need to process the form data
     if request.method == "POST":
@@ -122,4 +152,4 @@ def bulk_release(request):
         selected_loans = request.GET.getlist("selection", "")
         qs = Loan.unreleased.filter(id__in=selected_loans).values_list("id", flat=True)
         form = BulkReleaseForm(initial={"loans": qs})
-    return render(request, "girvi/bulk_release.html", {"form": form})
+    return TemplateResponse(request, "girvi/release/bulk_release.html", {"form": form})

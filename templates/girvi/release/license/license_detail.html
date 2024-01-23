@@ -14,7 +14,7 @@
       <tr><td>name</td><td>{{ object.name }}</td></tr>
       <tr><td>id</td><td>{{ object.id }}</td></tr>
       <tr><td>created</td><td>{{ object.created }}</td></tr>
-      <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+      <tr><td>last_updated</td><td>{{ object.updated }}</td></tr>
       <tr><td>type</td><td>{{ object.type }}</td></tr>
       <tr><td>shopname</td><td>{{ object.shopname }}</td></tr>
       <tr><td>address</td><td>{{ object.address }}</td></tr>
@@ -48,20 +48,16 @@
                   <span class="badge bg-primary rounded-pill">{{item.total_loan_amount.t}}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Gold Loan Amount
-                  <span class="badge bg-primary rounded-pill">{{item.total_gold_loan.t}}</span>
+                  Itemwise Loanamount
+                  <span class="badge bg-primary rounded-pill">{{item.get_itemwise_loanamount}}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Gold Weight
-                  <span class="badge bg-primary rounded-pill">{{item.total_gold_weight.t}} gms</span>
+                  Itemwise Weight
+                  <span class="badge bg-primary rounded-pill">{{item.get_itemwise_pure_weight}} gms</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Silver Loan Amount
-                  <span class="badge bg-primary rounded-pill">{{item.total_silver_loan.t}}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Silver Weight
-                  <span class="badge bg-primary rounded-pill">  {{item.total_silver_weight.t}} gms</span>
+                  Period
+                  <span class="badge bg-primary rounded-pill">{{item.get_earliest_date|date}} - {{item.get_latest_date|date}}</span>
                 </li>
         
             </ul>

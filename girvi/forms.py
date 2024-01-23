@@ -7,22 +7,18 @@ from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import AutocompleteSelect
-from django.forms import DateTimeInput
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django_select2 import forms as s2forms
-from django_select2.forms import (
-    ModelSelect2Widget,
-    Select2Mixin,
-    Select2MultipleWidget,
-    Select2Widget,
-)
+from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
+                                  Select2MultipleWidget, Select2Widget)
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
 from product.models import ProductVariant, Rate
 
-from .models import Adjustment, License, Loan, LoanItem, Release, Series
+from .models import (Adjustment, License, Loan, LoanItem, Release, Series,
+                     Statement, StatementItem)
 
 
 class LoansWidget(s2forms.ModelSelect2Widget):
@@ -46,7 +42,7 @@ class LicenseForm(forms.ModelForm):
 class SeriesForm(forms.ModelForm):
     class Meta:
         model = Series
-        fields = ["name", "license"]
+        fields = ["name", "license", "is_active"]
 
 
 class LoanForm(forms.ModelForm):
@@ -162,6 +158,9 @@ class LoanItemForm(forms.ModelForm):
     #         },
     #     ),
     # )
+    itemdesc = forms.CharField(
+        widget=forms.Textarea(attrs={"autofocus": True, "rows": "3"}),
+    )
     itemtype = forms.ChoiceField(
         choices=(("Gold", "Gold"), ("Silver", "Silver"), ("Bronze", "Bronze")),
         widget=forms.Select(
@@ -211,7 +210,14 @@ class LoanItemForm(forms.ModelForm):
 
 class ReleaseForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimeInput(attrs={"type": "datetime-local"}),
+        input_formats=["%d/%m/%Y %H:%M"],
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "data-date-format": "DD MMMM YYYY",
+                "max": datetime.now(),
+            }
+        ),
     )
     loan = forms.ModelChoiceField(widget=LoansWidget, queryset=Loan.unreleased.all())
 
@@ -237,13 +243,13 @@ class ReleaseForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
-                Column("releaseid", css_class="form-group col-md-3 mb-0"),
-                Column("created", css_class="form-group col-md-3 mb-0"),
+                Column("releaseid", css_class="form-group col-md-4 mb-0"),
+                Column("created", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
             ),
             Row(
-                Column("loan", css_class="form-group col-md-3 mb-0"),
-                Column("interestpaid", css_class="form-group col-md-3 mb-0"),
+                Column("loan", css_class="form-group col-md-4 mb-0"),
+                Column("interestpaid", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
             ),
             Submit("submit", "Submit"),
@@ -251,26 +257,39 @@ class ReleaseForm(forms.ModelForm):
 
 
 class BulkReleaseForm(forms.Form):
-    date = forms.DateTimeField(widget=DateTimeInput(attrs={"type": "datetime-local"}))
+    date = forms.DateTimeField(
+        input_formats=["%d/%m/%Y %H:%M"],
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "data-date-format": "DD MMMM YYYY",
+            }
+        ),
+    )
     loans = forms.ModelMultipleChoiceField(
         widget=MultipleLoansWidget, queryset=Loan.unreleased.all()
     )
-    # principal = forms.IntegerField()
-    # interest = forms.IntegerField()
-    # total = forms.IntegerField()
-    # total_received = forms.IntegerField()
 
 
-class PhysicalStockForm(forms.Form):
-    date = forms.DateTimeField(widget=DateTimeInput(attrs={"type": "datetime-local"}))
-    loans = forms.ModelMultipleChoiceField(
-        widget=MultipleLoansWidget, queryset=Loan.objects.filter(series__is_active=True)
+class StatementItemForm(forms.ModelForm):
+    loan = forms.ModelMultipleChoiceField(
+        widget=MultipleLoansWidget,
+        queryset=Loan.objects.unreleased().filter(series__is_active=True),
     )
+
+    class Meta:
+        model = StatementItem
+        fields = "__all__"
 
 
 class AdjustmentForm(forms.ModelForm):
     created = forms.DateTimeField(
-        widget=DateTimeInput(attrs={"type": "datetime-local"})
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "data-date-format": "DD MMMM YYYY",
+            }
+        )
     )
 
     loan = forms.ModelChoiceField(

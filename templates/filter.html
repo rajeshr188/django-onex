@@ -12,20 +12,16 @@
         <div class="card-body">
             <form hx-trigger="keyup,change,listChanged from:body delay:100ms" 
                     hx-get="."
-                    hx-select="#table" 
-                    hx-target="#table"
+                    hx-select="#results" 
+                    hx-target="#results"
                     hx-swap = "outerHTML"
                     hx-push-url="true"
                     class = "form">
-                
-                    
                 {%for field in filter.form%}
-                
-                <div class="form-floating mb-3">
+                <div class="form-floating mb-1">
                     {%render_field field|add_class:"form-control"%}
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                 </div>
-                
                 {%endfor%}
             </form>
         </div>

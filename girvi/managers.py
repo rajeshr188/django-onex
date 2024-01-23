@@ -1,20 +1,11 @@
 import datetime
 
 from django.db import models
-from django.db.models import (
-    BooleanField,
-    Case,
-    DecimalField,
-    ExpressionWrapper,
-    F,
-    FloatField,
-    Func,
-    Q,
-    Sum,
-    Value,
-    When,
-)
-from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, Round
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, FloatField, Func, Q, Sum,
+                              Value, When)
+from django.db.models.functions import (Coalesce, ExtractMonth, ExtractYear,
+                                        Round)
 from django.utils import timezone
 
 from product.models import Rate, RateSource
@@ -41,18 +32,19 @@ class LoanQuerySet(models.QuerySet):
     def unreleased(self):
         return self.filter(release__isnull=True)
 
-    # def with_total_interest(self):
-    #     today = datetime.date.today()
+    def with_total_interest(self):
+        today = datetime.date.today()
 
-    #     return self.annotate(
-    #         no_of_months=ExpressionWrapper(
-    #             today.month
-    #             - F("created__month")
-    #             + 12 * (today.year - F("created__year")),
-    #             output_field=DecimalField(decimal_places=2),
-    #         ),
-    #         loan_interest=F("interest") * F("no_of_months"),
-    #     ).aggregate(Sum("loan_interest"))
+        return self.annotate(
+            no_of_months=ExpressionWrapper(
+                today.month
+                - F("created__month")
+                + 12 * (today.year - F("created__year")),
+                output_field=DecimalField(decimal_places=2),
+            ),
+            loan_interest=F("interest") * F("no_of_months"),
+        ).aggregate(Sum("loan_interest"))
+
     # def with_due(self):
     #     current_time = timezone.now()
     #     return self.annotate(
@@ -221,6 +213,9 @@ class LoanQuerySet(models.QuerySet):
                 default=False,
                 output_field=BooleanField(),
             ),
+            worth=ExpressionWrapper(
+                F("current_value") - F("total_due"), output_field=DecimalField()
+            ),
         )
 
     def with_itemwise_loanamount(self):
@@ -246,6 +241,7 @@ class LoanQuerySet(models.QuerySet):
                     output_field=models.DecimalField(max_digits=10, decimal_places=2),
                 )
             ),
+            total_la=F("total_gold_la") + F("total_silver_la") + F("total_bronze_la"),
         )
 
     def total_itemwise_loanamount(self):
@@ -306,9 +302,6 @@ class LoanManager(models.Manager):
     def with_details(self):
         return self.get_queryset().with_details()
 
-    def with_due(self):
-        return self.get_queryset().with_due()
-
     def with_itemwise_loanamount(self):
         return self.get_queryset().with_itemwise_loanamount()
 
@@ -317,6 +310,18 @@ class LoanManager(models.Manager):
 
     def with_total_value(self):
         return self.get_queryset().aggregate(total_value=Sum("current_value"))
+
+    def total_loanamount(self):
+        return self.get_queryset().aggregate(total=Sum("loanamount"))
+
+    def total_weight(self):
+        return self.get_queryset().total_weight()
+
+    def total_pure_weight(self):
+        return self.get_queryset().total_pure_weight()
+
+    # def with_due(self):
+    #     return self.get_queryset().with_due()
 
     # def with_is_overdue(self):
     #     return self.get_queryset().with_is_overdue()
@@ -355,14 +360,6 @@ class LoanManager(models.Manager):
     #         gold = Sum("total_gold_weight"),
     #         silver = Sum("total_silver_weight")
     #     )
-    def total_loanamount(self):
-        return self.get_queryset().total_loanamount()
-
-    def total_weight(self):
-        return self.get_queryset().total_weight()
-
-    def total_pure_weight(self):
-        return self.get_queryset().total_pure_weight()
 
 
 class ReleasedManager(models.Manager):

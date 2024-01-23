@@ -1,0 +1,16 @@
+
+<div class="card" hx-target="this" hx-swap="outerHTML">
+    {% load crispy_forms_tags %}
+{{form.media}}
+    <div class="card-body" style="background-color: #eee;">
+        <form hx-post="{% url 'contact_create_relationship' from_customer_id=customer.id%}" hx-target="#content"
+        >
+            {{form|crispy}}
+            <button type="button" class="btn btn-danger"
+                    hx-get="{{current_url}}" 
+                    hx-target="#content" hx-swap="innerHTML" >Cancel</button>
+            <button  type="submit" class="btn btn-success">Save</button>
+    
+        </form> 
+    </div>  
+</div>

@@ -5,8 +5,8 @@
 <h1>All Loans for {{ year|date:"Y" }} - {{object_list.count}}  </h1>
 <h2>{{object_list.total}} - {{object_list.with_interest|floatformat:2}}</h2>
 <ul>
-    {% for date in date_list %}
-        <li><a href="{% url 'girvi:archive_month' date|date:"Y" date|date:"M" %}">{{ date|date }}</a></li>
+    {% for month in date_list %}
+        <li><a href="{% url 'girvi:archive_month' month|date:"Y" month|date:"M" %}">{{ month|date }}</a></li>
     {% endfor %}
 </ul>
 

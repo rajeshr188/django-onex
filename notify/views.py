@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, reverse
 from django.template.response import TemplateResponse
+from django.views.decorators.http import require_http_methods
 
 from girvi.models import Loan
 from utils.htmx_utils import for_htmx
@@ -14,7 +15,7 @@ from .models import NoticeGroup, Notification
 
 
 def noticegroup_list(request):
-    ng = NoticeGroup.objects.all()
+    ng = NoticeGroup.objects.all().prefetch_related("notifications")
     return render(request, "notify/noticegroup_list.html", context={"objects": ng})
 
 
@@ -37,26 +38,63 @@ def noticegroup_detail(request, pk):
     #     created__gt=ng.date_range.lower, created__lt=ng.date_range.upper
     # )
     items = (
-        ng.notification_set.all()
-        .prefetch_related("loans")
+        ng.notifications.all()
+        .prefetch_related(
+            "loans",
+            "loans__customer",
+        )
         .select_related("group", "customer")
     )
+    loans = Loan.objects.unreleased().filter(notifications__in=items).count()
+    uniquie_customers = (
+        Loan.objects.unreleased()
+        .filter(notifications__in=items)
+        .values("customer")
+        .distinct()
+        .count()
+    )
+
     return TemplateResponse(
         request,
         "notify/noticegroup_detail.html",
         context={
             "object": ng,
             "items": items,
-            #  "loans": loans
+            "customers": uniquie_customers,
+            "loans": loans,
         },
     )
 
 
+# view to delete a noticegroup
+@login_required
+@require_http_methods(["DELETE"])
+def noticegroup_delete(request, pk):
+    ng = get_object_or_404(NoticeGroup, pk=pk)
+    ng.delete()
+    return HttpResponse(
+        status=204, headers={"Hx-Redirect": reverse("notify_noticegroup_list")}
+    )
+
+
 # views for Notifications
+@login_required
+@require_http_methods(["DELETE"])
+def notification_delete(request, pk):
+    ng = get_object_or_404(Notification, pk=pk)
+    ng.delete()
+    return HttpResponse(
+        status=204, headers={"Hx-Redirect": reverse("notify_notification_list")}
+    )
 
 
+@login_required
 def notification_list(request):
-    ng = Notification.objects.all()
+    ng = (
+        Notification.objects.all()
+        .select_related("group", "customer")
+        .prefetch_related("loans", "customer__address", "customer__contactno")
+    )
     return render(request, "notify/notification_list.html", context={"objects": ng})
 
 
@@ -81,19 +119,18 @@ def notification_detail(request, pk):
 def noticegroup_print(request, pk):
     ng = get_object_or_404(NoticeGroup, pk=pk)
     selected_loans = []
-    items = (
-        ng.notification_set.all()
-        .prefetch_related("loans")
-        .select_related("group", "customer")
-    )
+    items = ng.notifications.all().prefetch_related("loans")
+
     print("generated items to print in this noticegroup")
     for i in items:
-        for j in i.loans.all().select_related("customer"):
+        for j in i.loans.all():
             selected_loans.append(j.id)
     selected_loans = (
-        Loan.objects.unreleased().filter(id__in=selected_loans).order_by("customer")
+        Loan.objects.unreleased()
+        .filter(id__in=selected_loans)
+        .order_by("customer")
+        .prefetch_related("customer", "loanitems")
     )
-    print("selected loans to print in this noticegroup")
     pdf = get_notice_pdf(selection=selected_loans)
     # Create a response object
     response = HttpResponse(pdf, content_type="application/pdf")

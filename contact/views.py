@@ -1,6 +1,5 @@
 import base64
-from datetime import datetime, timedelta
-from io import BytesIO
+from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,38 +8,17 @@ from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods  # new
 from django_tables2.config import RequestConfig
-from render_block import render_block_to_string
 
-from sales.models import Month
 from utils.htmx_utils import for_htmx
 
 from .filters import CustomerFilter
-from .forms import AddressForm, ContactForm, CustomerForm, CustomerMergeForm
-from .models import Address, Contact, Customer, Proof
+from .forms import (AddressForm, ContactForm, CustomerForm, CustomerMergeForm,
+                    CustomerRelationshipForm)
+from .models import Address, Contact, Customer, CustomerRelationship, Proof
 from .tables import CustomerTable
-
-
-@login_required
-def home(request):
-    data = dict()
-    c = Customer.objects
-    data["retailcount"] = c.filter(type="Re").count()
-
-    data["wol"] = c.filter(type="Re", loan=None).count()
-    data["wl"] = data["retailcount"] - data["wol"]
-    data["customercount"] = c.all().count()
-
-    data["whcount"] = c.filter(type="Wh").count()
-    data["withph"] = round((c.exclude(phonenumber="911").count() / c.count()) * 100, 2)
-
-    return render(
-        request,
-        "contact/home.html",
-        context={"data": data},
-    )
 
 
 @login_required
@@ -63,13 +41,13 @@ def customer_list(request):
 @require_http_methods(["DELETE"])
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
-    print(customer)
-    messages.success(request, messages.DEBUG, f"Deleted customer {customer.name}")
     customer.delete()
+    messages.success(request, messages.DEBUG, f"Deleted customer {customer.name}")
     return HttpResponse("")
 
 
 @login_required
+@for_htmx(use_block="content")
 def customer_create(request):
     if request.method == "POST":
         form = CustomerForm(request.POST or None, request.FILES)
@@ -91,48 +69,30 @@ def customer_create(request):
 
             messages.success(request, messages.SUCCESS, f"created customer {f.name}")
             if "add" in request.POST:
-                response = render_block_to_string(
-                    "contact/customer_form.html",
-                    "content",
-                    {"form": CustomerForm()},
-                    request,
+                response = TemplateResponse(
+                    request, "contact/customer_form.html", {"form": CustomerForm()}
                 )
-                return HttpResponse(
-                    response,
-                    headers={"Hx-Push-Url": reverse("contact_customer_create")},
-                )
+                response["HX-Push-Url"] = reverse("contact_customer_create")
+                return response
 
             else:
-                response = render_block_to_string(
-                    "contact/customer_detail.html",
-                    "content",
-                    {"customer": f, "object": f},
+                response = TemplateResponse(
                     request,
+                    "contact/customer_detail.html",
+                    {"customer": f, "object": f},
                 )
-                return HttpResponse(
-                    response,
-                    headers={
-                        "Hx-Push-Url": reverse(
-                            "contact_customer_detail", kwargs={"pk": f.id}
-                        )
-                    },
+                response["HX-Push-Url"] = reverse(
+                    "contact_customer_detail", kwargs={"pk": f.id}
                 )
+                return response
         else:
             messages.error(request, f"Error creating customer")
-            response = render_block_to_string(
-                "contact/customer_form.html", "content", {"form": form}, request
+            return TemplateResponse(
+                request, "contact/customer_form.html", {"form": form}
             )
-            return HttpResponse(response)
 
     else:
         form = CustomerForm()
-
-        if request.htmx:
-            response = render_block_to_string(
-                "contact/customer_form.html", "content", {"form": form}, request
-            )
-            return HttpResponse(response)
-
         return TemplateResponse(request, "contact/customer_form.html", {"form": form})
 
 
@@ -146,7 +106,7 @@ def customer_merge(request):
             original = form.cleaned_data["original"]
             duplicate = form.cleaned_data["duplicate"]
             original.merge(duplicate)
-            return HttpResponseRedirect("contact_customer_list")
+            return redirect("contact_customer_list")
     return TemplateResponse(
         request, "contact/customer_merge.html", context={"form": form}
     )
@@ -157,16 +117,49 @@ def customer_merge(request):
 def customer_detail(request, pk=None):
     context = {}
     cust = get_object_or_404(Customer, pk=pk)
-    # data = cust.sales.all()
-    # inv = data.exclude(status="Paid")
-    # how_many_days = 30
     context["object"] = cust
     context["customer"] = cust
+    loans = cust.loan_set.unreleased().with_details()
+    for i in loans:
+        print(f"get_worth:{i.get_worth} | worth: {i.worth}")
+    worth = [i.worth for i in loans]
+    context["worth"] = sum(worth)
     return TemplateResponse(request, "contact/customer_detail.html", context)
 
 
-@for_htmx(use_block="content")
 @login_required
+def create_relationship(request, from_customer_id):
+    from_customer = get_object_or_404(Customer, pk=from_customer_id)
+
+    if request.method == "POST":
+        form = CustomerRelationshipForm(request.POST, customer_id=from_customer)
+        if form.is_valid():
+            print(form.cleaned_data)
+            print(form.errors)
+            related_customer = form.cleaned_data["related_customer"]
+            relationship = form.cleaned_data["relationship"]
+
+            # Create a new CustomerRelationship instance
+            CustomerRelationship.objects.create(
+                customer=from_customer,
+                relationship=relationship,
+                related_customer=related_customer,
+            )
+
+            return redirect("contact_customer_detail", pk=from_customer_id)
+
+    else:
+        form = CustomerRelationshipForm(customer_id=from_customer)
+
+    return render(
+        request,
+        "contact/create_relationship.html",
+        {"form": form, "customer": from_customer},
+    )
+
+
+@login_required
+@for_htmx(use_block="content")
 def customer_edit(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     form = CustomerForm(request.POST or None, instance=customer)
@@ -187,9 +180,15 @@ def customer_edit(request, pk):
         f.save()
         messages.success(request, messages.SUCCESS, f"updated customer {f}")
 
-        return TemplateResponse(
-            request, "contact/customer_detail.html", {"customer": f, "object": f}
+        response = TemplateResponse(
+            request,
+            "contact/customer_detail.html",
+            {"customer": customer, "object": customer},
         )
+        response["HX-Push-Url"] = reverse(
+            "contact_customer_detail", kwargs={"pk": customer.id}
+        )
+        return response
 
     return TemplateResponse(
         request, "contact/customer_form.html", {"form": form, "customer": customer}

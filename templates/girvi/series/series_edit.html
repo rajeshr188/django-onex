@@ -1,10 +1,12 @@
+<!-- template to edit series -->
 {% extends "_base.html" %}
 {% load crispy_forms_tags%}
 
 {% block content %}
 
 {{form.media}}
-<p><a class="btn btn-secondary" href="{% url 'girvi:girvi_release_list' %}">Release Listing</a></p>
+<p><a class="btn btn-secondary" href="{% url 'girvi:girvi_series_list' %}">
+    Series Listing</a></p>
 <div class="card">
   <div class="card-body" style="background-color: #eee;">
     {% crispy form %}

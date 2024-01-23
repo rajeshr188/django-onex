@@ -109,12 +109,8 @@ class LoanAdmin(admin.ModelAdmin):
         "series",
         "created",
         "updated",
-        # "itemtype",
         "itemdesc",
-        # "itemweight",
-        # "itemvalue",
         "loanamount",
-        # "interestrate",
         "print",
     ]
     search_fields = ["customer__name", "series"]

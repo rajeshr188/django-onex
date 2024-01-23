@@ -3,10 +3,10 @@
 {%load django_tables2%}
 
 {% block content %}
-<div id="loan-content" class="mx-auto p-4 py-md-5">
+<div id="loan-content" class="container">
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Loans</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-toolbar mb-md-0">
       <div class="btn-group mr-2">
         <a class="btn btn-success" 
             hx-get="{% url 'girvi:girvi_loan_create' %}" 
@@ -35,11 +35,12 @@
             <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
           </svg>
         </a>
-        <a class="btn btn-primary" href="{%url 'girvi:girvi_physicalstock_add'%}">Stock <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-record2" viewBox="0 0 16 16">
-          <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0 1A5 5 0 1 0 8 3a5 5 0 0 0 0 10z"/>
-          <path d="M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
-        </svg></a>
-        <a class="btn btn-primary" href="{%url 'girvi:girvi_physicalstock_list'%}">Physical Loans</a>
+        <a class="btn btn-success" href="{%url 'girvi:check_girvi'%}">Verify 
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-checklist" viewBox="0 0 16 16">
+            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+            <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+          </svg>
+        </a>
       </div>
     </div>
   </div>
@@ -48,47 +49,43 @@
       {% include "filter.html"%}
     </div>
     <div class="col-md-9" id="results">
+      Results :{{table.paginator.count}}   Selected: <span id="text"></span> /{{table.paginator.count}}
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md">
           <div class="form-check"> 
             <input class="form-check-input" type="checkbox" value="selected" id="selectall" name="selectall" onclick="toggle(this)">
             <label class="form-check-label" for="flexCheckDefault">
               Select All
             </label>
           </div>
-          
         </div>
-        <div class="col-md-4">
-          <div hx-include="#checked-items" hx-target="#content">
+        <div class="col-md">
+          <div hx-include="#checked-items" hx-target="#loan-content">
             <div class="btn-group" role="group">
-              <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 Actions
               </button>
               <ul class="dropdown-menu">
-                <li><a class="btn btn-dange dropdown-item" hx-post="{% url 'girvi:girvi_loan_deletemultiple'%}"
-                  hx-include="[name='selection']" hx-confirm = "sure?">
-                  Delete <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <li><a class="btn btn-danger btn-sm dropdown-item" hx-post="{% url 'girvi:girvi_loan_deletemultiple'%}"
+                  hx-include="[name='selection']" hx-confirm = "sure?">Delete 
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
                   </svg></a></li>
-                <li><a class="btn btn-info dropdown-item" hx-get="{% url 'girvi:bulk_release'%}" 
-                  hx-include="[name='selection']">
-                Release</a></li>
-                <li><a class="btn btn-info dropdown-item" hx-post="{% url 'girvi:girvi_create_notice'%}?{{request.GET.urlencode}}"
-                  hx-include="[name='selection'],[name='selectall']">
-                  Notify <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-medical" viewBox="0 0 16 16">
-                  <path d="M8.5 4.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 1 0-.5.866L7 6l-.549.317a.5.5 0 1 0 .5.866l.549-.317V7.5a.5.5 0 1 0 1 0v-.634l.549.317a.5.5 0 1 0 .5-.866L9 6l.549-.317a.5.5 0 1 0-.5-.866l-.549.317V4.5zM5.5 9a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/>
-                  <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                <li><a class="btn btn-success btn-sm dropdown-item" hx-get="{% url 'girvi:bulk_release'%}" 
+                  hx-include="[name='selection']" hx-push-url = "true">Release</a></li>
+                <li><a class="btn btn-info btn-sm dropdown-item" hx-post="{% url 'girvi:girvi_create_notice'%}?{{request.GET.urlencode}}"
+                  hx-include="[name='selection'],[name='selectall']">Notify
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-medical" viewBox="0 0 16 16">
+                    <path d="M8.5 4.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 1 0-.5.866L7 6l-.549.317a.5.5 0 1 0 .5.866l.549-.317V7.5a.5.5 0 1 0 1 0v-.634l.549.317a.5.5 0 1 0 .5-.866L9 6l.549-.317a.5.5 0 1 0-.5-.866l-.549.317V4.5zM5.5 9a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/>
+                    <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
                   </svg></a></li>
               </ul>
-    
             </div>
-            
           </div>
         </div>
       </div>  
-      <div id="table" class = "table-responsive">
-        <p>Results :{{table.paginator.count}}  | Selected <span id="text"></span> /{{table.paginator.count}} </p>   
+      <div id="table" class = "table-responsive"> 
         {% render_table table %}
       </div>      
     </div>

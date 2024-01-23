@@ -1,0 +1,80 @@
+{% extends '_base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<div class="container mx-auto mt-3 t-2">
+  
+  <h1>Statement</h1>
+  <h2>Create New Statement</h2>
+  <div class="card" id="create">
+    <form hx-post="{% url 'girvi:statement_add'%}" hx-target="#result" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="myfile" accept=".xlsx">
+      <button type="submit">Create Statement</button>
+    </form>
+    <div class="card" id="result"></div>  
+  </div>
+  
+  <div>
+    <p>
+      {% if statement.previous %}
+        <a class="btn btn-primary"href="{% url 'girvi:check_girvi_statement' statement.previous.id %}">Previous</a>
+    {% endif %}
+      {% if statement %}
+          {{statement.id }}
+      {% else %}
+          <p>No statements available.</p>
+      {% endif %}
+
+    {% if statement.next %}
+        <a class="btn btn-primary"href="{% url 'girvi:check_girvi_statement' statement.next.id %}">Next</a>
+    {% endif %}
+    </p>
+    
+  </div>
+  
+  
+  <table class="table table-sm table-striped">
+    <tr>
+      <td>Total Records</td>
+      <td>{{data.records}}</td>
+    </tr>
+    <tr>
+      <td>Total Items</td>
+      <td>{{data.items}}</td>
+    </tr>
+  
+  </table>
+  <div class="row">
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Missing Items : {{data.missing_items|length}}</h5>
+        <p class="card-text">
+        <br>
+        {%for i in missing_items%}
+        <a href="{% url 'girvi:girvi_loan_detail' i.id%}"><span class="badge bg-secondary">{{i}}</span></a>
+        {%endfor%}
+      </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Missing Records : {{data.missing_records|length}}</h5>
+        <p class="card-text">
+          <br>
+          {%for i in missing_records%}
+        <a href="{% url 'girvi:girvi_loan_detail' i.id%}"><span class="badge bg-secondary">{{i}}</span></a>
+        {%endfor%}
+        </p>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+{% endblock %}

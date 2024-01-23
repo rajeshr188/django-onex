@@ -1,15 +1,40 @@
 {%extends "_base.html"%}
 {% load static %}
 {%block content%}
-<p>{{latest.count}}</p>
-<ul class="list-group list-group-flush">
-  
-    {% for y in date_list %}
-    <li class = "list-group-item"></li>
-    <a href = "{% url 'girvi:loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}} </a>
-  </li>
-    {% endfor %}
-  
-</ul>
+<div class="alert alert-info" role="alert">
+  <a href="{% url 'girvi:archive_today'  %}">Todays Loan</a>
+</div>
+<div class="row">
+  <div class="col-md-9">
+    <div class="card">
+      <h1>Latest Loans</h1>
+      
+      <p>Total Loans : {{latest.count}}</p>
+      <ul class="list-group">
+        {% for article in latest|slice:":10" %}
+            <li class="list-group-item">
+              <a href="{% url 'girvi:girvi_loan_detail' article.id %}">{{ article.created }}: {{ article.loanid }}</a>
+            </li>
+        {% endfor %}
+      </ul>
+      </div>
+    
+  </div>
+  <div class="col-md-3">
+    <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <h5 class="card-title">Loans By Year</h5>
+      <ul class="list-group list-group-flush">
+    
+        {% for y in date_list %}
+        <li class = "list-group-item"></li>
+        <a href = "{% url 'girvi:loan_year_archive' y|date:"Y" %}">{{y|date:"Y"}} </a>
+      </li>
+        {% endfor %}
+      </ul>
+    </div>
+</div>
+
+
   
 {%endblock%}

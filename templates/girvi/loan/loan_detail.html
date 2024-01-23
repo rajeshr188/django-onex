@@ -1,0 +1,385 @@
+{% extends "_base.html" %}
+{% load static %}
+{% block content %}
+<div class="container" hx-trigger="loanChanged from:body" hx-get="{% url 'girvi:girvi_loan_detail' loan.id %}"
+  hx-target="#content" hx-swap="innerHTML transition:true" hx-trigger="click" hx-vals='{"use_block":"content"}'>
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Loan Detail</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="btn-group ">
+        <a class="btn btn-default" hx-get="{% url 'girvi:girvi_loan_list' %}" hx-trigger="click"
+           hx-push-url="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
+            viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+              d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+          </svg></a>
+        <a class="btn btn-success" href="" hx-get="{% url 'girvi:girvi_loan_create' %}"
+              hx-trigger="click, keyup[shiftKey&&key=='N'] from:body" 
+              hx-push-url="true"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+              height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+            <path
+              d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+          </svg></a>
+      </div>
+    </div>
+  </div>
+  {% block loaninfo%}
+  <div class="container-fluid" hx-target="this">
+    <div class="btn-group flex-wrap justify-content-between mb-3" role="group" aria-label="Basic example">
+      {%if loan.get_previous%}
+      <a hx-get="{% url 'girvi:girvi_loan_detail' loan.get_previous.pk %}" hx-push-url="true"
+        hx-swap="outerHTML transition:true" hx-vals='{"use_block": "loaninfo"}' type="button"
+        class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+          class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+          <path fill-rule="evenodd"
+            d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z" />
+        </svg>
+        {{loan.get_previous.loanid}}</a>
+      {%endif%}
+      {%if loan.get_next %}
+      <a hx-get="{% url 'girvi:girvi_loan_detail' loan.get_next.id %}" hx-push-url="true"
+        hx-swap="outerHTML transition:true" hx-vals='{"use_block": "loaninfo"}' type="button"
+        class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+          class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+          <path fill-rule="evenodd"
+            d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z" />
+        </svg> {{loan.get_next.loanid}}</a>
+      {%endif%}
+      <a class = "btn btn-dark" href="{%url 'girvi:original' loan.id%}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer"
+            viewBox="0 0 16 16">
+            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+            <path
+              d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+          </svg>
+        </a>     
+
+      {% if not object.is_released%}
+      <a class="btn btn-success" 
+          hx-get="{% url 'girvi:girvi_release_create' object.id %}"
+          hx-target="#content" hx-push-url="true"
+          hx-swap="innerHTML transition:true">Release
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right"
+          viewBox="0 0 16 16">
+          <path fill-rule="evenodd"
+            d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+          <path fill-rule="evenodd"
+            d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+        </svg>
+      </a>
+      <a class="btn btn-primary" hx-get="{% url 'girvi:girvi_loan_renew' object.id %}">Renew <svg
+          xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise"
+          viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+          <path
+            d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+        </svg></a>
+      {%endif%}
+      <a class="btn btn-danger" hx-confirm="Are You sure to delete this Loan?" hx-delete="{% url 'girvi:girvi_loan_delete' object.id %}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
+          viewBox="0 0 16 16">
+          <path
+            d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+          <path
+            d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+        </svg>
+      </a>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <div class="card border-primary mb-3" id="loan-details">
+              <h5 class="card-header text-center">Loan Details
+                <a class="btn btn-primary" 
+                    hx-get="{% url 'girvi:girvi_loan_update' object.id %}" 
+                    hx-push-url="true"
+                    hx-target="#content"
+                    hx-swap="innerHTML transition:true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square"
+                      viewBox="0 0 16 16">
+                      <path
+                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                      <path fill-rule="evenodd"
+                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                    </svg>
+                  </a>
+              </h5>
+              
+              <div class="card-body table-responsive">
+                <table class="table table-sm table-striped-columns">
+                  <tbody>
+                    <tr>
+                      <td>
+                        Loan Id:
+                      </td>
+                      <td>
+                        {{object.loanid}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Customer <br />
+                        {% if loan.pic %}
+                        <img src="/media/{{loan.pic}}" alt="{{ loan.customer.name }}'s Profile Picture"
+                          class="profile-img img-fluid" width="150" height="150">
+                        {% else %}
+                        <img src="/media/customer_pics/profile-pic.jpg" alt="Default Profile Picture" width="200"
+                          height="200" class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 15rem;">
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{object.customer}}
+                        <button class='btn' hx-get="{% url 'contact_customer_detail' object.customer.id %}"
+                          hx-target="#content" hx-swap="innerHTML transition:true" hx-push-url="true" hx-trigger="click">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-binoculars" viewBox="0 0 16 16">
+                            <path
+                              d="M3 2.5A1.5 1.5 0 0 1 4.5 1h1A1.5 1.5 0 0 1 7 2.5V5h2V2.5A1.5 1.5 0 0 1 10.5 1h1A1.5 1.5 0 0 1 13 2.5v2.382a.5.5 0 0 0 .276.447l.895.447A1.5 1.5 0 0 1 15 7.118V14.5a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 14.5v-3a.5.5 0 0 1 .146-.354l.854-.853V9.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v.793l.854.853A.5.5 0 0 1 7 11.5v3A1.5 1.5 0 0 1 5.5 16h-3A1.5 1.5 0 0 1 1 14.5V7.118a1.5 1.5 0 0 1 .83-1.342l.894-.447A.5.5 0 0 0 3 4.882V2.5zM4.5 2a.5.5 0 0 0-.5.5V3h2v-.5a.5.5 0 0 0-.5-.5h-1zM6 4H4v.882a1.5 1.5 0 0 1-.83 1.342l-.894.447A.5.5 0 0 0 2 7.118V13h4v-1.293l-.854-.853A.5.5 0 0 1 5 10.5v-1A1.5 1.5 0 0 1 6.5 8h3A1.5 1.5 0 0 1 11 9.5v1a.5.5 0 0 1-.146.354l-.854.853V13h4V7.118a.5.5 0 0 0-.276-.447l-.895-.447A1.5 1.5 0 0 1 12 4.882V4h-2v1.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5V4zm4-1h2v-.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5V3zm4 11h-4v.5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V14zm-8 0H2v.5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V14z" />
+                          </svg>
+                        </button>
+    
+                        <a class="btn " hx-get="{% url 'contact_customer_update' object.customer.id %}" hx-trigger="click"
+                          hx-target="#content" hx-swap="innerHTML transition:true" hx-push-url="true"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-pencil-square" viewBox="0 0 16 16">
+                            <path
+                              d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                            <path fill-rule="evenodd"
+                              d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                          </svg></a>
+                      </td>
+    
+                    </tr>
+    
+                    <tr>
+                      <td>Created</td>
+                      <td>{{ object.created }}</td>
+                    </tr>
+                    <tr>
+                      <td>Updated</td>
+                      <td>{{ object.updated }}</td>
+                    </tr>
+                    <tr>
+                      <td>Creator</td>
+                      <td>{{object.created_by}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+    
+            </div>
+          </div>
+          <div class="col">
+            <div class="card border-primary mb-3">
+              <h5 class="card-header text-center">Item Summary</h5>
+              <div class="card-body">
+                <table class="table table-sm table-striped-columns">
+                  <tbody>
+                    <tr>
+                      <td>Item</td>
+                      <td>{{ object.itemdesc }}</td>
+                    </tr>
+                    <tr>
+                      <td>Weight</td>
+                      <td>
+                        {{weight}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Pure</td>
+                      <td>
+                        {%for k,v in pure.items%}
+                        {{k}}:{{v}} gms
+                        {%endfor%}
+                      </td>
+                    </tr>
+                    
+                    <tr>
+                      <td>Months Since</td>
+                      <td>{{object.noofmonths}}</td>
+                    </tr>
+                    <tr>
+                      <td>Value</td>
+                      <td>{{value}}</td>
+                    </tr>
+                    <tr>
+                      <td>OverDue?</td>
+                      <td>{{object.is_worth}}
+                      </td>
+                    </tr>
+                    <tr><td>Expire In</td><td>{{object.calculate_months_to_exceed_value}}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+    
+          </div>
+          <div class="col">
+            <div class="card border-primary mb-3">
+              <h5 class="card-header text-center">Loan Summary</h5>
+              <div class="card-body">
+                <table class="table table-sm table-striped-columns">
+                  <tbody>
+                    <tr>
+                      <td>Amount</td>
+                      <td class="table-warning">{{ object.loanamount }}</td>
+                    </tr>
+                    <tr>
+                      <td>Interest Due</td>
+                      <td class="table-warning">{{object.interest}} * {{object.noofmonths}} = {{ object.interestdue }}</td>
+                    </tr>
+                    <tr>
+                      <td>Adjustments</td>
+                      <td class="table-info">{{object.get_total_adjustments}}</td>
+                    </tr>
+                    <tr>
+                      <td>Total Due </td>
+                      <td class="table-success">{{object.due}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {%if loan.release%}
+            <div class="card border-primary mb-3">
+              <h5 class="card-header text-center">
+                
+                Release : <span class="badge text-bg-secondary"> {{object.release.created|date}}</span>
+                <a class="btn btn-danger" href="{%url 'girvi:girvi_release_delete' object.release.id%}"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3"
+                    viewBox="0 0 16 16">
+                    <path
+                      d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
+                  </svg></a>
+              </h5>
+              <div class="card-body" id="release">
+    
+                <table class="table table-sm table-striped-columns">
+                  <tbody>
+                    <tr>
+                      <td>Id</td>
+                      <td>
+                        <a href="" hx-get="{% url 'girvi:girvi_release_detail' loan.release.id %}"
+                                    hx-target="#content"
+                                    hx-swap = "innerHTML transition:true">
+                          {{loan.release.releaseid}}</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Amount</td>
+                      <td>{{loan.release.total_received}}</td>
+                    </tr>
+                    <tr>
+                      <td>Interest</td>
+                      <td>{{loan.release.interestpaid}}</td>
+                    </tr>
+    
+                  </tbody>
+                </table>
+                
+              </div>
+            </div>
+            {%endif%}
+          </div>
+        </div>
+        <div class="card">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane"
+                type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">
+                Items <span class="badge text-bg-secondary">{{items.count}}</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
+                type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">
+                Journals :<span class="badge text-bg-secondary">{{journals.count}}</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane"
+                type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">
+                Statement
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="notice-tab" data-bs-toggle="tab" data-bs-target="#notice-tab-pane"
+                type="button" role="tab" aria-controls="notice-tab-pane" aria-selected="false">
+                Notice:<span class="badge text-bg-secondary">{{loan.notifications.count}}</span>
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+              tabindex="0">
+              <div class="table-responsive">
+                <table class="table table-sm caption-top table-striped">
+                  <caption>
+                    
+                  </caption>
+                  <thead>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Wt</th>
+                    <th>Purity</th>
+                    <th>Amount</th>
+                    <th>Value</th>
+                    <th>ROI</th>
+                    </th>
+                    <th>Interest</th>
+                    <th>Action</th>
+                  </thead>
+                  <tbody id="items" hx-target="closest tr" hx-swap="outerHTML">
+                    {%for i in items%}
+                    {% include 'girvi/partials/item-inline.html' with object=i %}
+                    {%endfor%}
+                  </tbody>
+                </table>
+                <p class="align-items-right">
+                  <button class="btn btn-success" hx-get="{% url 'girvi:girvi_loanitem_create' object.id%}"
+                      hx-target="#items" hx-swap="beforeend"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                          d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z" />
+                      </svg> Item</button>
+                </p>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+              <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                  {%for i in journals%}
+                  {% include 'girvi/journals-inline.html' with object=i %}
+                  {%endfor%}
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
+              {%if statements%}
+              <ul>
+                {%for i in loan.statementitem_set.all%}
+                <li><a href="{% url 'girvi:check_girvi_statement' i.statement.id%}">{{i.statement.created}}</a></li>
+                {%endfor%}
+              </ul>
+              {%endif%}
+            </div>
+            <div class="tab-pane fade" id="notice-tab-pane" role="tabpanel" aria-labelledby="notice-tab" tabindex="0">
+              <ul class="list-group">
+                {%for i in loan.notifications.all%}
+                <li class="list-group-item">{{i.id}} {{i.created}} {{i.group.id}} {{i.status}}</li>
+                {%endfor%}
+              </ul>
+            </div>
+            <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
+              ...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {%endblock%}
+</div>
+{% endblock %}

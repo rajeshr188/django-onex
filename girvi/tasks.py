@@ -9,6 +9,36 @@ from .msg import notify_msg
 
 logger = get_task_logger(__name__)
 
+from django_tables2.export.export import TableExport
+
+from .filters import LoanFilter
+
+
+@shared_task
+def export_table(export_format, query_params):
+    filter = LoanFilter(
+        query_params,
+        queryset=Loan.objects.order_by("-id")
+        .with_details()
+        .prefetch_related("notifications", "loanitems"),
+    )
+    table = LoanTable(filter.qs)
+    exporter = TableExport(
+        export_format,
+        table,
+        exclude_columns=(
+            "selection",
+            "notified",
+            "months_since_created",
+            "current_value",
+            "total_due",
+            "total_interest",
+        ),
+        dataset_kwargs={"title": "loans"},
+    )
+    return exporter.response(f"table.{export_format}")
+
+
 # import datetime
 # @shared_task(name="twilio status")
 # def notify(name="twilio_up"):

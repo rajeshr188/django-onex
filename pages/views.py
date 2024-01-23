@@ -7,7 +7,10 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 
 from contact.models import Customer
+from contact.services import (active_customers, get_customers_by_type,
+                              get_customers_by_year)
 from girvi.models import Loan
+from girvi.services import *
 
 
 @login_required
@@ -22,8 +25,8 @@ class AboutPageView(TemplateView):
 @login_required
 def Dashboard(request):
     context = {}
-    from purchase.models import Invoice as Pinv
-    from sales.models import Invoice as Sinv
+    # from purchase.models import Invoice as Pinv
+    # from sales.models import Invoice as Sinv
 
     # pinv = Pinv.objects
     # sinv = Sinv.objects
@@ -67,26 +70,29 @@ def Dashboard(request):
     context["customer_count"] = Customer.objects.values("customer_type").annotate(
         count=Count("id")
     )
-
+    context["grouped_loan_counts"] = get_loan_counts_grouped()
     loan = Loan.objects.with_details()
     unreleased = loan.unreleased()
     sunken = unreleased.filter(is_overdue="True")
 
-    context["unreleased"] = {}
     context["loan_count"] = unreleased.count()
-    context["total_loan_amount"] = unreleased.total_loanamount()
-    context[
-        "assets"
-    ] = unreleased.with_itemwise_loanamount().total_itemwise_loanamount()
-    context["weight"] = unreleased.total_weight()
+
     context["due_amount"] = unreleased.aggregate(
         Sum("loanamount"), Sum("total_interest"), Sum("total_due")
     )
+    context["total_loan_amount"] = context["due_amount"]["loanamount__sum"]
+    context["total_interest"] = context["due_amount"]["total_interest__sum"]
+
+    context[
+        "assets"
+    ] = unreleased.with_itemwise_loanamount().total_itemwise_loanamount()
+    context["loanbyitemtype"] = get_loanamount_by_itemtype()
+    context["weight"] = unreleased.total_weight()
+    context["pure_weight"] = unreleased.total_pure_weight()
+
     context["current_value"] = unreleased.total_current_value()
     context["itemwise_value"] = unreleased.itemwise_value()
     context["total_current_value"] = unreleased.total_current_value()["total"]
-    context["total_interest"] = unreleased.aggregate(total=Sum("total_interest"))
-    context["pure_weight"] = unreleased.total_pure_weight()
 
     context["sunken"] = {}
     context["sunken"]["loan_count"] = sunken.count()
@@ -107,11 +113,19 @@ def Dashboard(request):
     context["loan_progress"] = round(
         Loan.objects.released().count() / Loan.objects.count() * 100, 2
     )
-
-    # context["is_overdue"] = (
-    #     unreleased.with_details().filter(is_overdue=True)
-    # )
-    # context["sunken_count"] = context["is_overdue"].count()
-    # context["sunken_total"] = context["is_overdue"].aggregate(Sum("total_due"))["total_due__sum"]
-
+    context["loan_data_by_year"] = get_loans_by_year()
+    context["customer_data_by_year"] = get_customers_by_year()
+    context["customer_data_by_type"] = get_customers_by_type()
+    context["active_customers"] = active_customers()
+    context["maxloans"] = (
+        Customer.objects.filter(loan__release__isnull=True)
+        .annotate(
+            num_loans=Count("loan"),
+            sum_loans=Sum("loan__loanamount"),
+            tint=Sum("loan__interest"),
+        )
+        .values("name", "num_loans", "sum_loans", "tint")
+        .order_by("-num_loans", "sum_loans", "tint")
+    )
+    context["interest_received"] = get_interest_paid()
     return render(request, "pages/dashboard.html", context)

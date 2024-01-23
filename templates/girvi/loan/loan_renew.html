@@ -1,31 +1,25 @@
 {% extends "_base.html" %}
 {% load static %}
 {% block content %}
-<div class="row">
+<div class="row container mt-3">
   <div class="col-sm-6">
     <div class="card">
-      <div class="card-body">
+      <div class="card-header">
         <h5 class="card-title">Loan Status</h5>
-        <p class="card-text">
-          <ul>
-            <li>{{loan.loanid}} {{loan.created|date}}</li>
-            <li>{{loan.customer}}</li>
-            <li>{{loan.loanamount}} + {{loan.interestdue}}</li>
-            <li>{{loan.get_total_adjustments}}</li>
-            <li>{{loan.total}}</li>
-          </ul>
-        </p>
-
       </div>
+      <ul class="list-group">
+        <li class="list-group-item">{{loan.loanid}} {{loan.created|date}}</li>
+        <li class="list-group-item">{{loan.customer}}</li>
+        <li class="list-group-item">{{loan.loanamount}} + {{loan.interestdue}}</li>
+        <li class="list-group-item">{{loan.get_total_adjustments}}</li>
+        <li class="list-group-item">{{loan.total}}</li>
+      </ul>
     </div>
   </div>
   <div class="col-sm-6">
     <div class="card">
+      <h5 class="card-header">Renew</h5>
       <div class="card-body">
-        <h5 class="card-title">Renew</h5>
-        <p class="card-text">
-
-        </p>
         <form method="post">
           {% csrf_token %}
           {{ form.as_p}}

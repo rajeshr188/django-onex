@@ -1,11 +1,8 @@
 {% extends '_base.html'%}
 {%load static%}
 {% load crispy_forms_tags%}
-
 {%block content%}
-
-
-  <div id="form">
+  <div class="container col-md-8" id="form">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
       {% if customer%}
         <h1 class="h2">Update Customer</h1>
@@ -16,36 +13,27 @@
     {{ form|as_crispy_errors }}
     <form hx-post="." enctype="multipart/form-data" hx-target="#form">
       {% csrf_token %}
-      <div class="row g-3">
-        <div class="col-md-4">
+      <div class="row container">
+        <div class="col-md-4 mb-3">
           {{form.name|as_crispy_field}}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           {{form.relatedas|as_crispy_field}}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           {{form.relatedto|as_crispy_field}}
         </div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           {{form.customer_type|as_crispy_field}}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           {{form.pricing_tier|as_crispy_field}}
         </div>
         
-      </div>
-      <div id="address-form">
-
-      </div>
-      <div id="contactno-form">
-        
-      </div>
-        
-      <div class="row g-3">
+      </div>        
+      <div class="row g-3 mb-3">
         <input type="hidden" id="image-data" name="image_data">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <div class="camera">
             <video id="video">Video stream not available.</video>
             <button id="startbutton">Take photo</button>
@@ -53,16 +41,24 @@
           <canvas id="canvas"> </canvas>
           
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <div class="output">
+            {% if customer.pic %}
+            <img id="photo"  src="/media/{{customer.pic}}" alt="The screen capture will appear in this box." />
+            {% else %}
             <img id="photo" alt="The screen capture will appear in this box." />
+            {% endif %}
           </div>
         </div>
         
       </div>
       <div class="">
+        {% if not customer%}
         <button name="add" type="submit" class="btn btn-primary">Add</button>
         <button name="view" type="submit" class="btn btn-primary">Add & view</button>
+        {%else%}
+        <button name="update" type="submit" class="btn btn-primary">Update</button>
+        {%endif%}
         <button  hx-get="/contact/customer/" hx-target="#content" 
                   hx-push-url="true" hx-swap="innerHTML transition:true" 
                   class="btn btn-danger">Cancel</button>

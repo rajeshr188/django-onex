@@ -8,7 +8,7 @@ from contact.forms import CustomerWidget
 from contact.models import Customer
 from girvi.forms import LoansWidget
 
-from .models import Adjustment, Loan, LoanStatement, Release
+from .models import Adjustment, Loan, Release
 
 
 class LoanFilter(django_filters.FilterSet):
@@ -64,16 +64,6 @@ class LoanFilter(django_filters.FilterSet):
     # causes trouble in the table while filtering by id
     def sunken(self, queryset, name, value):
         return queryset.filter(is_overdue=value)
-
-
-class LoanStatementFilter(django_filters.FilterSet):
-    loan = django_filters.ModelChoiceFilter(
-        widget=LoansWidget, queryset=Loan.objects.filter(series__is_active=True)
-    )
-
-    class Meta:
-        model = LoanStatement
-        fields = ["loan"]
 
 
 class AdjustmentFilter(django_filters.FilterSet):

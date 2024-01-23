@@ -1,26 +1,15 @@
 import datetime
+import math
 from decimal import Decimal
-
 # from qrcode.image.pure import PyImagingImage
 from io import BytesIO
 
 import qrcode
 import qrcode.image.svg
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.postgres.fields import DateRangeField
 from django.db import models, transaction
-from django.db.models import (
-    BooleanField,
-    Case,
-    DecimalField,
-    ExpressionWrapper,
-    F,
-    Func,
-    Q,
-    Sum,
-    Value,
-    When,
-)
+from django.db.models import (BooleanField, Case, DecimalField,
+                              ExpressionWrapper, F, Func, Q, Sum, Value, When)
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
@@ -30,11 +19,8 @@ from contact.models import Customer
 from dea.models import Journal, JournalTypes
 from product.models import Rate
 
-from ..managers import LoanManager, LoanQuerySet, ReleasedManager, UnReleasedManager
-
-# sinked_loans = Loan.objects.with_due().with_current_value().with_is_overdue().filter(is_overdue = True)
-# sinked_loans.filter(created__year_gt = 2021)
-# bursting possibilities :-;
+from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
+                        UnReleasedManager)
 
 
 class Loan(models.Model):
@@ -45,7 +31,7 @@ class Loan(models.Model):
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
     )
     lid = models.IntegerField(blank=True, null=True)
-    loanid = models.CharField(max_length=255, unique=True)
+    loanid = models.CharField(max_length=255, unique=True, db_index=True)
     has_collateral = models.BooleanField(default=False)
     pic = models.ImageField(upload_to="loan_pics/", null=True, blank=True)
 
@@ -67,25 +53,6 @@ class Loan(models.Model):
         blank=True,
         null=True,
     )
-
-    # ----------------legacy---------------------------------
-    itype = (
-        ("Gold", "Gold"),
-        ("Silver", "Silver"),
-        ("Bronze", "Bronze"),
-        ("Mixed", "Mixed"),
-    )
-    itemtype = models.CharField(max_length=30, choices=itype, default="Gold")
-
-    itemweight = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        verbose_name="Weight",
-        null=True,
-        blank=True,
-    )
-    # --------------------mustgo--------------------------------------
     loanamount = models.PositiveIntegerField(
         verbose_name="Amount", default=0, null=True, blank=True
     )
@@ -122,32 +89,6 @@ class Loan(models.Model):
     def get_update_url(self):
         return reverse("girvi:girvi_loan_update", args=(self.pk,))
 
-    def get_total_weight(self):
-        total_gold_weight = (
-            self.loanitems.filter(itemtype="Gold").aggregate(models.Sum("weight"))[
-                "weight__sum"
-            ]
-            or 0
-        )
-        total_silver_weight = (
-            self.loanitems.filter(itemtype="Silver").aggregate(models.Sum("weight"))[
-                "weight__sum"
-            ]
-            or 0
-        )
-        total_bronze_weight = (
-            self.loanitems.filter(itemtype="Bronze").aggregate(models.Sum("weight"))[
-                "weight__sum"
-            ]
-            or 0
-        )
-        weight = {
-            "gold": float(total_gold_weight),
-            "silver": float(total_silver_weight),
-            "bronze": float(total_bronze_weight),
-        }
-        return weight
-
     @property
     def get_qr(self):
         factory = qrcode.image.svg.SvgImage
@@ -165,8 +106,9 @@ class Loan(models.Model):
         adjustments = self.adjustments.filter(as_interest=False).aggregate(
             total=Coalesce(Sum("amount_received"), 0)
         )["total"]
-        items_total = self.loanitems.aggregate(Sum("loanamount"))["loanamount__sum"]
-        print(f"adjustments:{adjustments} items_total:{items_total}")
+        items_total = (
+            self.loanitems.aggregate(Sum("loanamount"))["loanamount__sum"] or 0
+        )
         return items_total - adjustments
 
     def get_total_adjustments(self):
@@ -189,14 +131,10 @@ class Loan(models.Model):
         return round(self.interest * self.noofmonths(date))
 
     def current_value(self):
-        loan_items = self.loanitems.all()
-        total_current_value = sum(loan_item.current_value() for loan_item in loan_items)
+        total_current_value = sum(
+            loan_item.current_value() for loan_item in self.loanitems.all()
+        )
         return total_current_value
-
-    # def calculate_total_current_value(self):
-    #     loan_items = self.loanitem_set.all()
-    #     total_current_value = sum(loan_item.current_value() for loan_item in loan_items)
-    #     return total_current_value
 
     def total(self):
         return self.interestdue() + self.loanamount
@@ -207,6 +145,14 @@ class Loan(models.Model):
 
     def is_worth(self):
         return self.current_value() < self.total()
+
+    def get_worth(self):
+        return self.current_value() - self.total()
+
+    def calculate_months_to_exceed_value(self):
+        if self.loanitems.exists():
+            return math.ceil((self.total() - self.current_value()) / self.interest)
+        return 0
 
     @property
     def get_pure(self):
@@ -225,15 +171,15 @@ class Loan(models.Model):
     def get_next(self):
         return (
             Loan.objects.filter(series=self.series, lid__gt=self.lid)
-            .order_by("lid")
-            .first()
+            # .select_related("series","customer","release")
+            .order_by("lid").first()
         )
 
     def get_previous(self):
         return (
             Loan.objects.filter(series=self.series, lid__lt=self.lid)
-            .order_by("lid")
-            .last()
+            # .select_related("series","customer","release")
+            .order_by("lid").last()
         )
 
     def create_journals(self):
@@ -527,15 +473,31 @@ class Adjustment(models.Model):
         super(Adjustment, self).save(*args, **kwargs)
 
 
-class LoanStatement(models.Model):
+class Statement(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
     )
-    loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+    # loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.created}"
 
     def get_absolute_url(self):
         return reverse("girvi:girvi_loanstatement_detail", args=(self.pk,))
+
+    @property
+    def next(self):
+        return Statement.objects.filter(id__gt=self.id).order_by("id").first()
+
+    @property
+    def previous(self):
+        return Statement.objects.filter(id__lt=self.id).order_by("id").last()
+
+
+class StatementItem(models.Model):
+    statement = models.ForeignKey(Statement, on_delete=models.CASCADE)
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.loan.loanid}"

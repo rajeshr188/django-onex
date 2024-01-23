@@ -7,9 +7,11 @@ from .models import Loan
 app_name = "girvi"
 urlpatterns = (
     path("", views.home, name="girvi-home"),
-    path("multirelease/", views.multirelease, name="girvi-multirelease"),
+    # path("multirelease/", views.multirelease, name="girvi-multirelease"),
     path("deletemultiple/", views.deleteLoan, name="girvi_loan_deletemultiple"),
     path("girvi/check/", views.check_girvi, name="check_girvi"),
+    path("girvi/check/<int:pk>/", views.check_girvi, name="check_girvi_statement"),
+    path("girvi/statement/add/", views.statement_create, name="statement_add"),
     path("girvi/bulk_release/", views.bulk_release, name="bulk_release"),
     path(
         "girvi/series/<int:pk>/activate",
@@ -48,12 +50,18 @@ urlpatterns += (
         views.LoanMonthArchiveView.as_view(),
         name="archive_month",
     ),
+    path(
+        "<int:year>/<str:month>/<int:day>/",
+        views.LoanDayArchiveView.as_view(),
+        name="archive_day",
+    ),
     # Example: /2012/week/23/
     path(
         "<int:year>/week/<int:week>/",
         views.LoanWeekArchiveView.as_view(),
         name="archive_week",
     ),
+    path("today/", views.LoanTodayArchiveView.as_view(), name="archive_today"),
 )
 
 urlpatterns += (
@@ -104,27 +112,15 @@ urlpatterns += (
     path("girvi/loan/detail/<int:pk>/", views.loan_detail, name="girvi_loan_detail"),
     path("girvi/loan/detail/<int:pk>/pdf", views.print_loan, name="loan_pdf"),
     path("girvi/loan/detail/<int:pk>/o", views.generate_original, name="original"),
-    path("girvi/loan/detail/<int:pk>/d", views.generate_duplicate, name="duplicate"),
     path(
         "girvi/loan/update/<int:id>/",
-        # views.LoanUpdateView.as_view(),
         views.loan_update,
         name="girvi_loan_update",
     ),
     path(
         "girvi/loan/<int:pk>/delete/",
-        views.LoanDeleteView.as_view(),
+        views.loan_delete,
         name="girvi_loan_delete",
-    ),
-    path(
-        "girvi/loan/take_physicalstock/",
-        views.physical_stock,
-        name="girvi_physicalstock_add",
-    ),
-    path(
-        "girvi/loan/physicalstock/",
-        views.physical_list,
-        name="girvi_physicalstock_list",
     ),
 )
 
@@ -178,23 +174,46 @@ urlpatterns += (
         name="girvi_adjustment_delete",
     ),
 )
-
+urlpatterns += (
+    # urls for series
+    path("girvi/series/", views.series_list, name="girvi_series_list"),
+    path(
+        "girvi/series/create/",
+        views.series_new,
+        name="girvi_series_create",
+    ),
+    path(
+        "girvi/series/detail/<int:pk>/",
+        views.series_detail,
+        name="girvi_series_detail",
+    ),
+    path(
+        "girvi/series/update/<int:pk>/",
+        views.series_edit,
+        name="girvi_series_update",
+    ),
+    path(
+        "girvi/series/<int:pk>/delete/",
+        views.series_delete,
+        name="girvi_series_delete",
+    ),
+)
 urlpatterns += (
     # urls for Release
     path("girvi/release/", views.release_list, name="girvi_release_list"),
     path(
         "girvi/release/create/",
-        views.ReleaseCreateView.as_view(),
+        views.release_create,
         name="girvi_release_create",
     ),
     path(
         "girvi/release/<int:pk>/create/",
-        views.ReleaseCreateView.as_view(),
+        views.release_create,
         name="girvi_release_create",
     ),
     path(
         "girvi/release/detail/<int:pk>/",
-        views.ReleaseDetailView.as_view(),
+        views.release_detail,
         name="girvi_release_detail",
     ),
     path(

@@ -1,12 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from ..forms import (
-    AttributeForm,
-    AttributeValueForm,
-    ProductImageForm,
-    VariantImageForm,
-)
+from ..forms import (AttributeForm, AttributeValueForm, ProductImageForm,
+                     VariantImageForm)
 from ..models import Attribute, AttributeValue, ProductImage, VariantImage
 
 # from ..filters import ProductFilter,ProductVariantFilter,StockFilterfrom django.shortcuts import get_object_or_404,redirect, render

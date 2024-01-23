@@ -3,7 +3,7 @@
     <div class="card" hx-target="this" hx-swap="outerHTML">
         <div class="card-body" style="background-color: #eee;">
             {% crispy form %}
-            <button type="button" hx-get="{{current_url}}" hx-target="#content" hx-swap="innerHTML"data-bs-dismiss="modal" class="btn btn-danger">Cancel</button>
+            <button type="button" hx-get="{{current_url}}" hx-target="#content" hx-swap="innerHTML" class="btn btn-danger">Cancel</button>
             <button type="submit" class="btn btn-success">Save</button>
         </div>
     </div>

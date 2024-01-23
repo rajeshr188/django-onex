@@ -3,12 +3,23 @@ from itertools import chain, islice, tee
 
 from dateutil import relativedelta
 from django.db import models
-from django.db.models import Count, Q, Sum
+from django.db.models import Avg, Case, Count, FloatField, Q, Sum, When
 from django.db.models.expressions import OrderBy
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.urls import reverse
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+class RelationType(models.TextChoices):
+    Son = "s", "S/o"
+    Daughter = "d", "D/o"
+    Father = "f", "F/o"
+    Child = "c", "C/o"
+    Parent = "p", "P/o"
+    Husband = "h", "H/o"
+    Wife = "w", "W/o"
+    Other = "o", "O/o"
 
 
 class Customer(models.Model):
@@ -46,13 +57,6 @@ class Customer(models.Model):
     customer_type = models.CharField(
         max_length=30, choices=CustomerType.choices, default=CustomerType.Retail
     )
-
-    class RelationType(models.TextChoices):
-        Son = "s", "S/o"
-        Daughter = "d", "D/o"
-        Wife = "w", "W/o"
-        Relation = "r", "R/o"
-
     relatedas = models.CharField(
         max_length=5, choices=RelationType.choices, default=RelationType.Son
     )
@@ -90,27 +94,19 @@ class Customer(models.Model):
     def merge(self, dup):
         # to merge one customer into another existing one
 
-        # get duplicate customers all loans
-        loans = dup.loan_set.all()
-        # transfer duplicate customerloans to original customer loans
-        for i in loans:
-            i.customer = self
-            i.save()
-        # transfer contacts to original
-        contacts = dup.contactno.all()
-        for i in contacts:
-            i.customer = self
-            i.save()
+        with transaction.atomic():
+            # Transfer duplicate customer's loans to original customer
+            dup.loan_set.update(customer=self)
 
-        # finally delete duplicate customer
-        dup.delete()
+            # Transfer duplicate customer's contacts to original customer
+            dup.contactno.all().update(customer=self)
 
-    def get_score(self):
-        return self.contactscore_set.aggregate(t=Sum("score"))["t"]
+            # Delete duplicate customer
+            dup.delete()
 
     @property
     def get_contact(self):
-        return [no.national_number for no in self.contactno.all()]
+        return list(self.contactno.values_list("national_number", flat=True))
 
     @property
     def get_loans(self):
@@ -137,27 +133,35 @@ class Customer(models.Model):
         return self.loan_set.aggregate(total=Sum("interest"))["total"]
 
     def get_weight(self):
-        wt = self.loan_set.values("itemtype", "loanamount").aggregate(
-            gold=Sum("loanamount", filter=Q(itemtype="Gold")),
-            silver=Sum("loanamount", filter=Q(itemtype="Silver")),
-            bronze=Sum("loanamount", filter=Q(itemtype="Bronze")),
-        )
-        return wt
+        return 0
 
     @property
     def get_release_average(self):
-        no_of_months = 0
-        for i in self.loan_set.filter(release__isnull=False).all():
-            delta = relativedelta.relativedelta(i.release.created, i.created)
-            no_of_months += delta.years * 12 + delta.months
-
-        for i in self.loan_set.filter(release__isnull=True).all():
-            delta = relativedelta.relativedelta(timezone.now(), i.created)
-            no_of_months += delta.years * 12 + delta.months
-
-        return (
-            round(no_of_months / self.loan_set.count()) if self.loan_set.count() else 0
+        # Calculate the difference in months between the release and loan creation times
+        release_time = Case(
+            When(
+                release__isnull=False,
+                then=(
+                    (ExtractYear("release__created") - ExtractYear("created")) * 12
+                    + (ExtractMonth("release__created") - ExtractMonth("created"))
+                ),
+            ),
+            When(
+                release__isnull=True,
+                then=(
+                    (ExtractYear(timezone.now()) - ExtractYear("created")) * 12
+                    + (ExtractMonth(timezone.now()) - ExtractMonth("created"))
+                ),
+            ),
+            output_field=FloatField(),
         )
+
+        # Calculate the average release time
+        average_release_time = self.loan_set.aggregate(average=Avg(release_time))[
+            "average"
+        ]
+
+        return round(average_release_time) if average_release_time is not None else 0
 
     # sales queries
     def get_sales_invoice(self):
@@ -289,33 +293,55 @@ class Customer(models.Model):
         return txn_list
 
 
-# class RelationshipChoices(models.TextChoices):
-#     SON = 'Son', _('Son')
-#     DAUGHTER = 'Daughter', _('Daughter')
-#     HUSBAND = 'Husband', _('Husband')
-#     WIFE = 'Wife', _('Wife')
-
-
 class CustomerRelationship(models.Model):
     customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="customer_relationships"
+        Customer, on_delete=models.CASCADE, related_name="relationships"
     )
     related_customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,
-        related_name="related_customer_relationships",
+        related_name="relatedby",
     )
-    RELATIONSHIP_CHOICES = (
-        ("S", "S/o"),  # Son of
-        ("F", "F/o"),  # Father of
-        ("D", "D/o"),  # Daughter of
-        ("C", "C/o"),  # Child of
-        ("W", "W/o"),  # Wife of
+    relationship = models.CharField(
+        max_length=2, choices=RelationType.choices, default=RelationType.Son
     )
-    relationship = models.CharField(max_length=2, choices=RELATIONSHIP_CHOICES)
+
+    class Meta:
+        unique_together = ("customer", "related_customer", "relationship")
 
     def __str__(self):
-        return f"{self.customer.name} - {self.relationship.get_relationship_display()} - {self.related_customer.name}"
+        return f"{self.customer.name} - {self.get_relationship_display()} - {self.related_customer.name}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+
+        # Define the reverse relationship mapping
+        reverse_relationships = {
+            "s": "f",  # Son of -> Father of
+            "f": "s",  # Father of -> Son of
+            "d": "f",  # Daughter of -> Father of
+            "c": "p",  # Child of -> Parent of
+            "w": "h",  # Wife of -> Husband of
+            "h": "w",  # Husband of -> Wife of
+        }
+
+        # Get the reverse relationship
+        reverse_relationship = reverse_relationships.get(self.relationship)
+
+        # Check if the reverse relationship exists
+        reverse_exists = CustomerRelationship.objects.filter(
+            customer=self.related_customer,
+            related_customer=self.customer,
+            relationship=reverse_relationship,
+        ).exists()
+
+        # If the reverse relationship doesn't exist, create it
+        if not reverse_exists:
+            CustomerRelationship.objects.create(
+                customer=self.related_customer,
+                related_customer=self.customer,
+                relationship=reverse_relationship,
+            )
 
 
 class Address(models.Model):

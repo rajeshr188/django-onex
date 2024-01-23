@@ -2,6 +2,7 @@ import io
 from io import BytesIO
 from itertools import groupby
 
+from django.db.models import Count
 from num2words import num2words
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -12,20 +13,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import (
-    Flowable,
-    Frame,
-    Image,
-    KeepTogether,
-    ListFlowable,
-    ListItem,
-    PageBreak,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import (Flowable, Frame, Image, KeepTogether,
+                                ListFlowable, ListItem, PageBreak, Paragraph,
+                                SimpleDocTemplate, Spacer, Table, TableStyle)
 from reportlab.platypus.doctemplate import PageTemplate
 from reportlab.rl_config import defaultPageSize
 
@@ -334,54 +324,46 @@ def get_loan_pdf(loan):
     return pdf
 
 
+def on_all_pages(canvas, doc):
+    canvas.saveState()
+    canvas.setFont("Times-Roman", 10)
+    canvas.drawString(inch, 0.75 * inch, "Page %d" % doc.page)
+    canvas.restoreState()
+
+
 def get_notice_pdf(selection=None):
     # TODO: paginate the pdf for better performance
     # TODO: add a progress bar
     # TODO: add page templates
 
-    # # get all loans with selected ids
-    selected_loans = selection
-    # get a list of unique customers for the selected loans
-    customers = (
-        Customer.objects.filter(loan__in=selected_loans)
-        .select_related("loan")
-        .distinct()
-    )
-
-    grouped_loans = groupby(selected_loans, lambda loan: loan.customer)
-    print(f"customers gathered:{customers.count()}")
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
     # Create the PDF object, using the buffer as its "file."
-    doc = SimpleDocTemplate(buffer)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
     doc.title = "Notice-Group"
+
     # Define styles for the paragraphs
     styles = getSampleStyleSheet()
-    styles.add(
-        ParagraphStyle(
-            name="Normal_CENTER",
-            parent=styles["Normal"],
-            fontName="Helvetica",
-            wordWrap="LTR",
-            alignment=TA_CENTER,
-            fontSize=12,
-            leading=13,
-            textColor=colors.black,
-            borderPadding=0,
-            leftIndent=0,
-            rightIndent=0,
-            spaceAfter=0,
-            spaceBefore=0,
-            splitLongWords=True,
-            spaceShrinkage=0.05,
-        )
+    top_style = ParagraphStyle(
+        name="Normal_CENTER",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        wordWrap="LTR",
+        alignment=TA_CENTER,
+        fontSize=12,
+        leading=13,
+        textColor=colors.black,
+        borderPadding=0,
+        leftIndent=0,
+        rightIndent=0,
+        spaceAfter=0,
+        spaceBefore=0,
+        splitLongWords=True,
+        spaceShrinkage=0.05,
     )
-    top = styles["Normal_CENTER"]
-    normal = styles["Normal"]
-    title = styles["Title"]
-    heading = styles["Heading1"]
+
+    # Main story list
     story = []
-    pages = []
     spacer = Spacer(0, 0.25 * inch)
     simple_tblstyle = TableStyle(
         [
@@ -390,181 +372,57 @@ def get_notice_pdf(selection=None):
         ]
     )
 
-    for customer, loans in grouped_loans:
-        # loans = list(loans) :Use generators instead of lists:
-        loans = (loan for loan in loans)
-        story.append(spacer)
-        story.append(Paragraph("TAMILNADU PAWNBROKERS ACT, 1943", top))
-        story.append(spacer)
-        story.append(Paragraph("NOTICE TO REDEEM PLEDGE", heading))
-        story.append(spacer)
-        story.append(
-            Paragraph(
-                f"""
-            To,<br/>
-            {customer.name} {customer.relatedas} {customer.relatedto}<br/>
-            {customer.Address}<br/>
-            {customer.area}<br/>
-            {customer.contactno}""",
-                normal,
-            )
-        )
-        story.append(spacer)
-        story.append(
-            Paragraph(
-                """
-        Notice is hereby given that the Pledge of the following article(s) is now <br/>
-        at the Pawn Broker named below, and that unless the same is redeemed within<br/>
-        30 days from the date hereof, it will be sold by public auction at the Pawn<br/>
-        Broker's place of business, without further notice to the Pledger or his agent.<br/>
-        """
-            )
-        )
-        story.append(spacer)
-        story.append(
-            Paragraph(
-                f"""
-        Name of Pawn Broker:J Champalal Pawn Brokers
-                """,
-                normal,
-            )
-        )
-        story.append(Paragraph("Description of Articles Pledged:"))
-        width = 400
-        height = 100
-        x = 100
-        y = 300
-        f = Table(
+    # Iterate over selected loans
+    for customer, loans in groupby(selection, key=lambda x: x.customer):
+        # Grouped loans
+        loans = list(loans)
+
+        # Append paragraphs to the story
+        story.extend(
             [
-                [item.loanid, item.itemweight, item.created, item.itemdesc]
-                for item in loans
+                spacer,
+                Paragraph("TAMILNADU PAWNBROKERS ACT, 1943", top_style),
+                spacer,
+                Paragraph("NOTICE TO REDEEM PLEDGE", styles["Heading1"]),
+                spacer,
+                Paragraph(f"To,<br/>{customer}", styles["Normal"]),
+                spacer,
+                Paragraph(
+                    "Notice is hereby given that the Pledge of the following article(s) is now "
+                    "at the Pawn Broker named below, and that unless the same is redeemed within "
+                    "30 days from the date hereof, it will be sold by public auction at the Pawn "
+                    "Broker's place of business, without further notice to the Pledger or his agent."
+                ),
+                spacer,
+                Paragraph(
+                    "<br/>Name of Pawn Broker: J Champalal Pawn Brokers",
+                    styles["Normal"],
+                ),
+                Paragraph("<br/>Description of Articles Pledged:", styles["Normal"]),
             ]
         )
 
+        # Create table
+        table_data = [["#", "Loan ID", "Created", "Item Weight", "Item Description"]]
+        table_data.extend(
+            [
+                [i + 1, loan.loanid, loan.created.date(), item.weight, item.itemdesc]
+                for i, (loan, item) in enumerate(
+                    ((loan, item) for loan in loans for item in loan.loanitems.all())
+                )
+            ]
+        )
+
+        # Add table to the story
+        f = Table(table_data)
         f.setStyle(simple_tblstyle)
-        story.append(spacer)
-        story.append(f)
-        story.append(PageBreak())
+        story.extend([spacer, f, PageBreak()])
 
-    print("pdf generated")
     # Save the PDF and return the response
-    print(f"story length: {len(story)}")
-    doc.build([KeepTogether(story)])
-    print("doc built")
+    doc.build(story)
     pdf = buffer.getvalue()
-    print("pdf ready")
     buffer.close()
-    print(f"pdf length: {pdf.__sizeof__()}")
     return pdf
-
-
-# copilot implementation
-# from reportlab.lib.pagesizes import landscape, A4
-# from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-# from reportlab.lib.units import inch
-# from reportlab.lib import colors
-# from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
-# from reportlab.pdfgen import canvas
-# import io
-
-# def get_notice_pdf(selection=None):
-#     # TODO: paginate the pdf for better performance
-#     # TODO: add a progress bar
-#     # TODO: add page templates
-
-#     # # get all loans with selected ids
-#     selected_loans = selection
-#     # get a list of unique customers for the selected loans
-#     customers = (
-#         Customer.objects.filter(loan__in=selected_loans)
-#         .select_related("loan")
-#         .distinct()
-#     )
-
-#     grouped_loans = groupby(selected_loans, lambda loan: loan.customer)
-#     print(f"customers gathered:{customers.count()}")
-
-#     # Create the PDF object, using the buffer as its "file."
-#     buffer = io.BytesIO()
-#     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
-#     doc.title = "Notice-Group"
-
-#     # Define styles for the paragraphs
-#     styles = getSampleStyleSheet()
-#     styles.add(
-#         ParagraphStyle(
-#             name="Normal_CENTER",
-#             parent=styles["Normal"],
-#             fontName="Helvetica",
-#             wordWrap="LTR",
-#             alignment=canvas.Canvas.TA_CENTER,
-#             fontSize=12,
-#             leading=13,
-#             textColor=colors.black,
-#             borderPadding=0,
-#             leftIndent=0,
-#             rightIndent=0,
-#             spaceAfter=0,
-#             spaceBefore=0,
-#             splitLongWords=True,
-#             spaceShrinkage=0.05,
-#         )
-#     )
-#     top = styles["Normal_CENTER"]
-#     normal = styles["Normal"]
-#     title = styles["Title"]
-#     heading = styles["Heading1"]
-
-#     # Create the canvas
-#     canvas_obj = canvas.Canvas(buffer, pagesize=landscape(A4))
-
-#     for customer, loans in grouped_loans:
-#         # loans = list(loans) :Use generators instead of lists:
-#         loans = (loan for loan in loans)
-
-#         # Create a new page
-#         canvas_obj.showPage()
-
-#         # Add the customer information
-#         canvas_obj.setFont("Helvetica", 12)
-#         canvas_obj.drawCentredString(300, 700, "TAMILNADU PAWNBROKERS ACT, 1943")
-#         canvas_obj.drawCentredString(300, 650, "NOTICE TO REDEEM PLEDGE")
-#         canvas_obj.drawCentredString(
-#             300, 600, f"{customer.name} {customer.relatedas} {customer.relatedto}"
-#         )
-#         canvas_obj.drawCentredString(300, 575, customer.Address)
-#         canvas_obj.drawCentredString(300, 550, customer.area)
-#         canvas_obj.drawCentredString(300, 525, customer.contactno)
-
-#         # Add the notice to redeem pledge
-#         canvas_obj.setFont("Helvetica-Bold", 12)
-#         canvas_obj.drawString(50, 450, "Notice is hereby given that the Pledge of the following article(s) is now")
-#         canvas_obj.drawString(50, 435, "at the Pawn Broker named below, and that unless the same is redeemed within")
-#         canvas_obj.drawString(50, 420, "30 days from the date hereof, it will be sold by public auction at the Pawn")
-#         canvas_obj.drawString(50, 405, "Broker's place of business, without further notice to the Pledger or his agent.")
-
-#         # Add the pawn broker information
-#         canvas_obj.setFont("Helvetica", 12)
-#         canvas_obj.drawString(50, 375, "Name of Pawn Broker:J Champalal Pawn Brokers")
-
-#         # Add the table of pawned items
-#         data = [
-#             ["Loan ID", "Item Weight", "Created", "Item Description"],
-#             *[list(map(str, [item.loanid, item.itemweight, item.created, item.itemdesc])) for item in loans]
-#         ]
-#         table = Table(data)
-#         table.setStyle(TableStyle([
-#             ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-#             ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-#         ]))
-#         table.wrapOn(canvas_obj, 0, 0)
-#         table.drawOn(canvas_obj, 50, 300)
-
-#     # Save the PDF and return the response
-#     canvas_obj.save()
-#     pdf = buffer.getvalue()
-#     buffer.close()
-#     return pdf
 
 
 def print_noticegroup(selection=None):

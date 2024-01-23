@@ -32,25 +32,19 @@
     <li class="list-group-item">Total Interest Due: {{data.interest}}</li>
   <ul>
   </div>
-<div class="row" data-masonry='{"percentPosition": true }'>
-  {%for i in data.cust%}
-  <div class="col-sm-6 col-lg-4 mb-4">
-    <div class="card text-center border-danger">
-      <div class="card-body">
-        <h5 class="card-title">{{i}}</h5>
-        <p class="card-text">No of loans :{{i.loan_set.count}}
-          Total Amount :{{i.t}}
-          <ul class="list-group">
-            {%for l in i.loan_set.all%}
-            <li class="list-group-item">{{l}} </li>
-            {%endfor%}
-          </ul></p>
-        <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-      </div>
-    </div>
-  </div>
-  {%endfor%}
-</div>
 
+{% regroup data.loans by customer.name as customer_list %}
+
+<ul>
+{% for customer in customer_list %}
+    <li>{{ customer.grouper }}
+    <ul>
+        {% for loan in customer.list %}
+          <li>{{ loan }}</li>
+        {% endfor %}
+    </ul>
+    </li>
+{% endfor %}
+</ul>
 
 {%endblock%}

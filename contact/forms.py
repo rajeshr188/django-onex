@@ -4,7 +4,8 @@ from django_select2 import forms as s2forms
 
 from product.models import PricingTier
 
-from .models import Address, Contact, Customer, Proof
+from .models import (Address, Contact, Customer, CustomerRelationship, Proof,
+                     RelationType)
 
 
 class CustomerWidget(s2forms.ModelSelect2Widget):
@@ -38,6 +39,11 @@ class CustomerForm(forms.ModelForm):
             }
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        default_pricing_tier = PricingTier.objects.get(name="Default")
+        self.fields["pricing_tier"].initial = default_pricing_tier
+
 
 class AddressForm(forms.ModelForm):
     class Meta:
@@ -68,10 +74,9 @@ class ContactForm(forms.ModelForm):
             "phone_number",
             # "customer",
         ]
-
-    # def __init__(self, *args, **kwargs):
-    #     super(ContactForm, self).__init__(*args, **kwargs)
-    #     self.fields["Customer"].queryset = Customer.objects.all()
+        widgets = {
+            "phone_number": forms.TextInput(attrs={"autofocus": True}),
+        }
 
 
 class ProofForm(forms.ModelForm):
@@ -106,3 +111,30 @@ class CustomerMergeForm(forms.Form):
             }
         ),
     )
+
+
+class CustomerRelationshipForm(forms.Form):
+    relationship = forms.ChoiceField(choices=RelationType.choices)
+    related_customer = forms.ModelChoiceField(
+        queryset=Customer.objects.all(),
+        widget=CustomerWidget(
+            select2_options={
+                "width": "100%",
+            }
+        ),
+    )
+
+    class Meta:
+        model = CustomerRelationship
+        fields = [
+            "relationship",
+            "related_customer",
+        ]
+
+    def __init__(self, *args, customer_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If from_customer_id is provided, exclude it from the queryset
+        if customer_id:
+            self.fields["related_customer"].queryset = Customer.objects.exclude(
+                pk=customer_id.id
+            )

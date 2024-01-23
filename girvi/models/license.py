@@ -51,6 +51,18 @@ class Series(models.Model):
     def get_update_url(self):
         return reverse("girvi:girvi_license_series_update", args=(self.pk,))
 
+    def get_earliest_date(self):
+        earliest_loan_date = self.loan_set.aggregate(models.Min("created"))[
+            "created__min"
+        ]
+        return earliest_loan_date
+
+    def get_latest_date(self):
+        latest_loan_date = self.loan_set.aggregate(models.Max("created"))[
+            "created__max"
+        ]
+        return latest_loan_date
+
     def activate(self):
         self.is_active = not self.is_active
         self.save(update_fields=["is_active"])
@@ -61,30 +73,13 @@ class Series(models.Model):
     def total_loan_amount(self):
         return self.loan_set.unreleased().aggregate(t=Sum("loanamount"))
 
-    def total_gold_loan(self):
+    def get_itemwise_loanamount(self):
         return (
             self.loan_set.unreleased()
-            .filter(itemtype="Gold")
-            .aggregate(t=Sum("loanamount"))
+            .with_details()
+            .with_itemwise_loanamount()
+            .total_itemwise_loanamount()
         )
 
-    def total_silver_loan(self):
-        return (
-            self.loan_set.unreleased()
-            .filter(itemtype="Silver")
-            .aggregate(t=Sum("loanamount"))
-        )
-
-    def total_gold_weight(self):
-        return (
-            self.loan_set.unreleased()
-            .filter(itemtype="Gold")
-            .aggregate(t=Sum("itemweight"))
-        )
-
-    def total_silver_weight(self):
-        return (
-            self.loan_set.unreleased()
-            .filter(itemtype="Silver")
-            .aggregate(t=Sum("itemweight"))
-        )
+    def get_itemwise_pure_weight(self):
+        return self.loan_set.unreleased().with_details().total_pure_weight()

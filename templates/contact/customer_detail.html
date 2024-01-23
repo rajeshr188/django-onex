@@ -2,140 +2,55 @@
 {% load static %}
 {% load render_table from django_tables2 %}
 {% block content %}
-<div id="customer-content" class="container mt-5">
-
+<div id="customer-content" class="container mt-2">
   <div class="row">
-    <div class="col-md-4 text-center">
-      {% if customer.pic %}
-        <img src="/media/{{customer.pic}}" alt="{{ customer.name }}'s Profile Picture" 
-          class="profile-img img-fluid" width="200" height="200"
-          >
-    {% else %}
-        <img src="/media/customer_pics/profile-pic.jpg" alt="Default Profile Picture" 
-        width="200" height="200"
-        class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;">
-    {% endif %}
-
-    </div>
-    <div class="col-md-8">
-        <div class="customer-info">
-            <h1 class="mb-4">Customer Information</h1>
-            <p>
-              <strong>Name: </strong> {{customer.name|title}} {{customer.get_relatedas_display}} {{customer.relatedto|title}}
-              <a class="btn btn-primary " 
-                    hx-get="{% url 'contact_customer_update' object.id%}" 
-                    hx-target="#content"
-                    hx-push-url="true"
-                    hx-swap="innerHTML transition:true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                      <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                    </svg></a>
-            </p>
-            <p><strong>Phone: </strong> <div id="contactno-list" 
-              hx-trigger = "revealed,listChanged from:body  delay:100ms"
-              hx-get = "{% url 'customer_contactno_list' customer.id%}"
-              hx-target ="#contactno-list"
-              hx-swap = "innerHTML">
-            </div></p>
-            <p><strong>Address: </strong><div id="address-list" 
-              hx-trigger = "revealed,listChanged from:body  delay:100ms"
-              hx-get = "{% url 'customer_address_list' customer.id%}"
-              hx-target ="#address-list"
-              hx-swap = "innerHTML">
-            </div> </p>
-            <p><strong>Pricing Tier: </strong>{{customer.pricing_tier}}</p>
-            <p><strong>Type: </strong>{{customer.customer_type}}</p>
-            <p><strong>Created By: </strong> {{customer.created_by}}</p>
-            <div class="btn-toolbar" role="toolbar">
-              <div class="btn-group mr-2" role="group">
-                {%if customer.account%}
-                <a class="btn btn-primary ml-2" role="button" href="" 
-                    hx-get="{% url 'dea_account_detail' object.account.id%}"
-                    hx-target="#content"
-                    hx-push-url="true"
-                    hx-swap="innerHTML transition:true">Account</a>
-                <a class="btn btn-primary ml-2 " role="button" href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
-                {%endif%}
-              </div>
-            </div>
-        </div>
-        <hr/>
-     
-    </div>
-  </div>
-
-
-  <div class="row row-cols-1 row-cols-md-2 g-4">
-    <div class="col">
+    <div class="col-sm-6 col-lg-4 mb-4">
       <div class="card">
-        <!-- <img src="..." class="card-img-top" alt="..."> -->
-        <div class="card-header"> <h5 class="card-title"> Loans </h5> <button class="btn btn-success" hx-get="{% url 'girvi:girvi_loan_create' customer.id %}"
-              hx-target="#content" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML transition:true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-        </svg></button></div>
-        <div class="card-body">
-          
-          <p class="card-text">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                Loans  <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill">{{customer.get_weight.gold}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">silver<span class="badge bg-primary rounded-pill">{{customer.get_weight.silver}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Bronze<span class="badge bg-primary rounded-pill"></span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
-              </ul>
-              
-          </p>
+        <div class="card-header">
+          <h5>Customer Information</h5>
         </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card">
         <div class="card-body">
-          <h5 class="card-title"></h5>
           <div class="row">
-            <div class="col">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Unreleased</h5>
-                    <p>
-                      <ul class="list-group list-group-flush">
-                        {%for i in customer.loan_set.unreleased%}
-                        <li class="list-group-item">
-                          <a href =""
-                            hx-get="{% url 'girvi:girvi_loan_detail' i.id %}"
-                            hx-target="#content" hx-swap="innerHTML transition:true"
-                            hx-trigger ="click" hx-vals='{"use_block":"content"}'
-                            hx-push-url="true">{{i.loanid}} {{i.created.date}} {{i.loanamount}} 
-                          </a>
-                        </li>
-                        {%endfor%}
-                      </ul>
-                    </p>
-                </div>
-              </div>
+            <div class="col text-center">
+
+              {% if customer.pic %}
+              <img src="/media/{{customer.pic}}" alt="{{ customer.name }}'s Profile Picture"
+                class="profile-img img-fluid" width="200" height="200">
+              {% else %}
+              <img src="/media/customer_pics/profile-pic.jpg" alt="Default Profile Picture" width="200" height="200"
+                class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;">
+              {% endif %}
+
             </div>
             <div class="col">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Released</h5>
-                    <p>
-                      <ul class="list-group list-group-flush">
-                        {%for i in customer.loan_set.released%}
-                        <li class="list-group-item">
-                          <a href ="" hx-get="{% url 'girvi:girvi_loan_detail' i.id %}"
-                            hx-target="#content" hx-swap="innerHTML transition:true" hx-vals='{"use_block":"content"}'
-                            hx-push-url="true">{{i.loanid}} {{i.created.date}} {{i.loanamount}}
-                          </a>
-                        </li>
-                        {%endfor%}
-                      </ul>
-                    </p>
+              <div class="customer-info">
+                <p class="ml-3">
+                  <strong>{{customer.name|title}} {{customer.get_relatedas_display}} {{customer.relatedto|title}}
+                  </strong>
+                  <a class="btn btn-primary " hx-get="{% url 'contact_customer_update' object.id%}"
+                    hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true"><svg
+                      xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                      class="bi bi-pencil-square" viewBox="0 0 16 16">
+                      <path
+                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                      <path fill-rule="evenodd"
+                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                    </svg></a>
+                </p>
+                <p><strong>Worth:</strong>{{worth}}</p>
+                <p><strong>Pricing Tier: </strong>{{customer.pricing_tier}}</p>
+                <p><strong>Type: </strong>{{customer.customer_type}}</p>
+                <p><strong>Created By: </strong> {{customer.created_by}}</p>
+                <div class="btn-toolbar" role="toolbar">
+                  <div class="btn-group mr-2" role="group">
+                    {%if customer.account%}
+                    <a class="btn btn-primary ml-2" role="button" href=""
+                      hx-get="{% url 'dea_account_detail' object.account.id%}" hx-target="#content" hx-push-url="true"
+                      hx-swap="innerHTML transition:true">Account</a>
+                    <a class="btn btn-primary ml-2 " role="button"
+                      href="{% url 'dea_account_audit' customer.account.id%}">Audit</a>
+                    {%endif%}
+                  </div>
                 </div>
               </div>
             </div>
@@ -143,119 +58,242 @@
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
+      <div id="address-list" hx-trigger="revealed,listChanged from:body  delay:100ms"
+        hx-get="{% url 'customer_address_list' customer.id%}" hx-target="#address-list" hx-swap="innerHTML">
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4  mb-4">
+      <div id="contactno-list" hx-trigger="revealed,listChanged from:body  delay:100ms"
+        hx-get="{% url 'customer_contactno_list' customer.id%}" hx-target="#contactno-list" hx-swap="innerHTML">
+      </div>
+    </div>
+  </div>
+  <div class="row" data-masonry='{" percentPosition": true }'>
+    
+    <div class="col-sm-6 col-lg-4  mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"> Relations <span
+              class="badge text-bg-secondary">{{customer.relationships.count}}</span></h5>
+        </div>
+        <div id="relations-form"></div>
+        <ul class="list-group">
+          {%for i in customer.relationships.all %}
+          <li class="list-group-item"><a href="{% url 'contact_customer_detail' i.id%}">{{i}}</a></li>
+          {%endfor%}
+        </ul>
+        <div class="card-footer bg-transparent border-success">
+          <a class="btn btn-success" hx-get="{% url 'contact_create_relationship' customer.id%}"
+            hx-target="#relations-form" hx-swap="innerHTML"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+              height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+              <path
+                d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+            </svg> Relations</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4 mb-4">
+      <div class="card border-info mb-3">
+        <!-- <img src="..." class="card-img-top" alt="..."> -->
+        <div class="card-header">
+          <h5 class="card-title"> Loans <button class="btn btn-success"
+              hx-get="{% url 'girvi:girvi_loan_create' customer.id %}" hx-target="#content" hx-push-url="true"
+              hx-trigger="click" hx-swap="innerHTML transition:true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                <path
+                  d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+              </svg></button></h5>
+        </div>
+        <div class="card-body">
+          <div class="col mb-4">
+            <p class="card-text">
+
+            </p>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Loans <span class="badge bg-primary rounded-pill">{{customer.get_loans_count}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Amount <span class="badge bg-primary rounded-pill">{{customer.get_total_loanamount}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Interestdue<span
+                  class="badge bg-primary rounded-pill">{{customer.get_total_interest_due}}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Average Release time<span
+                  class="badge bg-primary rounded-pill">{{customer.get_release_average}}</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4  mb-4">
+      <div class="card border-primary mb-3" style="max-height: 300px; overflow-y: auto;">
+        <div class="card-header">
+          <h5 class="card-title"> UnReleased Loans <span
+              class="badge text-bg-secondary">{{customer.loan_set.unreleased.count}}</span></h5>
+        </div>
+        <ul class="list-group list-group-flush list-group-numbered">
+          {%for i in customer.loan_set.unreleased%}
+          <li class="list-group-item">
+            <a href="" hx-get="{% url 'girvi:girvi_loan_detail' i.id %}" hx-target="#content"
+              hx-swap="innerHTML transition:true" hx-trigger="click" hx-vals='{"use_block":"content"}'
+              hx-push-url="true">{{i.loanid}} {{i.created.date}} {{i.loanamount}}
+            </a>
+          </li>
+          {%endfor%}
+        </ul>
+
+      </div>
+
+    </div>
+    <div class="col-sm-6 col-lg-4  mb-4">
+      <div class="card border-success mb-3 " style="max-height: 400px; overflow-y: auto;">
+        <div class="card-header">
+          <h5 class="card-title">Released Loans <span
+              class="badge text-bg-secondary">{{customer.loan_set.released.count}}</span></h5>
+        </div>
+        <ul class="list-group list-group-flush list-group-numbered">
+          {%for i in customer.loan_set.released%}
+          <li class="list-group-item">
+            <a href="" hx-get="{% url 'girvi:girvi_loan_detail' i.id %}" hx-target="#content"
+              hx-swap="innerHTML transition:true" hx-vals='{"use_block":"content"}' hx-push-url="true">{{i.loanid}}
+              {{i.created.date}} {{i.loanamount}}
+            </a>
+          </li>
+          {%endfor%}
+        </ul>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card">
         <!-- <img src="..." class="card-img-top" alt="..."> -->
         <div class="card-body">
           <h5 class="card-title">Invoice Balance</h5>
           <p class="card-text">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span class="badge bg-primary rounded-pill"></span></li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span class="badge bg-primary rounded-pill"></span>
-              </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">Amount <span
+                class="badge bg-primary rounded-pill"></span></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">Gold<span
+                class="badge bg-primary rounded-pill"></span>
+          </ul>
           </p>
         </div>
       </div>
     </div>
-  
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card text-center">
         <div class="card-header">
-        UnPaid Cash Balance : 
-        
+          UnPaid Cash Balance :
+
         </div>
       </div>
       <div class="card text-center">
         <div class="card-header">
-        UnPaid Metal Balance : 
-        
+          UnPaid Metal Balance :
+
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Unpaid Month-Wise</h5>
           <div class="table-responsive">
-          <table class ="table table-sm table-striped table-bordered">
-            <thead>
-              <tr>
-                <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {%for month in monthwise%}
-              <tr>
-                <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-              </tr>
-              {%endfor%}
-            </tbody>
-          </table>
+            <table class="table table-sm table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Cash Bal</th>
+                  <th>Metal Bal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%for month in monthwise%}
+                <tr>
+                  <td>{{month.month}}</td>
+                  <td>{{month.tc}}</td>
+                  <td>{{month.tm}}</td>
+                </tr>
+                {%endfor%}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Purchase Month-Wise</h5>
           <div class="table-responsive">
-          <table class ="table table-sm table-striped table-bordered">
-            <thead>
-              <tr>
-                <th>Month</th><th>Cash Bal</th><th>Metal Bal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {%for month in monthwiserev%}
-              <tr>
-                <td>{{month.month}}</td><td>{{month.tc}}</td><td>{{month.tm}}</td>
-              </tr>
-              {%endfor%}
-            </tbody>
-          </table>
+            <table class="table table-sm table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Cash Bal</th>
+                  <th>Metal Bal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%for month in monthwiserev%}
+                <tr>
+                  <td>{{month.month}}</td>
+                  <td>{{month.tc}}</td>
+                  <td>{{month.tm}}</td>
+                </tr>
+                {%endfor%}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Payment Expected</h5>
           <div class="table-responsive">
-          <table class ="table table-sm table-striped table-bordered">
-            <thead>
-              <tr>
-                <th>days since</th><th>Cash Bal</th><th>Metal Bal</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>last 30 days</td><td>{{current.tc}}</td><td>{{current.tm}}</td>
-              </tr>
-              <tr>
-                <td>before 30 days</td><td>{{past.tc}}</td><td>{{past.tm}}</td>
-              </tr>
-            </tbody>
-          </table>
+            <table class="table table-sm table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>days since</th>
+                  <th>Cash Bal</th>
+                  <th>Metal Bal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>last 30 days</td>
+                  <td>{{current.tc}}</td>
+                  <td>{{current.tm}}</td>
+                </tr>
+                <tr>
+                  <td>before 30 days</td>
+                  <td>{{past.tc}}</td>
+                  <td>{{past.tm}}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-sm-6 col-lg-4  mb-4">
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Notifications</h5>
           <p>
-            <ul>
-              {%for i in object.notification_set.all%}
-              <li><a href="">{{i}}</a></li> 
-              {%endfor%}
-            </ul> 
+          <ul>
+            {%for i in object.notification_set.all%}
+            <li><a href="{% url 'notify_notification_detail' i.id%}">{{i}}</a></li>
+            {%endfor%}
+          </ul>
           </p>
         </div>
       </div>
     </div>
-  </div> 
+  </div>
 </div>
+
 {% endblock %}

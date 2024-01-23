@@ -3,13 +3,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 
 from utils.htmx_utils import for_htmx
 
@@ -22,7 +17,7 @@ from ..models import License, Series
 def license_list(request):
     license = License.objects.all()
     return TemplateResponse(
-        request, "girvi/license_list.html", context={"object_list": license}
+        request, "girvi/license/license_list.html", context={"object_list": license}
     )
 
 

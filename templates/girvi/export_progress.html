@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Export Progress</h1>
+  <p>Task ID: {{ task_id }}</p>
+  <p>Status: {{ task.status }}</p>
+  {% if task.status == "SUCCESS" %}
+    <p><a href="{% url 'export_download' %}?task_id={{ task_id }}">Download Export</a></p>
+  {% endif %}
+{% endblock %}

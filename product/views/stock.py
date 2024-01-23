@@ -4,20 +4,16 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from django.views.generic.base import TemplateView
 
 from dea.models import Journal, JournalTypes
 from utils.htmx_utils import for_htmx
 
 from ..filters import StockFilter
-from ..forms import StockForm, StockJournalForm, UniqueForm, stockstatement_formset
+from ..forms import (StockForm, StockJournalForm, UniqueForm,
+                     stockstatement_formset)
 from ..models import Stock, StockLot, StockStatement, StockTransaction
 
 

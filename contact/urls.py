@@ -4,7 +4,6 @@ from . import views
 
 urlpatterns = (
     # urls for Customer
-    path("", views.home, name="contact_home"),
     path("customer/", views.customer_list, name="contact_customer_list"),
     path("customer/create/", views.customer_create, name="contact_customer_create"),
     path(
@@ -81,4 +80,10 @@ urlpatterns = (
         name="customer_address_delete",
     ),
     path("customer/merge/", views.customer_merge, name="contact_customer_merge"),
+    # path to create_relationship view
+    path(
+        "customer/<int:from_customer_id>/create_relationship/",
+        views.create_relationship,
+        name="contact_create_relationship",
+    ),
 )

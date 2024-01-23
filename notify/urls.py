@@ -16,6 +16,11 @@ urlpatterns = (
         views.noticegroup_create,
         name="notify_noticegroup_create",
     ),
+    path(
+        "noticegroup/<int:pk>/delete/",
+        views.noticegroup_delete,
+        name="notify_noticegroup_delete",
+    ),
     # paths for Notification
     path("notification/", views.notification_list, name="notify_notification_list"),
     path(
@@ -38,5 +43,11 @@ urlpatterns = (
         "notification/<int:pk>/print",
         views.notification_print,
         name="notify_notification_print",
+    ),
+    # path to delete a notification
+    path(
+        "notification/<int:pk>/delete/",
+        views.notification_delete,
+        name="notify_notification_delete",
     ),
 )

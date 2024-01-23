@@ -6,7 +6,10 @@
 
 {%block content%}
 
-<div id="customer-content" class="container-fluid mx-auto p-4 py-md-5" hx-target="this" hx-get="{% url 'contact_customer_list'%}" hx-trigger="listChanged from:body">
+<div id="customer-content" 
+      class="container mx-auto " 
+      hx-target="this" hx-get="{% url 'contact_customer_list'%}" 
+      hx-trigger="listChanged from:body">
  
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Customers</h1>
@@ -34,7 +37,7 @@
   </div>
   
   <div class="row" id="main-content">
-    <div class="col-sm-3" id="filter">
+    <div class="col-sm-2" id="filter">
       <div class="position-relative h-20" id ="filter">
         {% if filter %}
         <div class="card text-center">
@@ -56,6 +59,7 @@
                       </div>
                     {%endfor%}
                 </form>
+                 
             </div>
         </div>
         {% endif %}
@@ -63,8 +67,8 @@
     </div>
     {%block table%}
     <div class="col table-responsive" id = "table"> 
-      <p>Results :{{table.paginator.count}} </p> 
       {% render_table table %} 
+      <p>Results :{{table.paginator.count}} </p>
     </div>
     {%endblock%}
   </div>

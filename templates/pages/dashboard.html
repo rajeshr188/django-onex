@@ -236,8 +236,7 @@
                             // Fetch data from the Django view
                             var loanData = {
                                 label: 'Loan Count',
-                                data: [{% for entry in loan_data_by_year %}{{ entry.loans_count }
-                        }, {% endfor %}],
+                                data: [{% for entry in loan_data_by_year %}{{ entry.loans_count }}, {% endfor %}],
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',
                             borderWidth: 1
@@ -338,7 +337,7 @@
     </div>
 
     <!-- Content Row -->
-    <div class="row data-masonry='{" percentPosition": true }'>
+    <div class="row data-masonry='{"percentPosition": true }'>
 
         <!-- Earnings (Monthly) Card Example -->
         <div class="col-xl-2 col-md-2 mb-4 g-4">

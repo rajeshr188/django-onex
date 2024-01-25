@@ -1,4 +1,5 @@
-when bulk release get the total interest and amount detail via htmx on 
+group loans in listview
+django-allauth google signin
 AAdhar KYC:
     api-setu,sandbox.co.in
 mr.htmx wordwide:
@@ -47,7 +48,4 @@ pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock(hint use django-slick-reporting)
 SIMPLE UI LIKE KHATABOOK:
 MAKE ROBUST,ADD TEST AND DOCS WITH THE HELP OF GITHUB COPILOT:
-deployment:
-add ledger codes
-export data to tally
 remove dependency on django-mptt and use django-treebeard or implement own tree as papermergecore did

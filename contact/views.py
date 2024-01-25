@@ -42,7 +42,7 @@ def customer_list(request):
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     customer.delete()
-    messages.success(request, messages.DEBUG, f"Deleted customer {customer.name}")
+    messages.error(request, messages.DEBUG, f"Deleted customer {customer.name}")
     return HttpResponse("")
 
 
@@ -67,7 +67,7 @@ def customer_create(request):
 
             f.save()
 
-            messages.success(request, messages.SUCCESS, f"created customer {f.name}")
+            messages.success(request, messages.SUCCESS, f"Customer {f.name} created.")
             if "add" in request.POST:
                 response = TemplateResponse(
                     request, "contact/customer_form.html", {"form": CustomerForm()}
@@ -106,7 +106,13 @@ def customer_merge(request):
             original = form.cleaned_data["original"]
             duplicate = form.cleaned_data["duplicate"]
             original.merge(duplicate)
+            messages.success(
+                request,
+                messages.SUCCESS,
+                f"merged customer {duplicate} into {original}",
+            )
             return redirect("contact_customer_list")
+
     return TemplateResponse(
         request, "contact/customer_merge.html", context={"form": form}
     )
@@ -120,8 +126,6 @@ def customer_detail(request, pk=None):
     context["object"] = cust
     context["customer"] = cust
     loans = cust.loan_set.unreleased().with_details()
-    for i in loans:
-        print(f"get_worth:{i.get_worth} | worth: {i.worth}")
     worth = [i.worth for i in loans]
     context["worth"] = sum(worth)
     return TemplateResponse(request, "contact/customer_detail.html", context)
@@ -178,7 +182,9 @@ def customer_edit(request, pk):
             f.pic = image_file
 
         f.save()
-        messages.success(request, messages.SUCCESS, f"updated customer {f}")
+        messages.success(
+            request, messages.SUCCESS, f"Customer {customer.name} Info Updated"
+        )
 
         response = TemplateResponse(
             request,
@@ -218,7 +224,7 @@ def contact_create(request, pk=None):
         f = form.save(commit=False)
         f.customer = customer
         f.save()
-
+        messages.success(request, messages.SUCCESS, f"Contact {f} created.")
         return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
         # return HttpResponse(status=204, headers={"HX-Redirect": reverse("contact_customer_list")})
 
@@ -266,6 +272,7 @@ def contact_update(request, pk):
     if request.method == "POST":
         if form.is_valid():
             form.save()
+            messages.success(request, messages.SUCCESS, f"Contact {contact} updated.")
             return render(
                 request, "contact/contact_detail.html", context={"i": contact}
             )
@@ -281,6 +288,7 @@ def contact_update(request, pk):
 def contact_delete(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     contact.delete()
+    messages.error(request, messages.ERROR, f"Contact {contact} deleted.")
     return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
 
 
@@ -294,7 +302,8 @@ def address_create(request, pk=None):
         address.Customer = customer
 
         address.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "listChanged"})
+        messages.success(request, messages.SUCCESS, f"Address {address} created.")
+        return HttpResponse(headers={"HX-Trigger": "listChanged"})
 
     return render(
         request,
@@ -316,9 +325,11 @@ def address_update(request, pk):
     if request.method == "POST":
         if form.is_valid():
             form.save()
+            messages.success(request, messages.SUCCESS, f"Address {address} updated.")
             return render(
                 request, "contact/address_detail.html", context={"i": address}
             )
+
     return render(
         request,
         "contact/partials/address_update_form.html",
@@ -331,4 +342,5 @@ def address_update(request, pk):
 def address_delete(request, pk):
     address = get_object_or_404(Address, pk=pk)
     address.delete()
+    messages.error(request, messages.ERROR, f"Address {address} deleted.")
     return HttpResponse("")

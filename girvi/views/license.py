@@ -24,20 +24,24 @@ def license_list(request):
 class LicenseCreateView(LoginRequiredMixin, CreateView):
     model = License
     form_class = LicenseForm
+    template_name = "girvi/license/license_form.html"
 
 
 class LicenseDetailView(LoginRequiredMixin, DetailView):
     model = License
+    template_name = "girvi/license/license_detail.html"
 
 
 class LicenseUpdateView(LoginRequiredMixin, UpdateView):
     model = License
     form_class = LicenseForm
+    template_name = "girvi/license/license_form.html"
 
 
 class LicenseDeleteView(LoginRequiredMixin, DeleteView):
     model = License
     success_url = reverse_lazy("girvi:girvi_license_list")
+    template_name = "girvi/license/license_confirm_delete.html"
 
 
 def activate_series(request, pk):

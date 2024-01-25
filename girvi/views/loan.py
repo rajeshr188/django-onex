@@ -14,10 +14,9 @@ from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods  # new
-from django.views.generic import DeleteView
 from django.views.generic.dates import (DayArchiveView, MonthArchiveView,
                                         TodayArchiveView, WeekArchiveView,
                                         YearArchiveView)
@@ -25,7 +24,6 @@ from django_tables2.config import RequestConfig
 from django_tables2.export.export import TableExport
 from num2words import num2words
 from openpyxl import load_workbook
-from render_block import render_block_to_string
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 
@@ -37,8 +35,7 @@ from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 
 from ..filters import LoanFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm
-from ..models import (License, Loan, LoanItem, Release, Series, Statement,
-                      StatementItem)
+from ..models import *
 from ..tables import LoanTable
 
 
@@ -154,7 +151,7 @@ def create_loan(request, pk=None):
                 l.pic = image_file
 
             l.save()
-            messages.success(request, f"last loan id is {l.loanid}")
+            messages.success(request, f"Created Loan : {l.loanid}")
 
             response = TemplateResponse(
                 request,
@@ -204,7 +201,7 @@ def loan_update(request, id=None):
             l.pic = image_file
 
         l.save()
-        messages.success(request, messages.SUCCESS, f"updated customer {obj}")
+        messages.success(request, messages.SUCCESS, f"updated Loan {obj}")
 
         return TemplateResponse(
             request, "girvi/loan/loan_detail.html", {"loan": obj, "object": obj}
@@ -220,9 +217,9 @@ def loan_update(request, id=None):
 def loan_delete(request, pk=None):
     obj = get_object_or_404(Loan, id=pk)
     obj.delete()
-    messages.success(request, f"Deleted Loan {obj}")
+    messages.error(request, f" Loan {obj} Deleted")
     return HttpResponse(
-        status=200, headers={"Hx-Redirect": reverse("girvi:girvi_loan_list")}
+        status=204, headers={"Hx-Redirect": reverse("girvi:girvi_loan_list")}
     )
 
 
@@ -346,6 +343,7 @@ def loan_renew(request, pk):
             )
             newloan.save()
             # redirect to a new URL:
+            messages.success(request, f"Renewed Loan : {newloan.loanid}")
             return redirect(newloan)
 
     # if a GET (or any other method) we'll create a blank form
@@ -397,20 +395,8 @@ def deleteLoan(request):
     loans = Loan.objects.filter(id__in=id_list)
     for i in loans:
         i.delete()
-    filter = LoanFilter(
-        request.GET,
-        queryset=Loan.objects.order_by("-id")
-        .with_details()
-        .prefetch_related("notifications", "loanitems"),
-    )
-    table = LoanTable(filter.qs)
-    context = {"filter": filter, "table": table}
-    RequestConfig(request, paginate={"per_page": 10}).configure(table)
-
-    response = render_block_to_string(
-        "girvi/loan/loan_list.html", "content", context, request
-    )
-    return HttpResponse(response)
+    messages.error(request, f"Deleted {len(id_list)} loans")
+    return loan_list(request)
 
 
 @login_required
@@ -483,6 +469,7 @@ def print_loan(request, pk=None):
     return response
 
 
+@login_required
 def generate_original(request, pk=None):
     loan = get_object_or_404(Loan, pk=pk)
     response = HttpResponse(content_type="application/pdf")
@@ -634,104 +621,7 @@ def generate_original(request, pk=None):
     return response
 
 
-# Depreceated
-def generate_duplicate(request, pk=None):
-    loan = get_object_or_404(Loan, pk=pk)
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'"
-
-    page_width = 14.6 * cm
-    page_height = 21 * cm
-    c = canvas.Canvas(response, pagesize=(page_width, page_height))
-    c.setFont("Helvetica", 12)
-    # Grid spacing
-    grid_spacing = 1 * cm  # Adjust this value based on your preference
-
-    c.drawString(3 * cm, 17 * cm, f"{loan.lid}")
-    c.drawString(11 * cm, 17 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
-    c.drawString(5 * cm, 16.5 * cm, f"{loan.customer.name}")
-    c.drawString(
-        5 * cm,
-        16 * cm,
-        f"{loan.customer.get_relatedas_display()} {loan.customer.relatedto}",
-    )
-    address = textwrap.wrap(f"{loan.customer.address.first()}")
-    # Draw the wrapped text on the canvas
-    y = 15 * cm
-    for line in address:
-        c.drawString(5 * cm, y, line)
-        y -= 0.5 * cm
-
-    c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
-    c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
-
-    lines = textwrap.wrap(
-        f"{num2words(loan.loanamount, lang='en_IN')} rupees only", width=45
-    )
-    # Draw the wrapped text on the canvas
-    # y = 13 * cm
-    # for line in lines:
-    #     c.drawString(5 * cm, y, line)
-    #     y -= 0.5 * cm
-
-    # c.drawString(5 * cm, 12.1 * cm, f"{loan.itemtype}")
-
-    # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(loan.itemdesc, width=35)
-    # Draw the wrapped text on the canvas
-    y = 10 * cm
-    for line in lines:
-        c.drawString(3 * cm, y, line)
-        y -= 0.5 * cm
-
-    c.setFont("Helvetica", 8)
-    result = []
-    for item in loan.get_weight:
-        item_type = item["itemtype"]
-        total_weight_purity = round(item["total_weight"])
-        result.append(f"{item_type}:{total_weight_purity}")
-
-    # Join the results into a single string
-    weight = " ".join(result)
-    c.drawString(3 * cm, 7 * cm, f"{weight}gms")
-    result = []
-    for item in loan.get_pure:
-        item_type = item["itemtype"]
-        total_weight_purity = round(item["pure_weight"])
-        result.append(f"{item_type}:{total_weight_purity}")
-
-    # Join the results into a single string
-    pure = " ".join(result)
-    c.drawString(7 * cm, 7 * cm, f"{pure}")
-    c.setFont("Helvetica", 12)
-    c.drawString(12 * cm, 7 * cm, f"{loan.current_value()}")
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(1 * cm, 3.5 * cm, f"{loan.lid}")
-    c.drawString(1 * cm, 3 * cm, f"{loan.created.strftime('%d/%m/%y')}")
-    c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {weight}")
-    c.drawString(1 * cm, 2 * cm, f"{loan.customer.name}")
-    # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(f"{loan.itemdesc}", width=35)
-    # Draw the wrapped text on the canvas
-    y = 1.5 * cm
-    for line in lines:
-        c.drawString(1 * cm, y, line)
-        y -= 0.5 * cm
-
-    c.save()
-    return response
-
-
-@user_passes_test(lambda user: user.is_superuser)
-@login_required
-def home(request):
-    data = {}
-    return render(
-        request,
-        "girvi/home.html",
-        context={"data": data},
-    )
-
+# @user_passes_test(lambda user: user.is_superuser)
 
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
@@ -845,6 +735,7 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
 
                 new_obj.pic = image_file
             new_obj.save()
+            messages.success(request, f"Created Item : {new_obj.itemid}")
             context = {"object": new_obj}
 
             if request.htmx:
@@ -865,11 +756,11 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
     return render(request, "girvi/partials/item-form.html", context)
 
 
-@login_required
-def get_loan_items(request, loan):
-    l = get_object_or_404(Loan, pk=loan)
-    items = l.loanitem_set.all()
-    return render(request, "", context={"items": items})
+# @login_required
+# def get_loan_items(request, loan):
+#     l = get_object_or_404(Loan, pk=loan)
+#     items = l.loanitem_set.all()
+#     return render(request, "", context={"items": items})
 
 
 @login_required
@@ -877,6 +768,7 @@ def loanitem_delete(request, parent_id, id):
     item = get_object_or_404(LoanItem, id=id, loan_id=parent_id)
     loan = item.loan
     item.delete()
+    messages.error(request, f"Item {item} Deleted")
     loan.save()
     return HttpResponse(status=204, headers={"HX-Trigger": "loanChanged"})
 

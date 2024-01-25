@@ -82,7 +82,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "djangox_project.middleware.HtmxMessageMiddleware",
+    "djangox_project.middleware.HtmxMessagesMiddleware",
 ]
 
 # CACHE_MIDDLEWARE_ALIAS = 'default'

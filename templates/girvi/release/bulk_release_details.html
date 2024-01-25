@@ -1,0 +1,33 @@
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Details</h3>
+  <div class="card-body">
+    <div class="table">
+      <table class="table table-bordered table-striped table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Loan ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Interest</th>
+            <th>Release Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loan in loans %}
+          <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{ loan.id }}</td>
+            <td>{{ loan.customer }}</td>
+            <td>{{ loan.loanamount }}</td>
+            <td>{{ loan.interest }}</td>
+            <td>{{ loan.due }}</td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

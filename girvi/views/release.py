@@ -3,10 +3,12 @@ from typing import List
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 from django_filters.views import FilterView
 from django_tables2.config import RequestConfig
@@ -124,7 +126,7 @@ def bulk_release(request):
 
             if not date:
                 date = timezone.now().date()
-
+            new_releases: List[Release] = []
             for loan in loans:
                 try:
                     l = Loan.objects.get(loanid=loan.loanid)
@@ -133,23 +135,37 @@ def bulk_release(request):
                     print(f"Failed to create Release as {loan} does not exist")
                     continue
                 try:
-                    releaseid = Release.objects.order_by("-id")[0]
-                    releaseid = str(int(releaseid.releaseid) + 1)
-                    r = Release.objects.create(
-                        releaseid=releaseid,
-                        loan=l,
-                        created=date,  # datetime.now(timezone.utc),
-                        interestpaid=l.interestdue(date),
-                        created_by=request.user,
-                    )
-                except IntegrityError:
-                    # raise CommandError(f"Failed creating Release as {l} is already Released with {l.release}")
-                    print(
-                        f"Failed creating Release as {l} is already Released with {l.release}"
-                    )
+                    last_release = Release.objects.latest("id")
+                    releaseid = str(int(last_release.releaseid) + 1)
+                except Release.DoesNotExist:
+                    releaseid = "1"
+
+                new_release = Release(
+                    releaseid=releaseid,
+                    loan=l,
+                    created=date,  # datetime.now(timezone.utc),
+                    interestpaid=l.interestdue(date),
+                    created_by=request.user,
+                )
+                new_releases.append(new_release)
+            try:
+                with transaction.atomic():
+                    Release.objects.bulk_create(new_releases)
+            except IntegrityError:
+                print("Failed creating Release as already Released")
+
     # if a GET (or any other method) we'll create a blank form
     else:
         selected_loans = request.GET.getlist("selection", "")
         qs = Loan.unreleased.filter(id__in=selected_loans).values_list("id", flat=True)
         form = BulkReleaseForm(initial={"loans": qs})
     return TemplateResponse(request, "girvi/release/bulk_release.html", {"form": form})
+
+
+@require_POST
+def get_release_details(request):
+    # get the loans from request
+    loan_ids = request.POST.getlist("loans")  # list of loan ids
+    print(loan_ids)
+    loans = Loan.objects.filter(id__in=loan_ids).with_details()
+    return render(request, "girvi/release/bulk_release_details.html", {"loans": loans})

@@ -2,7 +2,6 @@ from decimal import Decimal
 
 import django_filters
 from django.db.models import Q
-from django_select2.forms import Select2Widget
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
@@ -56,7 +55,6 @@ class LoanFilter(django_filters.FilterSet):
                 | Q(lid__icontains=value)
                 | Q(loanid__icontains=value)
                 | Q(itemdesc__icontains=value)
-                # | Q(itemweight__icontains=value)
                 | Q(loanamount__icontains=value)
             )
         )

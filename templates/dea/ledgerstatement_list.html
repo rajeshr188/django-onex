@@ -3,14 +3,18 @@
 {% block title %}Ledger Statement {% endblock %}
 
 {% block content %}
-<h1>Ledger Statement</h1>
-<table class="table">
-    <tbody>
-        {% for i in object_list %}
-        <tr>
-            <td>{{i.created|date}}</td><td>{{i.ledgerno}}</td><td>{{i.get_cb}}</td>
-        </tr>
-        {%endfor%}
-    </tbody>
-</table>
+<div class="container m-3">
+    <h1>Ledger Statement</h1>
+    <div class="table-responsive">
+        <table class="table">
+            <tbody>
+                {% for i in object_list %}
+                <tr>
+                    <td>{{i.created|date}}</td><td>{{i.ledgerno}}</td><td>{{i.get_cb}}</td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

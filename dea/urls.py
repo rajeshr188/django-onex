@@ -53,15 +53,15 @@ urlpatterns = [
         views.LedgerTransactionListView.as_view(),
         name="dea_ledgertransaction_list",
     ),
-    path("journal/", views.JournalListView.as_view(), name="dea_journals_list"),
+    path("journal_entries/", views.JournalEntryListView.as_view(), name="dea_journal_entries_list"),
     path(
-        "journal/<int:pk>/detail",
-        views.JournalDetailView.as_view(),
-        name="dea_journal_detail",
+        "journal_entry/<int:pk>/detail",
+        views.JournalEntryDetailView.as_view(),
+        name="dea_journal_entry_detail",
     ),
     path(
-        "journal/<int:pk>/delete",
-        views.JournalDeleteView.as_view(),
-        name="dea_journal_delete",
+        "journal_entry/<int:pk>/delete",
+        views.JournalEntryDeleteView.as_view(),
+        name="dea_journal_entry_delete",
     ),
 ]

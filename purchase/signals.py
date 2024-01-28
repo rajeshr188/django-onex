@@ -2,7 +2,7 @@ from django.db.models import signals
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from dea.models import Journal
+from dea.models import JournalEntry
 from purchase.models import Invoice, InvoiceItem, Payment, PaymentAllocation
 
 # @receiver(signals.pre_delete, sender=PaymentAllocation)
@@ -36,12 +36,12 @@ def create_stock_journal(sender, instance, created, **kwargs):
     print(f"Balance after update: {instance.metal_balance}")
     if created:
         print("newly created stock journal")
-        sj = instance.create_journal()
+        sj = instance.get_journal_entry()
         instance.post(sj)
         instance.invoice.create_transactions()
     else:
         print("existing stock journal:appending txns")
-        sj = instance.get_journal()
+        sj = instance.get_journal_entry()
         instance.unpost(sj)
         instance.post(sj)
         # instance.invoice.update_balance()

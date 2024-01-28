@@ -54,7 +54,7 @@
                     <tr>
                       <th>ID</th>
                       <th>movement</th>
-                      <th>journal</th>
+                      <th>Voucher</th>
                       <th>Lot</th>
                       <th>weight</th>
                       <th>quantity</th>
@@ -66,11 +66,11 @@
                       <td>{{i.id}}</td>
                       <td>{{i.movement_type.name}}</td>
                       <td>
-                        {%if i.journal.get_url_string is not None%}
-                        <a href="{{i.journal.get_url_string}}">
-                          {{i.journal.desc}}:{{i.journal.content_object}}</a>
+                        {%if i.journal_entry.get_url_string is not None%}
+                        <a href="{{i.journal_entry.get_url_string}}">
+                          {{i.journal_entry.desc}}:{{i.journal_entry.content_object}}</a>
                         {%else%}
-                        <a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a>
+                        <a href="{% url 'dea_journal_entry_detail' i.journal_entry.id%}">{{i.journal_entry}}</a>
                         {%endif%}
                       </td>
                       <td>{{i.lot.barcode}}</td>

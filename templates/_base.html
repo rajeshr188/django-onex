@@ -42,6 +42,7 @@
                                   hx-target="#content"
                                   hx-swap="innerHTML transition:true"
                                   hx-push-url="true"
+                                  hx-vals='{"use_block": "content"}'
                                   hx-trigger="click, keyup[altKey&&shiftKey&&key=='C'] from:body"
                     >Customer </a>
             </li>
@@ -68,7 +69,7 @@
                 <li><a class="dropdown-item" href="{%url 'notify_noticegroup_list' %}">Notice Group</a></li>
               </ul>
             </li>
-            <!-- <li class="nav-item dropdown">
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Product
               </a>
@@ -94,8 +95,8 @@
                 <li><a class="dropdown-item" href="{%url 'product_pricingtier_list' %}"
                   >Pricing Tier</a></li>  
               </ul>
-            </li> -->
-            <!-- <li class="nav-item dropdown">
+            </li>
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Sales
               </a>
@@ -106,8 +107,8 @@
                 <li><a class="dropdown-item" href="{% url 'sales:sales_receipt_list'%}"  
                   >Receipt</a></li>
               </ul>
-            </li> -->
-            <!-- <li class="nav-item dropdown">
+            </li>
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Approval
               </a>
@@ -116,8 +117,8 @@
                 <li><hr class="dropdown-divider"></li>
                 <a class="dropdown-item" href="{%url 'approval:approval_return_list'%}">Approval Return</a>
               </ul>
-            </li> -->
-            <!-- <li class="nav-item dropdown">
+            </li>
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Purchase
               </a>
@@ -134,8 +135,8 @@
                     hx-swap="innerHTML"
                     hx-push-url="true">Payment</a></li>
               </ul>
-            </li> -->
-            <!-- <li class="nav-item dropdown">
+            </li>
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                 Chit</a>
               <ul class="dropdown-menu">
@@ -145,7 +146,7 @@
                 <li><hr class="dropdown-divider"></li>
                 <a class="dropdown-item" href="{% url 'allotment_list' %}">Allotment</a>
               </ul>
-            </li> -->
+            </li>
             <li class="nav-item active">
               <a class="nav-link" href="{% url 'daybook' %}">Daybook </a>
             </li>
@@ -171,7 +172,7 @@
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'dea_ledgerstatement_list'%}">Ledger statement</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url 'dea_journals_list' %}">Journals</a>
+                <a class="dropdown-item" href="{% url 'dea_journal_entries_list' %}">Journals</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'dea_daybook' %}">Daybook</a>
               

@@ -12,7 +12,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import Journal, JournalTypes
+from dea.models import JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
@@ -39,7 +39,7 @@ class Receipt(models.Model):
         max_length=18, choices=status_choices, default="Unallotted"
     )
     is_active = models.BooleanField(default=True)
-    journals = GenericRelation(Journal, related_query_name="receipt_doc")
+    journal_entries = GenericRelation(JournalEntry, related_query_name="receipt_doc")
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -190,26 +190,33 @@ class Receipt(models.Model):
         #     self.save()
         self.update_status()
 
-    def create_journals(self):
-        ledgerjournal = LedgerJournal.objects.create(
-            content_object=self,
-            desc="receipt",
-            journal_type=JournalTypes.LJ,
+    def create_journal_entries(self):
+        # create journal entries for this receipt
+        return JournalEntry.objects.create(
+            content_object=self, desc="Receipt"
         )
-        accountjournal = AccountJournal.objects.create(
-            content_object=self,
-            desc="receipt",
-            journal_type=JournalTypes.AJ,
-        )
-        return ledgerjournal, accountjournal
+        # ledgerjournal = LedgerJournal.objects.create(
+        #     content_object=self,
+        #     desc="receipt",
+        #     journal_type=JournalTypes.LJ,
+        # )
+        # accountjournal = AccountJournal.objects.create(
+        #     content_object=self,
+        #     desc="receipt",
+        #     journal_type=JournalTypes.AJ,
+        # )
+        # return ledgerjournal, accountjournal
 
-    def get_journals(self):
-        ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
+    def get_journal_entries(self):
+        if not self.journal_entries.exists():
+            return self.create_journal_entries()
+        return self.journal_entries.first()
+        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
+        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
 
-        if ledgerjournal.exists() and accountjournal.exists():
-            return ledgerjournal.first(), accountjournal.first()
-        return self.create_journals()
+        # if ledgerjournal.exists() and accountjournal.exists():
+        #     return ledgerjournal.first(), accountjournal.first()
+        # return self.create_journals()
 
     def get_transactions(self):
         lt = [
@@ -228,19 +235,25 @@ class Receipt(models.Model):
 
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        journal_entry = self.get_journal_entries()
         lt, at = self.get_transactions()
+        journal_entry.transact(lt, at)
+        # ledger_journal, Account_journal = self.get_journals()
+        # lt, at = self.get_transactions()
 
-        ledger_journal.transact(lt)
-        account_journal.transact(at)
+        # ledger_journal.transact(lt)
+        # account_journal.transact(at)
 
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal, Account_journal = self.get_journals()
+        journal_entry = self.get_journal_entries()
         lt, at = self.get_transactions()
+        journal_entry.untransact(lt, at)
+        # ledger_journal, Account_journal = self.get_journals()
+        # lt, at = self.get_transactions()
 
-        ledger_journal.untransact(lt)
-        account_journal.untransact(at)
+        # ledger_journal.untransact(lt)
+        # account_journal.untransact(at)
 
 
 class ReceiptAllocation(models.Model):

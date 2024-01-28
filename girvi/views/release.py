@@ -151,6 +151,7 @@ def bulk_release(request):
             try:
                 with transaction.atomic():
                     Release.objects.bulk_create(new_releases)
+                    # create journal_entries
             except IntegrityError:
                 print("Failed creating Release as already Released")
 

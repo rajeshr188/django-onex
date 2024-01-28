@@ -295,7 +295,7 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
                 type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">
-                Journals :<span class="badge text-bg-secondary">{{journals.count}}</span>
+                Journal Entries :<span class="badge text-bg-secondary">{{journal_entries.count}}</span>
               </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -314,11 +314,8 @@
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
               tabindex="0">
-              <div class="table-responsive">
+              <div class="container table-responsive">
                 <table class="table table-sm caption-top table-striped">
-                  <caption>
-                    
-                  </caption>
                   <thead>
                     <th>Item</th>
                     <th>Type</th>
@@ -328,7 +325,6 @@
                     <th>Amount</th>
                     <th>Value</th>
                     <th>ROI</th>
-                    </th>
                     <th>Interest</th>
                     <th>Action</th>
                   </thead>
@@ -349,10 +345,15 @@
               </div>
             </div>
             <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-              <div class="table-responsive">
+              <div class="container table-responsive">
                 <table class="table table-sm table-striped">
-                  {%for i in journals%}
-                  {% include 'girvi/journals-inline.html' with object=i %}
+                  <thead>
+                    <th>Id</th>
+                    <th>Created</th>
+                    <th>Description</th>
+                  </thead>
+                  {%for i in journal_entries%}
+                  {% include 'girvi/journal_entries-inline.html' with object=i %}
                   {%endfor%}
                 </table>
               </div>

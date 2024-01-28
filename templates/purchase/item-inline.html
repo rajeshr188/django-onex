@@ -11,9 +11,9 @@
     <td>{{object.balance}}</td>
     
     <td>
-      {%if object.journal.exists%}
-        <a href="{% url 'dea_journal_detail' object.journal.first.id %}">Journal</a>
-      {%else%}{{object.journal.first}}
+      {%if object.journal_entries.exists%}
+        <a href="{% url 'dea_journal_entry_detail' object.journal_entries.first.id %}">Journal</a>
+      {%else%}{{object.journal_entries.first}}
       {%endif%}
     </td>
     <td>

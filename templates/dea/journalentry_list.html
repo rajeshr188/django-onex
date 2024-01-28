@@ -1,0 +1,48 @@
+{% extends '_base.html' %}
+
+{% block title %}Journals List{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2>Journal Entries </h2>
+<div class="table-responsive">
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>created</th>
+                        <th>txn-type</th>
+                        <th>doc</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in object_list %}
+                    <tr>
+                        <td><a href="{% url 'dea_journal_entry_detail' i.id%}">{{i.id}}</a></td>
+                        <td>{{i.created|date}}</td>
+                        <td>{{i.desc}}</td>
+                        <td>
+                            {%if i.content_type %}
+                            <a
+                                href="{{object.get_url_string}}">{{object.get_url_string}}
+                                {{i.content_type.app_label}}-{{i.content_type.model}} {{i.content_object}}
+                            </a>
+                            {%else%}
+                            None
+                            {%endif%}
+                        </td>
+                        <td><a class="btn btn-danger" href="{% url 'dea_journal_entry_delete' i.id%}">Delete</a></td>
+                       
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+</div>
+{% endblock%}

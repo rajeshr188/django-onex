@@ -120,27 +120,27 @@ class LoanForm(forms.ModelForm):
         if Loan.objects.filter(loanid=loanid).exists():
             raise forms.ValidationError("A loan with this loanID already exists.")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
-        self.helper.help_text_inline = True
-        self.helper.layout = Layout(
-            Row(
-                Column(FloatingField("loan_type"), css_class="col-md"),
-                Column(FloatingField("created"), css_class="col-md date"),
-                css_class="row",
-            ),
-            Row(
-                Column(FloatingField("series"), css_class="col-md"),
-                Column(FloatingField("lid"), css_class="col-md"),
-                css_class="row",
-            ),
-            Row(
-                Column("customer", css_class="col-md"),
-                css_class="row",
-            ),
-        )
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.helper = FormHelper(self)
+    #     self.helper.form_tag = False
+    #     self.helper.help_text_inline = True
+    #     self.helper.layout = Layout(
+    #         Row(
+    #             Column(FloatingField("loan_type"), css_class="col-md"),
+    #             Column(FloatingField("created"), css_class="col-md date"),
+    #             css_class="row",
+    #         ),
+    #         Row(
+    #             Column(FloatingField("series"), css_class="col-md"),
+    #             Column(FloatingField("lid"), css_class="col-md"),
+    #             css_class="row",
+    #         ),
+    #         Row(
+    #             Column("customer", css_class="col-md"),
+    #             css_class="row",
+    #         ),
+    #     )
 
 
 class LoanRenewForm(forms.Form):

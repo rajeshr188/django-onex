@@ -6,7 +6,7 @@ from mptt.models import MPTTModel
 from . import models
 
 
-class JournalAdmin(admin.ModelAdmin):
+class JournalEntryAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "content_type",
@@ -15,7 +15,7 @@ class JournalAdmin(admin.ModelAdmin):
         "updated",
         "desc",
     )
-    list_filter = ("journal_type",)
+    # list_filter = ("journal_type",)
     search_fields = ("voucher__id",)
 
 
@@ -31,4 +31,4 @@ admin.site.register(models.LedgerStatement)
 admin.site.register(models.AccountType_Ext)
 admin.site.register(models.AccountTransaction)
 admin.site.register(models.AccountStatement)
-admin.site.register(models.Journal, JournalAdmin)
+admin.site.register(models.JournalEntry, JournalEntryAdmin)

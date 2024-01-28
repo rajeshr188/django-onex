@@ -2,7 +2,7 @@ from django.db.models import signals
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from dea.models import Journal
+from dea.models import JournalEntry
 from sales.models import Invoice, InvoiceItem, Receipt, ReceiptAllocation
 
 # @receiver(signals.post_delete, sender=ReceiptAllocation)

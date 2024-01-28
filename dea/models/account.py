@@ -202,13 +202,13 @@ class TransactionType_Ext(models.Model):
 
 class AccountTransactionManager(models.Manager):
     def create_txn(
-        self, journal, ledgerno, xacttypecode, xacttypecode_ext, account, amount
+        self, journal_entry, ledgerno, xacttypecode, xacttypecode_ext, account, amount
     ):
         l = Ledger.objects.get(name=ledgerno)
         xc = TransactionType_DE.objects.get(XactTypeCode=xacttypecode)
         xc_ext = TransactionType_Ext.objects.get(XactTypeCode_ext=xacttypecode_ext)
         txn = self.create(
-            journal=journal,
+            journal_entry=journal_entry,
             ledgerno=l,
             XactTypeCode=xc,
             XactTypeCode_ext=xc_ext,
@@ -219,8 +219,8 @@ class AccountTransactionManager(models.Manager):
 
 
 class AccountTransaction(models.Model):
-    journal = models.ForeignKey(
-        "Journal", on_delete=models.CASCADE, related_name="atxns"
+    journal_entry = models.ForeignKey(
+        "JournalEntry", on_delete=models.CASCADE, related_name="atxns"
     )
     ledgerno = models.ForeignKey("Ledger", on_delete=models.CASCADE)
     created = models.DateTimeField(

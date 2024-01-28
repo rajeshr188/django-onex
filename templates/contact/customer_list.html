@@ -47,8 +47,8 @@
             <div class="card-body">
                 <form hx-trigger="keyup,change,listChanged from:body delay:100ms" 
                         hx-get="."
-                        hx-select="#table" 
-                        hx-target="#table"
+                        hx-target = "#table"
+                        hx-vals='{"use_block": "table"}'
                         hx-swap = "outerHTML"
                         hx-push-url="true"     
                         class = "form-inline">
@@ -58,8 +58,7 @@
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                       </div>
                     {%endfor%}
-                </form>
-                 
+                </form> 
             </div>
         </div>
         {% endif %}

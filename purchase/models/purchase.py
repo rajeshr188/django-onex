@@ -13,7 +13,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import Journal, JournalTypes
+from dea.models import JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -61,8 +61,8 @@ class Invoice(models.Model):
         blank=True,
         null=True,
     )
-    journals = GenericRelation(
-        Journal,
+    journal_entries = GenericRelation(
+        JournalEntry,
         related_query_name="purchase_doc",
     )
     objects = PurchaseQueryset.as_manager()
@@ -203,27 +203,33 @@ class Invoice(models.Model):
         except PurchaseBalance.DoesNotExist:
             return None
 
-    def create_journals(self):
-        ledgerjournal = Journal.objects.create(
-            content_object=self,
-            journal_type=JournalTypes.LJ,
-            desc="purchase",
+    def create_journal_entry(self):
+        return JournalEntry.objects.create(
+            content_object=self, desc="Purchase Invoice"
         )
-        accountjournal = Journal.objects.create(
-            content_object=self,
-            journal_type=JournalTypes.AJ,
-            desc="purchase",
-        )
-        return ledgerjournal, accountjournal
+        # ledgerjournal = Journal.objects.create(
+        #     content_object=self,
+        #     journal_type=JournalTypes.LJ,
+        #     desc="purchase",
+        # )
+        # accountjournal = Journal.objects.create(
+        #     content_object=self,
+        #     journal_type=JournalTypes.AJ,
+        #     desc="purchase",
+        # )
+        # return ledgerjournal, accountjournal
 
-    def get_journals(self):
-        ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
+    def get_journal_entry(self):
+        if not self.journal_entries.exists():
+            return self.create_journal_entry()
+        return self.journal_entries.first()
+        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
+        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
 
-        if ledgerjournal.exists() and accountjournal.exists():
-            return ledgerjournal.first(), accountjournal.first()
+        # if ledgerjournal.exists() and accountjournal.exists():
+        #     return ledgerjournal.first(), accountjournal.first()
 
-        return self.create_journals()
+        # return self.create_journals()
 
     def get_transactions(self):
         try:
@@ -330,19 +336,25 @@ class Invoice(models.Model):
 
     @transaction.atomic()
     def create_transactions(self):
-        ledger_journal, account_journal = self.get_journals()
+        journal_entry = self.get_journal_entry()
         lt, at = self.get_transactions()
+        journal_entry.transact(lt, at)
+        # ledger_journal, account_journal = self.get_journals()
+        # lt, at = self.get_transactions()
 
-        ledger_journal.transact(lt)
-        account_journal.transact(at)
+        # ledger_journal.transact(lt)
+        # account_journal.transact(at)
 
     @transaction.atomic()
     def reverse_transactions(self):
-        ledger_journal, account_journal = self.get_journals()
-        lt, at = self.get_transactions()
+        # ledger_journal, account_journal = self.get_journals()
+        # lt, at = self.get_transactions()
 
-        ledger_journal.untransact(lt)
-        account_journal.untransact(at)
+        # ledger_journal.untransact(lt)
+        # account_journal.untransact(at)
+        journal_entry = self.get_journal_entry()
+        lt, at = self.get_transactions()
+        journal_entry.untransact(lt, at)
 
 
 class InvoiceItem(models.Model):
@@ -371,10 +383,10 @@ class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
         "purchase.Invoice", on_delete=models.CASCADE, related_name="purchase_items"
     )
-    journal = GenericRelation(
-        Journal,
-        # related_query_name="purchaseitems"
-    )
+    # journal_entries = GenericRelation(
+    #     JournalEntry,
+    #     # related_query_name="purchaseitems"
+    # )
 
     class Meta:
         ordering = ("-pk",)
@@ -423,22 +435,22 @@ class InvoiceItem(models.Model):
     def balance(self):
         return Balance([self.metal_balance, self.cash_balance])
 
-    def create_journal(self):
-        stock_journal = Journal.objects.create(
+    def create_journal_entry(self):
+        stock_journal_entry = JournalEntry.objects.create(
             content_object=self,
-            journal_type=JournalTypes.SJ,
             desc=f"for purchase-item {self.invoice.pk}",
         )
-        return stock_journal
+        return stock_journal_entry
 
-    def get_journal(self):
-        stock_journal = self.journal
-        if stock_journal.exists():
-            return stock_journal.first()
-        return self.create_journal()
+    def get_journal_entry(self):
+        return self.invoice.get_journal_entry()
+        # stock_journal = self.journal_entries
+        # if stock_journal.exists():
+        #     return stock_journal.first()
+        # return self.create_journal_entry()
 
     @transaction.atomic()
-    def post(self, journal):
+    def post(self, journal_entry):
         """
         if not return item create/add a stocklot then transact,
         if return item then remove the lot from stocklot"""
@@ -456,7 +468,7 @@ class InvoiceItem(models.Model):
             stock_lot.transact(
                 weight=self.weight,
                 quantity=self.quantity,
-                journal=journal,
+                journal_entry=journal_entry,
                 movement_type="P",
             )
 
@@ -467,14 +479,14 @@ class InvoiceItem(models.Model):
             )
             # lot = StockLotBalance.objects.get(Closing_wt__gte = self.weight,Closing_qty__gte = self.qty)
             lot.transact(
-                journal=journal,
+                journal_entry=journal_entry,
                 weight=self.weight,
                 quantity=self.quantity,
                 movement_type="PR",
             )
 
     @transaction.atomic()
-    def unpost(self, journal):
+    def unpost(self, journal_entry):
         """
         add lot back to stock lot if item is_return,
         remove lot from stocklot if item is not return item"""
@@ -482,7 +494,7 @@ class InvoiceItem(models.Model):
             try:
                 lot = self.item_lots.latest("created")
                 lot.transact(
-                    journal=journal,
+                    journal_entry=journal_entry,
                     weight=lot.weight,
                     quantity=lot.quantity,
                     movement_type="P",
@@ -493,7 +505,7 @@ class InvoiceItem(models.Model):
             try:
                 lot = self.item_lots.latest("created")
                 lot.transact(
-                    journal=journal,
+                    journal_entry=journal_entry,
                     weight=lot.weight,
                     quantity=lot.quantity,
                     movement_type="PR",
@@ -551,7 +563,7 @@ class InvoiceItem(models.Model):
      JOIN purchase_invoiceitem pi ON pi.invoice_id = purchase_invoice.id
   GROUP BY purchase_invoice.id;"""
 
-
+# db view for tracking the balance of a invoice from its invoice items in multicurrency
 class PurchaseBalance(models.Model):
     voucher = models.OneToOneField(
         Invoice,

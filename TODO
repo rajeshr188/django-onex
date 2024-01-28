@@ -1,5 +1,13 @@
-group loans in listview
+bring all loan,adjustment,release,sales,receipt,payment,approval under journals 
+every journal has one or many journal entries
+voucheritem cant create journalentries all stock transaction raising from vcoucheritems are recorded in vouchers journal entry
+
 django-allauth google signin
+pertenant_preference
+preference settings page for user so as to no need to go to admin
+django-polymorphic
+django-invitation
+django-activity-stream
 AAdhar KYC:
     api-setu,sandbox.co.in
 mr.htmx wordwide:
@@ -30,12 +38,8 @@ whatsapp:
                 notice
                 final notice
 settings:
-    interest Rate:
-        gold: 2
-        silver: 4
-        other: 8
     loan-haircut% : 75%
-    loan Pdf :
+    loan Pdf template:
 
 
 
@@ -44,7 +48,7 @@ need ledgerstatement detail page
 use qztray/cups pycups/esc/pos to print approval,stock labels,stock tags
 handle stock journal when a lot is not associated with purchase
 update status of vouchers
-pdfs for payment,sales,receipt,approval,approvalreturn,Account statement
+pdftemplates for payment,sales,receipt,approval,approvalreturn,Account statement
 add treegraph to asset,liabilities,income,expense,Stocklot,Stock(hint use django-slick-reporting)
 SIMPLE UI LIKE KHATABOOK:
 MAKE ROBUST,ADD TEST AND DOCS WITH THE HELP OF GITHUB COPILOT:

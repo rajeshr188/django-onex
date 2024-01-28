@@ -22,8 +22,7 @@ from .tables import CustomerTable
 
 
 @login_required
-@for_htmx(use_block="content")
-# @for_htmx(use_block_from_params=True)
+@for_htmx(use_block_from_params=True)
 def customer_list(request):
     context = {}
     f = CustomerFilter(
@@ -178,7 +177,6 @@ def customer_edit(request, pk):
                 base64.b64decode(image_data.split(",")[1]),
                 name=f"{f.name}_{f.relatedas.replace('/','-')}_{f.relatedto}_{f.id}.jpg",
             )
-
             f.pic = image_file
 
         f.save()

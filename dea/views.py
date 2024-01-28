@@ -13,7 +13,7 @@ from utils.htmx_utils import for_htmx
 from .forms import (AccountForm, AccountStatementForm, LedgerForm,
                     LedgerStatementForm)
 # Create your views here.
-from .models import (Account, Accountbalance, AccountStatement, Journal,
+from .models import (Account, Accountbalance, AccountStatement, JournalEntry,
                      Ledger, Ledgerbalance, LedgerStatement, LedgerTransaction)
 
 
@@ -143,17 +143,17 @@ def audit_ledger(request):
     return redirect("/dea")
 
 
-class JournalListView(ListView):
-    queryset = Journal.objects.all().select_related("content_type")
+class JournalEntryListView(ListView):
+    queryset = JournalEntry.objects.all().select_related("content_type")
     paginate_by = 10
 
 
-class JournalDetailView(DetailView):
-    model = Journal
+class JournalEntryDetailView(DetailView):
+    model = JournalEntry
 
 
-class JournalDeleteView(DeleteView):
-    model = Journal
+class JournalEntryDeleteView(DeleteView):
+    model = JournalEntry
     success_url = reverse_lazy("dea_journals_list")
 
 

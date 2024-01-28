@@ -5,7 +5,7 @@ from django.db.models import OuterRef, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import reverse
 
-from dea.models import Journal
+from dea.models import JournalEntry
 from utils.friendlyid import encode
 
 from ..managers import StockLotManager, StockManager
@@ -137,13 +137,13 @@ class Stock(models.Model):
     #     """
     #     return (self.created - self.updated_on).days
 
-    def transact(self, weight, quantity, journal, movement_type):
+    def transact(self, weight, quantity, journal_entry, movement_type):
         """
         Modifies weight and quantity associated with the stock based on movement type
         Returns none
         """
         StockTransaction.objects.create(
-            journal=journal,
+            journal_entry=journal_entry,
             stock=self,
             weight=weight,
             quantity=quantity,
@@ -164,10 +164,10 @@ class Stock(models.Model):
             wt=current.wt, qty=current.qty, stock=current.stock
         )
         new_lot.transact(
-            wt=current.wt, qty=current.qty, journal=None, movement_type="AD"
+            wt=current.wt, qty=current.qty, journal_entry=None, movement_type="AD"
         )
         for i in all_lots:
-            i.transact(wt=current.wt, qty=current.qty, journal=None, movement_type="RM")
+            i.transact(wt=current.wt, qty=current.qty, journal_entry=None, movement_type="RM")
         return new_lot
 
 
@@ -337,13 +337,13 @@ class StockLot(models.Model):
             ),
         )
 
-    def transact(self, weight, quantity, journal, movement_type):
+    def transact(self, weight, quantity, journal_entry, movement_type):
         """
         Modifies weight and quantity associated with the stock based on movement type
         Returns none
         """
         StockTransaction.objects.create(
-            journal=journal,
+            journal_entry=journal_entry,
             lot=self,
             weight=weight,
             quantity=quantity,
@@ -371,12 +371,12 @@ class StockLot(models.Model):
             weight=lot.weight + self.eight,
             quantity=lot.quantity + self.quantity,
         )
-        self.transact(self.weight, self.quantity, journal=None, movement_type="RM")
-        lot.transact(lot.weight, lot.quantity, journal=None, movement_type="RM")
+        self.transact(self.weight, self.quantity, journal_entry=None, movement_type="RM")
+        lot.transact(lot.weight, lot.quantity, journal_entry=None, movement_type="RM")
         new_lot.transact(
             self.weight + lot.weight,
             self.quantity + lot.quantity,
-            journal=None,
+            journal_entry=None,
             movement_type="AD",
         )
         return new_lot
@@ -387,9 +387,9 @@ class StockLot(models.Model):
         """
         if not self.is_unique and self.quantity > qty and self.weight > wt:
             new_lot = StockLot(variant=self.variant, weight=wt, quantity=qty)
-            new_lot.transact(wt, qty, journal=None, movement_type="AD")
+            new_lot.transact(wt, qty, journal_entry=None, movement_type="AD")
 
-            self.transact(wt, qty, journal=None, movement_type="RM")
+            self.transact(wt, qty, journal_entry=None, movement_type="RM")
 
             return new_lot
         raise Exception("Unique lots cant be split")
@@ -422,8 +422,8 @@ class StockTransaction(models.Model):
     movement_type = models.ForeignKey(Movement, on_delete=models.CASCADE, default="P")
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     lot = models.ForeignKey(StockLot, on_delete=models.CASCADE, default=1)
-
-    journal = models.ForeignKey(Journal, on_delete=models.CASCADE, related_name="stxns")
+    # # should oint to a journal or voucher since stocktransaction in itself is a journalentry
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name="stxns")
 
     class Meta:
         ordering = ("-created",)

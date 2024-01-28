@@ -1,6 +1,5 @@
 <tr>
     <td><a href="{% url 'dea_journal_detail' i.id%}">{{i.id}}</a></td>
-    <td>{{i.journal_type}}</td>
     <td>{{i.created|date}}</td>
     <td>{{i.desc}}</td>
     <td><a class="btn btn-danger" href="{% url 'dea_journal_delete' i.id%}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">

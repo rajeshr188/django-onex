@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.urls import reverse
 
 from contact.models import Customer
-from dea.models import Journal
+from dea.models import JournalEntry
 from product.models import StockLot
 
 """
@@ -139,8 +139,8 @@ class ApprovalLine(models.Model):
         default="Pending",
         blank=True,
     )
-    journal = GenericRelation(
-        Journal,
+    journalentry = GenericRelation(
+        JournalEntry,
         related_query_name="approval_lineitems",
         # content_type_field='content_type',object_id_field='object_id'
     )
@@ -203,7 +203,7 @@ class ApprovalLine(models.Model):
 
     def create_journal(self):
         jrnl = Journal.objects.create(
-            journal_type="SJ",
+            # journal_type="SJ",
             content_object=self,
             desc=f"Approval {self.approval.id} - {self.product.barcode}",
         )

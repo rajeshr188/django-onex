@@ -37,7 +37,9 @@ from ..filters import LoanFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm
 from ..models import *
 from ..tables import LoanTable
-
+from dynamic_preferences.registries import global_preferences_registry
+# We instantiate a manager for our global preferences
+global_preferences = global_preferences_registry.manager()
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
@@ -75,22 +77,28 @@ class LoanTodayArchiveView(TodayArchiveView):
     # template_name = "girvi/loan/loan_archive_day.html"
 
 
+
 def ld():
-    last = Loan.objects.order_by("id").last()
-    if not last:
-        return datetime.date.today()
-    return last.created
+    default_date = global_preferences["Loan__Default_Date"]
+    if default_date == 'N':
+        return datetime.datetime.now()
+    else:
+        last = Loan.objects.order_by("id").last()
+        if not last:
+            return datetime.date.now()
+        return last.created
 
 
 def get_interestrate(request):
     metal = request.GET["itemtype"]
     interest = 0
     if metal == "Gold":
-        interest = 2
+        interest = global_preferences["Interest_Rate__gold"]
     elif metal == "Silver":
-        interest = 4
+        interest = global_preferences["Interest_Rate__silver"]
     else:
-        interest = 8
+        interest = global_preferences["Interest_Rate__other"]
+
     form = LoanItemForm(initial={"interestrate": interest})
     context = {
         "field": form["interestrate"],
@@ -302,7 +310,7 @@ def loan_detail(request, pk):
         "pure": result,
         "value": value,
         "worth": value - loan.due(),
-        "journals": loan.journals.all(),
+        "journal_entries": loan.journal_entries.all(),
         "new_item_url": reverse(
             "girvi:girvi_loanitem_create", kwargs={"parent_id": loan.id}
         ),
@@ -735,7 +743,7 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
 
                 new_obj.pic = image_file
             new_obj.save()
-            messages.success(request, f"Created Item : {new_obj.itemid}")
+            messages.success(request, f"Created Item : {new_obj.id}")
             context = {"object": new_obj}
 
             if request.htmx:

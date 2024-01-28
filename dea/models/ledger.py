@@ -137,16 +137,16 @@ class Ledger(MPTTModel):
 
 
 class LedgerTransactionManager(models.Manager):
-    def create_txn(self, journal, ledgerno, ledgerno_dr, amount):
+    def create_txn(self, journal_entry, ledgerno, ledgerno_dr, amount):
         dr = Ledger.objects.get(name=ledgerno_dr)
         cr = Ledger.objects.get(name=ledgerno)
-        txn = self.create(journal=journal, ledgerno=cr, ledgerno_dr=dr, amount=amount)
+        txn = self.create(journal_entry=journal_entry, ledgerno=cr, ledgerno_dr=dr, amount=amount)
         return txn
 
 
 class LedgerTransaction(models.Model):
-    journal = models.ForeignKey(
-        "Journal", on_delete=models.CASCADE, related_name="ltxns"
+    journal_entry = models.ForeignKey(
+        "JournalEntry", on_delete=models.CASCADE, related_name="ltxns"
     )
     ledgerno = models.ForeignKey(
         Ledger, on_delete=models.CASCADE, related_name="credit_txns"

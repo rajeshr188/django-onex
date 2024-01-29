@@ -13,14 +13,14 @@ class InvoiceFilter(django_filters.FilterSet):
         # widget=Select2Widget creates N=1 problem with customer contacts
         widget=CustomerWidget,
     )
-    created = django_filters.DateTimeFromToRangeFilter()
+    created_at = django_filters.DateTimeFromToRangeFilter()
     # posted = django_filters.BooleanFilter(field_name="posted", lookup_expr="isnull")
 
     class Meta:
         model = Invoice
         fields = [
             "id",
-            "created",
+            "created_at",
             "is_gst",
             "status",
         ]
@@ -33,4 +33,4 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ["id", "created", "total_currency", "status"]
+        fields = ["id", "created_at", "total_currency", "status"]

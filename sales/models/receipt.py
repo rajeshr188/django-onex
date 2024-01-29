@@ -46,7 +46,7 @@ class Receipt(Journal):
     invoices = models.ManyToManyField("sales.Invoice", through="ReceiptAllocation")
 
     class Meta:
-        ordering = ("-created",)
+        ordering = ("-created_at",)
 
     def __str__(self):
         return "%s" % self.id

@@ -67,7 +67,7 @@ class LoanFilter(django_filters.FilterSet):
 class AdjustmentFilter(django_filters.FilterSet):
     class Meta:
         model = Adjustment
-        fields = ["loan"]
+        fields = ["adj_loan"]
 
 
 class ReleaseFilter(django_filters.FilterSet):
@@ -77,4 +77,4 @@ class ReleaseFilter(django_filters.FilterSet):
 
     class Meta:
         model = Release
-        fields = ["releaseid", "loan"]
+        fields = ["releaseid", "release_loan"]

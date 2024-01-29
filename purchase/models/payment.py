@@ -47,7 +47,7 @@ class Payment(Journal):
     invoices = models.ManyToManyField("purchase.Invoice", through="PaymentAllocation")
 
     class Meta:
-        ordering = ("-created",)
+        ordering = ("-created_at",)
 
     def __str__(self):
         return "%s" % self.id

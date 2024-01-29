@@ -63,9 +63,9 @@ class InvoiceAdmin(admin.ModelAdmin):
     # resource_class = InvoiceResource
     list_display = [
         "id",
-        "created",
+        "created_at",
         "customer",
-        "updated",
+        "updated_at",
         "is_ratecut",
         "status",
     ]
@@ -126,8 +126,8 @@ class ReceiptAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "customer",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
         "total",
         "description",
         "status",

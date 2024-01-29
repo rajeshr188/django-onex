@@ -32,7 +32,7 @@ class DateTimeLocalField(forms.DateTimeField):
 
 
 class InvoiceForm(forms.ModelForm):
-    created = DateTimeLocalField()
+    # created_at = DateTimeLocalField()
     customer = forms.ModelChoiceField(
         queryset=Customer.objects.all(), widget=Select2Widget
     )
@@ -45,7 +45,7 @@ class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
         fields = [
-            "created",
+            # "created_at",
             "approval",
             "is_ratecut",
             "is_gst",
@@ -64,7 +64,7 @@ class InvoiceForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Row(
-                Column(Field("created", css_class="form-control ")),
+                Column(Field("created_at", css_class="form-control ")),
                 Column(Field("customer", css_class="form-control ")),
                 css_class="form-row",
             ),
@@ -121,12 +121,12 @@ class ReceiptForm(forms.ModelForm):
     customer = forms.ModelChoiceField(
         queryset=Customer.objects.exclude(customer_type="S"), widget=CustomerWidget
     )
-    created = DateTimeLocalInput()
+    # created_at = DateTimeLocalInput()
 
     class Meta:
         model = Receipt
         fields = [
-            "created",
+            # "created",
             "customer",
             "weight",
             "touch",

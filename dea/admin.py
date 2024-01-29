@@ -9,8 +9,6 @@ from . import models
 class JournalEntryAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "content_type",
-        "content_object",
         "created",
         "updated",
         "desc",

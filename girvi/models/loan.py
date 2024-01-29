@@ -304,11 +304,11 @@ class Adjustment(Journal):
     amount_received = models.IntegerField(default=0)
     as_interest = models.BooleanField(default=True)
 
-    loan = models.ForeignKey(
+    adj_loan = models.ForeignKey(
         "girvi.Loan", on_delete=models.CASCADE, related_name="adjustments"
     )
     class Meta:
-        ordering = ("created",)
+        ordering = ("created_at",)
 
     def __str__(self):
         return f"{self.amount_received}=>loan{self.loan}"

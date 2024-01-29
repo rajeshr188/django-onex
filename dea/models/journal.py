@@ -81,13 +81,11 @@ class JournalEntry(models.Model):
 
     class Meta:
         get_latest_by = "id"
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]
+        
 
     def __str__(self):
         # return f"{self.journal_type}{self.desc}"
-        return f"{self.content_type}{self.desc}"
+        return f"{self.desc}"
 
     def check_data_integrity(self, lt,at):
         # check data integrity constraints before adding transactions

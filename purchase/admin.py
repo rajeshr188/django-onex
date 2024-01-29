@@ -63,8 +63,8 @@ class InvoiceAdmin(admin.ModelAdmin):
     # resource_class = InvoiceResource
     list_display = [
         "id",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
         "supplier",
         # "rate",
         # "balancetype",
@@ -120,8 +120,8 @@ class PaymentAdmin(admin.ModelAdmin):
     # resource_class = PaymentResourse
     list_display = [
         "id",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
         "supplier",
         # "payment_type",
         "total",

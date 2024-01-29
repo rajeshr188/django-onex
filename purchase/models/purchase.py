@@ -24,7 +24,7 @@ from product.models import (Attribute, ProductVariant, Stock, StockLot,
 from ..managers import PurchaseQueryset
 
 
-class Purchase(Journal):
+class Invoice(Journal):
     # Fields
     
     due_date = models.DateField(null=True, blank=True)
@@ -58,7 +58,7 @@ class Purchase(Journal):
     class Meta:
         ordering = (
             "id",
-            "created",
+            "created_at",
         )
 
     def __str__(self):

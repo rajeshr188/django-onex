@@ -134,7 +134,7 @@ class Invoice(Journal):
     objects = SalesQueryset.as_manager()
 
     class Meta:
-        ordering = ("-created",)
+        ordering = ("-created_at",)
         get_latest_by = "id"
 
     def __str__(self):
@@ -383,6 +383,7 @@ class Invoice(Journal):
         return lt, at
 
     def get_items(self):
+        return self.sale_items.all()
 
 
 class InvoiceItem(models.Model):

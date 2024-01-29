@@ -26,4 +26,4 @@ class ReceiptFilter(django_filters.FilterSet):
 
     class Meta:
         model = Receipt
-        fields = ["id", "created", "status"]
+        fields = ["id", "created_at", "status"]

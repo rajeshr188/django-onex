@@ -19,7 +19,7 @@ class Release(Journal):
     interestpaid = models.IntegerField(default=0)
 
     # Relationship Fields
-    loan = models.OneToOneField(
+    release_loan = models.OneToOneField(
         "girvi.Loan", on_delete=models.CASCADE, related_name="release"
     )
     # manager

@@ -71,7 +71,7 @@ admin.site.register(Adjustment)
 
 
 class LoanAdminForm(forms.ModelForm):
-    date_heirarchy = "created"
+    date_heirarchy = "created_at"
     list_filter = ("customer", "series", "itemtype")
 
     class Meta:
@@ -107,8 +107,8 @@ class LoanAdmin(admin.ModelAdmin):
         "loanid",
         "customer",
         "series",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
         "itemdesc",
         "loanamount",
         "print",
@@ -141,7 +141,7 @@ class ReleaseAdmin(admin.ModelAdmin):
     form = ReleaseAdminForm
     # resource_class = ReleaseResource
 
-    list_display = ["releaseid", "loan", "created", "updated", "interestpaid"]
+    list_display = ["releaseid", "loan", "created_at", "updated_at", "interestpaid"]
 
 
 admin.site.register(Release, ReleaseAdmin)

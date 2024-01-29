@@ -5,7 +5,7 @@ from django.utils import timezone
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import Journal,JournalEntry#, JournalTypes
 
 
 class ReleaseManager(models.Manager):
@@ -13,13 +13,8 @@ class ReleaseManager(models.Manager):
         return super().get_queryset().select_related("loan")
 
 
-class Release(models.Model):
+class Release(Journal):
     # Fields
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
     releaseid = models.CharField(max_length=255, unique=True, null=True, blank=True)
     interestpaid = models.IntegerField(default=0)
 
@@ -27,7 +22,6 @@ class Release(models.Model):
     loan = models.OneToOneField(
         "girvi.Loan", on_delete=models.CASCADE, related_name="release"
     )
-    journal_entries = GenericRelation(JournalEntry, related_query_name="release_doc")
     # manager
     objects = ReleaseManager()
 
@@ -45,37 +39,6 @@ class Release(models.Model):
 
     def total_received(self):
         return self.loan.loanamount + self.interestpaid
-
-    def create_journal_entry(self):
-        # ledgerjournal = Journal.objects.create(
-        #     content_object=self, desc="Loan Released", journal_type=JournalTypes.LJ
-        # )
-        # accountjournal = Journal.objects.create(
-        #     content_object=self, desc="Loan Released", journal_type=JournalTypes.AJ
-        # )
-        # return ledgerjournal, accountjournal
-        return JournalEntry.objects.create(
-            content_object=self, desc="Loan Released"
-        )
-
-    def delete_journal_entries(self):
-        self.journal_entries.all().delete()
-
-    def get_journal_entry(self):
-        if not self.journal_entries.exists():
-            return self.create_journal_entry()
-        return self.journal_entries.first()
-        # return self.journals.all()
-        # ledgerjournal = self.journals.filter(
-        #     release_doc=self, journal_type=JournalTypes.LJ
-        # )
-        # accountjournal = self.journals.filter(
-        #     release_doc=self, journal_type=JournalTypes.AJ
-        # )
-
-        # if ledgerjournal.exists() and accountjournal.exists():
-        #     return ledgerjournal, accountjournal
-        # return self.create_journals()
 
     def get_transactions(self):
         amount = Money(self.loan.loanamount, "INR")
@@ -137,20 +100,3 @@ class Release(models.Model):
                 },
             ]
         return lt, at
-
-    def create_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt,at = self.get_transactions()
-        journal_entry.transact(lt,at)
-        # ledgerjournal, accountjournal = self.get_journals()
-        # lt, at = self.get_transactions()
-        # ledgerjournal.transact(lt)
-        # accountjournal.transact(at)
-
-    def reverse_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.untransact(lt,at)
-        # ledgerJournal, accountJournal = self.get_journals()
-        # ledgerJournal.untransact(lt)
-        # accountJournal.untransact(at)

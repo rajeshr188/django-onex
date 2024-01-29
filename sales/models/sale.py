@@ -13,7 +13,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import Journal,JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -96,18 +96,9 @@ class SalesQueryset(models.QuerySet):
         )
 
 
-class Invoice(models.Model):
-    # Fields
-    created = models.DateTimeField(default=timezone.now, db_index=True)
-    updated = models.DateTimeField(auto_now_add=True, editable=False)
+class Invoice(Journal):
+    
     due_date = models.DateField(null=True, blank=True)
-    created_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="sold",
-    )
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -139,10 +130,6 @@ class Invoice(models.Model):
         null=True,
         blank=True,
         related_name="sales",
-    )
-    journal_entries = GenericRelation(
-        JournalEntry,
-        related_query_name="sales_doc",
     )
     objects = SalesQueryset.as_manager()
 
@@ -279,34 +266,6 @@ class Invoice(models.Model):
     #         self.approval.is_billed = False
     #     super(Invoice, self).delete(*args, **kwargs)
 
-    def create_journal_entry(self):
-        return JournalEntry.objects.create(
-            content_object=self,
-            desc="Sale",
-        )
-        # ledgerjournal = JournalE.objects.create(
-        #     content_object=self,
-        #     desc="sale",
-        #     journal_type=JournalTypes.LJ,
-        # )
-        # accountjournal = Journal.objects.create(
-        #     content_object=self,
-        #     desc="sale",
-        #     journal_type=JournalTypes.AJ,
-        # )
-        # return ledgerjournal, accountjournal
-
-    def get_journal_entry(self):
-        if not self.journal_entries.exists():
-            return self.create_journal_entry()
-        return self.journal_entries.first()
-        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
-
-        # if ledgerjournal.exists() and accountjournal.exists():
-        #     return ledgerjournal.first(), accountjournal.first()
-        # return self.create_journals()
-
     def get_transactions(self):
         """
         if self.approval:
@@ -423,27 +382,7 @@ class Invoice(models.Model):
             )
         return lt, at
 
-    @transaction.atomic()
-    def create_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
-        # ledger_journal, account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.transact(lt)
-        # account_journal.transact(at)
-
-    @transaction.atomic()
-    def reverse_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
-        # ledger_journal, Account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.untransact(lt)
-        # account_journal.untransact(at)
+    def get_items(self):
 
 
 class InvoiceItem(models.Model):
@@ -483,8 +422,7 @@ class InvoiceItem(models.Model):
         blank=True,
         related_name="sold_items",
     )
-    journal_entries = GenericRelation(JournalEntry, related_query_name="sale_items")
-
+    
     class Meta:
         ordering = ("-pk",)
 
@@ -539,21 +477,10 @@ class InvoiceItem(models.Model):
     def balance(self):
         return Balance([self.metal_balance, self.cash_balance])
 
-    def create_journal_entry(self):
-        stock_journal_entry = JournalEntry.objects.create(
-            content_object=self,
-            desc=f"sale-item {self.invoice.pk}",
-        )
-        return stock_journal_entry
-
-    def get_journal_entry(self):
-        stock_journal_entry = self.journal_entries
-        if stock_journal_entry.exists():
-            return stock_journal_entry.first()
-        return self.create_journal_entry()
 
     @transaction.atomic()
-    def post(self, jrnl_entry):
+    def post(self):
+        jrnl_entry = self.invoice.get_journal_entry()
         if not self.is_return:
             if self.approval_line:
                 # unpost the approval line to return the stocklot from approvalline
@@ -566,7 +493,8 @@ class InvoiceItem(models.Model):
             self.product.transact(self.weight, self.quantity, jrnl_entry, "SR")
 
     @transaction.atomic()
-    def unpost(self, jrnl_entry):
+    def unpost(self):
+        jrnl_entry = self.invoice.get_journal_entry()
         if self.is_return:
             self.product.transact(self.weight, self.quantity, jrnl_entry, "S")
         else:

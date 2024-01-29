@@ -11,7 +11,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import Journal,JournalEntry#, JournalTypes
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
@@ -21,13 +21,9 @@ from purchase.models.purchase import Invoice
 
 
 # how do you know which is gst payment?
-class Payment(models.Model):
+class Payment(Journal):
     # Fields
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now_add=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
+    
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
@@ -41,7 +37,6 @@ class Payment(models.Model):
     status = models.CharField(
         max_length=18, choices=status_choices, default="Unallotted"
     )
-    journal_entries = GenericRelation(JournalEntry, related_query_name="payment_doc")
     # Relationship Fields
     supplier = models.ForeignKey(
         Customer,
@@ -188,82 +183,11 @@ class Payment(models.Model):
         #     self.save()
         self.update_status()
 
-    def create_journal_entry(self):
-        return JournalEntry.objects.create(
-            content_object=self, desc="Payment"
-        )
-        # ledgerjournal = Journal.objects.create(
-        #     journal_type=JournalTypes.LJ,
-        #     content_object=self,
-        #     desc="payment",
-        # )
-        # accountjournal = Journal.objects.create(
-        #     journal_type=JournalTypes.AJ,
-        #     content_object=self,
-        #     desc="payment",
-        # )
-        # return ledgerjournal, accountjournal
-
-    def get_journal_entry(self):
-        if not self.journal_entries.exists():
-            return self.create_journal_entry()
-        return self.journal_entries.first()
-        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
-
-        # if ledgerjournal.exists() and accountjournal.exists():
-        #     return ledgerjournal.first(), accountjournal.first()
-
-    def delete_journal_entry(self):
-        self.journal_entries.all().delete()
-
-    def get_transactions(self):
-        lt = [
-            {
-                "ledgerno": "Cash",
-                "ledgerno_dr": "Sundry Creditors",
-                "amount": self.total,
-            }
-        ]
-        at = [
-            {
-                "ledgerno": "Sundry Creditors",
-                "xacttypecode": "Dr",
-                "xacttypecode_ext": "PYT",
-                "account": self.supplier.account,
-                "amount": self.total,
-            }
-        ]
-        return lt, at
-
-    @transaction.atomic()
-    def create_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
-        # ledger_journal, Account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.transact(lt)
-        # account_journal.transact(at)
-
-    @transaction.atomic()
-    def reverse_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.untransact(lt, at)
-        # ledger_journal, Account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.untransact(lt)
-        # account_journal.untransact(at)
-
-
 class PaymentAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
-    invoice = models.ForeignKey("purchase.Invoice", on_delete=models.CASCADE)
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE,related_name="paymentallocation_set")
+    invoice = models.ForeignKey("purchase.Invoice", on_delete=models.CASCADE,related_name="paymentallocation_set")
     # allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allocated = MoneyField(
         max_digits=19,

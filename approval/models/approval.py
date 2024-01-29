@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.urls import reverse
 
 from contact.models import Customer
-from dea.models import JournalEntry
+from dea.models import Journal,JournalEntry
 from product.models import StockLot
 
 """
@@ -28,17 +28,8 @@ If the approval is closed, the approval should be flagged as closed and no furth
 
 
 # Create your models here.
-class Approval(models.Model):
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.status = "pending"
-        super().save(*args, **kwargs)
+class Approval(Journal):
 
-    created_at = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_at = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
     contact = models.ForeignKey(
         Customer, related_name="contact", on_delete=models.CASCADE
     )
@@ -70,11 +61,15 @@ class Approval(models.Model):
     def get_update_url(self):
         return reverse("approval:approval_approval_update", args=(self.pk,))
 
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.status = "pending"
+        super().save(*args, **kwargs)
+    
     """
     called when an return item is created with a line item referencing this approval/approvalline,
-     otherwise called from approvalline.save() ,by default stus is pending
-     """
-
+    otherwise called from approvalline.save() ,by default stus is pending
+    """
     def update_status(self):
         print("in approval update_Status")
 
@@ -110,6 +105,8 @@ class Approval(models.Model):
         self.update_billed_status()
         self.save()
 
+    def get_items(self):
+        return self.items.all()
 
 class ApprovalLine(models.Model):
     product = models.ForeignKey(
@@ -139,12 +136,7 @@ class ApprovalLine(models.Model):
         default="Pending",
         blank=True,
     )
-    journalentry = GenericRelation(
-        JournalEntry,
-        related_query_name="approval_lineitems",
-        # content_type_field='content_type',object_id_field='object_id'
-    )
-
+    
     class Meta:
         ordering = ("approval",)
 
@@ -167,9 +159,6 @@ class ApprovalLine(models.Model):
             or 0 - self.return_items.aggregate(t=Sum("quantity"))["t"]
             or 0
         )
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
 
     # called when return item is created otherwise status is pending
     def update_status(self):
@@ -201,34 +190,21 @@ class ApprovalLine(models.Model):
         # return the ReturnItem quanitty for thisapprovalline
         return self.returnitem_set.aggregate(Sum("quantity"))["quantity_sum"]
 
-    def create_journal(self):
-        jrnl = Journal.objects.create(
-            # journal_type="SJ",
-            content_object=self,
-            desc=f"Approval {self.approval.id} - {self.product.barcode}",
-        )
-        return jrnl
-
-    def get_journal(self):
-        return self.journal.first() if self.journal.exists() else create_journal()
-
-    def delete_journals(self):
-        # delete journals for this approvalline
-        pass
-
     @transaction.atomic
-    def post(self, journal):
+    def post(self):
+        journal_entry = self.approval.get_journal_entry()
         self.product.transact(
             weight=self.weight,
             quantity=self.quantity,
-            journal=self.get_journal(),
+            journal_entry=journal_entry,
             movement_type="A",
         )
 
     @transaction.atomic
     def unpost(self, journal):
+        journal_entry = self.approval.get_journal_entry()
         # generally an approval/approval line shouldnt be edited onece the items are returned.
         # for i in self.returnitem_set.all():
         #     i.unpost(journal)
         #     i.delete()
-        self.product.transact(self.weight, self.quantity, journal, "AR")
+        self.product.transact(self.weight, self.quantity, journal_entry, "AR")

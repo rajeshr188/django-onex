@@ -13,7 +13,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import Journal,JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -24,18 +24,10 @@ from product.models import (Attribute, ProductVariant, Stock, StockLot,
 from ..managers import PurchaseQueryset
 
 
-class Invoice(models.Model):
+class Purchase(Journal):
     # Fields
-    created = models.DateTimeField(default=timezone.now, db_index=True)
-    updated = models.DateTimeField(auto_now_add=True)
+    
     due_date = models.DateField(null=True, blank=True)
-    created_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        null=True,  # cant be null
-        blank=True,  # cant be blank
-        related_name="purchases_created",
-    )
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -60,10 +52,6 @@ class Invoice(models.Model):
         related_name="purchase_term",
         blank=True,
         null=True,
-    )
-    journal_entries = GenericRelation(
-        JournalEntry,
-        related_query_name="purchase_doc",
     )
     objects = PurchaseQueryset.as_manager()
 
@@ -202,34 +190,7 @@ class Invoice(models.Model):
             return Balance(purchase_balance.balances)
         except PurchaseBalance.DoesNotExist:
             return None
-
-    def create_journal_entry(self):
-        return JournalEntry.objects.create(
-            content_object=self, desc="Purchase Invoice"
-        )
-        # ledgerjournal = Journal.objects.create(
-        #     content_object=self,
-        #     journal_type=JournalTypes.LJ,
-        #     desc="purchase",
-        # )
-        # accountjournal = Journal.objects.create(
-        #     content_object=self,
-        #     journal_type=JournalTypes.AJ,
-        #     desc="purchase",
-        # )
-        # return ledgerjournal, accountjournal
-
-    def get_journal_entry(self):
-        if not self.journal_entries.exists():
-            return self.create_journal_entry()
-        return self.journal_entries.first()
-        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
-
-        # if ledgerjournal.exists() and accountjournal.exists():
-        #     return ledgerjournal.first(), accountjournal.first()
-
-        # return self.create_journals()
+       
 
     def get_transactions(self):
         try:
@@ -334,27 +295,8 @@ class Invoice(models.Model):
             )
         return lt, at
 
-    @transaction.atomic()
-    def create_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
-        # ledger_journal, account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.transact(lt)
-        # account_journal.transact(at)
-
-    @transaction.atomic()
-    def reverse_transactions(self):
-        # ledger_journal, account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.untransact(lt)
-        # account_journal.untransact(at)
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.untransact(lt, at)
+    def get_items(self):
+        return self.purchase_items.all()
 
 
 class InvoiceItem(models.Model):
@@ -383,10 +325,7 @@ class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
         "purchase.Invoice", on_delete=models.CASCADE, related_name="purchase_items"
     )
-    # journal_entries = GenericRelation(
-    #     JournalEntry,
-    #     # related_query_name="purchaseitems"
-    # )
+
 
     class Meta:
         ordering = ("-pk",)
@@ -435,25 +374,12 @@ class InvoiceItem(models.Model):
     def balance(self):
         return Balance([self.metal_balance, self.cash_balance])
 
-    def create_journal_entry(self):
-        stock_journal_entry = JournalEntry.objects.create(
-            content_object=self,
-            desc=f"for purchase-item {self.invoice.pk}",
-        )
-        return stock_journal_entry
-
-    def get_journal_entry(self):
-        return self.invoice.get_journal_entry()
-        # stock_journal = self.journal_entries
-        # if stock_journal.exists():
-        #     return stock_journal.first()
-        # return self.create_journal_entry()
-
     @transaction.atomic()
-    def post(self, journal_entry):
+    def post(self):
         """
         if not return item create/add a stocklot then transact,
         if return item then remove the lot from stocklot"""
+        journal_entry = self.invoice.get_journal_entry()
         if not self.is_return:
             stock, created = Stock.objects.get_or_create(variant=self.product)
             stock_lot = StockLot.objects.create(
@@ -486,10 +412,11 @@ class InvoiceItem(models.Model):
             )
 
     @transaction.atomic()
-    def unpost(self, journal_entry):
+    def unpost(self):
         """
         add lot back to stock lot if item is_return,
         remove lot from stocklot if item is not return item"""
+        journal_entry = self.invoice.get_journal_entry()
         if self.is_return:
             try:
                 lot = self.item_lots.latest("created")
@@ -514,7 +441,29 @@ class InvoiceItem(models.Model):
             except StockLot.DoesNotExist:
                 print("Oops!while Unposting there was no said stock.  Try again...")
 
+# class InvoiceItem(models.Model):
+#     # fields...
 
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Store the initial state of the model.
+#         self._initial = self.__dict__.copy()
+
+#     def save(self, *args, **kwargs):
+#         # Save the model.
+#         super().save(*args, **kwargs)
+#         # Trigger the post_save signal manually.
+#         post_save.send(sender=self.__class__, instance=self, created=False)
+
+#     def unpost(self, sj):
+#         # Reverse the original transaction.
+#         # This should remove the initial quantity and weight from the inventory.
+#         StockTransaction.objects.filter(journal=sj, quantity=self._initial['quantity'], weight=self._initial['weight']).delete()
+
+#     def post(self, sj):
+#         # Apply the new transaction.
+#         # This should add the new quantity and weight to the inventory.
+#         StockTransaction.objects.create(journal=sj, quantity=self.quantity, weight=self.weight)
 """
  initial logic for purchase balance
   SELECT purchase_invoice.id AS voucher_id,

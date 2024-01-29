@@ -12,19 +12,15 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import Journal,JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
 
 
-class Receipt(models.Model):
+class Receipt(Journal):
     # Fields
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
+
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
@@ -39,7 +35,7 @@ class Receipt(models.Model):
         max_length=18, choices=status_choices, default="Unallotted"
     )
     is_active = models.BooleanField(default=True)
-    journal_entries = GenericRelation(JournalEntry, related_query_name="receipt_doc")
+    
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -190,34 +186,10 @@ class Receipt(models.Model):
         #     self.save()
         self.update_status()
 
-    def create_journal_entries(self):
-        # create journal entries for this receipt
-        return JournalEntry.objects.create(
-            content_object=self, desc="Receipt"
-        )
-        # ledgerjournal = LedgerJournal.objects.create(
-        #     content_object=self,
-        #     desc="receipt",
-        #     journal_type=JournalTypes.LJ,
-        # )
-        # accountjournal = AccountJournal.objects.create(
-        #     content_object=self,
-        #     desc="receipt",
-        #     journal_type=JournalTypes.AJ,
-        # )
-        # return ledgerjournal, accountjournal
-
-    def get_journal_entries(self):
-        if not self.journal_entries.exists():
-            return self.create_journal_entries()
-        return self.journal_entries.first()
-        # ledgerjournal = self.journals.filter(journal_type=JournalTypes.LJ)
-        # accountjournal = self.journals.filter(journal_type=JournalTypes.AJ)
-
-        # if ledgerjournal.exists() and accountjournal.exists():
-        #     return ledgerjournal.first(), accountjournal.first()
-        # return self.create_journals()
-
+    def unallocate(self):
+        self.receiptallocation_set.all().delete()
+        self.update_status()
+    
     def get_transactions(self):
         lt = [
             {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": self.total}
@@ -233,34 +205,11 @@ class Receipt(models.Model):
         ]
         return lt, at
 
-    @transaction.atomic()
-    def create_transactions(self):
-        journal_entry = self.get_journal_entries()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
-        # ledger_journal, Account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.transact(lt)
-        # account_journal.transact(at)
-
-    @transaction.atomic()
-    def reverse_transactions(self):
-        journal_entry = self.get_journal_entries()
-        lt, at = self.get_transactions()
-        journal_entry.untransact(lt, at)
-        # ledger_journal, Account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.untransact(lt)
-        # account_journal.untransact(at)
-
-
 class ReceiptAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE)
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE,related_name="receiptallocation_set")
+    invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE,related_name="receiptallocation_set")
     # allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allocated = MoneyField(
         max_digits=19,

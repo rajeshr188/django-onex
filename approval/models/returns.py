@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from approval.models import ApprovalLine
 from contact.models import Customer
-from dea.models import JournalEntry #, JournalTypes
+from dea.models import Journal,JournalEntry #, JournalTypes
 from product.models import StockLot
 
 """
@@ -28,19 +28,14 @@ If any changes are made to the approval, return, or invoice, those changes shoul
 # Create your models here.
 
 
-class Return(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_at = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
+class Return(Journal):
+    
     contact = models.ForeignKey(
         Customer, related_name="approval_returns", on_delete=models.CASCADE
     )
     total_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     total_qty = models.IntegerField(default=0)
-    posted = models.BooleanField(default=False)
-
+  
     def __str__(self):
         return f"Return #{self.id}"
 
@@ -52,19 +47,25 @@ class Return(models.Model):
 
     def get_total_wt(self):
         return self.returnitem_set.aggregate(t=Sum("weight"))["t"]
+    
+    def get_items(self):
+        return self.return_items.all()
 
 
 class ReturnItem(models.Model):
-    return_obj = models.ForeignKey(Return, on_delete=models.CASCADE)
+    return_obj = models.ForeignKey(
+                    Return, 
+                    on_delete=models.CASCADE,
+                    related_name="return_items")
     line_item = models.ForeignKey(
-        ApprovalLine, on_delete=models.CASCADE, related_name="return_items"
+                    ApprovalLine, 
+                    on_delete=models.CASCADE, 
+                    related_name="return_items"
     )
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    journalentry = GenericRelation(JournalEntry, related_query_name="approval_returnitem")
 
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product}"
@@ -76,22 +77,14 @@ class ReturnItem(models.Model):
         kwargs = {"return_pk": self.return_obj.id, "pk": self.pk}
         return reverse("approval:approval_returnitem_update", kwargs=kwargs)
 
-    def create_journal(self):
-        return Journal.objects.create(
-            journal_type=JournalTypes.SJ,
-            desc="Approval Return",
-            content_object=self,
-        )
-
-    def get_journal(self):
-        return self.journal.first()
-
     @transaction.atomic
-    def post(self, journal):
-        self.line_item.product.transact(self.weight, self.quantity, journal, "AR")
+    def post(self):
+        journal_entry = self.return_obj.get_journal_entry()
+        self.line_item.product.transact(self.weight, self.quantity, journal_entry, "AR")
         self.line_item.update_status()
 
     @transaction.atomic
-    def unpost(self, journal):
+    def unpost(self):
+        journal_entry = self.return_obj.get_journal_entry()
         self.line_item.product.transact(self.weight, self.quantity, journal, "A")
         self.line_item.update_status()

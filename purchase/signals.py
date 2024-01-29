@@ -12,7 +12,7 @@ from purchase.models import Invoice, InvoiceItem, Payment, PaymentAllocation
 #     inv.update_status()
 
 
-# @receiver(post_save, sender=Invoice)
+@receiver(post_save, sender=Invoice)
 @receiver(post_save, sender=Payment)
 def create_purchase_journal(sender, instance, created, **kwargs):
     if created:

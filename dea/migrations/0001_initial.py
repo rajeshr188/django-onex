@@ -15,10 +15,21 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("contact", "0001_initial"),
-        ("contenttypes", "0002_remove_content_type_name"),
+        # ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
+        migrations.RunSQL("""
+            DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_value') THEN
+                    CREATE TYPE public.money_value AS
+                    (
+                        amount numeric(14,3),
+                        currency character varying(3)
+                    );
+                END IF;
+            END $$;
+        """),
         migrations.CreateModel(
             name="Account",
             fields=[

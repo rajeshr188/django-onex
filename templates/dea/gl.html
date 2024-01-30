@@ -24,7 +24,7 @@
                 <td><a href="{% url 'dea_ledger_detail' i.ledgerno_dr.id%}">{{i.ledgerno_dr.name}}</a></td>
                 <td><a href="{% url 'dea_ledger_detail' i.ledgerno.id%}">{{i.ledgerno.name}}</a></td>
                 <td>{{i.amount}}</td>
-                <td><a href="{% url 'dea_journal_detail' i.journal.id%}">{{i.journal}}</a></td>
+                <td><a href="{{i.journal_entry.journal.get_absolute_url}}">{{i.journal_entry.journal}}</a></td>
             </tr>
             {%endfor%}
         </tbody>

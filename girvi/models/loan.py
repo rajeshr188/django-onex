@@ -75,7 +75,7 @@ class Loan(Journal):
         get_latest_by = "id"
 
     def __str__(self):
-        return f"{self.loanid} - {self.loanamount} - {self.created.date()}"
+        return f"{self.loanid} - {self.loanamount} - {self.created_at.date()}"
 
     def get_absolute_url(self):
         return reverse("girvi:girvi_loan_detail", args=(self.pk,))

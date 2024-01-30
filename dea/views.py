@@ -76,7 +76,7 @@ def home(request):
 
 def generalledger(request):
     context = {}
-    context["lt"] = LedgerTransaction.objects.all().order_by("-created")[:10]
+    context["lt"] = LedgerTransaction.objects.all().select_related("journal_entry","ledgerno","ledgerno_dr").prefetch_related("journal_entry__journal").order_by("-created")
     return render(request, "dea/gl.html", {"data": context})
 
 
@@ -144,7 +144,7 @@ def audit_ledger(request):
 
 
 class JournalEntryListView(ListView):
-    queryset = JournalEntry.objects.all().select_related("content_type")
+    queryset = JournalEntry.objects.all()
     paginate_by = 10
 
 

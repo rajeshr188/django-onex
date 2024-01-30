@@ -21,6 +21,9 @@ class Journal(PolymorphicModel):
 
     def __str__(self):
         return f"{self.desc}"
+
+    def get_class_name(self):
+        return self.__class__.__name__
     
     def get_items(self):
         # By default, return None or an empty list.
@@ -56,6 +59,10 @@ class Journal(PolymorphicModel):
         if lt and at:
             journal_entry.untransact(lt, at)
 
+    def update(self):
+        self.reverse_transactions()
+        self.create_transactions()
+
     def post(self):
         self.create_transactions()
         items = self.get_items()
@@ -69,10 +76,6 @@ class Journal(PolymorphicModel):
         if items is not None:
             for i in items:
                 i.unpost()
-
-    def update(self):
-        self.reverse_transactions()
-        self.create_transactions()
 
 class JournalEntry(models.Model):
     created = models.DateTimeField(auto_now_add=True)

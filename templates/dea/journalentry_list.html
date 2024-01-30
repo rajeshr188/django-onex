@@ -25,14 +25,7 @@
                         <td>{{i.created|date}}</td>
                         <td>{{i.desc}}</td>
                         <td>
-                            {%if i.content_type %}
-                            <a
-                                href="{{object.get_url_string}}">{{object.get_url_string}}
-                                {{i.content_type.app_label}}-{{i.content_type.model}} {{i.content_object}}
-                            </a>
-                            {%else%}
-                            None
-                            {%endif%}
+                            <a href="{{i.journal.get_absolute_url}}">{{i.journal}}:{{i.journal.id}}</a>
                         </td>
                         <td><a class="btn btn-danger" href="{% url 'dea_journal_entry_delete' i.id%}">Delete</a></td>
                        

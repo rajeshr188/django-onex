@@ -126,6 +126,11 @@ def bulk_release(request):
 
             if not date:
                 date = timezone.now().date()
+            try:
+                last_release = Release.objects.latest("id")
+                next_releaseid = int(last_release.releaseid) + 1
+            except Release.DoesNotExist:
+                next_releaseid = "1"
             new_releases: List[Release] = []
             for loan in loans:
                 try:
@@ -134,12 +139,8 @@ def bulk_release(request):
                     # raise CommandError(f"Failed to create Release as {loan} does not exist")
                     print(f"Failed to create Release as {loan} does not exist")
                     continue
-                try:
-                    last_release = Release.objects.latest("id")
-                    releaseid = str(int(last_release.releaseid) + 1)
-                except Release.DoesNotExist:
-                    releaseid = "1"
-
+                releaseid = str(next_releaseid)
+                next_releaseid += 1
                 new_release = Release(
                     releaseid=releaseid,
                     loan=l,
@@ -148,6 +149,7 @@ def bulk_release(request):
                     created_by=request.user,
                 )
                 new_releases.append(new_release)
+            print(new_releases)
             try:
                 with transaction.atomic():
                     Release.objects.bulk_create(new_releases)

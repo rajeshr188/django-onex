@@ -36,14 +36,14 @@ def create_stock_journal(sender, instance, created, **kwargs):
     print(f"Balance after update: {instance.metal_balance}")
     if created:
         print("newly created stock journal")
-        sj = instance.get_journal_entry()
-        instance.post(sj)
+        
+        instance.post()
         instance.invoice.create_transactions()
     else:
         print("existing stock journal:appending txns")
-        sj = instance.get_journal_entry()
-        instance.unpost(sj)
-        instance.post(sj)
+        
+        instance.unpost()
+        instance.post()
         # instance.invoice.update_balance()
         instance.invoice.reverse_transactions()
         instance.invoice.create_transactions()

@@ -171,14 +171,22 @@ def create_loan(request, pk=None):
             )
             return response
 
-        messages.warning(request, "Please correct the error below.")
-        response = TemplateResponse(
-            request, "girvi/loan/loan_form.html", {"form": form}
-        )
-        return response
+        else:
+            messages.warning(request, "Please correct the error below.")
+            response = TemplateResponse(
+                request, "girvi/loan/loan_form.html", {"form": form}
+            )
+            return response
+    try:
+        series = Loan.objects.latest().series
+        lid = series.loan_set.last().lid + 1
+    except Loan.DoesNotExist:
+        try:
+            series = Series.objects.latest()
+            lid = 1
+        except Series.DoesNotExist:
+            return TemplateResponse(request,'404.html',headers={"Hx-Redirect": reverse("girvi:girvi_license_create")})
 
-    series = Loan.objects.latest().series
-    lid = series.loan_set.last().lid + 1
     initial = {
         "created": ld(),
         "series": series,

@@ -55,12 +55,12 @@ urlpatterns = [
     ),
     path("journal_entries/", views.JournalEntryListView.as_view(), name="dea_journal_entries_list"),
     path(
-        "journal_entry/<int:pk>/detail",
+        "journal_entry/<uuid:pk>/detail",
         views.JournalEntryDetailView.as_view(),
         name="dea_journal_entry_detail",
     ),
     path(
-        "journal_entry/<int:pk>/delete",
+        "journal_entry/<uuid:pk>/delete",
         views.JournalEntryDeleteView.as_view(),
         name="dea_journal_entry_delete",
     ),

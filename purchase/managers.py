@@ -3,9 +3,9 @@ from datetime import date
 from django.db import models
 from django.db.models import F, Q, Sum
 from django.utils import timezone
+from polymorphic.query import PolymorphicQuerySet
 
-
-class PurchaseQueryset(models.QuerySet):
+class PurchaseQueryset(PolymorphicQuerySet):
     def is_gst(self, value):
         return self.filter(is_gst=value)
 

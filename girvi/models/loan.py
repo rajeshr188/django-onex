@@ -118,7 +118,7 @@ class Loan(Journal):
 
     def noofmonths(self, date=datetime.datetime.now(timezone.utc)):
         cd = date  # datetime.datetime.now()
-        nom = (cd.year - self.created.year) * 12 + cd.month - self.created.month
+        nom = (cd.year - self.created_at.year) * 12 + cd.month - self.created_at.month
         return 1 if nom <= 0 else nom - 1
 
     def interestdue(self, date=datetime.datetime.now(timezone.utc)):

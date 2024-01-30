@@ -96,28 +96,8 @@
                   >Pricing Tier</a></li>  
               </ul>
             </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Sales
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'sales:sales_invoice_list'%}" 
-                  >Sales</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{% url 'sales:sales_receipt_list'%}"  
-                  >Receipt</a></li>
-              </ul>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Approval
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'approval:approval_approval_list' %}">Approval</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <a class="dropdown-item" href="{%url 'approval:approval_return_list'%}">Approval Return</a>
-              </ul>
-            </li>
+           
+            
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Purchase
@@ -136,20 +116,7 @@
                     hx-push-url="true">Payment</a></li>
               </ul>
             </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                Chit</a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'chit_list'%}">Chit</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{% url 'collection_list'%}">Collection</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <a class="dropdown-item" href="{% url 'allotment_list' %}">Allotment</a>
-              </ul>
-            </li>
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'daybook' %}">Daybook </a>
-            </li>
+            
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
                 Rate

@@ -9,7 +9,7 @@ from django.db.models.functions import (Coalesce, ExtractMonth, ExtractYear,
 from django.utils import timezone
 
 from product.models import Rate, RateSource
-
+from polymorphic.managers import PolymorphicManager
 """
     each row shall have
         itemwise weight
@@ -135,9 +135,9 @@ class LoanQuerySet(models.QuerySet):
         return self.annotate(
             months_since_created=ExpressionWrapper(
                 Func(
-                    (ExtractYear(current_time) - ExtractYear(F("created"))) * 12
-                    + (ExtractMonth(current_time) - ExtractMonth(F("created")))
-                    + (current_time.day - F("created__day")) / 30,
+                    (ExtractYear(current_time) - ExtractYear(F("created_at"))) * 12
+                    + (ExtractMonth(current_time) - ExtractMonth(F("created_at")))
+                    + (current_time.day - F("created_at__day")) / 30,
                     function="ROUND",
                 ),
                 output_field=models.FloatField(),
@@ -284,7 +284,7 @@ class LoanQuerySet(models.QuerySet):
         return self.aggregate(total=Sum("loanamount"))
 
 
-class LoanManager(models.Manager):
+class LoanManager(PolymorphicManager):
     # def get_queryset(self):
     #     return super().get_queryset().select_related("series", "release", "customer")
 
@@ -362,11 +362,11 @@ class LoanManager(models.Manager):
     #     )
 
 
-class ReleasedManager(models.Manager):
+class ReleasedManager(PolymorphicManager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=False)
 
 
-class UnReleasedManager(models.Manager):
+class UnReleasedManager(PolymorphicManager):
     def get_queryset(self):
         return super().get_queryset().filter(release__isnull=True)

@@ -142,15 +142,15 @@ class Customer(models.Model):
             When(
                 release__isnull=False,
                 then=(
-                    (ExtractYear("release__created") - ExtractYear("created")) * 12
-                    + (ExtractMonth("release__created") - ExtractMonth("created"))
+                    (ExtractYear("release__created_at") - ExtractYear("created_at")) * 12
+                    + (ExtractMonth("release__created_at") - ExtractMonth("created_at"))
                 ),
             ),
             When(
                 release__isnull=True,
                 then=(
-                    (ExtractYear(timezone.now()) - ExtractYear("created")) * 12
-                    + (ExtractMonth(timezone.now()) - ExtractMonth("created"))
+                    (ExtractYear(timezone.now()) - ExtractYear("created_at")) * 12
+                    + (ExtractMonth(timezone.now()) - ExtractMonth("created_at"))
                 ),
             ),
             output_field=FloatField(),

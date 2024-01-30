@@ -57,11 +57,11 @@ INSTALLED_APPS = [
     "product",
     "girvi",
     "invoice",
-    "sales",
+    # "sales",
     "purchase",
-    "approval",
-    "Chitfund",
-    "daybook",
+    # "approval",
+    # "Chitfund",
+    # "daybook",
     "sea",
     "notify",
     "dynamic_preferences",
@@ -207,7 +207,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-# CRISPY_FAIL_SILENTLY = not DEBUG
+CRISPY_FAIL_SILENTLY = not DEBUG
 
 # CACHES = {
 #     'default': {

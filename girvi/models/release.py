@@ -6,9 +6,9 @@ from moneyed import Money
 
 from contact.models import Customer
 from dea.models import Journal,JournalEntry#, JournalTypes
+from polymorphic.managers import PolymorphicManager
 
-
-class ReleaseManager(models.Manager):
+class ReleaseManager(PolymorphicManager):
     def get_queryset(self):
         return super().get_queryset().select_related("loan")
 

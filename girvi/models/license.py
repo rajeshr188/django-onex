@@ -41,6 +41,7 @@ class Series(models.Model):
     class Meta:
         ordering = ("created",)
         unique_together = ["license", "name"]
+        get_latest_by = "created"
 
     def __str__(self):
         return f"Series {self.name}"

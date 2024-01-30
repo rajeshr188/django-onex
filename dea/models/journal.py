@@ -46,13 +46,15 @@ class Journal(PolymorphicModel):
     def create_transactions(self):
         journal_entry = self.get_journal_entry()
         lt, at = self.get_transactions()
-        journal_entry.transact(lt, at)
+        if lt and at:
+            journal_entry.transact(lt, at)
        
     @transaction.atomic()
     def reverse_transactions(self):
         journal_entry = self.get_journal_entry()
         lt, at = self.get_transactions()
-        journal_entry.untransact(lt, at)
+        if lt and at:
+            journal_entry.untransact(lt, at)
 
     def post(self):
         self.create_transactions()
@@ -116,21 +118,31 @@ class JournalEntry(models.Model):
         # if not self.check_data_integrity(lt,at):
         #     raise ValidationError("Data integrity violation.")
         
-        for i in lt:
-            # print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
-            LedgerTransaction.objects.create_txn(
-                self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
-            )
-        
-        for i in at:
-            AccountTransaction.objects.create_txn(
-                self,
-                i["ledgerno"],
-                i["xacttypecode"],
-                i["xacttypecode_ext"],
-                i["account"],
-                i["amount"],
-            )
+        if lt:
+            for i in lt:
+                # print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
+                try:
+                    LedgerTransaction.objects.create_txn(
+                    self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
+                    )
+                except Exception as e:
+                    print(f"error: {e}")
+                    
+        if at:
+
+            for i in at:
+                try:
+
+                    AccountTransaction.objects.create_txn(
+                        self,
+                        i["ledgerno"],
+                        i["xacttypecode"],
+                        i["xacttypecode_ext"],
+                        i["account"],
+                        i["amount"],
+                    )
+                except Exception as e:
+                    print(f"error: {e}")    
         print("transact done")
 
     @transaction.atomic()

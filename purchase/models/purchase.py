@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 from moneyed import Money
-
+from django.db import ProgrammingError
 from contact.models import Customer
 from dea.models import Journal,JournalEntry#, JournalTypes
 from dea.models.moneyvalue import MoneyValueField
@@ -97,7 +97,8 @@ class Invoice(Journal):
     def save(self, *args, **kwargs):
         if not self.due_date:
             if self.term:
-                self.due_date = self.created + timedelta(days=self.term.due_days)
+                super().save(*args, **kwargs)
+                self.due_date = self.journal_ptr.created_at + timedelta(days=self.term.due_days)
         super(Invoice, self).save(*args, **kwargs)
 
     # def delete(self, *args, **kwargs):
@@ -185,11 +186,12 @@ class Invoice(Journal):
 
     @property
     def balance(self):
-        purchase_balance = self.purchase_balance
+        
         try:
+            purchase_balance = self.purchase_balance
             return Balance(purchase_balance.balances)
-        except PurchaseBalance.DoesNotExist:
-            return None
+        except ProgrammingError:
+            return Balance(0, "INR")
        
 
     def get_transactions(self):
@@ -219,7 +221,10 @@ class Invoice(Journal):
         #     }
         # ]
         lt, at = [], []
-        balance = self.purchase_balance
+        try:
+            balance = self.purchase_balance
+        except ProgrammingError:
+            return lt, at
         cash_balance = balance.cash_balance
         gold_balance = balance.gold_balance
         silver_balance = balance.silver_balance

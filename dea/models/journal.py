@@ -63,13 +63,15 @@ class Journal(PolymorphicModel):
             self.journal_entries.delete()
 
     def is_changed(self, old_instance):
+        # https://stackoverflow.com/questions/31286330/django-compare-two-objects-using-fields-dynamically
+        # TODO efficient way to compare old and new instances
         # Implement logic to compare old and new instances
         # Compare all fields using dictionaries
-        # print(f"old: {model_to_dict(old_instance,fields=['loanamount','customer','lid'])} new: {model_to_dict(self,fields =['loanamount','customer','lid'])}")
         return model_to_dict(
             self, fields=["loanamount", "customer", "lid"]
         ) != model_to_dict(old_instance, fields=["loanamount", "customer", "lid"])
 
+    # https://stackoverflow.com/questions/7792287/how-to-use-django-model-inheritance-with-signals
     @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

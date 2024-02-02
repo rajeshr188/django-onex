@@ -130,7 +130,7 @@ class LoanTable(tables.Table):
 
 class ReleaseTable(tables.Table):
     releaseid = tables.Column(linkify=True)
-    loan = tables.Column(linkify=True)
+    release_loan = tables.Column(linkify=True)
 
     def render_loan(self, record):
         return format_html(
@@ -140,8 +140,8 @@ class ReleaseTable(tables.Table):
                         hx-vals='{{"use_block":"content"}}'
                         hx-push-url="true">{}</a>
             """,
-            record.loan.id,
-            record.loan.loanid,
+            record.release_loan.id,
+            record.release_loan.loanid,
         )
 
     def render_releaseid(self, record):
@@ -158,7 +158,7 @@ class ReleaseTable(tables.Table):
 
     class Meta:
         model = Release
-        fields = ("id", "releaseid", "created", "loan", "interestpaid")
+        fields = ("id", "releaseid", "created", "release_loan", "interestpaid")
         attrs = {"class": "table table-sm table-striped-columns table-hover"}
         empty_text = "There are no release matching the search criteria..."
         # template_name = "django_tables2/bootstrap5.html"

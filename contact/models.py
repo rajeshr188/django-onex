@@ -142,7 +142,8 @@ class Customer(models.Model):
             When(
                 release__isnull=False,
                 then=(
-                    (ExtractYear("release__created_at") - ExtractYear("created_at")) * 12
+                    (ExtractYear("release__created_at") - ExtractYear("created_at"))
+                    * 12
                     + (ExtractMonth("release__created_at") - ExtractMonth("created_at"))
                 ),
             ),

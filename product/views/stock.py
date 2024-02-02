@@ -8,7 +8,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from django.views.generic.base import TemplateView
 
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from utils.htmx_utils import for_htmx
 
 from ..filters import StockFilter

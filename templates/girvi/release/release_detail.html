@@ -19,16 +19,16 @@
     </p>
     <table class="table table-sm table-striped">
       <tr><td>releaseid</td><td>{{ object.releaseid }}</td></tr>
-      <tr><td>Release Date</td><td>{{ object.created }}</td></tr>
-      <tr><td>loanid</td><td><a href="" hx-get="{% url 'girvi:girvi_loan_detail' object.loan.id%}"
+      <tr><td>Release Date</td><td>{{ object.created_at }}</td></tr>
+      <tr><td>loanid</td><td><a href="" hx-get="{% url 'girvi:girvi_loan_detail' object.release_loan.id%}"
         hx-target="#content"
         hx-swap="innerHTML transition:true"
                             hx-vals='{"use_block":"content"}'
-                            hx-push-url="true">{{object.loan.id}}</a></td></tr>
-      <tr><td>loandate</td><td>{{ object.loan.created }}</td></tr>
-      <tr><td>customer</td><td><a hx-get="{% url 'contact_customer_detail' object.loan.customer.id %}"
-        hx-target="#content" hx-swap="innerHTML transition:true">{{ object.loan.customer}}</a></td></tr>
-      <tr><td>created</td><td>{{ object.created }}</td></tr>
+                            hx-push-url="true">{{object.release_loan.id}}</a></td></tr>
+      <tr><td>loandate</td><td>{{ object.release_loan.created_at }}</td></tr>
+      <tr><td>customer</td><td><a hx-get="{% url 'contact_customer_detail' object.release_loan.customer.id %}"
+        hx-target="#content" hx-swap="innerHTML transition:true">{{ object.release_loan.customer}}</a></td></tr>
+     
       <tr><td>interestpaid</td><td>{{ object.interestpaid }}</td></tr>
     
     </table>

@@ -16,7 +16,7 @@ from django.utils import timezone
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from product.models import Rate
 
 from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
@@ -247,6 +247,7 @@ class Loan(Journal):
         notice = self.notification_set.last()
         return notice.created if notice else None
 
+
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="loanitems")
     # item = models.ForeignKey(
@@ -298,15 +299,16 @@ class LoanItem(models.Model):
         super().save(*args, **kwargs)
         # Update related Loan's total interest
 
+
 # rename to payment when released create journals through payment
 class Adjustment(Journal):
-    
     amount_received = models.IntegerField(default=0)
     as_interest = models.BooleanField(default=True)
 
     adj_loan = models.ForeignKey(
         "girvi.Loan", on_delete=models.CASCADE, related_name="adjustments"
     )
+
     class Meta:
         ordering = ("created_at",)
 

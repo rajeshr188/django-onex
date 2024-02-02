@@ -22,6 +22,7 @@ from django.views.generic.dates import (DayArchiveView, MonthArchiveView,
                                         YearArchiveView)
 from django_tables2.config import RequestConfig
 from django_tables2.export.export import TableExport
+from dynamic_preferences.registries import global_preferences_registry
 from num2words import num2words
 from openpyxl import load_workbook
 from reportlab.lib.units import cm
@@ -37,9 +38,10 @@ from ..filters import LoanFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm
 from ..models import *
 from ..tables import LoanTable
-from dynamic_preferences.registries import global_preferences_registry
+
 # We instantiate a manager for our global preferences
 global_preferences = global_preferences_registry.manager()
+
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
@@ -77,10 +79,9 @@ class LoanTodayArchiveView(TodayArchiveView):
     # template_name = "girvi/loan/loan_archive_day.html"
 
 
-
 def ld():
     default_date = global_preferences["Loan__Default_Date"]
-    if default_date == 'N':
+    if default_date == "N":
         return datetime.datetime.now()
     else:
         last = Loan.objects.order_by("id").last()
@@ -185,7 +186,11 @@ def create_loan(request, pk=None):
             series = Series.objects.latest()
             lid = 1
         except Series.DoesNotExist:
-            return TemplateResponse(request,'404.html',headers={"Hx-Redirect": reverse("girvi:girvi_license_create")})
+            return TemplateResponse(
+                request,
+                "404.html",
+                headers={"Hx-Redirect": reverse("girvi:girvi_license_create")},
+            )
 
     initial = {
         "created": ld(),

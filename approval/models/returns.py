@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from approval.models import ApprovalLine
 from contact.models import Customer
-from dea.models import Journal,JournalEntry #, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from product.models import StockLot
 
 """
@@ -29,13 +29,12 @@ If any changes are made to the approval, return, or invoice, those changes shoul
 
 
 class Return(Journal):
-    
     contact = models.ForeignKey(
         Customer, related_name="approval_returns", on_delete=models.CASCADE
     )
     total_wt = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     total_qty = models.IntegerField(default=0)
-  
+
     def __str__(self):
         return f"Return #{self.id}"
 
@@ -47,20 +46,17 @@ class Return(Journal):
 
     def get_total_wt(self):
         return self.returnitem_set.aggregate(t=Sum("weight"))["t"]
-    
+
     def get_items(self):
         return self.return_items.all()
 
 
 class ReturnItem(models.Model):
     return_obj = models.ForeignKey(
-                    Return, 
-                    on_delete=models.CASCADE,
-                    related_name="return_items")
+        Return, on_delete=models.CASCADE, related_name="return_items"
+    )
     line_item = models.ForeignKey(
-                    ApprovalLine, 
-                    on_delete=models.CASCADE, 
-                    related_name="return_items"
+        ApprovalLine, on_delete=models.CASCADE, related_name="return_items"
     )
     quantity = models.IntegerField(default=0)
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)

@@ -71,7 +71,7 @@ class AdjustmentFilter(django_filters.FilterSet):
 
 
 class ReleaseFilter(django_filters.FilterSet):
-    loan = django_filters.ModelChoiceFilter(
+    release_loan = django_filters.ModelChoiceFilter(
         widget=LoansWidget, queryset=Loan.released.all()
     )
 

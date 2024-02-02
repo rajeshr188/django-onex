@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.urls import reverse
 
 from contact.models import Customer
-from dea.models import Journal,JournalEntry
+from dea.models import Journal, JournalEntry
 from product.models import StockLot
 
 """
@@ -29,7 +29,6 @@ If the approval is closed, the approval should be flagged as closed and no furth
 
 # Create your models here.
 class Approval(Journal):
-
     contact = models.ForeignKey(
         Customer, related_name="contact", on_delete=models.CASCADE
     )
@@ -65,11 +64,12 @@ class Approval(Journal):
         if not self.pk:
             self.status = "pending"
         super().save(*args, **kwargs)
-    
+
     """
     called when an return item is created with a line item referencing this approval/approvalline,
     otherwise called from approvalline.save() ,by default stus is pending
     """
+
     def update_status(self):
         print("in approval update_Status")
 
@@ -108,6 +108,7 @@ class Approval(Journal):
     def get_items(self):
         return self.items.all()
 
+
 class ApprovalLine(models.Model):
     product = models.ForeignKey(
         StockLot, related_name="lineitems", on_delete=models.CASCADE
@@ -136,7 +137,7 @@ class ApprovalLine(models.Model):
         default="Pending",
         blank=True,
     )
-    
+
     class Meta:
         ordering = ("approval",)
 

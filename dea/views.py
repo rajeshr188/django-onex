@@ -76,7 +76,12 @@ def home(request):
 
 def generalledger(request):
     context = {}
-    context["lt"] = LedgerTransaction.objects.all().select_related("journal_entry","ledgerno","ledgerno_dr").prefetch_related("journal_entry__journal").order_by("-created")
+    context["lt"] = (
+        LedgerTransaction.objects.all()
+        .select_related("journal_entry", "ledgerno", "ledgerno_dr")
+        .prefetch_related("journal_entry__journal")
+        .order_by("-created")
+    )
     return render(request, "dea/gl.html", {"data": context})
 
 
@@ -154,7 +159,7 @@ class JournalEntryDetailView(DetailView):
 
 class JournalEntryDeleteView(DeleteView):
     model = JournalEntry
-    success_url = reverse_lazy("dea_journals_list")
+    success_url = reverse_lazy("dea_journal_entries_list")
 
 
 class AccountCreateView(CreateView):

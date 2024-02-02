@@ -12,7 +12,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
@@ -35,7 +35,7 @@ class Receipt(Journal):
         max_length=18, choices=status_choices, default="Unallotted"
     )
     is_active = models.BooleanField(default=True)
-    
+
     # Relationship Fields
     customer = models.ForeignKey(
         Customer,
@@ -189,7 +189,7 @@ class Receipt(Journal):
     def unallocate(self):
         self.receiptallocation_set.all().delete()
         self.update_status()
-    
+
     def get_transactions(self):
         lt = [
             {"ledgerno": "Sundry Debtors", "ledgerno_dr": "Cash", "amount": self.total}
@@ -205,11 +205,16 @@ class Receipt(Journal):
         ]
         return lt, at
 
+
 class ReceiptAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE,related_name="receiptallocation_set")
-    invoice = models.ForeignKey("sales.Invoice", on_delete=models.CASCADE,related_name="receiptallocation_set")
+    receipt = models.ForeignKey(
+        Receipt, on_delete=models.CASCADE, related_name="receiptallocation_set"
+    )
+    invoice = models.ForeignKey(
+        "sales.Invoice", on_delete=models.CASCADE, related_name="receiptallocation_set"
+    )
     # allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allocated = MoneyField(
         max_digits=19,

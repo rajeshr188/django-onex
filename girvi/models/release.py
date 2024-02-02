@@ -3,14 +3,15 @@ from django.db import models, transaction
 from django.shortcuts import reverse
 from django.utils import timezone
 from moneyed import Money
+from polymorphic.managers import PolymorphicManager
 
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
-from polymorphic.managers import PolymorphicManager
+from dea.models import Journal, JournalEntry  # , JournalTypes
+
 
 class ReleaseManager(PolymorphicManager):
     def get_queryset(self):
-        return super().get_queryset().select_related("loan")
+        return super().get_queryset().select_related("release_loan")
 
 
 class Release(Journal):

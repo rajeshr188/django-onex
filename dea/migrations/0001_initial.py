@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL("""
+        migrations.RunSQL(
+            """
             DO $$ BEGIN
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_value') THEN
                     CREATE TYPE public.money_value AS
@@ -29,7 +30,8 @@ class Migration(migrations.Migration):
                     );
                 END IF;
             END $$;
-        """),
+        """
+        ),
         migrations.CreateModel(
             name="Account",
             fields=[

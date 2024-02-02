@@ -140,7 +140,9 @@ class LedgerTransactionManager(models.Manager):
     def create_txn(self, journal_entry, ledgerno, ledgerno_dr, amount):
         dr = Ledger.objects.get(name=ledgerno_dr)
         cr = Ledger.objects.get(name=ledgerno)
-        txn = self.create(journal_entry=journal_entry, ledgerno=cr, ledgerno_dr=dr, amount=amount)
+        txn = self.create(
+            journal_entry=journal_entry, ledgerno=cr, ledgerno_dr=dr, amount=amount
+        )
         return txn
 
 
@@ -220,8 +222,8 @@ class Ledgerbalance(models.Model):
 
     class Meta:
         managed = False
-        # db_table = "ledger_balance"
-        db_table = "ledger_balance_plain"
+        db_table = "ledger_balance"
+        # db_table = "ledger_balance_plain"
         ordering = ["AccountType", "ledgerno__name"]
 
     def get_currbal(self):

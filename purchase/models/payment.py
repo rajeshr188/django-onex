@@ -11,7 +11,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
@@ -23,7 +23,7 @@ from purchase.models.purchase import Invoice
 # how do you know which is gst payment?
 class Payment(Journal):
     # Fields
-    
+
     weight = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     touch = models.DecimalField(max_digits=10, decimal_places=3, default=0)
     rate = models.IntegerField(default=0)
@@ -183,11 +183,18 @@ class Payment(Journal):
         #     self.save()
         self.update_status()
 
+
 class PaymentAllocation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE,related_name="paymentallocation_set")
-    invoice = models.ForeignKey("purchase.Invoice", on_delete=models.CASCADE,related_name="paymentallocation_set")
+    payment = models.ForeignKey(
+        Payment, on_delete=models.CASCADE, related_name="paymentallocation_set"
+    )
+    invoice = models.ForeignKey(
+        "purchase.Invoice",
+        on_delete=models.CASCADE,
+        related_name="paymentallocation_set",
+    )
     # allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allocated = MoneyField(
         max_digits=19,

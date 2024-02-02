@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, transaction
+from django.db import ProgrammingError, models, transaction
 from django.db.models import F, Q, Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
@@ -11,9 +11,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 from moneyed import Money
-from django.db import ProgrammingError
+
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -26,7 +26,7 @@ from ..managers import PurchaseQueryset
 
 class Invoice(Journal):
     # Fields
-    
+
     due_date = models.DateField(null=True, blank=True)
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
@@ -98,7 +98,9 @@ class Invoice(Journal):
         if not self.due_date:
             if self.term:
                 super().save(*args, **kwargs)
-                self.due_date = self.journal_ptr.created_at + timedelta(days=self.term.due_days)
+                self.due_date = self.journal_ptr.created_at + timedelta(
+                    days=self.term.due_days
+                )
         super(Invoice, self).save(*args, **kwargs)
 
     # def delete(self, *args, **kwargs):
@@ -186,13 +188,11 @@ class Invoice(Journal):
 
     @property
     def balance(self):
-        
         try:
             purchase_balance = self.purchase_balance
             return Balance(purchase_balance.balances)
         except ProgrammingError:
             return Balance(0, "INR")
-       
 
     def get_transactions(self):
         try:
@@ -331,7 +331,6 @@ class InvoiceItem(models.Model):
         "purchase.Invoice", on_delete=models.CASCADE, related_name="purchase_items"
     )
 
-
     class Meta:
         ordering = ("-pk",)
 
@@ -446,6 +445,7 @@ class InvoiceItem(models.Model):
             except StockLot.DoesNotExist:
                 print("Oops!while Unposting there was no said stock.  Try again...")
 
+
 # class InvoiceItem(models.Model):
 #     # fields...
 
@@ -516,6 +516,7 @@ class InvoiceItem(models.Model):
    FROM purchase_invoice
      JOIN purchase_invoiceitem pi ON pi.invoice_id = purchase_invoice.id
   GROUP BY purchase_invoice.id;"""
+
 
 # db view for tracking the balance of a invoice from its invoice items in multicurrency
 class PurchaseBalance(models.Model):

@@ -23,7 +23,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
-    "polymorphic",#new
+    "polymorphic",  # new
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     # 'actstream',
     "users",
     "pages",
-    "dea",
+    "dea.apps.DeaConfig",
     "contact.apps.ContactConfig",
     "product",
     "girvi",

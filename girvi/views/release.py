@@ -61,9 +61,11 @@ def release_create(request, pk=None):
         if form.is_valid():
             form.save()
             # return HttpResponse(status = 200,headers={"HX-Trigger":loanChanged})
-            response = redirect("girvi:girvi_loan_detail", pk=form.instance.loan.pk)
+            response = redirect(
+                "girvi:girvi_loan_detail", pk=form.instance.release_loan.pk
+            )
             response["HX-Push-Url"] = reverse(
-                "girvi:girvi_loan_detail", kwargs={"pk": form.instance.loan.pk}
+                "girvi:girvi_loan_detail", kwargs={"pk": form.instance.release_loan.pk}
             )
             return response
     else:
@@ -73,7 +75,7 @@ def release_create(request, pk=None):
             form = ReleaseForm(
                 initial={
                     "releaseid": increlid,
-                    "loan": loan,
+                    "release_loan": loan,
                     "created": datetime.now(),
                     "interestpaid": loan.interestdue,
                 }

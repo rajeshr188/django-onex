@@ -13,7 +13,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import Journal,JournalEntry#, JournalTypes
+from dea.models import Journal, JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -97,7 +97,6 @@ class SalesQueryset(models.QuerySet):
 
 
 class Invoice(Journal):
-    
     due_date = models.DateField(null=True, blank=True)
     is_ratecut = models.BooleanField(default=False)
     is_gst = models.BooleanField(default=False)
@@ -423,7 +422,7 @@ class InvoiceItem(models.Model):
         blank=True,
         related_name="sold_items",
     )
-    
+
     class Meta:
         ordering = ("-pk",)
 
@@ -477,7 +476,6 @@ class InvoiceItem(models.Model):
 
     def balance(self):
         return Balance([self.metal_balance, self.cash_balance])
-
 
     @transaction.atomic()
     def post(self):

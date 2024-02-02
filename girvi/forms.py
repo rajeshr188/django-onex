@@ -70,16 +70,16 @@ class LoanForm(forms.ModelForm):
         ),
     )
 
-    created = forms.DateTimeField(
-        input_formats=["%d/%m/%Y %H:%M"],
-        widget=forms.DateTimeInput(
-            attrs={
-                "type": "datetime-local",
-                "data-date-format": "DD MMMM YYYY",
-                "max": datetime.now(),
-            }
-        ),
-    )
+    # created = forms.DateTimeField(
+    #     input_formats=["%d/%m/%Y %H:%M"],
+    #     widget=forms.DateTimeInput(
+    #         attrs={
+    #             "type": "datetime-local",
+    #             "data-date-format": "DD MMMM YYYY",
+    #             "max": datetime.now(),
+    #         }
+    #     ),
+    # )
 
     class Meta:
         model = Loan
@@ -89,10 +89,10 @@ class LoanForm(forms.ModelForm):
             "customer",
             "pic",
             "lid",
-            "created",
+            # "created_at",
         ]
 
-    def clean_created(self):
+    def clean_created_at(self):
         cleaned_data = super().clean()
         my_date = cleaned_data.get("created")
 
@@ -219,19 +219,21 @@ class ReleaseForm(forms.ModelForm):
             }
         ),
     )
-    loan = forms.ModelChoiceField(widget=LoansWidget, queryset=Loan.unreleased.all())
+    release_loan = forms.ModelChoiceField(
+        widget=LoansWidget, queryset=Loan.unreleased.all()
+    )
 
     class Meta:
         model = Release
         fields = [
             "releaseid",
-            "loan",
+            "release_loan",
             "interestpaid",
         ]
 
     def clean_created(self):
         cleaned_data = super().clean()
-        my_date = cleaned_data.get("created")
+        my_date = cleaned_data.get("created_at")
 
         if my_date and my_date > timezone.now():
             raise forms.ValidationError("Date cannot be in the future.")
@@ -248,7 +250,7 @@ class ReleaseForm(forms.ModelForm):
                 css_class="form-row",
             ),
             Row(
-                Column("loan", css_class="form-group col-md-4 mb-0"),
+                Column("release_loan", css_class="form-group col-md-4 mb-0"),
                 Column("interestpaid", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
             ),
@@ -292,7 +294,7 @@ class AdjustmentForm(forms.ModelForm):
         )
     )
 
-    loan = forms.ModelChoiceField(
+    adj_loan = forms.ModelChoiceField(
         queryset=Loan.unreleased.all(),
         widget=ModelSelect2Widget(
             model=Loan,
@@ -304,4 +306,4 @@ class AdjustmentForm(forms.ModelForm):
 
     class Meta:
         model = Adjustment
-        fields = ["loan", "amount_received", "as_interest"]
+        fields = ["adj_loan", "amount_received", "as_interest"]

@@ -155,11 +155,15 @@
     
                     <tr>
                       <td>Created</td>
-                      <td>{{ object.created }}</td>
+                      <td>{{ object.created_at }}</td>
+                    </tr>
+                    <tr>
+                      <td>Posted</td>
+                      <td>{{ object.posted }}</td>
                     </tr>
                     <tr>
                       <td>Updated</td>
-                      <td>{{ object.updated }}</td>
+                      <td>{{ object.updated_at }}</td>
                     </tr>
                     <tr>
                       <td>Creator</td>
@@ -263,8 +267,9 @@
                       <td>
                         <a href="" hx-get="{% url 'girvi:girvi_release_detail' loan.release.id %}"
                                     hx-target="#content"
+                                    hx-push-url="true"
                                     hx-swap = "innerHTML transition:true">
-                          {{loan.release.releaseid}}</a>
+                          {{loan.release.id}}</a>
                       </td>
                     </tr>
                     <tr>

@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from approval.models import ApprovalLine
 from contact.models import Customer
-from dea.models import JournalEntry #, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from product.models import StockLot
 
 """
@@ -64,7 +64,9 @@ class ReturnItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    journalentry = GenericRelation(JournalEntry, related_query_name="approval_returnitem")
+    journalentry = GenericRelation(
+        JournalEntry, related_query_name="approval_returnitem"
+    )
 
     def __str__(self):
         return f"{self.quantity} x {self.line_item.product}"

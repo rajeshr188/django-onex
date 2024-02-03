@@ -13,7 +13,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm

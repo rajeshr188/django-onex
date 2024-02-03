@@ -17,7 +17,7 @@ class LoanFilter(django_filters.FilterSet):
         widget=CustomerWidget(),
     )
     status = django_filters.BooleanFilter(field_name="release", method="filter_status")
-    created = django_filters.DateFromToRangeFilter()
+    loan_date = django_filters.DateFromToRangeFilter()
     # notice = django_filters.CharFilter(
     #     field_name="notifications__notice_type", lookup_expr="icontains"
     # )
@@ -43,7 +43,7 @@ class LoanFilter(django_filters.FilterSet):
             return (
                 Loan.objects.with_details()
                 .prefetch_related("notifications", "loanitems")
-                .filter(Q(id=value) | Q(lid=value) | Q(loanamount=value))
+                .filter(Q(id=value) | Q(lid=value) | Q(loan_amount=value))
             )
 
         return (
@@ -53,9 +53,9 @@ class LoanFilter(django_filters.FilterSet):
                 Q(id__icontains=value)
                 | Q(customer__name__icontains=value)
                 | Q(lid__icontains=value)
-                | Q(loanid__icontains=value)
-                | Q(itemdesc__icontains=value)
-                | Q(loanamount__icontains=value)
+                | Q(loan_id__icontains=value)
+                | Q(item_desc__icontains=value)
+                | Q(loan_amount__icontains=value)
             )
         )
 

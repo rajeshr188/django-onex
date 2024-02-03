@@ -78,9 +78,9 @@ def Dashboard(request):
     context["loan_count"] = unreleased.count()
 
     context["due_amount"] = unreleased.aggregate(
-        Sum("loanamount"), Sum("total_interest"), Sum("total_due")
+        Sum("loan_amount"), Sum("total_interest"), Sum("total_due")
     )
-    context["total_loan_amount"] = context["due_amount"]["loanamount__sum"]
+    context["total_loan_amount"] = context["due_amount"]["loan_amount__sum"]
     context["total_interest"] = context["due_amount"]["total_interest__sum"]
 
     context[
@@ -102,7 +102,7 @@ def Dashboard(request):
     ] = sunken.with_itemwise_loanamount().total_itemwise_loanamount()
     context["sunken"]["weight"] = sunken.total_weight()
     context["sunken"]["due_amount"] = sunken.aggregate(
-        Sum("loanamount"), Sum("total_interest"), Sum("total_due")
+        Sum("loan_amount"), Sum("total_interest"), Sum("total_due")
     )
     context["sunken"]["current_value"] = sunken.total_current_value()
     context["sunken"]["itemwise_value"] = sunken.itemwise_value()
@@ -121,7 +121,7 @@ def Dashboard(request):
         Customer.objects.filter(loan__release__isnull=True)
         .annotate(
             num_loans=Count("loan"),
-            sum_loans=Sum("loan__loanamount"),
+            sum_loans=Sum("loan__loan_amount"),
             tint=Sum("loan__interest"),
         )
         .values("name", "num_loans", "sum_loans", "tint")

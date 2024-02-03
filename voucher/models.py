@@ -293,4 +293,3 @@ class VoucherItem(models.Model):
         Reverses the journal entry for this voucher item
         """
         raise NotImplementedError("reverse() must be implemented by descendant models")
-

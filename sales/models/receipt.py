@@ -12,7 +12,7 @@ from moneyed import Money
 
 from approval.models import ReturnItem
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from invoice.models import PaymentTerm
 from product.models import StockLot, StockTransaction
@@ -192,9 +192,7 @@ class Receipt(models.Model):
 
     def create_journal_entries(self):
         # create journal entries for this receipt
-        return JournalEntry.objects.create(
-            content_object=self, desc="Receipt"
-        )
+        return JournalEntry.objects.create(content_object=self, desc="Receipt")
         # ledgerjournal = LedgerJournal.objects.create(
         #     content_object=self,
         #     desc="receipt",

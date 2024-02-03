@@ -167,7 +167,9 @@ class Stock(models.Model):
             wt=current.wt, qty=current.qty, journal_entry=None, movement_type="AD"
         )
         for i in all_lots:
-            i.transact(wt=current.wt, qty=current.qty, journal_entry=None, movement_type="RM")
+            i.transact(
+                wt=current.wt, qty=current.qty, journal_entry=None, movement_type="RM"
+            )
         return new_lot
 
 
@@ -371,7 +373,9 @@ class StockLot(models.Model):
             weight=lot.weight + self.eight,
             quantity=lot.quantity + self.quantity,
         )
-        self.transact(self.weight, self.quantity, journal_entry=None, movement_type="RM")
+        self.transact(
+            self.weight, self.quantity, journal_entry=None, movement_type="RM"
+        )
         lot.transact(lot.weight, lot.quantity, journal_entry=None, movement_type="RM")
         new_lot.transact(
             self.weight + lot.weight,
@@ -423,7 +427,9 @@ class StockTransaction(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     lot = models.ForeignKey(StockLot, on_delete=models.CASCADE, default=1)
     # # should oint to a journal or voucher since stocktransaction in itself is a journalentry
-    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name="stxns")
+    journal_entry = models.ForeignKey(
+        JournalEntry, on_delete=models.CASCADE, related_name="stxns"
+    )
 
     class Meta:
         ordering = ("-created",)

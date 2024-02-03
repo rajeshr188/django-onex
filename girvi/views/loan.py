@@ -22,6 +22,7 @@ from django.views.generic.dates import (DayArchiveView, MonthArchiveView,
                                         YearArchiveView)
 from django_tables2.config import RequestConfig
 from django_tables2.export.export import TableExport
+from dynamic_preferences.registries import global_preferences_registry
 from num2words import num2words
 from openpyxl import load_workbook
 from reportlab.lib.units import cm
@@ -37,9 +38,10 @@ from ..filters import LoanFilter
 from ..forms import LoanForm, LoanItemForm, LoanRenewForm
 from ..models import *
 from ..tables import LoanTable
-from dynamic_preferences.registries import global_preferences_registry
+
 # We instantiate a manager for our global preferences
 global_preferences = global_preferences_registry.manager()
+
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
@@ -77,16 +79,15 @@ class LoanTodayArchiveView(TodayArchiveView):
     # template_name = "girvi/loan/loan_archive_day.html"
 
 
-
 def ld():
     default_date = global_preferences["Loan__Default_Date"]
-    if default_date == 'N':
+    if default_date == "N":
         return datetime.datetime.now()
     else:
         last = Loan.objects.order_by("id").last()
         if not last:
             return datetime.date.now()
-        return last.created
+        return last.loan_date
 
 
 def get_interestrate(request):
@@ -154,12 +155,12 @@ def create_loan(request, pk=None):
             if image_data:
                 image_file = ContentFile(
                     base64.b64decode(image_data.split(",")[1]),
-                    name=f"{l.loanid}__{l.customer.name}_{l.id}.jpg",
+                    name=f"{l.loan_id}__{l.customer.name}_{l.id}.jpg",
                 )
                 l.pic = image_file
 
             l.save()
-            messages.success(request, f"Created Loan : {l.loanid}")
+            messages.success(request, f"Created Loan : {l.loan_id}")
 
             response = TemplateResponse(
                 request,
@@ -204,7 +205,7 @@ def loan_update(request, id=None):
         if image_data:
             image_file = ContentFile(
                 base64.b64decode(image_data.split(",")[1]),
-                name=f"{l.loanid}__{l.customer.name}_{l.id}.jpg",
+                name=f"{l.loan_id}__{l.customer.name}_{l.id}.jpg",
             )
             l.pic = image_file
 
@@ -259,7 +260,10 @@ def next_loanid(request):
 def loan_detail(request, pk):
     loan = get_object_or_404(
         Loan.objects.select_related(
-            "customer", "series", "release", "created_by"
+            "customer",
+            "series",
+            "release",
+            # "created_by"
         ).prefetch_related("adjustments"),
         pk=pk,
     )
@@ -536,7 +540,7 @@ def generate_original(request, pk=None):
 
     c.setFont("Helvetica-Bold", 14)
     # c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
-    c.drawString(8 * cm, 6.5 * cm, f"{loan.loanamount}")
+    c.drawString(8 * cm, 6.5 * cm, f"{loan.loan_amount}")
     # Wrap the text if its length is greater than 35 characters
     lines = textwrap.wrap(loan.itemdesc, width=30)
     # Draw the wrapped text on the canvas
@@ -547,7 +551,7 @@ def generate_original(request, pk=None):
 
     c.setFont("Helvetica", 12)
     c.drawString(
-        2 * cm, 6 * cm, f"{num2words(loan.loanamount, lang='en_IN')} rupees only"
+        2 * cm, 6 * cm, f"{num2words(loan.loan_amount, lang='en_IN')} rupees only"
     )
     c.showPage()
     c.setFont("Helvetica", 12)
@@ -555,7 +559,7 @@ def generate_original(request, pk=None):
     grid_spacing = 1 * cm  # Adjust this value based on your preference
 
     c.drawString(3 * cm, 17 * cm, f"{loan.lid}")
-    c.drawString(11 * cm, 17 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
+    c.drawString(11 * cm, 17 * cm, f"{loan.loan_date.strftime('%d-%m-%Y')}")
     c.drawString(5 * cm, 16.5 * cm, f"{loan.customer.name}")
     c.drawString(
         5 * cm,
@@ -570,21 +574,14 @@ def generate_original(request, pk=None):
         y -= 0.5 * cm
 
     c.drawString(5 * cm, 14 * cm, f"{loan.customer.contactno.first()}")
-    c.drawString(5 * cm, 13.5 * cm, f"{loan.loanamount}")
+    c.drawString(5 * cm, 13.5 * cm, f"{loan.loan_amount}")
 
     lines = textwrap.wrap(
-        f"{num2words(loan.loanamount, lang='en_IN')} rupees only", width=45
+        f"{num2words(loan.loan_amount, lang='en_IN')} rupees only", width=45
     )
-    # Draw the wrapped text on the canvas
-    # y = 13 * cm
-    # for line in lines:
-    #     c.drawString(5 * cm, y, line)
-    #     y -= 0.5 * cm
-
-    # c.drawString(5 * cm, 12.1 * cm, f"{loan.itemtype}")
 
     # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(loan.itemdesc, width=35)
+    lines = textwrap.wrap(loan.item_desc, width=35)
     # Draw the wrapped text on the canvas
     y = 10 * cm
     for line in lines:
@@ -614,11 +611,11 @@ def generate_original(request, pk=None):
     c.drawString(12 * cm, 7 * cm, f"{loan.current_value()}")
     c.setFont("Helvetica-Bold", 12)
     c.drawString(1 * cm, 3.5 * cm, f"{loan.lid}")
-    c.drawString(1 * cm, 3 * cm, f"{loan.created.strftime('%d/%m/%y')}")
-    c.drawString(1 * cm, 2.5 * cm, f"{loan.loanamount}   {weight}")
+    c.drawString(1 * cm, 3 * cm, f"{loan.loan_date.strftime('%d/%m/%y')}")
+    c.drawString(1 * cm, 2.5 * cm, f"{loan.loan_amount}   {weight}")
     c.drawString(1 * cm, 2 * cm, f"{loan.customer.name}")
     # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(f"{loan.itemdesc}", width=35)
+    lines = textwrap.wrap(f"{loan.item_desc}", width=35)
     # Draw the wrapped text on the canvas
     y = 1.5 * cm
     for line in lines:
@@ -738,7 +735,7 @@ def loan_item_update_hx_view(request, parent_id=None, id=None):
             if image_data:
                 image_file = ContentFile(
                     base64.b64decode(image_data.split(",")[1]),
-                    name=f"{new_obj.loan.loanid}_{new_obj.id}.jpg",
+                    name=f"{new_obj.loan.loan_id}_{new_obj.id}.jpg",
                 )
 
                 new_obj.pic = image_file

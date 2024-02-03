@@ -16,22 +16,19 @@ from django.utils import timezone
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
+from dea.models import Journal
 from product.models import Rate
 
 from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
                         UnReleasedManager)
 
 
-class Loan(models.Model):
+class Loan(Journal):
     # Fields
-    created = models.DateTimeField(default=datetime.datetime.now)
-    updated = models.DateTimeField(auto_now=True, editable=False)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
+    loan_date = models.DateTimeField(default=datetime.datetime.now)
     lid = models.IntegerField(blank=True, null=True)
-    loanid = models.CharField(max_length=255, unique=True, db_index=True)
+    loan_id = models.CharField(max_length=255, unique=True, db_index=True)
     has_collateral = models.BooleanField(default=False)
     pic = models.ImageField(upload_to="loan_pics/", null=True, blank=True)
 
@@ -46,25 +43,24 @@ class Loan(models.Model):
         null=True,
         blank=True,
     )
-
-    itemdesc = models.TextField(
+    # ----------redundant fields
+    item_desc = models.TextField(
         max_length=100,
         verbose_name="Item",
         blank=True,
         null=True,
     )
-    loanamount = models.PositiveIntegerField(
+    loan_amount = models.PositiveIntegerField(
         verbose_name="Amount", default=0, null=True, blank=True
     )
 
     interest = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, null=True, blank=True
     )
+    # -----------------------------------
     series = models.ForeignKey(
         "girvi.Series",
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
     )
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     journal_entries = GenericRelation(JournalEntry, related_query_name="loan_doc")
@@ -81,7 +77,7 @@ class Loan(models.Model):
         get_latest_by = "id"
 
     def __str__(self):
-        return f"{self.loanid} - {self.loanamount} - {self.created.date()}"
+        return f"{self.loan_id} - {self.loan_amount} - {self.loan_date.date()}"
 
     def get_absolute_url(self):
         return reverse("girvi:girvi_loan_detail", args=(self.pk,))
@@ -101,6 +97,29 @@ class Loan(models.Model):
     @property
     def is_released(self):
         return hasattr(self, "release")
+
+    @property
+    def get_pure(self):
+        return self.loanitems.values("itemtype").annotate(
+            pure_weight=Sum(
+                ExpressionWrapper(
+                    F("weight") * F("purity") * 0.01, output_field=DecimalField()
+                )
+            )
+        )
+
+    @property
+    def get_weight(self):
+        return self.loanitems.values("itemtype").annotate(total_weight=Sum("weight"))
+
+    @property
+    def last_notified(self):
+        notice = self.notification_set.last()
+        return notice
+
+    @property
+    def is_posted(self):
+        return self.journal_entries.exists()
 
     def get_loanamount(self):
         adjustments = self.adjustments.filter(as_interest=False).aggregate(
@@ -124,7 +143,7 @@ class Loan(models.Model):
 
     def noofmonths(self, date=datetime.datetime.now(timezone.utc)):
         cd = date  # datetime.datetime.now()
-        nom = (cd.year - self.created.year) * 12 + cd.month - self.created.month
+        nom = (cd.year - self.loan_date.year) * 12 + cd.month - self.loan_date.month
         return 1 if nom <= 0 else nom - 1
 
     def interestdue(self, date=datetime.datetime.now(timezone.utc)):
@@ -137,11 +156,11 @@ class Loan(models.Model):
         return total_current_value
 
     def total(self):
-        return self.interestdue() + self.loanamount
+        return self.interestdue() + self.loan_amount
 
     def due(self):
         a = self.get_total_adjustments()
-        return self.loanamount + self.interestdue() - a["int"] - a["amt"]
+        return self.loan_amount + self.interestdue() - a["int"] - a["amt"]
 
     def is_worth(self):
         return self.current_value() < self.total()
@@ -154,73 +173,26 @@ class Loan(models.Model):
             return math.ceil((self.total() - self.current_value()) / self.interest)
         return 0
 
-    @property
-    def get_pure(self):
-        return self.loanitems.values("itemtype").annotate(
-            pure_weight=Sum(
-                ExpressionWrapper(
-                    F("weight") * F("purity") * 0.01, output_field=DecimalField()
-                )
-            )
-        )
-
-    @property
-    def get_weight(self):
-        return self.loanitems.values("itemtype").annotate(total_weight=Sum("weight"))
-
     def get_next(self):
         return (
             Loan.objects.filter(series=self.series, lid__gt=self.lid)
-            # .select_related("series","customer","release")
-            .order_by("lid").first()
+            .order_by("lid")
+            .first()
         )
 
     def get_previous(self):
         return (
             Loan.objects.filter(series=self.series, lid__lt=self.lid)
-            # .select_related("series","customer","release")
-            .order_by("lid").last()
+            .order_by("lid")
+            .last()
         )
-
-    def create_journal_entry(self):
-        return JournalEntry.objects.create(
-                content_object=self, desc=self.loan_type)
-        # ledgerJournal = Journal.objects.create(
-        #     journal_type=JournalTypes.LJ, content_object=self, desc=self.loan_type
-        # )
-        # accountJournal = Journal.objects.create(
-        #     journal_type=JournalTypes.AJ, content_object=self, desc=self.loan_type
-        # )
-        # return ledgerJournal, accountJournal
-
-    def delete_journal_entries(self):
-        self.journal_entries.all().delete()
-
-    def get_journal_entry(self):
-        if self.journal_entries.exists():
-            return self.journal_entries.first()
-        else:
-            return self.create_journal_entry()
-        # ledgerJournal = Journal.objects.filter(
-        #     loan_doc=self, journal_type=JournalTypes.LJ
-        # )
-        # accountJournal = Journal.objects.filter(
-        #     loan_doc=self, journal_type=JournalTypes.AJ
-        # )
-
-        # print(ledgerJournal, accountJournal)
-        # if ledgerJournal.exists() and accountJournal.exists():
-        #     return ledgerJournal.first(), accountJournal.first()
-
-        # else:
-        #     return self.create_journals()
 
     def get_transactions(self):
         try:
             self.customer.account
         except:
             self.customer.save()
-        amount = Money(self.loanamount, "INR")
+        amount = Money(self.loan_amount, "INR")
         interest = Money(self.interest, "INR")
         if self.loan_type == self.LoanType.TAKEN:
             lt = [
@@ -274,49 +246,9 @@ class Loan(models.Model):
             ]
         return lt, at
 
-    def create_transactions(self):
-        # get contact.Account
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.transact(lt,at)
-        # ledger_journal, account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.transact(lt)
-        # account_journal.transact(at)
-
-    def reverse_transactions(self):
-        journal_entry = self.get_journal_entry()
-        lt, at = self.get_transactions()
-        journal_entry.untransact(lt,at)
-        # ledger_journal, account_journal = self.get_journals()
-        # lt, at = self.get_transactions()
-
-        # ledger_journal.untransact(lt)
-        # account_journal.untransact(at)
-
     def save(self, *args, **kwargs):
-        self.loanid = self.series.name + str(self.lid)
+        self.loan_id = self.series.name + str(self.lid)
         super(Loan, self).save(*args, **kwargs)
-
-    @property
-    def last_notified(self):
-        notice = self.notification_set.last()
-        return notice
-
-    @property
-    def is_posted(self):
-        return self.journal_entries.exists()
-
-    def post(self):
-        if not self.is_released:
-            self.create_transactions()
-            self.save()
-
-    def unpost(self):
-        if not self.is_released:
-            self.reverse_transactions()
-            self.save()
 
 
 class LoanItem(models.Model):
@@ -370,22 +302,21 @@ class LoanItem(models.Model):
         super().save(*args, **kwargs)
         # Update related Loan's total interest
 
+
 # rename to payment when released create journals through payment
 class Adjustment(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
     amount_received = models.IntegerField(default=0)
     as_interest = models.BooleanField(default=True)
 
     loan = models.ForeignKey(
         "girvi.Loan", on_delete=models.CASCADE, related_name="adjustments"
     )
-    journalentries = GenericRelation(JournalEntry, related_query_name="loan_adjustment_doc")
+    journal_entries = GenericRelation(
+        JournalEntry, related_query_name="loan_adjustment_doc"
+    )
 
     class Meta:
-        ordering = ("created",)
+        ordering = ("id",)
 
     def __str__(self):
         return f"{self.amount_received}=>loan{self.loan}"
@@ -453,56 +384,6 @@ class Adjustment(models.Model):
                 },
             ]
         return lt, at
-
-    def create_journal_entry(self):
-        return JournalEntry.objects.create(
-                content_object=self, desc=self.loan_type)
-        # ledgerJournal = LedgerJournal.objects.create(
-        #     journal_type=JournalTypes.LJ,
-        #     content_object=self,
-        #     desc=f"Adjustment for :{self.loan_type}",
-        # )
-        # accountJournal = AccountJournal.objects.create(
-        #     journal_type=JournalTypes.AJ,
-        #     content_object=self,
-        #     desc=f"Adjustment for :{self.loan_type}",
-        # )
-        # return ledgerJournal, accountJournal
-
-    def delete_journal_entries(self):
-        self.journal_entries.all().delete()
-
-    def get_journal_entry(self):
-        if self.journal_entries.exists():
-            return self.journal_entries.first()
-        else:
-            return self.create_journal_entry()
-        # ledgerJournal = Journal.objects.filter(
-        #     journal_type=JournalTypes.LJ, adjustment_doc=self
-        # )
-        # accountJournal = Journal.objects.filter(
-        #     journal_type=JournalTypes.AJ, adjustment_doc=self
-        # )
-
-        # if ledgerjournal.exists() and accountJournal.exists():
-        #     return ledgerJournal.first(), accountJournal.first()
-        # return self.create_journals()
-
-    def create_transactions(self):
-        lt, at = self.get_transactions()
-        journal_entry = self.get_journal_entry()
-        journal_entry.transact(lt,at)
-        # ledgerJournal, accountJournal = self.get_journals()
-        # ledgerJournal.transact(lt)
-        # accountJournal.transact(at)
-
-    def reverse_transactions(self):
-        lt, at = self.get_transactions()
-        journal_entry = self.get_journal_entry()
-        journal_entry.untransact(lt,at)
-        # ledgerJournal, accountJournal = self.get_journals()
-        # ledgerJournal.untransact(lt)
-        # accountJournal.untransact(at)
 
     def save(self, *args, **kwargs):
         super(Adjustment, self).save(*args, **kwargs)

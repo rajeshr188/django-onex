@@ -23,7 +23,7 @@ class CheckBoxColumnWithName(tables.CheckBoxColumn):
 
 
 class LoanTable(tables.Table):
-    loanid = tables.Column(verbose_name="Loan")
+    loan_id = tables.Column(verbose_name="Loan ID")
     # pic = ImageColumn()
     # https://stackoverflow.com/questions/12939548/select-all-rows-in-django-tables2/12944647#12944647
     selection = tables.CheckBoxColumn(
@@ -64,7 +64,7 @@ class LoanTable(tables.Table):
         pure = " gms,".join(result)
         return f"{pure} gms"
 
-    def render_loanid(self, record):
+    def render_loan_id(self, record):
         return format_html(
             """
             <a href ="" hx-get="/girvi/girvi/loan/detail/{}/"
@@ -73,17 +73,17 @@ class LoanTable(tables.Table):
                         hx-push-url="true">{}</a>
             """,
             record.id,
-            record.loanid,
+            record.loan_id,
         )
 
-    def value_loanid(self, record):
-        return record.loanid
+    def value_loan_id(self, record):
+        return record.loan_id
 
-    def render_created(self, value):
+    def render_loan_date(self, value):
         return value.date
 
-    def value_created(self, record):
-        return record.created.date()
+    def value_loan_date(self, record):
+        return record.loan_date.date()
 
     # is_overdue = tables.Column(verbose_name="Overdue?")
     # total_loan_amount = tables.Column(
@@ -102,13 +102,13 @@ class LoanTable(tables.Table):
         fields = (
             "selection",
             "id",
-            "loanid",
+            "loan_id",
             "created",
             "customer",
             # "pic",
-            "itemdesc",
+            "item_desc",
             "total_weight",
-            "loanamount",
+            "loan_amount",
             "total_interest",
             "total_due",
             "current_value",

@@ -14,6 +14,7 @@ class License(models.Model):
     address = models.TextField(max_length=100)
     phonenumber = models.CharField(max_length=30)
     propreitor = models.CharField(max_length=30)
+    renewal_date = models.DateField()
 
     class Meta:
         ordering = ("-created",)

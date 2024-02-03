@@ -31,6 +31,7 @@ class LicenseAdmin(admin.ModelAdmin):
         "address",
         "phonenumber",
         "propreitor",
+        "renewal_date",
     ]
 
 
@@ -72,7 +73,7 @@ admin.site.register(Adjustment)
 
 class LoanAdminForm(forms.ModelForm):
     date_heirarchy = "created"
-    list_filter = ("customer", "series", "itemtype")
+    list_filter = ("customer", "series")
 
     class Meta:
         model = Loan
@@ -104,13 +105,12 @@ class LoanAdmin(admin.ModelAdmin):
     # resource_class = LoanResource
     list_display = [
         "id",
-        "loanid",
+        "loan_id",
         "customer",
         "series",
-        "created",
-        "updated",
-        "itemdesc",
-        "loanamount",
+        "loan_date",
+        "item_desc",
+        "loan_amount",
         "print",
     ]
     search_fields = ["customer__name", "series"]

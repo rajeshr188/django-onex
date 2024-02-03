@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 urlpatterns = [
     path("admin/", admin.site.urls),
     # path('^activity/', include('actstream.urls')),
-    path("preferences/",include("dynamic_preferences.urls")),
+    path("preferences/", include("dynamic_preferences.urls")),
     path("users/", include("django.contrib.auth.urls")),
     path("accounts/", include("allauth.urls")),
     path("", include("pages.urls")),

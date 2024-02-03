@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     "approval",
     "Chitfund",
     "daybook",
-    "dea",
+    "dea.apps.DeaConfig",
     "sea",
     "notify",
     "dynamic_preferences",

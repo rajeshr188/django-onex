@@ -140,7 +140,9 @@ class LedgerTransactionManager(models.Manager):
     def create_txn(self, journal_entry, ledgerno, ledgerno_dr, amount):
         dr = Ledger.objects.get(name=ledgerno_dr)
         cr = Ledger.objects.get(name=ledgerno)
-        txn = self.create(journal_entry=journal_entry, ledgerno=cr, ledgerno_dr=dr, amount=amount)
+        txn = self.create(
+            journal_entry=journal_entry, ledgerno=cr, ledgerno_dr=dr, amount=amount
+        )
         return txn
 
 

@@ -90,4 +90,3 @@
 #     total_credit_ledger = models.DecimalField(max_digits=15, decimal_places=2)
 #     total_debit_account = models.DecimalField(max_digits=15, decimal_places=2)
 #     total_credit_account = models.DecimalField(max_digits=15, decimal_places=2)
-

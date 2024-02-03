@@ -22,7 +22,7 @@ from .models import (Adjustment, License, Loan, LoanItem, Release, Series,
 
 
 class LoansWidget(s2forms.ModelSelect2Widget):
-    search_fields = ["loanid__icontains"]
+    search_fields = ["loan_id__icontains"]
 
 
 class SeriesWidget(s2forms.ModelSelect2Widget):
@@ -30,13 +30,21 @@ class SeriesWidget(s2forms.ModelSelect2Widget):
 
 
 class MultipleLoansWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["loanid__icontains"]
+    search_fields = ["loan_id__icontains"]
 
 
 class LicenseForm(forms.ModelForm):
     class Meta:
         model = License
-        fields = ["name", "type", "shopname", "address", "phonenumber", "propreitor"]
+        fields = [
+            "name",
+            "type",
+            "shopname",
+            "address",
+            "phonenumber",
+            "propreitor",
+            "renewal_date",
+        ]
 
 
 class SeriesForm(forms.ModelForm):
@@ -70,7 +78,7 @@ class LoanForm(forms.ModelForm):
         ),
     )
 
-    created = forms.DateTimeField(
+    loan_date = forms.DateTimeField(
         input_formats=["%d/%m/%Y %H:%M"],
         widget=forms.DateTimeInput(
             attrs={
@@ -89,12 +97,12 @@ class LoanForm(forms.ModelForm):
             "customer",
             "pic",
             "lid",
-            "created",
+            "loan_date",
         ]
 
     def clean_created(self):
         cleaned_data = super().clean()
-        my_date = cleaned_data.get("created")
+        my_date = cleaned_data.get("loan_date")
 
         if my_date and my_date > timezone.now():
             raise forms.ValidationError("Date cannot be in the future.")
@@ -110,15 +118,15 @@ class LoanForm(forms.ModelForm):
             )
 
         # generate loan id when created
-        loanid = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
+        loan_id = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
             self.cleaned_data["lid"]
         )
         # # in update mode, check if loanid is changed
-        if self.instance.loanid and self.instance.loanid == loanid:
+        if self.instance.loan_id and self.instance.loan_id == loan_id:
             return cleaned_data
         # when created, check if loanid already exists
-        if Loan.objects.filter(loanid=loanid).exists():
-            raise forms.ValidationError("A loan with this loanID already exists.")
+        if Loan.objects.filter(loan_id=loan_id).exists():
+            raise forms.ValidationError("A loan with this LoanID already exists.")
 
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)

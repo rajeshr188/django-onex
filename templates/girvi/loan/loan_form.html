@@ -26,7 +26,7 @@
       {% csrf_token %}       
       <div class="row">
         <div class="col">{{form.loan_type|as_crispy_field}}</div>
-        <div class="col">{{form.created|as_crispy_field}}</div>
+        <div class="col">{{form.loan_date|as_crispy_field}}</div>
       </div> 
       <div class="row">
         <div class="col">{{form.series|as_crispy_field}}</div>

@@ -1,9 +1,98 @@
+import uuid
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 
 from .account import AccountTransaction
-from .ledger import LedgerTransaction  
+from .ledger import LedgerTransaction
+
+
+def reverse_journal_entry(sender, instance, **kwargs):
+    #     # Access model and subclass:
+    if instance.pk:  # If journal is being updated
+        # Retrieve the old data from the database
+        old_instance = sender.objects.get(pk=instance.pk)
+        print(f"Instance changed?: {instance.is_changed(old_instance)}")
+        if old_instance.is_changed(instance):
+            with transaction.atomic:
+                old_instance.reverse_transactions()
+                instance.create_transactions()
+
+
+def create_journal_entry(sender, instance, created, **kwargs):
+    if created:
+        print("create_journal_entry Post_save signal")
+        with transaction.atomic:
+            instance.create_transactions()
+
+
+class Journal(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
+    )
+    desc = models.TextField(blank=True, null=True)
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+
+    class Meta:
+        abstract = True
+
+    def get_class_name(self):
+        return self.__class__.__name__
+
+    def get_items(self):
+        # By default, return None or an empty list.
+        return None
+
+    def get_journal_entry(self, desc=None):
+        if self.journal_entries.exists():
+            return self.journal_entries.latest()
+        else:
+            return JournalEntry.objects.create(
+                journal=self, desc=self.__class__.__name__
+            )
+
+    def delete_journal_entry(self):
+        if self.journal_entries.exists():
+            self.journal_entries.delete()
+
+    def get_transactions(self):
+        lt = []
+        at = []
+        # to be defined by the subclass
+        return lt, at
+
+    def create_transactions(self):
+        print("create_transactions")
+        journal_entry = self.get_journal_entry()
+        lt, at = self.get_transactions()
+        if lt and at:
+            journal_entry.transact(lt, at)
+
+    def reverse_transactions(self):
+        journal_entry = self.get_journal_entry()
+        lt, at = self.get_transactions()
+        if lt and at:
+            journal_entry.untransact(lt, at)
+
+    def is_changed(self, old_instance):
+        # https://stackoverflow.com/questions/31286330/django-compare-two-objects-using-fields-dynamically
+        # TODO efficient way to compare old and new instances
+        # Implement logic to compare old and new instances
+        # Compare all fields using dictionaries
+        return model_to_dict(
+            self, fields=["loanamount", "customer", "lid"]
+        ) != model_to_dict(old_instance, fields=["loanamount", "customer", "lid"])
+
+    # https://stackoverflow.com/questions/7792287/how-to-use-django-model-inheritance-with-signals
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        models.signals.pre_save.connect(reverse_journal_entry, sender=cls)
+        models.signals.post_save.connect(create_journal_entry, sender=cls)
+
 
 class JournalEntry(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -62,18 +151,34 @@ class JournalEntry(models.Model):
             # print("returning none")
             return None
 
-    def check_data_integrity(self, lt,at):
+    def check_data_integrity(self, lt, at):
         # check data integrity constraints before adding transactions
         # for example, make sure the sum of debit amounts equals the sum of credit amounts
         # return True if all checks pass, False otherwise
 
         # Calculate total debit and credit amounts for ledger transactions
-#         total_debit_ledger = sum(amount for _, amount, transaction_type in ledger_transactions if transaction_type == 'debit')
-#         total_credit_ledger = sum(amount for _, amount, transaction_type in ledger_transactions if transaction_type == 'credit')
+        total_debit_ledger = sum(
+            amount
+            for _, amount, transaction_type in ledger_transactions
+            if transaction_type == "debit"
+        )
+        total_credit_ledger = sum(
+            amount
+            for _, amount, transaction_type in ledger_transactions
+            if transaction_type == "credit"
+        )
 
         # Calculate total debit and credit amounts for account transactions
-        total_debit_account = sum(amount for _, amount, transaction_type in account_transactions if transaction_type == 'debit')
-        total_credit_account = sum(amount for _, amount, transaction_type in account_transactions if transaction_type == 'credit')
+        total_debit_account = sum(
+            amount
+            for _, amount, transaction_type in account_transactions
+            if transaction_type == "debit"
+        )
+        total_credit_account = sum(
+            amount
+            for _, amount, transaction_type in account_transactions
+            if transaction_type == "credit"
+        )
 
         # Ensure the ledger transactions are balanced
         if total_debit_ledger != total_credit_ledger:
@@ -137,18 +242,18 @@ class JournalEntry(models.Model):
     #             )
 
     @transaction.atomic()
-    def transact(self, lt,at):
+    def transact(self, lt, at):
         # add transactions to the journal
         # check data integrity constraints before adding transactions
         # if not self.check_data_integrity(lt,at):
         #     raise ValidationError("Data integrity violation.")
-        
+
         for i in lt:
             # print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
             LedgerTransaction.objects.create_txn(
                 self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
             )
-        
+
         for i in at:
             AccountTransaction.objects.create_txn(
                 self,
@@ -161,15 +266,14 @@ class JournalEntry(models.Model):
         print("transact done")
 
     @transaction.atomic()
-    def untransact(self, lt,at):
-        
+    def untransact(self, lt, at):
         for i in lt:
             # print(f"txn:{i}")
             # print(f"cr: {i['ledgerno']} dr:{i['ledgerno_dr']}")
             LedgerTransaction.objects.create_txn(
                 self, i["ledgerno_dr"], i["ledgerno"], i["amount"]
             )
-        
+
         for i in at:
             xacttypecode = ""
             xacttypecode_ext = ""

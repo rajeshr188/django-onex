@@ -13,7 +13,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from dea.models.moneyvalue import MoneyValueField
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
@@ -204,9 +204,7 @@ class Invoice(models.Model):
             return None
 
     def create_journal_entry(self):
-        return JournalEntry.objects.create(
-            content_object=self, desc="Purchase Invoice"
-        )
+        return JournalEntry.objects.create(content_object=self, desc="Purchase Invoice")
         # ledgerjournal = Journal.objects.create(
         #     content_object=self,
         #     journal_type=JournalTypes.LJ,
@@ -562,6 +560,7 @@ class InvoiceItem(models.Model):
    FROM purchase_invoice
      JOIN purchase_invoiceitem pi ON pi.invoice_id = purchase_invoice.id
   GROUP BY purchase_invoice.id;"""
+
 
 # db view for tracking the balance of a invoice from its invoice items in multicurrency
 class PurchaseBalance(models.Model):

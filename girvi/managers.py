@@ -38,8 +38,8 @@ class LoanQuerySet(models.QuerySet):
         return self.annotate(
             no_of_months=ExpressionWrapper(
                 today.month
-                - F("created__month")
-                + 12 * (today.year - F("created__year")),
+                - F("loan_date__month")
+                + 12 * (today.year - F("loan_date__year")),
                 output_field=DecimalField(decimal_places=2),
             ),
             loan_interest=F("interest") * F("no_of_months"),
@@ -135,9 +135,9 @@ class LoanQuerySet(models.QuerySet):
         return self.annotate(
             months_since_created=ExpressionWrapper(
                 Func(
-                    (ExtractYear(current_time) - ExtractYear(F("created"))) * 12
-                    + (ExtractMonth(current_time) - ExtractMonth(F("created")))
-                    + (current_time.day - F("created__day")) / 30,
+                    (ExtractYear(current_time) - ExtractYear(F("loan_date"))) * 12
+                    + (ExtractMonth(current_time) - ExtractMonth(F("loan_date")))
+                    + (current_time.day - F("loan_date__day")) / 30,
                     function="ROUND",
                 ),
                 output_field=models.FloatField(),
@@ -149,7 +149,7 @@ class LoanQuerySet(models.QuerySet):
                 ),
                 output_field=models.FloatField(),
             ),
-            total_due=F("loanamount") + F("total_interest"),
+            total_due=F("loan_amount") + F("total_interest"),
             total_gold_weight=Sum(
                 Case(
                     When(loanitems__itemtype="Gold", then=F("loanitems__weight")),
@@ -281,7 +281,7 @@ class LoanQuerySet(models.QuerySet):
         )
 
     def total_loanamount(self):
-        return self.aggregate(total=Sum("loanamount"))
+        return self.aggregate(total=Sum("loan_amount"))
 
 
 class LoanManager(models.Manager):
@@ -312,7 +312,7 @@ class LoanManager(models.Manager):
         return self.get_queryset().aggregate(total_value=Sum("current_value"))
 
     def total_loanamount(self):
-        return self.get_queryset().aggregate(total=Sum("loanamount"))
+        return self.get_queryset().aggregate(total=Sum("loan_amount"))
 
     def total_weight(self):
         return self.get_queryset().total_weight()

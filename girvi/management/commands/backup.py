@@ -1,51 +1,8 @@
-# backup_postgres.py
-
 import os
 from datetime import datetime
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
-# class Command(BaseCommand):
-#     help = 'Backup PostgreSQL data'
-
-#     def handle(self, *args, **options):
-#         database_name = settings.DATABASES['default']['NAME']
-#         user = settings.DATABASES['default']['USER']
-#         password = settings.DATABASES['default']['PASSWORD']
-#         host = settings.DATABASES['default']['HOST']
-#         port = settings.DATABASES['default']['PORT']
-
-#         backup_date = datetime.now().strftime('%Y%m%d_%H%M%S')
-#         backup_file = f'backup_{database_name}_{backup_date}.sql'
-
-#         # Construct the PostgreSQL dump command
-#         dump_cmd = [
-#             'pg_dump',
-#             '-h', host,
-#             '-p', str(port),
-#             '-U', user,
-#             '-P',password,
-#             '-F', 'c',  # Custom format
-#             '-b',  # Include blobs
-#             '-f', backup_file,
-#             database_name,
-#         ]
-
-#         # If a password is set, include it in the command
-#         if password:
-#             dump_cmd.extend(['-W', password])
-
-#         try:
-#             # Execute the PostgreSQL dump command
-#             subprocess.run(dump_cmd, check=True)
-#             self.stdout.write(self.style.SUCCESS(f'Successfully backed up {database_name} to {backup_file}'))
-#         except subprocess.CalledProcessError as e:
-#             self.stderr.write(self.style.ERROR(f'Error during backup: {e}'))
-#         finally:
-#             # Clean up the backup file
-#             if os.path.exists(backup_file):
-#                 os.remove(backup_file)
 
 
 class Command(BaseCommand):

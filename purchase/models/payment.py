@@ -11,7 +11,7 @@ from djmoney.models.fields import MoneyField
 from moneyed import Money
 
 from contact.models import Customer
-from dea.models import JournalEntry#, JournalTypes
+from dea.models import JournalEntry  # , JournalTypes
 from dea.utils.currency import Balance
 from invoice.models import PaymentTerm
 from product.attributes import get_product_attributes_data
@@ -189,9 +189,7 @@ class Payment(models.Model):
         self.update_status()
 
     def create_journal_entry(self):
-        return JournalEntry.objects.create(
-            content_object=self, desc="Payment"
-        )
+        return JournalEntry.objects.create(content_object=self, desc="Payment")
         # ledgerjournal = Journal.objects.create(
         #     journal_type=JournalTypes.LJ,
         #     content_object=self,

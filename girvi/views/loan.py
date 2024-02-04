@@ -45,13 +45,13 @@ global_preferences = global_preferences_registry.manager()
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()
-    date_field = "created"
+    date_field = "loan_date"
     make_object_list = True
 
 
 class LoanMonthArchiveView(LoginRequiredMixin, MonthArchiveView):
     queryset = Loan.objects.unreleased()
-    date_field = "created"
+    date_field = "loan_date"
     make_object_list = True
 
     def get_context_data(self, *args, **kwargs):
@@ -62,19 +62,19 @@ class LoanMonthArchiveView(LoginRequiredMixin, MonthArchiveView):
 
 class LoanWeekArchiveView(LoginRequiredMixin, WeekArchiveView):
     queryset = Loan.objects.unreleased()
-    date_field = "created"
+    date_field = "loan_date"
     week_format = "%W"
 
 
 class LoanDayArchiveView(LoginRequiredMixin, DayArchiveView):
     queryset = Loan.objects.all()
-    date_field = "created"
+    date_field = "loan_date"
     allow_empty = True
 
 
 class LoanTodayArchiveView(TodayArchiveView):
     queryset = Loan.objects.all()
-    date_field = "created"
+    date_field = "loan_date"
     allow_empty = True
     # template_name = "girvi/loan/loan_archive_day.html"
 
@@ -181,7 +181,7 @@ def create_loan(request, pk=None):
     series = Loan.objects.latest().series
     lid = series.loan_set.last().lid + 1
     initial = {
-        "created": ld(),
+        "loan_date": ld(),
         "series": series,
         "lid": lid,
     }
@@ -212,9 +212,13 @@ def loan_update(request, id=None):
         l.save()
         messages.success(request, messages.SUCCESS, f"updated Loan {obj}")
 
-        return TemplateResponse(
+        response = TemplateResponse(
             request, "girvi/loan/loan_detail.html", {"loan": obj, "object": obj}
         )
+        response["Hx-Push-Url"] = reverse(
+                "girvi:girvi_loan_detail", kwargs={"pk": obj.id}
+            )
+        return response
 
     return TemplateResponse(
         request, "girvi/loan/loan_form.html", {"form": form, "loan": obj, "object": obj}
@@ -225,6 +229,7 @@ def loan_update(request, id=None):
 @login_required
 def loan_delete(request, pk=None):
     obj = get_object_or_404(Loan, id=pk)
+    obj.journal_entries.all().delete()
     obj.delete()
     messages.error(request, f" Loan {obj} Deleted")
     return HttpResponse(
@@ -252,7 +257,7 @@ def next_loanid(request):
     except (Series.DoesNotExist, Exception) as e:
         # Handle exceptions here, you can log the error or return an error response
         # For simplicity, here we are returning a basic error message
-        return render(request, "error.html", {"error_message": "An error occurred."})
+        return render(request, "error.html", {"error_message": "An error occurred in next_loanid."})
 
 
 @login_required
@@ -263,7 +268,7 @@ def loan_detail(request, pk):
             "customer",
             "series",
             "release",
-            # "created_by"
+            "created_by"
         ).prefetch_related("adjustments"),
         pk=pk,
     )
@@ -377,7 +382,7 @@ def notice(request):
     # get all loans with selected ids
     selected_loans = (
         Loan.objects.unreleased()
-        .filter(created__lt=a_yr_ago)
+        .filter(loan_date__lt=a_yr_ago)
         .order_by("customer")
         .select_related("customer")
     )
@@ -496,7 +501,7 @@ def generate_original(request, pk=None):
     c.setFillColorRGB(0, 0, 0)
     c.setFont("Helvetica-Bold", 12)
     c.drawString(12 * cm, 18.2 * cm, f"{loan.lid}")
-    c.drawString(11.5 * cm, 17.2 * cm, f"{loan.created.strftime('%d-%m-%Y')}")
+    c.drawString(11.5 * cm, 17.2 * cm, f"{loan.loan_date.strftime('%d-%m-%Y')}")
 
     # Wrap the text if its length is greater than 35 characters
     customer = f"{loan.customer.name} {loan.customer.get_relatedas_display()} {loan.customer.relatedto}"
@@ -542,7 +547,7 @@ def generate_original(request, pk=None):
     # c.drawString(7 * cm, 12.5 * cm, f"{loan.itemtype}")
     c.drawString(8 * cm, 6.5 * cm, f"{loan.loan_amount}")
     # Wrap the text if its length is greater than 35 characters
-    lines = textwrap.wrap(loan.itemdesc, width=30)
+    lines = textwrap.wrap(loan.item_desc, width=30)
     # Draw the wrapped text on the canvas
     y = 11 * cm
     for line in lines:

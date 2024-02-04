@@ -11,7 +11,7 @@
 {% if object_list%}
 <ul>
     {% for loan in object_list %}
-        <li><a href="{%url 'girvi:girvi_loan_detail' loan.id %}">{{ loan.created|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
+        <li><a href="{%url 'girvi:girvi_loan_detail' loan.id %}">{{ loan.loan_date|date:"F j, Y" }}: {{ loan.loanid }} {{loan.loanamount}}</a></li>
     {% endfor %}
 </ul>
 {%endif%}

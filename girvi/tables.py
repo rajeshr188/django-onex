@@ -101,9 +101,9 @@ class LoanTable(tables.Table):
         model = Loan
         fields = (
             "selection",
-            "id",
+            # "id",
             "loan_id",
-            "created",
+            "loan_date",
             "customer",
             # "pic",
             "item_desc",
@@ -141,7 +141,7 @@ class ReleaseTable(tables.Table):
                         hx-push-url="true">{}</a>
             """,
             record.loan.id,
-            record.loan.loanid,
+            record.loan.loan_id,
         )
 
     def render_releaseid(self, record):

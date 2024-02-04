@@ -4,6 +4,10 @@
 
 <!-- Begin Page Content -->
 <div class="container">
+ 
+    {% for action in actions %}
+        <p>{{ action.actor }} {{ action.verb }}  at {{ action.timestamp }}</p>
+    {% endfor %}
     {%if user.is_superuser%}
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">

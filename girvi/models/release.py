@@ -44,7 +44,7 @@ class Release(models.Model):
         return reverse("girvi:girvi_release_update", args=(self.pk,))
 
     def total_received(self):
-        return self.loan.loanamount + self.interestpaid
+        return self.loan.loan_amount + self.interestpaid
 
     def create_journal_entry(self):
         return JournalEntry.objects.create(content_object=self, desc="Loan Released")

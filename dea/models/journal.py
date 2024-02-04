@@ -3,6 +3,7 @@ import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
+from django.forms import model_to_dict
 
 from .account import AccountTransaction
 from .ledger import LedgerTransaction
@@ -15,7 +16,7 @@ def reverse_journal_entry(sender, instance, **kwargs):
         old_instance = sender.objects.get(pk=instance.pk)
         print(f"Instance changed?: {instance.is_changed(old_instance)}")
         if old_instance.is_changed(instance):
-            with transaction.atomic:
+            with transaction.atomic():
                 old_instance.reverse_transactions()
                 instance.create_transactions()
 
@@ -23,7 +24,7 @@ def reverse_journal_entry(sender, instance, **kwargs):
 def create_journal_entry(sender, instance, created, **kwargs):
     if created:
         print("create_journal_entry Post_save signal")
-        with transaction.atomic:
+        with transaction.atomic():
             instance.create_transactions()
 
 
@@ -51,7 +52,7 @@ class Journal(models.Model):
             return self.journal_entries.latest()
         else:
             return JournalEntry.objects.create(
-                journal=self, desc=self.__class__.__name__
+                content_object=self, desc=self.__class__.__name__
             )
 
     def delete_journal_entry(self):
@@ -83,8 +84,8 @@ class Journal(models.Model):
         # Implement logic to compare old and new instances
         # Compare all fields using dictionaries
         return model_to_dict(
-            self, fields=["loanamount", "customer", "lid"]
-        ) != model_to_dict(old_instance, fields=["loanamount", "customer", "lid"])
+            self, fields=["loan_amount", "customer", "lid"]
+        ) != model_to_dict(old_instance, fields=["loan_amount", "customer", "lid"])
 
     # https://stackoverflow.com/questions/7792287/how-to-use-django-model-inheritance-with-signals
     @classmethod
@@ -113,7 +114,6 @@ class JournalEntry(models.Model):
         ]
 
     def __str__(self):
-        # return f"{self.journal_type}{self.desc}"
         return f"{self.content_type}{self.desc}"
 
     def get_url_string(self):
@@ -189,58 +189,7 @@ class JournalEntry(models.Model):
             raise ValueError("Account transactions are not balanced")
         return True
 
-    # @transaction.atomic()
-    # def transact(self, txns):
-    #     # add transactions to the journal
-    #     # check data integrity constraints before adding transactions
-    #     if not self.check_data_integrity(txns):
-    #         raise ValidationError("Data integrity violation.")
-
-    #     if self.journal_type == "LedgerJournal":
-    #         for i in txns:
-    #             # print(f"cr: {i['ledgerno']}dr:{i['ledgerno_dr']}")
-    #             LedgerTransaction.objects.create_txn(
-    #                 self, i["ledgerno"], i["ledgerno_dr"], i["amount"]
-    #             )
-    #     elif self.journal_type == "AccountJournal":
-    #         for i in txns:
-    #             AccountTransaction.objects.create_txn(
-    #                 self,
-    #                 i["ledgerno"],
-    #                 i["xacttypecode"],
-    #                 i["xacttypecode_ext"],
-    #                 i["account"],
-    #                 i["amount"],
-    #             )
-
-    # @transaction.atomic()
-    # def untransact(self, txns):
-    #     if self.journal_type == "LedgerJournal":
-    #         for i in txns:
-    #             # print(f"txn:{i}")
-    #             # print(f"cr: {i['ledgerno']} dr:{i['ledgerno_dr']}")
-    #             LedgerTransaction.objects.create_txn(
-    #                 self, i["ledgerno_dr"], i["ledgerno"], i["amount"]
-    #             )
-    #     elif self.journal_type == "AccountJournal":
-    #         for i in txns:
-    #             xacttypecode = ""
-    #             xacttypecode_ext = ""
-    #             if i["xacttypecode"] == "Cr":
-    #                 xacttypecode = "Dr"
-    #                 xacttypecode_ext = "AC"
-    #             else:
-    #                 xacttypecode = "Cr"
-    #                 xacttypecode_ext = "AD"
-    #             AccountTransaction.objects.create_txn(
-    #                 self,
-    #                 i["ledgerno"],
-    #                 xacttypecode,
-    #                 xacttypecode_ext,
-    #                 i["account"],
-    #                 i["amount"],
-    #             )
-
+    
     @transaction.atomic()
     def transact(self, lt, at):
         # add transactions to the journal
@@ -263,7 +212,6 @@ class JournalEntry(models.Model):
                 i["account"],
                 i["amount"],
             )
-        print("transact done")
 
     @transaction.atomic()
     def untransact(self, lt, at):

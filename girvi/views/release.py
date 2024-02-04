@@ -134,7 +134,7 @@ def bulk_release(request):
             new_releases: List[Release] = []
             for loan in loans:
                 try:
-                    l = Loan.objects.get(loanid=loan.loanid)
+                    l = Loan.objects.get(loan_id=loan.loan_id)
                 except Loan.DoesNotExist:
                     # raise CommandError(f"Failed to create Release as {loan} does not exist")
                     print(f"Failed to create Release as {loan} does not exist")

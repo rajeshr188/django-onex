@@ -11,7 +11,8 @@ from contact.services import (active_customers, get_customers_by_type,
                               get_customers_by_year)
 from girvi.models import Loan
 from girvi.services import *
-
+from actstream.models import user_stream,any_stream,actor_stream,Action
+from actstream import action
 
 @login_required
 def HomePageView(request):
@@ -21,10 +22,28 @@ def HomePageView(request):
 class AboutPageView(TemplateView):
     template_name = "pages/about.html"
 
+class PrivacyPolicy(TemplateView):
+    template_name = "pages/privacy_policy.html" 
+
+class TermsAndConditions(TemplateView):
+    template_name = "pages/terms_and_conditions.html"
 
 @login_required
 def Dashboard(request):
     context = {}
+    # context['stream'] = user_stream(request.user, with_user_activity=True)
+    # context['any_stream'] = any_stream(request.user)
+    # context['actor_stream'] = actor_stream(request.user)
+    # context['action'] = Action.objects.all()
+    if request.user.is_superuser:
+        # If the user is a superuser, get all actions.
+        actions = Action.objects.all()
+    else:
+        # If the user is not a superuser, get only their actions.
+        actions = user_stream(request.user)
+    context['actions'] = actions
+    action.send(request.user, verb='posted', target=request.user)
+    
     # from purchase.models import Invoice as Pinv
     # from sales.models import Invoice as Sinv
 

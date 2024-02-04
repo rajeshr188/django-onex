@@ -113,7 +113,7 @@ class Customer(models.Model):
         return self.loan_set.all()
 
     def get_total_loanamount(self):
-        amount = self.loan_set.aggregate(total=Coalesce(Sum("loanamount"), 0))
+        amount = self.loan_set.aggregate(total=Coalesce(Sum("loan_amount"), 0))
         return amount["total"]
 
     def get_total_interest_due(self):
@@ -142,15 +142,15 @@ class Customer(models.Model):
             When(
                 release__isnull=False,
                 then=(
-                    (ExtractYear("release__created") - ExtractYear("created")) * 12
-                    + (ExtractMonth("release__created") - ExtractMonth("created"))
+                    (ExtractYear("release__created") - ExtractYear("loan_date")) * 12
+                    + (ExtractMonth("release__created") - ExtractMonth("loan_date"))
                 ),
             ),
             When(
                 release__isnull=True,
                 then=(
-                    (ExtractYear(timezone.now()) - ExtractYear("created")) * 12
-                    + (ExtractMonth(timezone.now()) - ExtractMonth("created"))
+                    (ExtractYear(timezone.now()) - ExtractYear("loan_date")) * 12
+                    + (ExtractMonth(timezone.now()) - ExtractMonth("loan_date"))
                 ),
             ),
             output_field=FloatField(),

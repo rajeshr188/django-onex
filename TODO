@@ -1,13 +1,9 @@
-bring all loan,adjustment,release,sales,receipt,payment,approval under journals 
-every journal has one or many journal entries
 voucheritem cant create journalentries all stock transaction raising from vcoucheritems are recorded in vouchers journal entry
-
+abstranct journal with genericrelation to journalentry fails cascade delete of transactions
 django-allauth google signin
-pertenant_preference
+per tenant instance preference
 preference settings page for user so as to no need to go to admin
-django-polymorphic
-django-invitation
-django-activity-stream
+
 AAdhar KYC:
     api-setu,sandbox.co.in
 mr.htmx wordwide:
@@ -38,7 +34,6 @@ whatsapp:
                 notice
                 final notice
 settings:
-    loan-haircut% : 75%
     loan Pdf template:
 
 

@@ -49,4 +49,3 @@ class Membership(models.Model):
     #     on_delete=models.CASCADE,
     #     related_name="membership_invites",
     # )
-    # invite_reason = models.CharField(max_length=64)

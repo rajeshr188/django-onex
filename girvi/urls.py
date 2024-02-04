@@ -25,7 +25,7 @@ urlpatterns = (
 urlpatterns += (
     path(
         "loan_archive/",
-        ArchiveIndexView.as_view(model=Loan, date_field="created"),
+        ArchiveIndexView.as_view(model=Loan, date_field="loan_date"),
         name="loan_archive",
     ),
     path("<int:year>/", views.LoanYearArchiveView.as_view(), name="loan_year_archive"),

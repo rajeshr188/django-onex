@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_celery_results",
     # Local
-    # 'actstream',
+    'actstream',
     "users",
     "pages",
     "contact.apps.ContactConfig",
@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "sea",
     "notify",
     "dynamic_preferences",
+    "invitations",
     # comment the following line if you don't want to use user preferences
     # 'dynamic_preferences.users.apps.UserPreferencesConfig',
 ]

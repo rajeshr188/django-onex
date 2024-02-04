@@ -2,7 +2,7 @@
 {%load static%}
 {% load crispy_forms_tags%}
 {%block content%}
-  <div class="container col-md-10" id="form">
+  <div class="container col-md-10 mt-3 mb-2" id="form">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
       {% if customer%}
         <h1 class="h2">Update Customer</h1>
@@ -10,7 +10,9 @@
         <h1 class="h2">Create Customer</h1>
       {%endif%}
     </div>
-    {{ form|as_crispy_errors }}
+    <div class="card">
+      <div class="card-body">
+        {{ form|as_crispy_errors }}
     <form hx-post="." enctype="multipart/form-data" hx-target="#form">
       {% csrf_token %}
       <div class="row container">
@@ -61,9 +63,12 @@
         {%endif%}
         <button  hx-get="/contact/customer/" hx-target="#content" 
                   hx-push-url="true" hx-swap="innerHTML transition:true" 
+                  hx-vals='{"use_block":"content"}'
                   class="btn btn-danger">Cancel</button>
       </div>
     </form>
-    
+      </div>
+    </div>
+      
   </div>
 {%endblock%}

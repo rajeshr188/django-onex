@@ -4,23 +4,28 @@
 
 {%block content%}
 
-<h1>Merge Customers</h1>
-
-<div class="form">
-    <form method="post" action=".">
-        
-        {% csrf_token %}
-        {{form|crispy}}
-        <input class="btn btn-success" type="submit" value="Merge">
-    </form>
-    
+<div class="container col-md-6 mt-5 mb-5">
+    <h1>Merge Customers</h1>
+    <div class="card">
+        <div class="card-body">    
+            <div class="form mb-5">
+                <form method="post" action=".">
+                    
+                    {% csrf_token %}
+                    {{form|crispy}}
+                    <input class="btn btn-success" type="submit" value="Merge">
+                </form>
+                
+            </div>
+        {{form.media}}
+        <script type="text/javascript">
+            document.body.addEventListener('htmx:afterSettle', async (event) => {
+                // Call the initialization scripts here so they run when the DOM has settled after a swap
+                // In my case this was:
+                $('.django-select2').djangoSelect2()
+            });
+        </script>
+        </div>
+    </div>
 </div>
-{{form.media}}
-<script type="text/javascript">
-    document.body.addEventListener('htmx:afterSettle', async (event) => {
-        // Call the initialization scripts here so they run when the DOM has settled after a swap
-        // In my case this was:
-        $('.django-select2').djangoSelect2()
-    });
-</script>
 {%endblock%}

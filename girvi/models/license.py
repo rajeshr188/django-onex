@@ -53,14 +53,14 @@ class Series(models.Model):
         return reverse("girvi:girvi_license_series_update", args=(self.pk,))
 
     def get_earliest_date(self):
-        earliest_loan_date = self.loan_set.aggregate(models.Min("created"))[
-            "created__min"
+        earliest_loan_date = self.loan_set.aggregate(models.Min("loan_date"))[
+            "loan_date__min"
         ]
         return earliest_loan_date
 
     def get_latest_date(self):
-        latest_loan_date = self.loan_set.aggregate(models.Max("created"))[
-            "created__max"
+        latest_loan_date = self.loan_set.aggregate(models.Max("loan_date"))[
+            "loan_date__max"
         ]
         return latest_loan_date
 
@@ -72,7 +72,7 @@ class Series(models.Model):
         return self.loan_set.unreleased().count()
 
     def total_loan_amount(self):
-        return self.loan_set.unreleased().aggregate(t=Sum("loanamount"))
+        return self.loan_set.unreleased().aggregate(t=Sum("loan_amount"))
 
     def get_itemwise_loanamount(self):
         return (

@@ -245,6 +245,12 @@
                 {%endfor%}
               </tbody>
             </table>
+            <ul></ul>
+              {%for i in customer.journal_entries.all%} 
+            <a href="">{{i}}</a>
+            {%endfor%}
+            </ul>
+            
           </div>
         </div>
       </div>

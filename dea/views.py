@@ -154,7 +154,7 @@ class JournalEntryDetailView(DetailView):
 
 class JournalEntryDeleteView(DeleteView):
     model = JournalEntry
-    success_url = reverse_lazy("dea_journals_list")
+    success_url = reverse_lazy("dea_journal_entries_list")
 
 
 class AccountCreateView(CreateView):

@@ -2,7 +2,7 @@
 {% load crispy_forms_tags%}
 
 {% block content %}
-<div  class="container col-md-6" id="loan-content" >
+<div  class="container col-md-6 mt-3 mb-3" id="loan-content" >
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     {% if object %}  
     <h1 class="h2">Update Loan</h1>
@@ -20,54 +20,59 @@
         </div>
       </div>
     </div>
-  <div id="form" >
-    <form hx-post="." hx-target="#content">
-      {{form.media}}
-      {% csrf_token %}       
-      <div class="row">
-        <div class="col">{{form.loan_type|as_crispy_field}}</div>
-        <div class="col">{{form.loan_date|as_crispy_field}}</div>
-      </div> 
-      <div class="row">
-        <div class="col">{{form.series|as_crispy_field}}</div>
-        <div class="col">{{form.lid|as_crispy_field}}</div>
-      </div>
-      <div class="row">
-        <div class="col ">
-          {{form.customer|as_crispy_field}}
-          <a hx-get="{% url 'contact_customer_create' %}" hx-target="#content"hx-push-url="true" hx-swap="innerHTML">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-            </svg>
-          </a>          
-        </div>
-      </div> 
-      
-      <div class="row g-3 mb-3">
-        <input type="hidden" id="image-data" name="image_data">
-        <div class="col-md-3">
-          <div class="camera">
-            <video id="video">Video stream not available.</video>
-            <button id="startbutton">Take photo</button>
+  <div class="card">
+    <div class="card-body">
+      <div id="form" >
+        {{ form|as_crispy_errors }}
+        <form hx-post="." hx-target="#content">
+          {{form.media}}
+          {% csrf_token %}       
+          <div class="row">
+            <div class="col">{{form.loan_type|as_crispy_field}}</div>
+            <div class="col">{{form.loan_date|as_crispy_field}}</div>
+          </div> 
+          <div class="row">
+            <div class="col">{{form.series|as_crispy_field}}</div>
+            <div class="col">{{form.lid|as_crispy_field}}</div>
           </div>
-          <canvas id="canvas"> </canvas> 
-        </div>
-        <div class="col-md-3">
-          <div class="output">
-            <img id="photo" alt="The screen capture will appear in this box." />
+          <div class="row">
+            <div class="col ">
+              {{form.customer|as_crispy_field}}
+              <a hx-get="{% url 'contact_customer_create' %}" hx-target="#content"hx-push-url="true" hx-swap="innerHTML">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+                </svg>
+              </a>          
+            </div>
+          </div> 
+          
+          <div class="row g-3 mb-3">
+            <input type="hidden" id="image-data" name="image_data">
+            <div class="col-md-3">
+              <div class="camera">
+                <video id="video">Video stream not available.</video>
+                <button id="startbutton">Take photo</button>
+              </div>
+              <canvas id="canvas"> </canvas> 
+            </div>
+            <div class="col-md-3">
+              <div class="output">
+                <img id="photo" alt="The screen capture will appear in this box." />
+              </div>
+            </div> 
           </div>
-        </div> 
+          <button name="add" type="submit" class="btn btn-success"       
+                  hx-swap="innerHTML transition:true" hx-push-url="true">
+            {% if object %} Update {%else%} Create {%endif%}
+          </button>
+          <button hx-get="{%if not object %}{% url 'girvi:girvi_loan_list' %} {%else%} {% url 'girvi:girvi_loan_detail' object.id %}{%endif%}"
+                  {% if object %}hx-vals='{"use_block":"content"}'{% endif %} 
+                  hx-swap="innerHTML transition:true" hx-push-url="true" class="btn btn-danger">
+              Cancel</button>
+    
+          </form>
       </div>
-      <button name="add" type="submit" class="btn btn-success"       
-              hx-swap="innerHTML transition:true" hx-push-url="true">
-        {% if object %} Update {%else%} Create {%endif%}
-      </button>
-      <button hx-get="{%if not object %}{% url 'girvi:girvi_loan_list' %} {%else%} {% url 'girvi:girvi_loan_detail' object.id %}{%endif%}"
-              {% if object %}hx-vals='{"use_block":"content"}'{% endif %} 
-              hx-swap="innerHTML transition:true" hx-push-url="true" class="btn btn-danger">
-          Cancel</button>
-
-      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

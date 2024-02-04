@@ -4,13 +4,20 @@
 
 {% block content %}
 
-{{form.media}}
-<p><a class="btn btn-secondary" href="{% url 'girvi:girvi_series_list' %}">
-    Series Listing</a></p>
+<div class="container col-md-4 mt-4 mb-4">
+  {{form.media}}
+<h1>Add Series</a></h1>
 <div class="card">
   <div class="card-body" style="background-color: #eee;">
-    {% crispy form %}
+    <form method="post" class="my-class">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-success">Add</button>
+
+    </form>
+    
   </div>
+</div>
 </div>
 
 {% endblock %}

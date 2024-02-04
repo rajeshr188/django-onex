@@ -24,8 +24,8 @@
         hx-target="#content"
         hx-swap="innerHTML transition:true"
                             hx-vals='{"use_block":"content"}'
-                            hx-push-url="true">{{object.loan.id}}</a></td></tr>
-      <tr><td>loandate</td><td>{{ object.loan.created }}</td></tr>
+                            hx-push-url="true">{{object.loan_id}}</a></td></tr>
+      <tr><td>loandate</td><td>{{ object.loan.loan_date }}</td></tr>
       <tr><td>customer</td><td><a hx-get="{% url 'contact_customer_detail' object.loan.customer.id %}"
         hx-target="#content" hx-swap="innerHTML transition:true">{{ object.loan.customer}}</a></td></tr>
       <tr><td>created</td><td>{{ object.created }}</td></tr>

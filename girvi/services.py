@@ -28,7 +28,7 @@ def get_loan_counts_grouped():
 def get_loans_by_year():
     loans_by_year = (
         Loan.objects.annotate(
-            year=ExtractYear("created"),
+            year=ExtractYear("created_at"),
             has_release=Case(
                 When(release__isnull=False, then=Value(1)),
                 default=Value(0),
@@ -50,7 +50,7 @@ def get_loans_by_year():
 def get_unreleased_loans_by_year():
     data = (
         Loan.objects.unreleased()
-        .annotate(year=ExtractYear("created"))  # Extract year from start_date
+        .annotate(year=ExtractYear("created_at"))  # Extract year from start_date
         .values("year")  # Group by year
         .annotate(release_count=Count("id"))  # Count the number of loans
         .order_by("year")
@@ -67,7 +67,7 @@ def get_loanamount_by_itemtype():
 
 def get_interest_paid():
     data = (
-        Release.objects.annotate(year=ExtractYear("created"))
+        Release.objects.annotate(year=ExtractYear("created_at"))
         .values("year")
         .annotate(total_interest=Sum("interestpaid"))
         .order_by("year")

@@ -3,7 +3,7 @@ abstranct journal with genericrelation to journalentry fails cascade delete of t
 django-allauth google signin
 per tenant instance preference
 preference settings page for user so as to no need to go to admin
-
+add fixture for pricingtier,rate
 AAdhar KYC:
     api-setu,sandbox.co.in
 mr.htmx wordwide:

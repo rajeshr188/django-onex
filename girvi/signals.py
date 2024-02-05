@@ -1,10 +1,10 @@
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
 
 from girvi.models import Loan, LoanItem
 
 
-@receiver([post_delete, post_save], sender=LoanItem)
+@receiver([pre_delete, post_save], sender=LoanItem)
 def update_loan(sender, instance, **kwargs):
     loan = instance.loan
     loan_items = LoanItem.objects.filter(loan=loan)

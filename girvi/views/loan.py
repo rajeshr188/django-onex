@@ -229,7 +229,6 @@ def loan_update(request, id=None):
 @login_required
 def loan_delete(request, pk=None):
     obj = get_object_or_404(Loan, id=pk)
-    obj.journal_entries.all().delete()
     obj.delete()
     messages.error(request, f" Loan {obj} Deleted")
     return HttpResponse(

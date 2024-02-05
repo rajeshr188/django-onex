@@ -57,6 +57,7 @@ class SeriesListView(LoginRequiredMixin, ListView):
 class SeriesCreateView(LoginRequiredMixin, CreateView):
     model = Series
     form_class = SeriesForm
+    success_url = reverse_lazy("girvi:girvi_license_list")
 
 
 class SeriesDetailView(LoginRequiredMixin, DetailView):

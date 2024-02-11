@@ -44,10 +44,10 @@ class Loandate(ChoicePreference):
     name = "Default_Date"
     default = "N"
 
+
 @global_preferences_registry.register
 class LoanHaircut(DecimalPreference):
     section = "Loan"
     name = "Haircut"
     default = Decimal("75.00")
     required = True
-

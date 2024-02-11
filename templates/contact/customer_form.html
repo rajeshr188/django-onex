@@ -32,7 +32,12 @@
           {{form.pricing_tier|as_crispy_field}}
         </div>
         
-      </div>        
+      </div>  
+      {% if form.instance.pic %}
+        <img src="{{ form.instance.pic.url }}" alt="Customer Image">
+      {% endif %}
+      {{form.pic|as_crispy_field}}
+       
       <div class="row g-3 mb-3">
         <input type="hidden" id="image-data" name="image_data">
         <div class="col-md-4">
@@ -45,17 +50,14 @@
         </div>
         <div class="col-md-4">
           <div class="output">
-            {% if customer.pic %}
-            <img id="photo"  src="/media/{{customer.pic}}" alt="The screen capture will appear in this box." />
-            {% else %}
             <img id="photo" alt="The screen capture will appear in this box." />
-            {% endif %}
           </div>
         </div>
         
       </div>
-      <div class="">
-        {% if not customer%}
+      <div class="card card-info">
+        <div class="card-body">
+          {% if not customer%}
         <button name="add" type="submit" class="btn btn-primary">Add</button>
         <button name="view" type="submit" class="btn btn-primary">Add & view</button>
         {%else%}
@@ -65,6 +67,7 @@
                   hx-push-url="true" hx-swap="innerHTML transition:true" 
                   hx-vals='{"use_block":"content"}'
                   class="btn btn-danger">Cancel</button>
+        </div>
       </div>
     </form>
       </div>

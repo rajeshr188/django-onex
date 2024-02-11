@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from contact.models import Customer
 
 from .forms import LoanForm
-from .models import Adjustment, License, Loan, Release, Series
+from .models import License, Loan, LoanPayment, Release, Series
 
 # from import_export import fields, resources
 # from import_export.admin import ImportExportModelAdmin
@@ -37,7 +37,7 @@ class LicenseAdmin(admin.ModelAdmin):
 
 admin.site.register(License, LicenseAdmin)
 admin.site.register(Series)
-admin.site.register(Adjustment)
+admin.site.register(LoanPayment)
 
 
 # class LoanResource(resources.ModelResource):
@@ -141,7 +141,14 @@ class ReleaseAdmin(admin.ModelAdmin):
     form = ReleaseAdminForm
     # resource_class = ReleaseResource
 
-    list_display = ["releaseid", "loan", "created", "updated", "interestpaid"]
+    list_display = [
+        "release_id",
+        "loan",
+        "created_at",
+        "updated_at",
+        "release_date",
+        "released_by",
+    ]
 
 
 admin.site.register(Release, ReleaseAdmin)

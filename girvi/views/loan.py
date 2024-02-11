@@ -16,7 +16,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods  # new
+from django.views.decorators.http import (require_http_methods,  # new
+                                          require_POST)
 from django.views.generic.dates import (DayArchiveView, MonthArchiveView,
                                         TodayArchiveView, WeekArchiveView,
                                         YearArchiveView)
@@ -178,8 +179,13 @@ def create_loan(request, pk=None):
         )
         return response
 
-    series = Loan.objects.latest().series
-    lid = series.loan_set.last().lid + 1
+    try:
+        series = Loan.objects.latest().series
+        lid = series.loan_set.last().lid + 1
+    except Loan.DoesNotExist:
+        series = Series.objects.first()
+        lid = 1
+
     initial = {
         "loan_date": ld(),
         "series": series,
@@ -210,14 +216,14 @@ def loan_update(request, id=None):
             l.pic = image_file
 
         l.save()
-        messages.success(request, messages.SUCCESS, f"updated Loan {obj}")
+        messages.success(request, messages.SUCCESS, f"updated Loan {l.loan_id}")
 
         response = TemplateResponse(
             request, "girvi/loan/loan_detail.html", {"loan": obj, "object": obj}
         )
         response["Hx-Push-Url"] = reverse(
-                "girvi:girvi_loan_detail", kwargs={"pk": obj.id}
-            )
+            "girvi:girvi_loan_detail", kwargs={"pk": obj.id}
+        )
         return response
 
     return TemplateResponse(
@@ -256,7 +262,11 @@ def next_loanid(request):
     except (Series.DoesNotExist, Exception) as e:
         # Handle exceptions here, you can log the error or return an error response
         # For simplicity, here we are returning a basic error message
-        return render(request, "error.html", {"error_message": "An error occurred in next_loanid."})
+        return render(
+            request,
+            "error.html",
+            {"error_message": "An error occurred in next_loanid."},
+        )
 
 
 @login_required
@@ -264,11 +274,8 @@ def next_loanid(request):
 def loan_detail(request, pk):
     loan = get_object_or_404(
         Loan.objects.select_related(
-            "customer",
-            "series",
-            "release",
-            "created_by"
-        ).prefetch_related("adjustments"),
+            "customer", "series", "release", "created_by"
+        ).prefetch_related("loan_payments", "loanitems"),
         pk=pk,
     )
     result = []
@@ -282,7 +289,7 @@ def loan_detail(request, pk):
     result = {}
     for item in loan.get_pure:
         item_type = item["itemtype"]
-        total_weight_purity = round(item["pure_weight"])
+        total_weight_purity = round(item["pure_weight"], 3)
         result[item["itemtype"]] = total_weight_purity
 
     # Subquery to get the latest timestamp for each metal type
@@ -307,7 +314,7 @@ def loan_detail(request, pk):
     }
     # Join the results into a single string
 
-    value = sum(result_dict.values())
+    value = round(sum(result_dict.values()))
     context = {
         "object": loan,
         "sunken": loan.total() < value,
@@ -481,7 +488,8 @@ def print_loan(request, pk=None):
     pdf = get_loan_pdf(loan=loan)
     # Create a response object
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
+    # response["Content-Disposition"] = 'attachment; filename="pledge.pdf"'
+    response["Content-Disposition"] = f"inline; filename='{loan.lid}.pdf'"
     return response
 
 

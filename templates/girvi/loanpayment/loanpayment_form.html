@@ -1,0 +1,33 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load crispy_forms_tags%}
+{% block content %}
+<!-- create a crispy form for loan payment -->
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Loan Payment</h2>
+      <form method="post">
+        {{form.media}}
+        {{form|as_crispy_errors}}
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group col-md-4">
+            
+            {{ form.payment_date|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-4">
+                
+                {{ form.loan|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-4">
+                {{ form.payment_amount|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-4">
+              {{ form.with_release|as_crispy_field }}
+          </div>
+        </div>
+       
+        <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+{% endblock %}

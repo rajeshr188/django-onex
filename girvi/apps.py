@@ -7,10 +7,11 @@ class GirviConfig(AppConfig):
 
     def ready(self):
         from actstream import registry
-        registry.register(self.get_model('Loan'))
-        registry.register(self.get_model('License'))
-        registry.register(self.get_model('Series'))
-        registry.register(self.get_model('LoanItem'))
-        registry.register(self.get_model('Adjustment'))
-        registry.register(self.get_model('Release'))
+
+        registry.register(self.get_model("Loan"))
+        registry.register(self.get_model("License"))
+        registry.register(self.get_model("Series"))
+        registry.register(self.get_model("LoanItem"))
+        registry.register(self.get_model("LoanPayment"))
+        registry.register(self.get_model("Release"))
         import girvi.signals

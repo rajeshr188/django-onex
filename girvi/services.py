@@ -3,7 +3,7 @@ from collections import Counter
 from django.db.models import Case, Count, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import ExtractYear
 
-from .models import Customer, Loan, LoanItem, Release
+from .models import Customer, Loan, LoanItem, LoanPayment, Release
 
 
 def get_loan_counts_grouped():
@@ -67,11 +67,12 @@ def get_loanamount_by_itemtype():
 
 def get_interest_paid():
     data = (
-        Release.objects.annotate(year=ExtractYear("created"))
+        LoanPayment.objects.annotate(year=ExtractYear("payment_date"))
         .values("year")
-        .annotate(total_interest=Sum("interestpaid"))
+        .annotate(total_interest=Sum("interest_payment"))
         .order_by("year")
     )
+
     labels = [entry["year"] for entry in data]
     interest_paid = [float(entry["total_interest"]) for entry in data]
 

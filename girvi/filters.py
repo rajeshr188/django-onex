@@ -7,7 +7,7 @@ from contact.forms import CustomerWidget
 from contact.models import Customer
 from girvi.forms import LoansWidget
 
-from .models import Adjustment, Loan, Release
+from .models import Loan, LoanPayment, Release
 
 
 class LoanFilter(django_filters.FilterSet):
@@ -64,9 +64,15 @@ class LoanFilter(django_filters.FilterSet):
         return queryset.filter(is_overdue=value)
 
 
-class AdjustmentFilter(django_filters.FilterSet):
+class LoanPaymentFilter(django_filters.FilterSet):
     class Meta:
-        model = Adjustment
+        model = LoanPayment
+        fields = ["loan"]
+
+
+class LoanPaymentFilter(django_filters.FilterSet):
+    class Meta:
+        model = LoanPayment
         fields = ["loan"]
 
 
@@ -77,4 +83,4 @@ class ReleaseFilter(django_filters.FilterSet):
 
     class Meta:
         model = Release
-        fields = ["releaseid", "loan"]
+        fields = ["release_id", "loan", "release_date"]

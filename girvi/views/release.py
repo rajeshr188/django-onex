@@ -27,7 +27,7 @@ from ..tables import ReleaseTable
 def increlid():
     try:
         last = Release.objects.latest("id")
-        return str(int(last.releaseid) + 1)
+        return str(int(last.release_id) + 1)
     except Release.DoesNotExist:
         return "1"
     except (ValueError, TypeError):
@@ -40,16 +40,16 @@ def release_list(request):
     stats = {}
     filter = ReleaseFilter(
         request.GET,
-        queryset=Release.objects.order_by("-id").select_related("created_by"),
+        queryset=Release.objects.order_by("-id").select_related("loan"),
     )
     table = ReleaseTable(filter.qs)
     context = {"filter": filter, "table": table}
 
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
-    export_format = request.GET.get("_export", None)
-    if TableExport.is_valid_format(export_format):
-        exporter = TableExport(export_format, table, exclude_columns=())
-        return exporter.response(f"table.{export_format}")
+    # export_format = request.GET.get("_export", None)
+    # if TableExport.is_valid_format(export_format):
+    #     exporter = TableExport(export_format, table, exclude_columns=())
+    #     return exporter.response(f"table.{export_format}")
     return TemplateResponse(request, "girvi/release/release_list.html", context)
 
 
@@ -59,7 +59,10 @@ def release_create(request, pk=None):
     if request.POST:
         form = ReleaseForm(request.POST or None)
         if form.is_valid():
-            form.save()
+            release = form.save(commit=False)
+            release.created_by = request.user
+            release.save()
+
             # return HttpResponse(status = 200,headers={"HX-Trigger":loanChanged})
             response = redirect("girvi:girvi_loan_detail", pk=form.instance.loan.pk)
             response["HX-Push-Url"] = reverse(
@@ -72,17 +75,18 @@ def release_create(request, pk=None):
             loan = get_object_or_404(Loan, pk=pk)
             form = ReleaseForm(
                 initial={
-                    "releaseid": increlid,
+                    "release_id": increlid,
                     "loan": loan,
-                    "created": datetime.now(),
-                    "interestpaid": loan.interestdue,
+                    "release_date": datetime.now(),
+                    "released_by": loan.customer,
                 }
             )
         else:
             form = ReleaseForm(
                 initial={
-                    "releaseid": increlid,
-                    "created": datetime.now(),
+                    "release_id": increlid,
+                    "release_date": datetime.now(),
+                    # "released_by": loan.customer,
                 }
             )
     return TemplateResponse(
@@ -128,7 +132,7 @@ def bulk_release(request):
                 date = timezone.now().date()
             try:
                 last_release = Release.objects.latest("id")
-                next_releaseid = int(last_release.releaseid) + 1
+                next_releaseid = int(last_release.release_id) + 1
             except Release.DoesNotExist:
                 next_releaseid = "1"
             new_releases: List[Release] = []
@@ -139,17 +143,15 @@ def bulk_release(request):
                     # raise CommandError(f"Failed to create Release as {loan} does not exist")
                     print(f"Failed to create Release as {loan} does not exist")
                     continue
-                releaseid = str(next_releaseid)
+                release_id = str(next_releaseid)
                 next_releaseid += 1
                 new_release = Release(
-                    releaseid=releaseid,
+                    release_id=release_id,
                     loan=l,
-                    created=date,  # datetime.now(timezone.utc),
-                    interestpaid=l.interestdue(date),
+                    release_date=date,  # datetime.now(timezone.utc),
                     created_by=request.user,
                 )
                 new_releases.append(new_release)
-            print(new_releases)
             try:
                 with transaction.atomic():
                     Release.objects.bulk_create(new_releases)

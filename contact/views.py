@@ -61,9 +61,7 @@ def customer_create(request):
                     base64.b64decode(image_data.split(",")[1]),
                     name=f"{f.name}_{f.relatedas.replace('/','-')}_{f.relatedto}_{f.id}.jpg",
                 )
-
                 f.pic = image_file
-
             f.save()
 
             messages.success(request, messages.SUCCESS, f"Customer {f.name} created.")

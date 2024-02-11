@@ -1,9 +1,12 @@
 import datetime
 
+from actstream import action
+from actstream.models import Action, actor_stream, any_stream, user_stream
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, FloatField, Sum
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.generic import TemplateView
 
 from contact.models import Customer
@@ -11,8 +14,7 @@ from contact.services import (active_customers, get_customers_by_type,
                               get_customers_by_year)
 from girvi.models import Loan
 from girvi.services import *
-from actstream.models import user_stream,any_stream,actor_stream,Action
-from actstream import action
+
 
 @login_required
 def HomePageView(request):
@@ -22,11 +24,14 @@ def HomePageView(request):
 class AboutPageView(TemplateView):
     template_name = "pages/about.html"
 
+
 class PrivacyPolicy(TemplateView):
-    template_name = "pages/privacy_policy.html" 
+    template_name = "pages/privacy_policy.html"
+
 
 class TermsAndConditions(TemplateView):
     template_name = "pages/terms_and_conditions.html"
+
 
 @login_required
 def Dashboard(request):
@@ -41,9 +46,9 @@ def Dashboard(request):
     else:
         # If the user is not a superuser, get only their actions.
         actions = user_stream(request.user)
-    context['actions'] = actions
-    action.send(request.user, verb='posted', target=request.user)
-    
+    context["actions"] = actions
+    action.send(request.user, verb="posted", target=request.user)
+
     # from purchase.models import Invoice as Pinv
     # from sales.models import Invoice as Sinv
 

@@ -45,6 +45,7 @@ class Customer(models.Model):
         ),
         default="Hindu",
     )
+    # pic needs its own model
     pic = models.ImageField(upload_to="customer_pics/", null=True, blank=True)
 
     Address = models.TextField(max_length=100, blank=True)
@@ -81,15 +82,15 @@ class Customer(models.Model):
     def get_update_url(self):
         return reverse("contact_customer_update", args=(self.pk,))
 
-    def save(self, *args, **kwargs):
-        try:
-            this = Customer.objects.get(id=self.id)
-            if this.pic != self.pic:
-                this.pic.delete(save=False)
+    # def save(self, *args, **kwargs):
+    #     try:
+    #         this = Customer.objects.get(id=self.id)
+    #         if this.pic != self.pic:
+    #             this.pic.delete(save=False)
 
-        except:
-            pass
-        super(Customer, self).save(*args, **kwargs)
+    #     except:
+    #         pass
+    #     super(Customer, self).save(*args, **kwargs)
 
     def merge(self, dup):
         # to merge one customer into another existing one
@@ -110,10 +111,12 @@ class Customer(models.Model):
 
     @property
     def get_loans(self):
-        return self.loan_set.all()
+        return self.loan_set.unreleased()
 
     def get_total_loanamount(self):
-        amount = self.loan_set.aggregate(total=Coalesce(Sum("loan_amount"), 0))
+        amount = self.loan_set.unreleased().aggregate(
+            total=Coalesce(Sum("loan_amount"), 0)
+        )
         return amount["total"]
 
     def get_total_interest_due(self):
@@ -124,13 +127,10 @@ class Customer(models.Model):
 
     @property
     def get_loans_count(self):
-        return self.loan_set.count()
-
-    def get_religion_count(self):
-        return self.values("religion").annotate(Count("religion")).order_by("religion")
+        return self.loan_set.unreleased().count()
 
     def get_interestdue(self):
-        return self.loan_set.aggregate(total=Sum("interest"))["total"]
+        return self.loan_set.unreleased().aggregate(total=Sum("interest"))["total"]
 
     def get_weight(self):
         return 0
@@ -142,8 +142,12 @@ class Customer(models.Model):
             When(
                 release__isnull=False,
                 then=(
-                    (ExtractYear("release__created") - ExtractYear("loan_date")) * 12
-                    + (ExtractMonth("release__created") - ExtractMonth("loan_date"))
+                    (ExtractYear("release__release_date") - ExtractYear("loan_date"))
+                    * 12
+                    + (
+                        ExtractMonth("release__release_date")
+                        - ExtractMonth("loan_date")
+                    )
                 ),
             ),
             When(
@@ -157,9 +161,9 @@ class Customer(models.Model):
         )
 
         # Calculate the average release time
-        average_release_time = self.loan_set.aggregate(average=Avg(release_time))[
-            "average"
-        ]
+        average_release_time = self.loan_set.released().aggregate(
+            average=Avg(release_time)
+        )["average"]
 
         return round(average_release_time) if average_release_time is not None else 0
 

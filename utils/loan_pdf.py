@@ -159,11 +159,12 @@ def get_loan_pdf(loan):
     header = Table(
         [
             [
-                Paragraph("Sec Rules 8"),
+                Paragraph("Sec Rules 8", styles["Normal"]),
                 Paragraph(
-                    "Pawn Ticket <font size = 14 name='NotoSansTamil-Regular'>அடகு சீட்டு   </font>"
+                    "Pawn Ticket <font size = 14 name='NotoSansTamil-Regular'>அடகு சீட்டு   </font>",
+                    styles["Heading3"],
                 ),
-                Paragraph("PBL NO:1515/2017"),
+                Paragraph("PBL NO:1515/2017", styles["Normal"]),
             ]
         ]
     )
@@ -176,8 +177,8 @@ def get_loan_pdf(loan):
     loanid_date = Table(
         [
             [
-                Paragraph(f"LoanID : {loan.loanid}"),
-                Paragraph(f"Date: {loan.created.date()}"),
+                Paragraph(f"LoanID : {loan.loan_id}"),
+                Paragraph(f"Date: {loan.loan_date.date()}"),
             ]
         ]
     )
@@ -189,19 +190,34 @@ def get_loan_pdf(loan):
                     [
                         # ListItem(Paragraph('Paragraph #2', normal),
                         #         bulletColor="blue",),
-                        Paragraph(f"{loan.itemdesc}", normal),
+                        Paragraph(f"{loan.item_desc}", normal),
                     ]
                 )
             ]
         ]
     )
+    result = []
+    for item in loan.get_weight:
+        item_type = item["itemtype"]
+        total_weight_purity = item["total_weight"]
+        result.append(f"{item_type}:{total_weight_purity}")
+
+    # Join the results into a single string
+    weight = " ".join(result)
+    result = []
+    for item in loan.get_pure:
+        item_type = item["itemtype"]
+        total_weight_purity = round(item["pure_weight"])
+        result.append(f"{item_type}:{total_weight_purity}")
+    # Join the results into a single string
+    pure = " ".join(result)
     loanitems.setStyle(simple_tblstyle)
     loanitem_details = Table(
         [
             [
-                Paragraph(f"Gross Wt: {loan.itemweight} gms"),
-                Paragraph("Nett Wt: 100.00"),
-                Paragraph(f"Value: {loan.itemvalue}"),
+                Paragraph(f"Gross Wt: {weight} "),
+                Paragraph(f"Nett Wt: {pure}"),
+                Paragraph(f"Value: {loan.current_value()}"),
             ]
         ]
     )
@@ -209,10 +225,8 @@ def get_loan_pdf(loan):
     amount_tbl = Table(
         [
             [
-                Paragraph(f"Loan Amount: {loan.loanamount}"),
-                Paragraph(
-                    f"Loan Amount In Words<br/>{num2words(loan.loanamount, lang='en_IN')}"
-                ),
+                Paragraph(f"Loan Amount: {loan.loan_amount}"),
+                Paragraph(f"{num2words(loan.loan_amount, lang='en_IN')} rupees only"),
             ],
         ]
     )
@@ -283,9 +297,9 @@ def get_loan_pdf(loan):
     right_flowables.append(
         Table(
             [
-                [loan.loanid, loan.created.date()],
-                [loan.loanamount, loan.itemweight],
-                [loan.customer.name, loan.itemdesc],
+                [loan.loan_id, loan.loan_date.date()],
+                [loan.loan_amount, weight],
+                [loan.customer.name, loan.item_desc],
             ]
         )
     )
@@ -316,7 +330,7 @@ def get_loan_pdf(loan):
 
     # Draw the dotted line from top to bottom at the center of the page
     my_canvas.line(center_x, landscape(A4)[1], center_x, 0)
-    my_canvas.line(w / 2, 100, w, 100)
+    my_canvas.line(w / 2, 110, w, 110)
 
     my_canvas.save()
     pdf = buffer.getvalue()

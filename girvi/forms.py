@@ -7,6 +7,7 @@ from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import AutocompleteSelect
+from django.core.exceptions import ValidationError
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django_select2 import forms as s2forms
@@ -17,7 +18,7 @@ from contact.forms import CustomerWidget
 from contact.models import Customer
 from product.models import ProductVariant, Rate
 
-from .models import (Adjustment, License, Loan, LoanItem, Release, Series,
+from .models import (License, Loan, LoanItem, LoanPayment, Release, Series,
                      Statement, StatementItem)
 
 
@@ -113,9 +114,12 @@ class LoanForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         if not self.cleaned_data["series"].is_active:
-            raise forms.ValidationError(
-                f"Series {self.cleaned_data['series'].name}Inactive"
+            self.add_error(
+                "series", f"Series {self.cleaned_data['series'].name}Inactive"
             )
+            # raise forms.ValidationError(
+            #     f"Series {self.cleaned_data['series'].name}Inactive"
+            # )
 
         # generate loan id when created
         loan_id = Series.objects.get(id=self.cleaned_data["series"].id).name + str(
@@ -126,7 +130,8 @@ class LoanForm(forms.ModelForm):
             return cleaned_data
         # when created, check if loanid already exists
         if Loan.objects.filter(loan_id=loan_id).exists():
-            raise forms.ValidationError("A loan with this LoanID already exists.")
+            self.add_error("lid", "A loan with this LoanID already exists.")
+            # raise forms.ValidationError("A loan with this LoanID already exists.")
 
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
@@ -194,6 +199,12 @@ class LoanItemForm(forms.ModelForm):
             "interestrate",
         ]
 
+    def clean_loan(self):
+        loan = self.cleaned_data["loan"]
+        if loan.is_released():
+            raise forms.ValidationError("Loan already has a release.")
+        return loan
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -217,7 +228,7 @@ class LoanItemForm(forms.ModelForm):
 
 
 class ReleaseForm(forms.ModelForm):
-    created = forms.DateTimeField(
+    release_date = forms.DateTimeField(
         input_formats=["%d/%m/%Y %H:%M"],
         widget=forms.DateTimeInput(
             attrs={
@@ -228,37 +239,89 @@ class ReleaseForm(forms.ModelForm):
         ),
     )
     loan = forms.ModelChoiceField(widget=LoansWidget, queryset=Loan.unreleased.all())
+    released_by = forms.ModelChoiceField(
+        required=False,
+        queryset=Customer.objects.all(),
+        widget=CustomerWidget(),
+    )
+    release_amount = forms.DecimalField(required=False)
 
     class Meta:
         model = Release
-        fields = [
-            "releaseid",
-            "loan",
-            "interestpaid",
-        ]
+        fields = ["release_id", "loan", "release_date", "released_by", "release_amount"]
+
+    def clean_loan(self):
+        loan = self.cleaned_data["loan"]
+        # if loan.due() > 0:
+        #     self.add_error("loan", "Loan is not fully paid")
+        # raise forms.ValidationError("Loan is not fully paid")
+
+        if loan.is_released:
+            self.add_error("loan", "Loan already has a release.")
+            # raise forms.ValidationError("Loan already has a release."
+        return loan
 
     def clean_created(self):
         cleaned_data = super().clean()
-        my_date = cleaned_data.get("created")
+        my_date = cleaned_data.get("release_date")
 
         if my_date and my_date > timezone.now():
-            raise forms.ValidationError("Date cannot be in the future.")
+            self.add_error("release_date", "Date cannot be in the future.")
+            # raise forms.ValidationError("Date cannot be in the future.")
 
         return my_date
+
+    def clean_release_amount(self):
+        release_amount = self.cleaned_data["release_amount"]
+        loan = self.cleaned_data["loan"]
+
+        if not release_amount:
+            return release_amount
+
+        if release_amount > loan.due():
+            self.add_error(
+                "release_amount",
+                f"Release amount {release_amount} cannot be > due amount {loan.due()}.",
+            )
+            # raise ValidationError(f"Release amount {release_amount} cannot be > due amount {loan.due()}.")
+
+        return release_amount
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Get the value of release_amount
+        release_amount = self.cleaned_data.get("release_amount")
+
+        # Create a new object in OtherModel with release_amount
+        if release_amount is not None and release_amount > 0:
+            payment = LoanPayment.objects.create(
+                loan=instance.loan,
+                payment_amount=release_amount,
+                payment_date=instance.release_date,
+                with_release=True,
+            )
+
+        if commit:
+            instance.save()
+        return instance
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
-                Column("releaseid", css_class="form-group col-md-4 mb-0"),
-                Column("created", css_class="form-group col-md-4 mb-0"),
+                Column("release_id", css_class="form-group col-md-4 mb-0"),
+                Column("release_date", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
             ),
             Row(
                 Column("loan", css_class="form-group col-md-4 mb-0"),
-                Column("interestpaid", css_class="form-group col-md-4 mb-0"),
+                Column("released_by", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
+            ),
+            Row(
+                Column("release_amount", css_class="form-group  col-md-4 mb-0"),
             ),
             Submit("submit", "Submit"),
         )
@@ -290,8 +353,8 @@ class StatementItemForm(forms.ModelForm):
         fields = "__all__"
 
 
-class AdjustmentForm(forms.ModelForm):
-    created = forms.DateTimeField(
+class LoanPaymentForm(forms.ModelForm):
+    payment_date = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={
                 "type": "datetime-local",
@@ -299,17 +362,47 @@ class AdjustmentForm(forms.ModelForm):
             }
         )
     )
-
     loan = forms.ModelChoiceField(
         queryset=Loan.unreleased.all(),
         widget=ModelSelect2Widget(
             model=Loan,
             queryset=Loan.unreleased.all(),
-            search_fields=["loanid_icontains"],
+            search_fields=["loan_id__icontains"],
             # dependent_fields={'customer':'customer'}
         ),
     )
+    payment_amount = forms.DecimalField()
+    with_release = forms.BooleanField(
+        required=False, initial=False, widget=forms.CheckboxInput()
+    )
 
     class Meta:
-        model = Adjustment
-        fields = ["loan", "amount_received", "as_interest"]
+        model = LoanPayment
+        fields = ["payment_date", "loan", "payment_amount", "with_release"]
+
+    def clean_loan(self):
+        loan = self.cleaned_data.get("loan")
+        if loan.is_released:
+            raise forms.ValidationError("Loan already has a release.")
+        return loan
+
+    def clean(self):
+        payment_amount = self.cleaned_data["payment_amount"]
+        loan = self.cleaned_data["loan"]
+
+        if payment_amount < 0:
+            self.add_error("payment_amount", "Payment amount cannot be negative.")
+            # raise forms.ValidationError("Payment amount cannot be negative.")
+
+        if (
+            payment_amount is not None
+            and loan is not None
+            and payment_amount > loan.due()
+        ):
+            self.add_error(
+                "payment_amount",
+                f"Payment amount {payment_amount} cannot be > due amount {loan.due()}.",
+            )
+            # raise ValidationError(f"Payment amount {payment_amount} cannot be > due amount {loan.due()}.")
+
+        return self.cleaned_data

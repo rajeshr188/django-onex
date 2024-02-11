@@ -96,7 +96,7 @@
                   >Pricing Tier</a></li>  
               </ul>
             </li>
-            <li class="nav-item dropdown">
+            <!--<li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Sales
               </a>
@@ -146,17 +146,7 @@
                 <li><hr class="dropdown-divider"></li>
                 <a class="dropdown-item" href="{% url 'allotment_list' %}">Allotment</a>
               </ul>
-            </li>
-            
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                Rate
-              </a>
-              <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.grate}}</a></li>
-                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.srate}}</a></li>
-              </ul>
-            </li>
+            </li> 
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                 DEA
@@ -176,13 +166,22 @@
               
               </ul>
             
-            </li>  
+            </li>  -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                Rate
+              </a>
+              <ul class="dropdown-menu">
+                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.grate}}</a></li>
+                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.srate}}</a></li>
+              </ul>
+            </li>
             <li class="nav-item dropdown d-flex">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ user.email }}
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="">Preferences</a></li>
+                <li><a class="dropdown-item" href="{% url 'dynamic_preferences:global' %}">Preferences</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{% url 'account_change_password' %}">Change password</a></li>
                 <li><hr class="dropdown-divider"></li>

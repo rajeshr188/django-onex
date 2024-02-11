@@ -138,7 +138,7 @@
           <li class="list-group-item">
             <a href="" hx-get="{% url 'girvi:girvi_loan_detail' i.id %}" hx-target="#content"
               hx-swap="innerHTML transition:true" hx-trigger="click" hx-vals='{"use_block":"content"}'
-              hx-push-url="true">{{i.loanid}} {{i.created.date}} {{i.loanamount}}
+              hx-push-url="true">{{i.loan_id}} {{i.loan_date.date}} {{i.loan_amount}}
             </a>
           </li>
           {%endfor%}
@@ -157,8 +157,8 @@
           {%for i in customer.loan_set.released%}
           <li class="list-group-item">
             <a href="" hx-get="{% url 'girvi:girvi_loan_detail' i.id %}" hx-target="#content"
-              hx-swap="innerHTML transition:true" hx-vals='{"use_block":"content"}' hx-push-url="true">{{i.loanid}}
-              {{i.created.date}} {{i.loanamount}}
+              hx-swap="innerHTML transition:true" hx-vals='{"use_block":"content"}' hx-push-url="true">{{i.loan_id}}
+              {{i.loan_date.date}} {{i.loan_amount}}
             </a>
           </li>
           {%endfor%}

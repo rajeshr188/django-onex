@@ -137,32 +137,32 @@ urlpatterns += (
     ),
 )
 
-# urls for Adjustment
+# urls for LoanPayment
 urlpatterns += (
     path(
-        "girvi/adjustment/",
-        views.AdjustmentListView.as_view(),
-        name="girvi_adjustment_list",
+        "girvi/loanpayment/",
+        views.loan_payment_list_view,
+        name="girvi_loanpayment_list",
     ),
     path(
-        "girvi/adjustment/create/",
-        views.AdjustmentCreateView.as_view(),
-        name="girvi_adjustment_create",
+        "girvi/loanpayment/create/",
+        views.loan_payment_create_view,
+        name="girvi_loanpayment_create",
     ),
     path(
-        "girvi/adjustment/<int:pk>/create/",
-        views.AdjustmentCreateView.as_view(),
-        name="girvi_adjustment_create",
+        "girvi/loanpayment/<int:pk>/create/",
+        views.loan_payment_create_view,
+        name="girvi_loanpayment_create",
     ),
     path(
-        "girvi/adjustment/update/<int:pk>/",
-        views.AdjustmentUpdateView.as_view(),
-        name="girvi_adjustment_update",
+        "girvi/loanpayment/update/<int:pk>/",
+        views.loan_payment_update_view,
+        name="girvi_loanpayment_update",
     ),
     path(
-        "girvi/adjustment/<int:pk>/delete",
-        views.AdjustmentDeleteView.as_view(),
-        name="girvi_adjustment_delete",
+        "girvi/loanpayment/<int:pk>/delete",
+        views.loan_payment_delete_view,
+        name="girvi_loanpayment_delete",
     ),
 )
 

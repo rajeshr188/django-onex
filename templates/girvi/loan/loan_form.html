@@ -2,7 +2,7 @@
 {% load crispy_forms_tags%}
 
 {% block content %}
-<div  class="container col-md-6 mt-3 mb-3" id="loan-content" >
+<div  class="container col-md-8 mt-3 mb-3" id="loan-content" >
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     {% if object %}  
     <h1 class="h2">Update Loan</h1>
@@ -20,8 +20,8 @@
         </div>
       </div>
     </div>
-  <div class="card">
-    <div class="card-body">
+  <div class="card ">
+    <div class="card-body ">
       <div id="form" >
         {{ form|as_crispy_errors }}
         <form hx-post="." hx-target="#content">
@@ -46,16 +46,16 @@
             </div>
           </div> 
           
-          <div class="row g-3 mb-3">
+          <div class="row g-4 mb-3">
             <input type="hidden" id="image-data" name="image_data">
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="camera">
                 <video id="video">Video stream not available.</video>
                 <button id="startbutton">Take photo</button>
               </div>
               <canvas id="canvas"> </canvas> 
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="output">
                 <img id="photo" alt="The screen capture will appear in this box." />
               </div>

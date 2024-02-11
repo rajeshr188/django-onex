@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_celery_results",
     # Local
-    'actstream',
+    "actstream",
     "users",
     "pages",
     "contact.apps.ContactConfig",
@@ -71,7 +71,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
-    # 'django.middleware.cache.FetchFromCacheMiddleware',
+    "django.middleware.cache.FetchFromCacheMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "product.middleware.RateMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -84,11 +84,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "djangox_project.middleware.HtmxMessagesMiddleware",
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
 ]
-
-# CACHE_MIDDLEWARE_ALIAS = 'default'
-# CACHE_MIDDLEWARE_SECONDS = 604800
-# CACHE_MIDDLEWARE_KEY_PREFIX = 'jsk'
 
 ROOT_URLCONF = "djangox_project.urls"
 INTERNAL_IPS = ["127.0.0.1", "localhost"]
@@ -209,12 +206,23 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 # CRISPY_FAIL_SILENTLY = not DEBUG
 
+
 # CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#         'LOCATION': '127.0.0.1:11211',
-#     }
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+#         "LOCATION": "unique-snowflake",
+#     },
+#     "select2": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://redis:6379/2",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
+#     },
 # }
+
+# SELECT2_CACHE_BACKEND = "select2"
+
 # CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_BROKER_URL = "amqp://localhost"
 # CELERY_RESULT_BACKEND = "redis://localhost:6379"
@@ -231,13 +239,6 @@ MESSAGE_TAGS = {
 
 PHONENUMBER_DEFAULT_REGION = "IN"
 PHONENUMBER_DEFAULT_FORMAT = "NATIONAL"
-MESSAGE_TAGS = {
-    messages.DEBUG: "bg-light",
-    messages.INFO: "text-white bg-primary",
-    messages.SUCCESS: "text-white bg-success",
-    messages.WARNING: "text-dark bg-warning",
-    messages.ERROR: "text-white bg-danger",
-}
 
 TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN")

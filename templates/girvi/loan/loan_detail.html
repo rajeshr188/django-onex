@@ -159,7 +159,7 @@
                     </tr>
                     <tr>
                       <td>Updated</td>
-                      <td>{{ object.updated }}</td>
+                      <td>{{ object.updated_at }}</td>
                     </tr>
                     <tr>
                       <td>Creator</td>
@@ -232,7 +232,7 @@
                     </tr>
                     <tr>
                       <td>Adjustments</td>
-                      <td class="table-info">{{object.get_total_adjustments}}</td>
+                      <td class="table-info">{{object.get_total_payments}}</td>
                     </tr>
                     <tr>
                       <td>Total Due </td>
@@ -246,7 +246,7 @@
             <div class="card border-primary mb-3">
               <h5 class="card-header text-center">
                 
-                Release : <span class="badge text-bg-secondary"> {{object.release.created|date}}</span>
+                Release : <span class="badge text-bg-secondary"> {{object.release.release_date|date}}</span>
                 <a class="btn btn-danger" href="{%url 'girvi:girvi_release_delete' object.release.id%}"><svg
                     xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3"
                     viewBox="0 0 16 16">
@@ -259,21 +259,17 @@
                 <table class="table table-sm table-striped-columns">
                   <tbody>
                     <tr>
-                      <td>Id</td>
+                      <td>Release Id</td>
                       <td>
                         <a href="" hx-get="{% url 'girvi:girvi_release_detail' loan.release.id %}"
                                     hx-target="#content"
                                     hx-swap = "innerHTML transition:true">
-                          {{loan.release.releaseid}}</a>
+                          {{loan.release.release_id}}</a>
                       </td>
                     </tr>
                     <tr>
-                      <td>Amount</td>
-                      <td>{{loan.release.total_received}}</td>
-                    </tr>
-                    <tr>
-                      <td>Interest</td>
-                      <td>{{loan.release.interestpaid}}</td>
+                      <td>By</td>
+                      <td>{{loan.release.released_by}}</td>
                     </tr>
     
                   </tbody>
@@ -296,6 +292,12 @@
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
                 type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">
                 Journal Entries :<span class="badge text-bg-secondary">{{journal_entries.count}}</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment-tab-pane"
+                type="button" role="tab" aria-controls="payment-tab-pane" aria-selected="false">
+                Payment :<span class="badge text-bg-secondary">{{object.loan_payments.count}}</span>
               </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -358,6 +360,34 @@
                 </table>
               </div>
             </div>
+            <div class="tab-pane fade" id="payment-tab-pane" role="tabpanel" aria-labelledby="payment-tab" tabindex="0">
+              <div class="container table-responsive">
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <th>Id</th>
+                    <th>Created</th>
+                    <th>Amount</th>
+                    <th>Principal</th>
+                    <th>Interest</th>
+                    <th>with_release</th>
+                    <th>Balance</th>
+                  </thead>
+                  <tbody id="payment-items" >
+                    {%for i in object.loan_payments.all%}
+                    {% include 'girvi/loanpayment/payment-inline.html' with object=i %}
+                    {%endfor%}
+                  </tbody>
+                </table>
+                <p class="align-items-right">
+                  <a class="btn btn-success" href="{% url 'girvi:girvi_loanpayment_create' object.id%}"
+                      ><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                        height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                          d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z" />
+                      </svg> Payment</a>
+                </p>
+              </div>
+            </div>
             <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
               {%if statements%}
               <ul>
@@ -374,8 +404,7 @@
                 {%endfor%}
               </ul>
             </div>
-            <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
-              ...</div>
+            
           </div>
         </div>
       </div>

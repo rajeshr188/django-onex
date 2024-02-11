@@ -18,8 +18,8 @@
     </svg></a>
     </p>
     <table class="table table-sm table-striped">
-      <tr><td>releaseid</td><td>{{ object.releaseid }}</td></tr>
-      <tr><td>Release Date</td><td>{{ object.created }}</td></tr>
+      <tr><td>releaseid</td><td>{{ object.release_id }}</td></tr>
+      <tr><td>Release Date</td><td>{{ object.release_date }}</td></tr>
       <tr><td>loanid</td><td><a href="" hx-get="{% url 'girvi:girvi_loan_detail' object.loan.id%}"
         hx-target="#content"
         hx-swap="innerHTML transition:true"
@@ -28,8 +28,8 @@
       <tr><td>loandate</td><td>{{ object.loan.loan_date }}</td></tr>
       <tr><td>customer</td><td><a hx-get="{% url 'contact_customer_detail' object.loan.customer.id %}"
         hx-target="#content" hx-swap="innerHTML transition:true">{{ object.loan.customer}}</a></td></tr>
-      <tr><td>created</td><td>{{ object.created }}</td></tr>
-      <tr><td>interestpaid</td><td>{{ object.interestpaid }}</td></tr>
+      <tr><td>created</td><td>{{ object.created_at }}</td></tr>
+     
     
     </table>
   </div>

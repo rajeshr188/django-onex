@@ -14,7 +14,6 @@ def reverse_journal_entry(sender, instance, **kwargs):
     if instance.pk:  # If journal is being updated
         # Retrieve the old data from the database
         old_instance = sender.objects.get(pk=instance.pk)
-        print(f"Instance changed?: {instance.is_changed(old_instance)}")
         if old_instance.is_changed(instance):
             with transaction.atomic():
                 old_instance.reverse_transactions()
@@ -23,7 +22,6 @@ def reverse_journal_entry(sender, instance, **kwargs):
 
 def create_journal_entry(sender, instance, created, **kwargs):
     if created:
-        print("create_journal_entry Post_save signal")
         with transaction.atomic():
             instance.create_transactions()
 
@@ -66,7 +64,6 @@ class Journal(models.Model):
         return lt, at
 
     def create_transactions(self):
-        print("create_transactions")
         journal_entry = self.get_journal_entry()
         lt, at = self.get_transactions()
         if lt and at:
@@ -189,7 +186,6 @@ class JournalEntry(models.Model):
             raise ValueError("Account transactions are not balanced")
         return True
 
-    
     @transaction.atomic()
     def transact(self, lt, at):
         # add transactions to the journal

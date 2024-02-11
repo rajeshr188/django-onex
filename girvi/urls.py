@@ -7,6 +7,8 @@ from .models import Loan
 app_name = "girvi"
 
 urlpatterns = (
+    # create a path to create notification view
+    path("girvi/loan/<int:pk>/notify/", views.create_loan_notification, name="girvi_loan_notice"),
     path("deletemultiple/", views.deleteLoan, name="girvi_loan_deletemultiple"),
     path("girvi/check/", views.check_girvi, name="check_girvi"),
     path("girvi/check/<int:pk>/", views.check_girvi, name="check_girvi_statement"),

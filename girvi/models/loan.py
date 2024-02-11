@@ -299,6 +299,15 @@ class Loan(Journal):
             # Handle or log the error as needed
             print(f"An error occurred while updating the loan: {e}")
 
+    def notify(self, notice_type, medium_type):
+        from notify.models import Notification
+
+        notification = Notification(
+            loan=self, notice_type=notice_type, medium_type=medium_type
+        )
+        notification.save()
+        return notification
+
 
 class LoanItem(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="loanitems")

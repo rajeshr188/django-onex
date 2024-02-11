@@ -87,7 +87,7 @@ class Notification(models.Model):
         return str(self.pk)
 
     def get_absolute_url(self):
-        return reverse("notify_Notification_detail", args=(self.pk,))
+        return reverse("notify_notification_detail", args=(self.pk,))
 
     def get_update_url(self):
         return reverse("notify_Notification_update", args=(self.pk,))

@@ -43,6 +43,27 @@ from ..tables import LoanTable
 # We instantiate a manager for our global preferences
 global_preferences = global_preferences_registry.manager()
 
+def create_loan_notification(request,pk=None):
+    
+    # get loan instance
+    loan = get_object_or_404(Loan, pk=pk)
+    # create a noticegroup
+    import random
+    import string
+
+    # Generate a random string of 3 letters
+    random_string = ''.join(random.choice(string.ascii_letters) for _ in range(3))
+    ng = NoticeGroup.objects.create(name=f"{loan.loan_id}-{random_string}-{datetime.now().date()}")
+    notification = Notification.objects.create(
+        group = ng,
+        customer=loan.customer,
+    )  
+    # add the loan to the notification
+    notification.loans.add(loan)
+    notification.save()
+    return redirect(notification.get_absolute_url()) 
+
+
 
 class LoanYearArchiveView(LoginRequiredMixin, YearArchiveView):
     queryset = Loan.objects.unreleased()

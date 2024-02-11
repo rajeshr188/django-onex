@@ -398,11 +398,30 @@
               {%endif%}
             </div>
             <div class="tab-pane fade" id="notice-tab-pane" role="tabpanel" aria-labelledby="notice-tab" tabindex="0">
-              <ul class="list-group">
-                {%for i in loan.notifications.all%}
-                <li class="list-group-item">{{i.id}} {{i.created}} {{i.group.id}} {{i.status}}</li>
-                {%endfor%}
-              </ul>
+              <table class="table table-sm">
+                <thead>
+                  <th>Id</th>
+                  <th>Created</th>
+                  <th>Group</th>
+                  <th>Medium</th>
+                  <th>Notification Type</th>
+                  <th>Status</th>
+                </thead>
+                <tbody>
+                  {%for i in loan.notifications.all%}
+                  <tr>
+                    <td><a href="{% url 'notify_notification_detail' i.id%}">{{i.id}}</a></td>
+                    <td>{{i.created}}</td>
+                    <td>{{i.group.id}}</td>
+                    <td>{{i.get_medium_type_display}}</td>
+                    <td>{{i.get_notice_type_display}}</td>
+                    <td>{{i.get_status_display}}</td>
+                    
+                  </tr>
+                  {%endfor%}
+                </tbody>
+              </table>
+              <a class="btn btn-success" href="{% url 'girvi:girvi_loan_notice' loan.id%}">Create Notice</a>
             </div>
             
           </div>

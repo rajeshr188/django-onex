@@ -1,7 +1,8 @@
 {% extends '_base.html'%}
 {%load crispy_forms_tags%}
 {% block content %}
-{{form.media}}
+<div class="container mt-5 mb-5">
+  {{form.media}}
 <p><a class="btn btn-default" href="{% url 'product_productvariant_list' %}">ProductVariant Listing</a></p>
 <div class="row">
   <div class="col-9">
@@ -50,5 +51,6 @@
         {% endif %}
       </div>
     </div>
+</div>
 </div>
 {% endblock %}

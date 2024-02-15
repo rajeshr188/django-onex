@@ -22,8 +22,8 @@ def pricing_tier_create(request):
     form = PricingTierForm(request or None)
     if request.method == "POST" and form.is_valid():
         form.save()
-        return
-    render(request, "", context={"form": form})
+        return redirect("product_pricingtier_list")
+    return render(request, "product/price/create.html", context={"form": form})
 
 
 def pricing_tier_update(request):

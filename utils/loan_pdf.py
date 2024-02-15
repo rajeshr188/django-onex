@@ -420,7 +420,13 @@ def get_notice_pdf(selection=None):
         table_data = [["#", "Loan ID", "Created", "Item Weight", "Item Description"]]
         table_data.extend(
             [
-                [i + 1, loan.loan_id, loan.loan_date.date(), loan.get_weight[0], item.itemdesc]
+                [
+                    i + 1,
+                    loan.loan_id,
+                    loan.loan_date.date(),
+                    loan.get_weight[0],
+                    item.itemdesc,
+                ]
                 for i, (loan, item) in enumerate(
                     ((loan, item) for loan in loans for item in loan.loanitems.all())
                 )

@@ -2,7 +2,8 @@
 {%block content%}
 <h1>Pricing Tier</h1>
 <div class="div">
-    <button class="btn btn-success">Add Tier</button>
+    <a class="btn btn-success"
+    href="{% url 'product_pricingtier_create' %}">Add Tier</a>
     <table class="table">
         <thead>
             <th>Name</th><th>Description</th><th>Parent</th>

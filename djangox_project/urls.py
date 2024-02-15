@@ -12,6 +12,7 @@ urlpatterns = [
     path("dynamic_preferences/", include("dynamic_preferences.urls")),
     path("users/", include("django.contrib.auth.urls")),
     path("accounts/", include("allauth.urls")),
+    path("accounts/", include("allauth.socialaccount.urls")),
     path("", include("pages.urls")),
     path("approval/", include("approval.urls", namespace="approval")),
     path("contact/", include("contact.urls")),

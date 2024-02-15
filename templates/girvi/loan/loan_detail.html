@@ -291,7 +291,7 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
                 type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">
-                Journal Entries :<span class="badge text-bg-secondary">{{journal_entries.count}}</span>
+                Journal Entries :<!-- <span class="badge text-bg-secondary">{{journal_entries.count}}</span> -->
               </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -354,9 +354,9 @@
                     <th>Created</th>
                     <th>Description</th>
                   </thead>
-                  {%for i in journal_entries%}
+                  <!-- {%for i in journal_entries%}
                   {% include 'girvi/journal_entries-inline.html' with object=i %}
-                  {%endfor%}
+                  {%endfor%} -->
                 </table>
               </div>
             </div>

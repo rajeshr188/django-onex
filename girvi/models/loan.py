@@ -26,8 +26,13 @@ from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
                         UnReleasedManager)
 
 
-class Loan(Journal):
+class Loan(models.Model):
     # Fields
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
+    )
     loan_date = models.DateTimeField(default=datetime.now)
     lid = models.IntegerField(blank=True, null=True)
     loan_id = models.CharField(max_length=255, unique=True, db_index=True)
@@ -65,7 +70,7 @@ class Loan(Journal):
         on_delete=models.CASCADE,
     )
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    journal_entries = GenericRelation(JournalEntry, related_query_name="loan_doc")
+    # journal_entries = GenericRelation(JournalEntry, related_query_name="loan_doc")
     # notifications = models.ManyToManyField(Notification)
     # Managers
     # objects = LoanManager.from_queryset(LoanQuerySet)()
@@ -367,7 +372,12 @@ class LoanItem(models.Model):
         loan.update()
 
 
-class LoanPayment(Journal):
+class LoanPayment(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.ForeignKey(
+        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
+    )
     loan = models.ForeignKey(
         "Loan", on_delete=models.CASCADE, related_name="loan_payments"
     )
@@ -377,9 +387,9 @@ class LoanPayment(Journal):
     )
     principal_payment = models.DecimalField(max_digits=10, decimal_places=2)
     interest_payment = models.DecimalField(max_digits=10, decimal_places=2)
-    journal_entries = GenericRelation(
-        JournalEntry, related_query_name="loan_payment_doc"
-    )
+    # journal_entries = GenericRelation(
+    #     JournalEntry, related_query_name="loan_payment_doc"
+    # )
     with_release = models.BooleanField(default=False)
 
     class Meta:

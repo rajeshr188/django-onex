@@ -105,7 +105,7 @@ class LoanTodayArchiveView(TodayArchiveView):
 def ld():
     default_date = global_preferences["Loan__Default_Date"]
     if default_date == "N":
-        return datetime.datetime.now()
+        return datetime.now()
     else:
         last = Loan.objects.order_by("id").last()
         if not last:
@@ -347,7 +347,7 @@ def loan_detail(request, pk):
         "pure": result,
         "value": value,
         "worth": value - loan.due(),
-        "journal_entries": loan.journal_entries.all(),
+        # "journal_entries": loan.journal_entries.all(),
         "new_item_url": reverse(
             "girvi:girvi_loanitem_create", kwargs={"parent_id": loan.id}
         ),

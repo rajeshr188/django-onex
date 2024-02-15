@@ -33,7 +33,7 @@ class Journal(models.Model):
         "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
     )
     desc = models.TextField(blank=True, null=True)
-    uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False,null = True, blank = True)
 
     class Meta:
         abstract = True

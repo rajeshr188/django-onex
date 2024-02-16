@@ -12,24 +12,8 @@
   {{ form|crispy }}
   <button class="btn btn-success" type="submit">Sign up</button>
 </form>
-<a href="{% provider_login_url 'google' %}">Sign up with Google</a>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<div id="g_id_onload"
-     data-client_id="932403034181-qpl8ctjlem6cuiaq8n7ic8tkft6pe6pt.apps.googleusercontent.com"
-     data-context="use"
-     data-ux_mode="redirect"
-     data-login_uri="https://www.rokkad.com/accounts/google/login/callback/"
-     data-itp_support="true">
-</div>
-
-<div class="g_id_signin"
-     data-type="standard"
-     data-shape="pill"
-     data-theme="filled_blue"
-     data-text="continue_with"
-     data-size="large"
-     data-logo_alignment="left">
-</div>
+<a class="btn btn-primary mt-4" href="{% provider_login_url 'google' %}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
+  <path d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"/>
+</svg> continue with Google</a>
 </div>
 {% endblock content %}

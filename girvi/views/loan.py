@@ -138,6 +138,7 @@ def loan_list(request):
         request.GET,
         queryset=Loan.objects.order_by("-id")
         .with_details()
+        # .select_related("customer", "release", "created_by")
         .prefetch_related("notifications", "loanitems"),
     )
     table = LoanTable(filter.qs)

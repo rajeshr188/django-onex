@@ -17,6 +17,7 @@ SECRET_KEY = "43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j"
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS=['https://www.rokkad.com','http://localhost:8000','http://127.0.0.1:8000']
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Application definition
 

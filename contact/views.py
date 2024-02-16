@@ -11,6 +11,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods  # new
 from django_tables2.config import RequestConfig
+from django_tables2.export.export import TableExport
 
 from utils.htmx_utils import for_htmx
 
@@ -18,7 +19,7 @@ from .filters import CustomerFilter
 from .forms import (AddressForm, ContactForm, CustomerForm, CustomerMergeForm,
                     CustomerRelationshipForm)
 from .models import Address, Contact, Customer, CustomerRelationship, Proof
-from .tables import CustomerTable
+from .tables import CustomerTable,CustomerExportTable
 
 
 @login_required
@@ -31,11 +32,21 @@ def customer_list(request):
     )
     table = CustomerTable(f.qs)
     RequestConfig(request, paginate={"per_page": 10}).configure(table)
+    export_format = request.GET.get("_export", None)
+    if TableExport.is_valid_format(export_format):
+        # TODO speed up the table export using celery
+
+        exporter = TableExport(
+            export_format,
+            table,
+            exclude_columns=("actions",),
+            dataset_kwargs={"title": "loans"},
+        )
+        return exporter.response(f"table.{export_format}")
     context["filter"] = f
     context["table"] = table
 
     return TemplateResponse(request, "contact/customer_list.html", context)
-
 
 @require_http_methods(["DELETE"])
 def customer_delete(request, pk):

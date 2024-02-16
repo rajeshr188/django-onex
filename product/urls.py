@@ -268,30 +268,17 @@ urlpatterns += (
     path(
         "pricingtier/<int:pk>/addproductprice",
         views.pricing_tier_product_price_create,
-        name="product_pricingtier_create",
+        name="product_pricingtier_productprice_create",
     ),
     path(
         "pricingtier/productprice/<int:pk>/update",
         views.pricing_tier_product_price_update,
-        name="product_pricingtier_update",
+        name="product_pricingtier_productprice_update",
     ),
     path(
         "pricingtier/productprice/<int:pk>/delete",
         views.pricing_tier_product_price_delete,
-        name="product_pricingtier_delete",
+        name="product_pricingtier_productprice_delete",
     ),
 )
-urlpatterns += (
-    path(
-        "product/rate/latest",
-        views.get_latest_rate,
-        name="product_rate",
-    ),
-    path(
-        "product/rate/",
-        views.rate_list,
-        name="product_rate_list",
-    ),
-    path("product/rate/create", views.rate_create, name="product_rate_create"),
-    path("product/rate/<int:pk>/", views.rate_delete, name="product_rate_delete"),
-)
+

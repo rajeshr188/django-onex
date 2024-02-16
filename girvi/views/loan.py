@@ -31,7 +31,7 @@ from reportlab.pdfgen import canvas
 
 from contact.models import Customer
 from notify.models import NoticeGroup, Notification
-from product.models import Rate
+from rates.models import Rate
 from utils.htmx_utils import for_htmx
 from utils.loan_pdf import get_loan_pdf, get_notice_pdf
 

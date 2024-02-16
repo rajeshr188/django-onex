@@ -11,6 +11,6 @@
             {%endfor%}
         </tbody>
     </table>
-    <button class="btn btn-outline btn-primary">Add Product Price</button>
+    <a href="{% url 'product_pricingtier_productprice_create' obj.id%}"class="btn btn-outline btn-primary">Add Product Price</a>
 </div>
 {%endblock%}

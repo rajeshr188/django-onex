@@ -1,0 +1,13 @@
+{% extends '_base.html' %}
+
+{% block content %}
+  <div class="container card mt-4"><h1>Rate Source Detail</h1>
+    <a class="btn btn-primary" href="{% url 'ratesource_list' %}">Back to list</a>
+    <ul>
+      <li><strong>ID:</strong> {{ ratesource.id }}</li>
+      <li><strong>Name:</strong> {{ ratesource.name }}</li>
+      <li><strong>Location:</strong> {{ ratesource.location }}</li>
+      <li><strong>Taxed?:</strong> {{ ratesource.tax_included }}</li>
+      <!-- Add more fields as needed -->
+    </ul></div>
+{% endblock %}

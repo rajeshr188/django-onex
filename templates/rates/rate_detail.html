@@ -1,0 +1,41 @@
+{%extends '_base.html'%}
+{%block content%}
+<div class="container">
+    <h1>Rate Detail</h1>
+    <table class="table table-sm">
+        <tr>
+            <th>id</th>
+            <td>{{rate.id}}</td>
+        </tr>
+        <tr>
+            <th>Created</th>
+            <td>{{rate.timestamp}}</td>
+        </tr>
+        <tr>
+            <th>buying</th>
+            <td>{{rate.buying_rate}}</td>
+        </tr>
+        <tr>
+            <th>selling</th>
+            <td>{{rate.selling_rate}}</td>
+        </tr>
+        <tr>
+            <th>ratesource</th>
+            <td>{{rate.rate_source}}</td>
+        </tr>
+        <tr>
+            <th>metal</th>
+            <td>{{rate.metal}}</td>
+        </tr>
+        <tr>
+            <th>currency</th>
+            <td>{{rate.currency}}</td>
+        </tr>
+        <tr>
+            <th>purity</th>
+            <td>{{rate.purity}}</td>
+        </tr>
+    </table>
+    <a href="{% url 'rate_list'%}">Back to list</a>
+</div>
+{%endblock%}

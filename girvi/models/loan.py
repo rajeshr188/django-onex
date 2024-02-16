@@ -1,5 +1,4 @@
 import math
-import uuid
 from datetime import datetime
 from decimal import Decimal
 # from qrcode.image.pure import PyImagingImage
@@ -20,7 +19,7 @@ from moneyed import Money
 from contact.models import Customer
 from dea.models import JournalEntry  # , JournalTypes
 from dea.models import Journal
-from product.models import Rate
+from rates.models import Rate
 
 from ..managers import (LoanManager, LoanQuerySet, ReleasedManager,
                         UnReleasedManager)

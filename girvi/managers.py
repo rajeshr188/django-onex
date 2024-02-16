@@ -8,7 +8,7 @@ from django.db.models.functions import (Coalesce, ExtractMonth, ExtractYear,
                                         Round)
 from django.utils import timezone
 
-from product.models import Rate, RateSource
+from rates.models import Rate
 
 """
     each row shall have

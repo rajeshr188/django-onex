@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render, HttpResponse
 
 from ..forms import PricingTierForm, PricingTierProductPriceForm
 from ..models import PricingTier, PricingTierProductPrice
@@ -19,11 +19,14 @@ def pricing_tier_detail(request, pk):
 
 
 def pricing_tier_create(request):
-    form = PricingTierForm(request or None)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect("product_pricingtier_list")
-    return render(request, "product/price/create.html", context={"form": form})
+    if request.method == "POST":
+        form = PricingTierForm(request.POST)
+        if form.is_valid():
+            pt = form.save()
+            return redirect("product_pricingtier_detail", pk=pt.pk)
+    else:
+        form = PricingTierForm()
+    return render(request, "product/price/pricingtier_form.html", context={"form": form})
 
 
 def pricing_tier_update(request):
@@ -40,12 +43,13 @@ def pricing_tier_delete(request, pk):
     return HttpResponse(status=201)
 
 
-def pricing_tier_product_price_create(request):
-    form = PricingTierForm(request or None)
+def pricing_tier_product_price_create(request,pk):
+    pricing_tier = get_object_or_404(PricingTier, id=pk)
+    form = PricingTierProductPriceForm(request or None)
     if request.method == "POST" and form.is_valid():
         form.save()
-        return
-    render(request, "", context={"form": form})
+        return redirect("product_pricingtier_detail", pk=pricing_tier.pk)
+    return render(request, "product/price/productprice_form.html", context={"form": form})
 
 
 def pricing_tier_product_price_update(request):
@@ -53,7 +57,7 @@ def pricing_tier_product_price_update(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         return
-    render(request, "", context={"form": form})
+    return render(request, "", context={"form": form})
 
 
 def pricing_tier_product_price_delete(request, pk):

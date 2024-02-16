@@ -1,0 +1,13 @@
+{% extends '_base.html' %}
+
+{% block content %}
+  <div class="container card mt-4">
+    <h1>Confirm Delete</h1>
+  <p>Are you sure you want to delete this rate?</p>
+  <form action="{% url 'rate_delete' rate.id %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="Delete">
+    <a class="btn btn-danger" href="{% url 'rate_list' %}">Cancel</a>
+  </form>
+  </div>
+{% endblock %}

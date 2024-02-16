@@ -1,0 +1,27 @@
+{%extends '_base.html'%}
+{%block content%}
+<div class="container mt-4">    <h1>Ratesource List</h1>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Taxed?</th>
+                <!-- Add more table headers for other fields if needed -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Loop through ratesource records and generate table rows -->
+            {% for ratesource in ratesources %}
+            <tr>
+                <td>{{ ratesource.id }}</td>
+                <td>{{ ratesource.name }}</td>
+                <td>{{ ratesource.location }}</td>
+                <td>{{ratesource.tax_included}}</td>
+                <!-- Add more table cells for other fields if needed -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+{%endblock%}

@@ -26,6 +26,7 @@ urlpatterns = [
     path("sea/", include("sea.urls")),
     path("notify/", include("notify.urls")),
     path("select2/", include("django_select2.urls")),
+    path("rates/", include("rates.urls")),
 ]
 
 if settings.DEBUG:

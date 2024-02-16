@@ -172,8 +172,8 @@
                 Rate
               </a>
               <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.grate}}</a></li>
-                <li class="dropdown-item"><a href="{% url 'product_rate_list'%}">{{request.srate}}</a></li>
+                <li class="dropdown-item"><a href="{% url 'rate_detail' request.grate.id%}">{{request.grate}}</a></li>
+                <li class="dropdown-item"><a href="{% url 'rate_detail' request.srate.id%}">{{request.srate}}</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown d-flex">

@@ -65,6 +65,17 @@ class LoanTable(tables.Table):
         pure = " gms,".join(result)
         return f"{pure} gms"
 
+    def value_total_weight(self, record):
+        result = []
+        for item in record.get_weight:
+            item_type = item["itemtype"]
+            total_weight_purity = round(item["total_weight"])
+            result.append(f"{item_type}:{total_weight_purity}")
+
+        # Join the results into a single string
+        pure = " gms,".join(result)
+        return f"{pure} gms"
+
     def render_loan_id(self, record):
         return format_html(
             """
@@ -96,7 +107,11 @@ class LoanTable(tables.Table):
     #     # footer=lambda table: sum(x.total_interest for x in table.data)
     # )
     total_due = tables.Column(verbose_name="Due")
+    def value_total_due(self, record):
+        return record.total_due
     current_value = tables.Column(verbose_name="Value")
+    def value_current_value(self, record):
+        return record.current_value
 
     class Meta:
         model = Loan

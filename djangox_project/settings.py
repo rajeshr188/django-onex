@@ -17,7 +17,6 @@ SECRET_KEY = "43)%4yx)aa@a=+_c(fn&kf3g29xax+=+a&key9i=!98zyim=8j"
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS=['https://www.rokkad.com','http://localhost:8000','http://127.0.0.1:8000']
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Application definition
 
@@ -27,6 +26,8 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    # ...whitenoise for dev mode
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",  # new
@@ -68,6 +69,7 @@ INSTALLED_APPS = [
     "notify",
     "dynamic_preferences",
     "invitations",
+    "rates",
     # comment the following line if you don't want to use user preferences
     # 'dynamic_preferences.users.apps.UserPreferencesConfig',
 ]
@@ -77,9 +79,10 @@ MIDDLEWARE = [
     # 'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.cache.FetchFromCacheMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
-    "product.middleware.RateMiddleware",
+    "rates.middleware.RateMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -90,7 +93,7 @@ MIDDLEWARE = [
     "djangox_project.middleware.HtmxMessagesMiddleware",
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 ]
-
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 ROOT_URLCONF = "djangox_project.urls"
 INTERNAL_IPS = ["127.0.0.1", "localhost"]
 TEMPLATES = [

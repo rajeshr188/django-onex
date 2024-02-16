@@ -1,0 +1,43 @@
+{% extends '_base.html' %}
+
+{% block content %}
+  <div class="container">
+    <h1>Rate List</h1>
+    <a href="{% url 'ratesource_list'%}">Ratesource List</a>
+  <a href="{% url 'rate_create'%}">Add Rates</a>
+  <table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>Created</th>
+            <th>buying</th>
+            <th>selling</th>
+            <th>ratesource</th>
+            <th>metal</th>
+            <th>currency</th>
+            <th>purity</th>
+            <th>View</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rate in rates %}
+            <tr>
+            <td>{{ rate.id }}</td>
+            <td>{{ rate.timestamp }}</td>
+            <td>{{ rate.buying_rate }}</td>
+            <td>{{ rate.selling_rate }}</td>
+            <td><a href="{% url 'ratesource_detail' rate.rate_source.id%}">{{ rate.rate_source }}</a></td>
+            <td>{{ rate.metal }}</td>
+            <td>{{ rate.currency }}</td>
+            <td>{{ rate.purity }}</td>
+            <td><a href="{% url 'rate_detail' rate.id %}">View</a></td>
+            <td><a href="{% url 'rate_update' rate.id %}">Edit</a></td>
+            <td><a href="{% url 'rate_delete' rate.id %}">Delete</a></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+  </div>  
+{% endblock %}

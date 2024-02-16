@@ -1,8 +1,7 @@
 from django.db import models
-from djmoney.models.fields import MoneyField
 
-# balance = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
-
+# Create your models here.
+from django.db import models
 
 class RateSource(models.Model):
     name = models.CharField(max_length=30)

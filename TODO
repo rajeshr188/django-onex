@@ -1,9 +1,9 @@
 voucheritem cant create journalentries all stock transaction raising from vcoucheritems are recorded in vouchers journal entry
 abstranct journal with genericrelation to journalentry fails cascade delete of transactions
-django-allauth google signin
 per tenant instance preference
 preference settings page for user so as to no need to go to admin
-add fixture for pricingtier,rate
+languages:
+    hindi
 AAdhar KYC:
     api-setu,sandbox.co.in
 mr.htmx wordwide:

@@ -266,7 +266,7 @@ stockstatement_formset = forms.modelformset_factory(
 class PricingTierForm(forms.ModelForm):
     class Meta:
         model = PricingTier
-        fields = ["name", "description", "parent"]
+        fields = ["name", "description", "minimum_quantity","parent"]
 
 
 class PricingTierProductPriceForm(forms.ModelForm):

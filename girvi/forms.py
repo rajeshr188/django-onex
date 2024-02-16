@@ -16,7 +16,8 @@ from django_select2.forms import (ModelSelect2Widget, Select2Mixin,
 
 from contact.forms import CustomerWidget
 from contact.models import Customer
-from product.models import ProductVariant, Rate
+from product.models import ProductVariant
+from rates.models import Rate
 
 from .models import (License, Loan, LoanItem, LoanPayment, Release, Series,
                      Statement, StatementItem)
